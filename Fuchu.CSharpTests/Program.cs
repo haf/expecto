@@ -8,7 +8,7 @@ namespace Fuch.CSharpTests {
         }
 
         private static void Main(string[] args) {
-            Test.NewList(Add).Run();
+            Test.NewList(Add).RunParallel();
         }
     }
 }

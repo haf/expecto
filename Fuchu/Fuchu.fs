@@ -1,6 +1,7 @@
 ﻿namespace Fuchu
 
 open System
+open System.Linq
 open System.Runtime.CompilerServices
 open FSharpx
 
@@ -35,6 +36,12 @@ module F =
         Failed: int
         Errored: int
     }
+        with override x.ToString() =
+                        sprintf "%d tests run: %d passed, %d failed, %d errored\n"
+                            (x.Errored + x.Failed + x.Passed)
+                            x.Passed
+                            x.Failed
+                            x.Errored
 
     let sumTestResults results =
         let counts = 
@@ -101,12 +108,19 @@ module F =
         let printResult (n,t) = printfn "%s: %s" n (testResultToString t)
         let results = flattenEval ignore printResult printResult printResult Seq.map tests
         let summary = sumTestResults results
-        printfn "%d tests run: %d passed, %d failed, %d errored"
-            (summary.Errored + summary.Failed + summary.Passed)
-            summary.Passed
-            summary.Failed
-            summary.Errored
+        Console.WriteLine summary
 
+    [<Extension>]
+    [<CompiledName("RunParallel")>]
+    let runParallel tests = 
+        let locker = obj()
+        let printResult (n,t) = 
+            lock locker (fun () -> printfn "%s: %s" n (testResultToString t))
+        let map (f: _ -> _) (s: _ seq) =
+            s.AsParallel().Select f
+        let results = flattenEval ignore printResult printResult printResult map tests
+        let summary = sumTestResults results
+        Console.WriteLine summary
 
 type Test with
     static member NewCase (f: Func<Choice<unit, string>>) = 
