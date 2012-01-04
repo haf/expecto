@@ -30,15 +30,13 @@ module F =
         | Failed error -> "Failed: " + error
         | Exception e -> "Exception: " + e.ToString()
 
-    type TestResults = (string * TestResult) list
-
     type TestResultCounts = {
         Passed: int
         Failed: int
         Errored: int
     }
 
-    let sumTestResults (results: TestResults) =
+    let sumTestResults results =
         let counts = 
             results 
             |> Seq.map snd
@@ -66,37 +64,42 @@ module F =
             then ok
             else failf "Expected %A but was %A" expected actual
 
-    let exec beforeRun onPassed onFailed onException =
-        let rec loop (parentName: string) (partialResults: TestResults) =
+    let flatten =
+        let rec loop parentName testList =
             function
-            | TestLabel (name, test) -> loop (parentName + "/" + name) partialResults test
-            | TestCase test -> 
-                let r = 
-                    try
-                        beforeRun parentName
-                        match test() with
-                        | Choice1Of2() -> 
-                            let r = parentName, Passed
-                            onPassed r
-                            r
-                        | Choice2Of2 error -> 
-                            let r = parentName, Failed error
-                            onFailed r
-                            r
-                    with e -> 
-                        let r = parentName, Exception e
-                        onException r
-                        r                        
-                r::partialResults
-            | TestList tests -> List.collect (loop parentName partialResults) tests
-
+            | TestLabel (name, test) -> 
+                loop (parentName + "/" + name) testList test
+            | TestCase test -> (parentName, test)::testList
+            | TestList tests -> List.collect (loop parentName testList) tests
         loop "" []
+
+    let eval beforeRun onPassed onFailed onException =
+        let execOne (name: string, test) = 
+            try
+                beforeRun name
+                match test() with
+                | Choice1Of2() -> 
+                    let r = name, Passed
+                    onPassed r
+                    r
+                | Choice2Of2 error -> 
+                    let r = name, Failed error
+                    onFailed r
+                    r
+            with e -> 
+                let r = name, Exception e
+                onException r
+                r                        
+        Seq.map execOne
+
+    let flattenEval beforeRun onPassed onFailed onException tests =
+        flatten tests |> eval beforeRun onPassed onFailed onException
 
     [<Extension>]
     [<CompiledName("Run")>]
     let run tests = 
         let printResult (n,t) = printfn "%s: %s" n (testResultToString t)
-        let results = exec ignore printResult printResult printResult tests
+        let results = flattenEval ignore printResult printResult printResult tests
         let summary = sumTestResults results
         printfn "%d tests run: %d passed, %d failed, %d errored"
             (summary.Errored + summary.Failed + summary.Passed)
@@ -108,7 +111,7 @@ module F =
 type Test with
     static member NewCase (f: Func<Choice<unit, string>>) = 
         TestCase f.Invoke
-    static member NewList ([<ParamArray>] tests: Test array) = 
+    static member NewList ([<ParamArray>] tests) = 
         Array.toList tests |> TestList
-    static member NewList ([<ParamArray>] tests: Func<Choice<unit, string>> array) =
+    static member NewList ([<ParamArray>] tests) =
         tests |> Array.map Test.NewCase |> Test.NewList
