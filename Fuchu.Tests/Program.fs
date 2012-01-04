@@ -1,5 +1,6 @@
 ﻿open Fuchu
 
-let test1 = TestCase (fun() -> assertEqual 4 (2+2)) |> withLabel "test1"
-run test1
+let test1() = assertEqual 4 (2+2)
+let testcase1 = TestLabel("test1", TestCase test1)
+run testcase1
 
