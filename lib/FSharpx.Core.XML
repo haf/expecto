@@ -1,0 +1,2124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doc>
+<assembly><name>FSharpx.Core</name></assembly>
+<members>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.BS">
+<summary>
+ An ArraySegment with structural comparison and equality.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.FSharpFunc">
+ <summary>
+ Conversion functions from Action/Func to FSharpFunc
+ We need these because FuncConvert often makes C# type inference fail.
+ </summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Array">
+
+</member>
+<member name="M:FSharpx.Async.op_LessEqualsLess``3(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Control.FSharpAsync{``1}})">
+<summary>
+ Right-to-left Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Async.op_GreaterEqualsGreater``3(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Control.FSharpAsync{``1}},Microsoft.FSharp.Core.FSharpFunc`2{``1,Microsoft.FSharp.Control.FSharpAsync{``2}},``0)">
+<summary>
+ Left-to-right Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Async.op_GreaterGreaterDot``2(Microsoft.FSharp.Control.FSharpAsync{``0},Microsoft.FSharp.Control.FSharpAsync{``1})">
+<summary>
+ Sequentially compose two async actions, discarding any value produced by the first
+</summary>
+</member>
+<member name="M:FSharpx.Async.op_LessMultiply``2(Microsoft.FSharp.Control.FSharpAsync{``0},Microsoft.FSharp.Control.FSharpAsync{``1})">
+<summary>
+ Sequence actions, discarding the value of the second argument.
+</summary>
+</member>
+<member name="M:FSharpx.Async.op_MultiplyGreater``2(Microsoft.FSharp.Control.FSharpAsync{``0},Microsoft.FSharp.Control.FSharpAsync{``1})">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Async.ap``2(Microsoft.FSharp.Control.FSharpAsync{``0},Microsoft.FSharp.Control.FSharpAsync{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1}})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="M:FSharpx.Async.op_LessMultiplyGreater``2(Microsoft.FSharp.Control.FSharpAsync{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1}},Microsoft.FSharp.Control.FSharpAsync{``0})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Async">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.ByteString.append(FSharpx.BS,FSharpx.BS)">
+<summary>
+ append uses Buffer.BlockCopy for efficient array operations.
+ Please note that a new array is created and both arrays are copied in,
+ disregarding any additional bytes in the original, underlying arrays.
+</summary>
+</member>
+<member name="M:FSharpx.ByteString.cons(System.Byte,FSharpx.BS)">
+<summary>
+ cons uses Buffer.SetByte and Buffer.BlockCopy for efficient array operations.
+ Please note that a new array is created and both the head and tail are copied in,
+ disregarding any additional bytes in the original tail array.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.ByteString.|BS|(FSharpx.BS)">
+<summary>
+ An active pattern for conveniently retrieving the properties of a BS.
+</summary>
+</member>
+<member name="T:FSharpx.ByteString">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Choice.op_LessEqualsLess``4(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpChoice{``1,``2}})">
+<summary>
+ Right-to-left Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Choice.op_GreaterEqualsGreater``4(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpChoice{``1,``2}},Microsoft.FSharp.Core.FSharpFunc`2{``1,Microsoft.FSharp.Core.FSharpChoice{``3,``2}},``0)">
+<summary>
+ Left-to-right Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Choice.op_GreaterGreaterDot``3(Microsoft.FSharp.Core.FSharpChoice{``0,``1},Microsoft.FSharp.Core.FSharpChoice{``2,``1})">
+<summary>
+ Sequentially compose two either actions, discarding any value produced by the first
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Choice.op_LessMultiply``3(Microsoft.FSharp.Core.FSharpChoice{``0,``1},Microsoft.FSharp.Core.FSharpChoice{``2,``1})">
+<summary>
+ Sequence actions, discarding the value of the second argument.
+</summary>
+</member>
+<member name="M:FSharpx.Choice.op_MultiplyGreater``3(Microsoft.FSharp.Core.FSharpChoice{``0,``1},Microsoft.FSharp.Core.FSharpChoice{``2,``1})">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Choice.op_LessMultiplyGreater``3(Microsoft.FSharp.Core.FSharpChoice{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},``2},Microsoft.FSharp.Core.FSharpChoice{``0,``2})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Choice">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Continuation.Coroutine">
+<summary>
+ The coroutine type from http://fssnip.net/7M
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Continuation.Cont`2">
+<summary>
+ The continuation monad.
+ The algorithm is from Wes Dyer http://blogs.msdn.com/b/wesdyer/archive/2008/01/11/the-marvels-of-monads.aspx.
+ The builder approach is from Matthew Podwysocki&apos;s excellent Creating Extended Builders series http://codebetter.com/blogs/matthew.podwysocki/archive/2010/01/18/much-ado-about-monads-creating-extended-builders.aspx.
+ Current implementation from Matt&apos;s gist at https://gist.github.com/628956
+</summary>
+</member>
+<member name="M:FSharpx.Continuation.op_LessEqualsLess``4(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``1,``2},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``2},``2}}})">
+<summary>
+ Right-to-left Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Continuation.op_GreaterEqualsGreater``4(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``1,``2},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``2},``2}}},Microsoft.FSharp.Core.FSharpFunc`2{``1,Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``3,``2},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``2},``2}}},``0)">
+<summary>
+ Left-to-right Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Continuation.op_GreaterGreaterDot``3(Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``1},``1}},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``2,``1},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``1},``1}})">
+<summary>
+ Sequentially compose two continuation actions, discarding any value produced by the first
+</summary>
+</member>
+<member name="M:FSharpx.Continuation.op_LessMultiply``3(Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``1},``1}},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``2,``1},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``1},``1}})">
+<summary>
+ Sequence actions, discarding the value of the second argument.
+</summary>
+</member>
+<member name="M:FSharpx.Continuation.op_MultiplyGreater``3(Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``1},``1}},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``2,``1},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``1},``1}})">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Continuation.ap``3(Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``1},``1}},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``0,``2},``1},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``1},``1}})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="M:FSharpx.Continuation.op_LessMultiplyGreater``3(Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},``2},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``2},``2}},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{``0,``2},Microsoft.FSharp.Core.FSharpFunc`2{Microsoft.FSharp.Core.FSharpFunc`2{System.Exception,``2},``2}})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Continuation">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.DictionaryModule">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Distribution">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Iteratee.Enumeratee`3">
+<summary>
+ An Enumeratee is an Enumerator that feeds data streams to an internal iteratee.
+</summary>
+</member>
+<member name="T:FSharpx.Iteratee.Enumerator`2">
+<summary>
+ An enumerator generates a stream of data and feeds an iteratee, returning a new iteratee.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Iteratee.Iteratee`2">
+<summary>
+ The iteratee is a stream consumer that will consume a stream of data until either 
+ it receives an EOF or meets its own requirements for consuming data. The iteratee
+ will return Continue whenever it is ready to receive the next chunk. An iteratee
+ is fed data by an Enumerator, which generates a Stream. 
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Iteratee.Stream`1">
+<summary>
+ A stream of chunks of data generated by an Enumerator.
+ The stream can be composed of chunks of &apos;a, empty blocks indicating a wait, or an EOF marker.
+ In Haskell, the Chunk is usually composed of a list of ListLike type, but F# doesn&apos;t support
+ Monad Transforms or ^M in type declarations. Thus, the Chunk is left open to various internal
+ types, but a bit more work must be done in order to maintain the meaningfulness of &quot;chunk&quot;.
+ That said, the &apos;a allows a large number of chunk-y types to be used, including other monads.
+ Be aware that when using #seq&lt;_&gt; types, you will need to check for both Seq.empty ([]) and Empty.
+</summary>
+</member>
+<member name="M:FSharpx.Iteratee.op_LessEqualsLess``4(Microsoft.FSharp.Core.FSharpFunc`2{``0,FSharpx.Iteratee.Iteratee{``1,``2}})">
+<summary>
+ Right-to-left Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Iteratee.op_GreaterEqualsGreater``4(Microsoft.FSharp.Core.FSharpFunc`2{``0,FSharpx.Iteratee.Iteratee{``1,``2}},Microsoft.FSharp.Core.FSharpFunc`2{``2,FSharpx.Iteratee.Iteratee{``1,``3}},``0)">
+<summary>
+ Left-to-right Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Iteratee.op_GreaterGreaterDot``3(FSharpx.Iteratee.Iteratee{``0,``1},FSharpx.Iteratee.Iteratee{``0,``2})">
+<summary>
+ Sequentially compose two iteratee actions, discarding any value produced by the first
+</summary>
+</member>
+<member name="M:FSharpx.Iteratee.op_LessMultiply``3(FSharpx.Iteratee.Iteratee{``0,``1},FSharpx.Iteratee.Iteratee{``0,``2})">
+<summary>
+ Sequence actions, discarding the value of the second argument.
+</summary>
+</member>
+<member name="M:FSharpx.Iteratee.op_MultiplyGreater``3(FSharpx.Iteratee.Iteratee{``0,``1},FSharpx.Iteratee.Iteratee{``0,``2})">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Iteratee.ap``3(FSharpx.Iteratee.Iteratee{``0,``1},FSharpx.Iteratee.Iteratee{``0,Microsoft.FSharp.Core.FSharpFunc`2{``1,``2}})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="M:FSharpx.Iteratee.op_LessMultiplyGreater``3(FSharpx.Iteratee.Iteratee{``0,Microsoft.FSharp.Core.FSharpFunc`2{``1,``2}},FSharpx.Iteratee.Iteratee{``0,``1})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Iteratee.Binary">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Iteratee.List">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Iteratee.Primitives">
+
+</member>
+<member name="T:FSharpx.Iteratee">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.JoinList">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.List.cons``1(``0,Microsoft.FSharp.Collections.FSharpList{``0})">
+<summary>
+ Curried cons
+</summary>
+</member>
+<member name="T:FSharpx.List">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Monoid.OptionMonoid`1">
+<summary>
+ Option wrapper monoid
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Monoid.ListMonoid`1">
+<summary>
+ List monoid
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Monoid.Monoid`1.mconcat(System.Collections.Generic.IEnumerable{`0})">
+ <summary>
+ Fold a list using this monoid
+ </summary>
+</member>
+<member name="M:FSharpx.Monoid.Monoid`1.mappend(`0,`0)">
+ <summary>
+ Associative operation
+ </summary>
+</member>
+<member name="P:FSharpx.Monoid.Monoid`1.mempty">
+ <summary>
+ Identity
+ </summary>
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Monoid.Monoid`1">
+<summary>
+ Monoid (associative binary operation with identity)
+ The monoid implementation comes from Matthew Podwysocki&apos;s http://codebetter.com/blogs/matthew.podwysocki/archive/2010/02/01/a-kick-in-the-monads-writer-edition.aspx.
+</summary>
+</member>
+<member name="P:FSharpx.Monoid.IntProductMonoid">
+<summary>
+ Monoid (int,1,*)
+</summary>
+</member>
+<member name="P:FSharpx.Monoid.IntSumMonoid">
+<summary>
+ Monoid (int,0,+)
+</summary>
+</member>
+<member name="T:FSharpx.Monoid">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.NameValueCollectionModule.fromSeq(System.Collections.Generic.IEnumerable{System.Tuple`2{System.String,System.String}})">
+ <summary>
+ Creates a <see cref="NameValueCollection"/> from a list of key-value pairs
+ </summary>
+ <param name="l"></param>
+</member>
+<member name="M:FSharpx.NameValueCollectionModule.toList(System.Collections.Specialized.NameValueCollection)">
+ <summary>
+ Returns a <see cref="NameValueCollection"/> as a list of key-value pairs.
+ Note that keys may be duplicated.
+ </summary>
+ <param name="a"></param>
+</member>
+<member name="M:FSharpx.NameValueCollectionModule.ToEnumerable(System.Collections.Specialized.NameValueCollection)">
+ <summary>
+ Returns a <see cref="NameValueCollection"/> as a sequence of key-value pairs.
+ Note that keys may be duplicated.
+ </summary>
+ <param name="a"></param>
+</member>
+<member name="M:FSharpx.NameValueCollectionModule.add(System.String,System.String,System.Collections.Specialized.NameValueCollection)">
+<summary>
+ Adds an element to a copy of an existing NameValueCollection
+</summary>
+</member>
+<member name="M:FSharpx.NameValueCollectionModule.addInPlace(System.Collections.Specialized.NameValueCollection,System.String,System.String)">
+ <summary>
+ In-place add of a key-value pair to a <see cref="NameValueCollection"/>
+ </summary>
+ <param name="x"></param>
+ <param name="a"></param>
+ <param name="b"></param>
+</member>
+<member name="M:FSharpx.NameValueCollectionModule.Concat(System.Collections.Specialized.NameValueCollection,System.Collections.Specialized.NameValueCollection)">
+ <summary>
+ Returns a new <see cref="NameValueCollection"/> with the concatenation of two <see cref="NameValueCollection"/>s
+ </summary>
+ <param name="a"></param>
+ <param name="b"></param>
+</member>
+<member name="T:FSharpx.NameValueCollectionModule">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Nullable">
+
+</member>
+<member name="M:FSharpx.Operators.applyM``7(``0,``5,``1,``6)">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Operators">
+<summary>
+ Generic monadic operators    
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Option.MaybeBuilder">
+<summary>
+ The maybe monad.
+ This monad is my own and uses an &apos;a option. Others generally make their own Maybe&lt;&apos;a&gt; type from Option&lt;&apos;a&gt;.
+ The builder approach is from Matthew Podwysocki&apos;s excellent Creating Extended Builders series http://codebetter.com/blogs/matthew.podwysocki/archive/2010/01/18/much-ado-about-monads-creating-extended-builders.aspx.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Option.op_LessEqualsLess``3(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpOption{``1}})">
+<summary>
+ Right-to-left Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Option.op_GreaterEqualsGreater``3(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpOption{``1}},Microsoft.FSharp.Core.FSharpFunc`2{``1,Microsoft.FSharp.Core.FSharpOption{``2}},``0)">
+<summary>
+ Left-to-right Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Option.op_GreaterGreaterDot``2(Microsoft.FSharp.Core.FSharpOption{``0},Microsoft.FSharp.Core.FSharpOption{``1})">
+<summary>
+ Sequentially compose two maybe actions, discarding any value produced by the first
+</summary>
+</member>
+<member name="M:FSharpx.Option.op_LessMultiply``2(Microsoft.FSharp.Core.FSharpOption{``0},Microsoft.FSharp.Core.FSharpOption{``1})">
+<summary>
+ Sequence actions, discarding the value of the second argument.
+</summary>
+</member>
+<member name="M:FSharpx.Option.op_MultiplyGreater``2(Microsoft.FSharp.Core.FSharpOption{``0},Microsoft.FSharp.Core.FSharpOption{``1})">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Option.ap``2(Microsoft.FSharp.Core.FSharpOption{``0},Microsoft.FSharp.Core.FSharpOption{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1}})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="M:FSharpx.Option.op_LessMultiplyGreater``2(Microsoft.FSharp.Core.FSharpOption{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1}},Microsoft.FSharp.Core.FSharpOption{``0})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Option">
+
+</member>
+<member name="M:FSharpx.Prelude.tuple6``6(``0,``1,``2,``3,``4,``5)">
+<summary>
+ Creates a 6-tuple
+</summary>
+</member>
+<member name="M:FSharpx.Prelude.tuple5``5(``0,``1,``2,``3,``4)">
+<summary>
+ Creates a 5-tuple
+</summary>
+</member>
+<member name="M:FSharpx.Prelude.tuple4``4(``0,``1,``2,``3)">
+<summary>
+ Creates a 4-tuple
+</summary>
+</member>
+<member name="M:FSharpx.Prelude.tuple3``3(``0,``1,``2)">
+<summary>
+ Creates a 3-tuple
+</summary>
+</member>
+<member name="M:FSharpx.Prelude.tuple2``2(``0,``1)">
+<summary>
+ Creates a pair
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Prelude">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Reader.ReaderBuilder">
+<summary>
+ The reader monad.
+ This monad comes from Matthew Podwysocki&apos;s http://codebetter.com/blogs/matthew.podwysocki/archive/2010/01/07/much-ado-about-monads-reader-edition.aspx.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Reader.op_LessEqualsLess``4(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpFunc`2{``1,``2}})">
+<summary>
+ Right-to-left Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Reader.op_GreaterEqualsGreater``4(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpFunc`2{``1,``2}},Microsoft.FSharp.Core.FSharpFunc`2{``2,Microsoft.FSharp.Core.FSharpFunc`2{``1,``3}},``0)">
+<summary>
+ Left-to-right Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.Reader.op_GreaterGreaterDot``3(Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},Microsoft.FSharp.Core.FSharpFunc`2{``0,``2})">
+<summary>
+ Sequentially compose two reader actions, discarding any value produced by the first
+</summary>
+</member>
+<member name="M:FSharpx.Reader.op_LessMultiply``3(Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},Microsoft.FSharp.Core.FSharpFunc`2{``0,``2})">
+<summary>
+ Sequence actions, discarding the value of the second argument.
+</summary>
+</member>
+<member name="M:FSharpx.Reader.op_MultiplyGreater``3(Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},Microsoft.FSharp.Core.FSharpFunc`2{``0,``2})">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Reader.ap``3(Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpFunc`2{``1,``2}})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="M:FSharpx.Reader.op_LessMultiplyGreater``3(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpFunc`2{``1,``2}},Microsoft.FSharp.Core.FSharpFunc`2{``0,``1})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Reader">
+
+</member>
+<member name="M:FSharpx.Seq.tryFindWithIndex``1(Microsoft.FSharp.Core.FSharpFunc`2{``0,System.Boolean},System.Collections.Generic.IEnumerable{``0})">
+ <summary>
+ Returns the first element (with its index) for which the given function returns true.
+ Return None if no such element exists.
+ </summary>
+ <param name="pred">Predicate</param>
+ <param name="l">Sequence</param>
+</member>
+<member name="M:FSharpx.Seq.index``1(System.Collections.Generic.IEnumerable{``0})">
+ <summary>
+ Adds an index to a sequence
+ </summary>
+ <param name="a"></param>
+</member>
+<member name="T:FSharpx.Seq">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.State.StateBuilder">
+<summary>
+ The state monad.
+ The algorithm is adjusted from my original work off of Brian Beckman&apos;s http://channel9.msdn.com/shows/Going+Deep/Brian-Beckman-The-Zen-of-Expressing-State-The-State-Monad/.
+ The approach was adjusted from Matthew Podwysocki&apos;s http://codebetter.com/blogs/matthew.podwysocki/archive/2009/12/30/much-ado-about-monads-state-edition.aspx and mirrors his final result.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.State.op_LessEqualsLess``4(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpFunc`2{``2,System.Tuple`2{``1,``2}}})">
+<summary>
+ Right-to-left Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.State.op_GreaterEqualsGreater``4(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpFunc`2{``2,System.Tuple`2{``1,``2}}},Microsoft.FSharp.Core.FSharpFunc`2{``1,Microsoft.FSharp.Core.FSharpFunc`2{``2,System.Tuple`2{``3,``2}}},``0)">
+<summary>
+ Left-to-right Kleisli composition
+</summary>
+</member>
+<member name="M:FSharpx.State.op_GreaterGreaterDot``3(Microsoft.FSharp.Core.FSharpFunc`2{``1,System.Tuple`2{``0,``1}},Microsoft.FSharp.Core.FSharpFunc`2{``1,System.Tuple`2{``2,``1}})">
+<summary>
+ Sequentially compose two state actions, discarding any value produced by the first
+</summary>
+</member>
+<member name="M:FSharpx.State.op_LessMultiply``3(Microsoft.FSharp.Core.FSharpFunc`2{``1,System.Tuple`2{``0,``1}},Microsoft.FSharp.Core.FSharpFunc`2{``1,System.Tuple`2{``2,``1}})">
+<summary>
+ Sequence actions, discarding the value of the second argument.
+</summary>
+</member>
+<member name="M:FSharpx.State.op_MultiplyGreater``3(Microsoft.FSharp.Core.FSharpFunc`2{``1,System.Tuple`2{``0,``1}},Microsoft.FSharp.Core.FSharpFunc`2{``1,System.Tuple`2{``2,``1}})">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.State.ap``3(Microsoft.FSharp.Core.FSharpFunc`2{``1,System.Tuple`2{``0,``1}},Microsoft.FSharp.Core.FSharpFunc`2{``1,System.Tuple`2{Microsoft.FSharp.Core.FSharpFunc`2{``0,``2},``1}})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="M:FSharpx.State.op_LessMultiplyGreater``3(Microsoft.FSharp.Core.FSharpFunc`2{``2,System.Tuple`2{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},``2}},Microsoft.FSharp.Core.FSharpFunc`2{``2,System.Tuple`2{``0,``2}})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.State">
+
+</member>
+<member name="M:FSharpx.Strings.startsWith(System.String,System.String)">
+<summary>
+ Checks wether the given text starts with the given prefix
+</summary>
+</member>
+<member name="T:FSharpx.Strings">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Undo">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Validation.CustomValidation`1.apr``2(Microsoft.FSharp.Core.FSharpChoice{``0,`0},Microsoft.FSharp.Core.FSharpChoice{``1,`0})">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="M:FSharpx.Validation.CustomValidation`1.apl``2(Microsoft.FSharp.Core.FSharpChoice{``0,`0},Microsoft.FSharp.Core.FSharpChoice{``1,`0})">
+<summary>
+ Sequence actions, discarding the value of the second argument.
+</summary>
+</member>
+<member name="M:FSharpx.Validation.CustomValidation`1.ap``2(Microsoft.FSharp.Core.FSharpChoice{``0,`0})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Validation.op_LessMultiply``2">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="M:FSharpx.Validation.op_MultiplyGreater``2">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Validation.op_LessMultiplyGreater``2(Microsoft.FSharp.Core.FSharpChoice{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1},Microsoft.FSharp.Collections.FSharpList{System.String}},Microsoft.FSharp.Core.FSharpChoice{``0,Microsoft.FSharp.Collections.FSharpList{System.String}})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="M:FSharpx.Validation.ap``2">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.Validation.apm``3(FSharpx.Monoid.Monoid{``0})">
+<summary>
+ Sequential application, parameterized by monoid
+</summary>
+</member>
+<member name="M:FSharpx.Validation.apa``3(Microsoft.FSharp.Core.FSharpFunc`2{``0,Microsoft.FSharp.Core.FSharpFunc`2{``0,``0}},Microsoft.FSharp.Core.FSharpChoice{``1,``0},Microsoft.FSharp.Core.FSharpChoice{Microsoft.FSharp.Core.FSharpFunc`2{``1,``2},``0})">
+<summary>
+ Sequential application, parameterized by append
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Validation">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Writer.WriterBuilder`1">
+<summary>
+ The writer monad.
+ This monad comes from Matthew Podwysocki&apos;s http://codebetter.com/blogs/matthew.podwysocki/archive/2010/02/01/a-kick-in-the-monads-writer-edition.aspx.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.Writer">
+
+</member>
+<member name="M:FSharpx.ZipList.op_LessMultiply``2(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1})">
+<summary>
+ Sequence actions, discarding the value of the second argument.
+</summary>
+</member>
+<member name="M:FSharpx.ZipList.op_MultiplyGreater``2(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{``1})">
+<summary>
+ Sequence actions, discarding the value of the first argument.
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="M:FSharpx.ZipList.ap``2(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1}})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="M:FSharpx.ZipList.op_LessMultiplyGreater``2(System.Collections.Generic.IEnumerable{Microsoft.FSharp.Core.FSharpFunc`2{``0,``1}},System.Collections.Generic.IEnumerable{``0})">
+<summary>
+ Sequential application
+</summary>
+</member>
+<member name="">
+
+</member>
+<member name="T:FSharpx.ZipList">
+
+</member>
+</members>
+</doc>
