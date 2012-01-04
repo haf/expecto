@@ -32,11 +32,6 @@ module F =
 
     type TestResults = (string * TestResult) list
 
-    let testResultsToString (results: TestResults) =
-        results 
-        |> Seq.map (fun (n,t) -> sprintf "%s: %s" n (testResultToString t))
-        |> String.concat "\n"
-
     type TestResultCounts = {
         Passed: int
         Failed: int
@@ -71,16 +66,27 @@ module F =
             then ok
             else failf "Expected %A but was %A" expected actual
 
-    let exec =
+    let exec onPassed onFailed onException =
         let rec loop (parentName: string) (partialResults: TestResults) =
             function
             | TestLabel (name, test) -> loop (parentName + "/" + name) partialResults test
             | TestCase test -> 
-                try
-                    match test() with
-                    | Choice1Of2() -> (parentName, Passed)::partialResults
-                    | Choice2Of2 error -> (parentName, Failed error)::partialResults
-                with e -> (parentName, Exception e)::partialResults
+                let r = 
+                    try
+                        match test() with
+                        | Choice1Of2() -> 
+                            let r = parentName, Passed
+                            onPassed r
+                            r
+                        | Choice2Of2 error -> 
+                            let r = parentName, Failed error
+                            onFailed r
+                            r
+                    with e -> 
+                        let r = parentName, Exception e
+                        onException r
+                        r                        
+                r::partialResults
             | TestList tests -> List.collect (loop parentName partialResults) tests
 
         loop "" []
@@ -88,10 +94,9 @@ module F =
     [<Extension>]
     [<CompiledName("Run")>]
     let run tests = 
-        let results = exec tests
-        let report = testResultsToString results
+        let printResult (n,t) = printfn "%s: %s" n (testResultToString t)
+        let results = exec printResult printResult printResult tests
         let summary = sumTestResults results
-        printfn "%s" report
         printfn "%d tests run: %d passed, %d failed, %d errored"
             (summary.Errored + summary.Failed + summary.Passed)
             summary.Passed
