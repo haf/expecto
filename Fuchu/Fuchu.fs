@@ -73,7 +73,7 @@ module F =
             | TestList tests -> List.collect (loop parentName testList) tests
         loop "" []
 
-    let eval beforeRun onPassed onFailed onException =
+    let eval beforeRun onPassed onFailed onException map =
         let execOne (name: string, test) = 
             try
                 beforeRun name
@@ -90,16 +90,16 @@ module F =
                 let r = name, Exception e
                 onException r
                 r                        
-        Seq.map execOne
+        map execOne
 
-    let flattenEval beforeRun onPassed onFailed onException tests =
-        flatten tests |> eval beforeRun onPassed onFailed onException
+    let flattenEval beforeRun onPassed onFailed onException map tests =
+        flatten tests |> eval beforeRun onPassed onFailed onException map
 
     [<Extension>]
     [<CompiledName("Run")>]
     let run tests = 
         let printResult (n,t) = printfn "%s: %s" n (testResultToString t)
-        let results = flattenEval ignore printResult printResult printResult tests
+        let results = flattenEval ignore printResult printResult printResult Seq.map tests
         let summary = sumTestResults results
         printfn "%d tests run: %d passed, %d failed, %d errored"
             (summary.Errored + summary.Failed + summary.Passed)
