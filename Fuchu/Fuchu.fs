@@ -66,13 +66,14 @@ module F =
             then ok
             else failf "Expected %A but was %A" expected actual
 
-    let exec onPassed onFailed onException =
+    let exec beforeRun onPassed onFailed onException =
         let rec loop (parentName: string) (partialResults: TestResults) =
             function
             | TestLabel (name, test) -> loop (parentName + "/" + name) partialResults test
             | TestCase test -> 
                 let r = 
                     try
+                        beforeRun parentName
                         match test() with
                         | Choice1Of2() -> 
                             let r = parentName, Passed
@@ -95,7 +96,7 @@ module F =
     [<CompiledName("Run")>]
     let run tests = 
         let printResult (n,t) = printfn "%s: %s" n (testResultToString t)
-        let results = exec printResult printResult printResult tests
+        let results = exec ignore printResult printResult printResult tests
         let summary = sumTestResults results
         printfn "%d tests run: %d passed, %d failed, %d errored"
             (summary.Errored + summary.Failed + summary.Passed)
