@@ -125,7 +125,8 @@ module F =
     let runParallel tests = 
         let locker = obj()
         let printResult (n,t) = 
-            lock locker (fun () -> printfn "%s: %s" n (testResultToString t))
+            let result = testResultToString t
+            lock locker (fun () -> printfn "%s: %s" n result)
         let map (f: _ -> _) (s: _ seq) =
             s.AsParallel().Select f
         let results = flattenEval ignore printResult printResult printResult map tests
