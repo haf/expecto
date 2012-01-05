@@ -3,7 +3,6 @@
 open System
 open System.Linq
 open System.Runtime.CompilerServices
-open FSharpx
 
 type TestCode = unit -> Choice<unit, string>
 
@@ -53,7 +52,10 @@ module F =
                             | Exception _ -> 2)
             |> dict
         let get i = 
-            counts |> Dictionary.tryFind i |> Option.getOrDefault
+            match counts.TryGetValue i with
+            | true, v -> v
+            | _ -> 0
+
         { Passed = get 0
           Failed = get 1
           Errored = get 2 }
