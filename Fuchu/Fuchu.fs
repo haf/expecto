@@ -40,6 +40,9 @@ module F =
                             x.Failed
                             x.Errored
 
+    let testResultCountsToErrorLevel (c: TestResultCounts) =
+        (if c.Failed > 0 then 1 else 0) ||| (if c.Errored > 0 then 2 else 0)
+
     let sumTestResults results =
         let counts = 
             results 
@@ -119,6 +122,7 @@ module F =
         let results = flattenEval ignore printResult printResult printResult Seq.map tests
         let summary = sumTestResults results
         Console.WriteLine summary
+        testResultCountsToErrorLevel summary
 
     [<Extension>]
     [<CompiledName("RunParallel")>]
@@ -132,6 +136,7 @@ module F =
         let results = flattenEval ignore printResult printResult printResult map tests
         let summary = sumTestResults results
         Console.WriteLine summary
+        testResultCountsToErrorLevel summary
 
 open System.Reflection
 

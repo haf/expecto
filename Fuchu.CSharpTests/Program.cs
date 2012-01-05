@@ -7,8 +7,8 @@ namespace Fuchu.CSharpTests {
             return F.AssertEqual(4, 2 + 2);
         }
 
-        private static void Main(string[] args) {
-            Test.NewList(Add).RunParallel();
+        private static int Main(string[] args) {
+            return Test.NewList(Add).RunParallel();
         }
     }
 }
