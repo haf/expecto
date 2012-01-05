@@ -102,26 +102,29 @@ module F =
                 match test() with
                 | Choice1Of2() -> 
                     let r = name, Passed
-                    onPassed r
+                    onPassed name
                     r
                 | Choice2Of2 error -> 
                     let r = name, Failed error
-                    onFailed r
+                    onFailed name error
                     r
             with e -> 
                 let r = name, Exception e
-                onException r
+                onException name e
                 r                        
         map execOne
 
     let flattenEval beforeRun onPassed onFailed onException map tests =
         flatten tests |> eval beforeRun onPassed onFailed onException map
 
+    let printPassed = printfn "%s: Passed"
+    let printFailed = printfn "%s: Failed: %s"
+    let printException = printfn "%s: Exception: %A"
+
     [<Extension>]
     [<CompiledName("Run")>]
     let run tests = 
-        let printResult (n,t) = printfn "%s: %s" n (testResultToString t)
-        let results = flattenEval ignore printResult printResult printResult Seq.map tests
+        let results = flattenEval ignore printPassed printFailed printException Seq.map tests
         let summary = sumTestResults results
         Console.WriteLine summary
         testResultCountsToErrorLevel summary
@@ -130,12 +133,15 @@ module F =
     [<CompiledName("RunParallel")>]
     let runParallel tests = 
         let locker = obj()
-        let printResult (n,t) = 
-            let result = testResultToString t
-            lock locker (fun () -> printfn "%s: %s" n result)
+        let printPassed name = 
+            lock locker (fun () -> printPassed name)
+        let printFailed name error =
+            lock locker (fun () -> printFailed name error)
+        let printException name ex =
+            lock locker (fun () -> printException name ex)
         let map (f: _ -> _) (s: _ seq) =
             s.AsParallel().Select f
-        let results = flattenEval ignore printResult printResult printResult map tests
+        let results = flattenEval ignore printPassed printFailed printException map tests
         let summary = sumTestResults results
         Console.WriteLine summary
         testResultCountsToErrorLevel summary
