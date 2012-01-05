@@ -132,6 +132,8 @@ module F =
         let summary = sumTestResults results
         Console.WriteLine summary
 
+open System.Reflection
+
 [<Extension>]
 type Test with
     static member NewCase (f: Func<Choice<unit, string>>) = 
@@ -151,3 +153,20 @@ type Test with
 
     [<Extension>]
     static member Add (test, add) = TestList [test; add]
+
+    static member FromType (t: Type) =
+        let toFunc (m: MethodInfo) = Func<Choice<unit, string>>(fun () -> unbox (m.Invoke(null, [||])))
+        t.GetMethods(BindingFlags.Public ||| BindingFlags.Static)
+        |> Seq.filter (fun m -> m.ReturnType = typeof<Choice<unit, string>> && m.GetParameters().Length = 0)
+        |> Seq.map (fun m -> m.Name, toFunc m)
+        |> Seq.map (fun (name, code) -> Test.NewCase code |> withLabel name)
+        |> Seq.toList
+        |> TestList
+        |> withLabel t.Name
+
+    static member FromAssembly (a: Assembly) =
+        a.GetExportedTypes()
+        |> Seq.map Test.FromType
+        |> Seq.toList
+        |> TestList
+        |> withLabel (a.FullName.Split ',').[0]
