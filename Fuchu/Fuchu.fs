@@ -15,10 +15,7 @@ type Test =
 [<AutoOpen>]
 module F =
 
-    let withLabel lbl t = TestLabel (lbl, t)
-
-    [<Extension>]
-    let WithLabel = flip withLabel
+    let withLabel label test = TestLabel (label, test)
 
     type TestResult = 
         | Passed
@@ -71,6 +68,19 @@ module F =
             then ok
             else failf "Expected %A but was %A" expected actual
 
+    [<CompiledName("AssertTrue")>]
+    let assertTrue x = assertEqual true x
+
+    [<CompiledName("AssertFalse")>]
+    let assertFalse x = assertEqual false x
+
+    [<CompiledName("AssertThrows")>]
+    let assertThrows ex f = 
+        try
+            f()
+            ok
+        with e -> assertEqual ex (e.GetType())
+
     let flatten =
         let rec loop parentName testList =
             function
@@ -122,10 +132,22 @@ module F =
         let summary = sumTestResults results
         Console.WriteLine summary
 
+[<Extension>]
 type Test with
     static member NewCase (f: Func<Choice<unit, string>>) = 
         TestCase f.Invoke
+
     static member NewList ([<ParamArray>] tests) = 
         Array.toList tests |> TestList
+
     static member NewList ([<ParamArray>] tests) =
         tests |> Array.map Test.NewCase |> Test.NewList
+
+    [<Extension>]
+    static member WithLabel (test, label) = TestLabel (label, test)
+
+    [<Extension>]
+    static member Add (test, add) = TestList [test; TestCase add]
+
+    [<Extension>]
+    static member Add (test, add) = TestList [test; add]
