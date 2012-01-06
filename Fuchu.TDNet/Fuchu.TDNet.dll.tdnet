@@ -1,0 +1,5 @@
+<TestRunner>
+  <FriendlyName>Fuchu {0}.{1}.{2}</FriendlyName>
+  <AssemblyPath>Fuchu.TDNet.dll</AssemblyPath>
+  <TypeName>Fuchu.TDNet.FuchuRunner</TypeName>
+</TestRunner>

@@ -43,6 +43,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Fuchu.TDNet\Fuchu.TDNet.fsproj">
+      <Project>{0C7F95E5-C77C-4856-88BB-857639490343}</Project>
+      <Name>Fuchu.TDNet</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Fuchu\Fuchu.fsproj">
       <Project>{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}</Project>
       <Name>Fuchu</Name>

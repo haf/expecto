@@ -129,6 +129,8 @@ module F =
         Console.WriteLine summary
         testResultCountsToErrorLevel summary
 
+    let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select f
+
     [<Extension>]
     [<CompiledName("RunParallel")>]
     let runParallel tests = 
@@ -139,9 +141,7 @@ module F =
             lock locker (fun () -> printFailed name error)
         let printException name ex =
             lock locker (fun () -> printException name ex)
-        let map (f: _ -> _) (s: _ seq) =
-            s.AsParallel().Select f
-        let results = flattenEval ignore printPassed printFailed printException map tests
+        let results = flattenEval ignore printPassed printFailed printException pmap tests
         let summary = sumTestResults results
         Console.WriteLine summary
         testResultCountsToErrorLevel summary

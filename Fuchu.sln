@@ -7,6 +7,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.Tests", "Fuchu.Tests\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuchu.CSharpTests", "Fuchu.CSharpTests\Fuchu.CSharpTests.csproj", "{5ED1DDC5-9B80-4F5C-BFDD-B5EC9C143AE3}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.TDNet", "Fuchu.TDNet\Fuchu.TDNet.fsproj", "{0C7F95E5-C77C-4856-88BB-857639490343}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,16 @@ Global
 		{5ED1DDC5-9B80-4F5C-BFDD-B5EC9C143AE3}.Release|Mixed Platforms.Build.0 = Release|x86
 		{5ED1DDC5-9B80-4F5C-BFDD-B5EC9C143AE3}.Release|x86.ActiveCfg = Release|x86
 		{5ED1DDC5-9B80-4F5C-BFDD-B5EC9C143AE3}.Release|x86.Build.0 = Release|x86
+		{0C7F95E5-C77C-4856-88BB-857639490343}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C7F95E5-C77C-4856-88BB-857639490343}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C7F95E5-C77C-4856-88BB-857639490343}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{0C7F95E5-C77C-4856-88BB-857639490343}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{0C7F95E5-C77C-4856-88BB-857639490343}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0C7F95E5-C77C-4856-88BB-857639490343}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C7F95E5-C77C-4856-88BB-857639490343}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C7F95E5-C77C-4856-88BB-857639490343}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{0C7F95E5-C77C-4856-88BB-857639490343}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{0C7F95E5-C77C-4856-88BB-857639490343}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
