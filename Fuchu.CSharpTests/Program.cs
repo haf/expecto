@@ -1,10 +1,10 @@
 ﻿using Fuchu;
-using Microsoft.FSharp.Core;
+using NUnit.Framework;
 
 namespace Fuchu.CSharpTests {
     internal class Program {
-        public static FSharpChoice<Unit,string> Add() {
-            return F.AssertEqual(4, 2 + 2);
+        public static void Add() {
+            Assert.AreEqual(5, 2+2);
         }
 
         private static int Main(string[] args) {

@@ -4,7 +4,7 @@ open System
 open System.Linq
 open System.Runtime.CompilerServices
 
-type TestCode = unit -> Choice<unit, string>
+type TestCode = unit -> unit
 
 type Test = 
     | TestCase of TestCode
@@ -12,6 +12,7 @@ type Test =
     | TestLabel of string * Test
 
 [<AutoOpen>]
+[<Extension>]
 module F =
 
     let withLabel label test = TestLabel (label, test)
@@ -60,32 +61,6 @@ module F =
           Failed = get 1
           Errored = get 2 }
 
-    [<CompiledName("Ok")>]
-    let ok : Choice<unit, string> = Choice1Of2 ()
-
-    [<CompiledName("Fail")>]
-    let fail (msg: string) : Choice<unit, string> = Choice2Of2 msg
-    let failf fmt = Printf.ksprintf Choice2Of2 fmt
-
-    [<CompiledName("AssertEqual")>]
-    let assertEqual expected actual = 
-        if actual = expected
-            then ok
-            else failf "Expected %A but was %A" expected actual
-
-    [<CompiledName("AssertTrue")>]
-    let assertTrue x = assertEqual true x
-
-    [<CompiledName("AssertFalse")>]
-    let assertFalse x = assertEqual false x
-
-    [<CompiledName("AssertThrows")>]
-    let assertThrows ex f = 
-        try
-            f()
-            ok
-        with e -> assertEqual ex (e.GetType())
-
     let flatten =
         let rec loop parentName testList =
             function
@@ -95,23 +70,26 @@ module F =
             | TestList tests -> List.collect (loop parentName testList) tests
         loop "" []
 
+    let failExceptions = [ 
+        "NUnit.Framework.AssertionException"
+        "Gallio.Framework.Assertions.AssertionFailureException"
+        "Xunit.Sdk.AssertException"
+    ]
     let eval beforeRun onPassed onFailed onException map =
         let execOne (name: string, test) = 
+            beforeRun name
             try
-                beforeRun name
-                match test() with
-                | Choice1Of2() -> 
-                    let r = name, Passed
-                    onPassed name
-                    r
-                | Choice2Of2 error -> 
-                    let r = name, Failed error
-                    onFailed name error
-                    r
-            with e -> 
-                let r = name, Exception e
-                onException name e
-                r                        
+                test()
+                onPassed name
+                name, Passed
+            with e ->
+                if List.exists ((=) (e.GetType().FullName)) failExceptions
+                    then 
+                        onFailed name e.Message
+                        name, Failed e.Message
+                    else
+                        onException name e
+                        name, Exception e
         map execOne
 
     let flattenEval beforeRun onPassed onFailed onException map tests =
@@ -150,7 +128,7 @@ open System.Reflection
 
 [<Extension>]
 type Test with
-    static member NewCase (f: Func<Choice<unit, string>>) = 
+    static member NewCase (f: Action) = 
         TestCase f.Invoke
 
     static member NewList ([<ParamArray>] tests) = 
@@ -169,11 +147,11 @@ type Test with
     static member Add (test, add) = TestList [test; add]
 
     static member FromMember (m: MemberInfo) =
-        let toFunc (m: MethodInfo) = Func<Choice<unit, string>>(fun () -> unbox (m.Invoke(null, [||])))
+        let toFunc (m: MethodInfo) = Action(fun () -> unbox (m.Invoke(null, [||])))
         [m]
         |> Seq.filter (fun m -> m.MemberType = MemberTypes.Method)
         |> Seq.map (fun m -> m :?> MethodInfo)
-        |> Seq.filter (fun m -> m.ReturnType = typeof<Choice<unit, string>> && m.GetParameters().Length = 0)
+        |> Seq.filter (fun m -> m.ReturnType = typeof<System.Void> && m.GetParameters().Length = 0)
         |> Seq.map (fun m -> m.Name, toFunc m)
         |> Seq.map (fun (name, code) -> Test.NewCase code |> withLabel name)
         |> Seq.toList
