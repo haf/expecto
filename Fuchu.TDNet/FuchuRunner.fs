@@ -5,15 +5,30 @@ open Fuchu
 
 type FuchuRunner() =
     let locker = obj()
-    let onPassed (listener: ITestListener) name = 
+    let onPassed (listener: ITestListener) name time = 
         lock locker 
-            (fun () -> listener.TestFinished(TestResult(Name = name, State = TestState.Passed)))
-    let onFailed (listener: ITestListener) name error = 
-        lock locker 
-            (fun () -> listener.TestFinished(TestResult(Name = name, State = TestState.Failed, Message = error)))
-    let onException (listener: ITestListener) name ex =
+            (fun () -> 
+                let result = TestResult(Name = name, 
+                                        State = TestState.Passed,
+                                        TimeSpan = time)
+                listener.TestFinished result)
+    let onFailed (listener: ITestListener) name error time = 
+        lock locker             
+            (fun () -> 
+                let result = TestResult(Name = name, 
+                                        State = TestState.Failed, 
+                                        Message = error,
+                                        TimeSpan = time)
+                listener.TestFinished result)
+    let onException (listener: ITestListener) name ex time =
         lock locker
-            (fun () -> listener.TestFinished(TestResult(Name = name, State = TestState.Failed, Message = ex.ToString(), StackTrace = ex.ToString())))
+            (fun () -> 
+                let result = TestResult(Name = name, 
+                                        State = TestState.Failed, 
+                                        Message = ex.ToString(), 
+                                        StackTrace = ex.ToString(),
+                                        TimeSpan = time)
+                listener.TestFinished result)
     let run listener = 
         flattenEval ignore (onPassed listener) (onFailed listener) (onException listener) pmap
 

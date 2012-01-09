@@ -8,7 +8,7 @@ namespace Fuchu.CSharpTests {
         }
 
         private static int Main(string[] args) {
-            return Test.NewList(Add).RunParallel();
+            return Test.NewList(Add).WithLabel("ll").Run();
         }
     }
 }

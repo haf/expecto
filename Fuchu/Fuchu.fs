@@ -11,9 +11,12 @@ type Test =
     | TestList of Test list
     | TestLabel of string * Test
 
+
 [<AutoOpen>]
 [<Extension>]
 module F =
+    type TimeSpan with
+        static member sum = Seq.fold (+) TimeSpan.Zero
 
     let withLabel label test = TestLabel (label, test)
 
@@ -32,27 +35,36 @@ module F =
         Passed: int
         Failed: int
         Errored: int
+        Time: TimeSpan
     }
         with 
         override x.ToString() =
-                        sprintf "%d tests run: %d passed, %d failed, %d errored\n"
+                        sprintf "%d tests run: %d passed, %d failed, %d errored (%A)\n"
                             (x.Errored + x.Failed + x.Passed)
                             x.Passed
                             x.Failed
                             x.Errored
+                            x.Time
         static member (+) (c1: TestResultCounts, c2: TestResultCounts) = 
             { Passed = c1.Passed + c2.Passed
               Failed = c1.Failed + c2.Failed
-              Errored = c1.Errored + c2.Errored }
+              Errored = c1.Errored + c2.Errored
+              Time = c1.Time + c2.Time }
             
 
     let testResultCountsToErrorLevel (c: TestResultCounts) =
         (if c.Failed > 0 then 1 else 0) ||| (if c.Errored > 0 then 2 else 0)
 
-    let sumTestResults results =
+    type TestRunResult = {
+        Name: string
+        Result: TestResult
+        Time: TimeSpan
+    }
+
+    let sumTestResults (results: #seq<TestRunResult>) =
         let counts = 
             results 
-            |> Seq.map snd
+            |> Seq.map (fun r -> r.Result)
             |> Seq.countBy (function
                             | Passed -> 0
                             | Failed _ -> 1
@@ -65,7 +77,8 @@ module F =
 
         { Passed = get 0
           Failed = get 1
-          Errored = get 2 }
+          Errored = get 2 
+          Time = results |> Seq.map (fun r -> r.Time) |> TimeSpan.sum }
 
     let flatten =
         let rec loop parentName testList =
@@ -85,26 +98,36 @@ module F =
         fun beforeRun onPassed onFailed onException map ->
             let execOne (name: string, test) = 
                 beforeRun name
-                try
+                let w = System.Diagnostics.Stopwatch.StartNew()
+                try                    
                     test()
-                    onPassed name
-                    name, Passed
+                    w.Stop()
+                    onPassed name w.Elapsed
+                    { Name = name
+                      Result = Passed
+                      Time = w.Elapsed }
                 with e ->
+                    w.Stop()
                     if List.exists ((=) (e.GetType().FullName)) failExceptions
                         then 
-                            onFailed name e.Message
-                            name, Failed e.Message
+                            onFailed name e.Message w.Elapsed
+                            { Name = name
+                              Result = Failed e.Message
+                              Time = w.Elapsed }
                         else
-                            onException name e
-                            name, Exception e
+                            onException name e w.Elapsed
+                            { Name = name
+                              Result = Failed e.Message
+                              Time = w.Elapsed }
             map execOne
 
     let flattenEval beforeRun onPassed onFailed onException map tests =
-        flatten tests |> eval beforeRun onPassed onFailed onException map
+        let r = flatten tests |> eval beforeRun onPassed onFailed onException map
+        Seq.toList r
 
-    let printPassed = printfn "%s: Passed"
-    let printFailed = printfn "%s: Failed: %s"
-    let printException = printfn "%s: Exception: %A"
+    let printPassed = printfn "%s: Passed (%A)"
+    let printFailed = printfn "%s: Failed: %s (%A)"
+    let printException = printfn "%s: Exception: %A (%A)"
 
     let flattenEvalSeq = flattenEval ignore printPassed printFailed printException Seq.map
 
@@ -112,12 +135,12 @@ module F =
 
     let flattenEvalPar =
         let locker = obj()
-        let printPassed name = 
-            lock locker (fun () -> printPassed name)
-        let printFailed name error =
-            lock locker (fun () -> printFailed name error)
-        let printException name ex =
-            lock locker (fun () -> printException name ex)
+        let printPassed name time = 
+            lock locker (fun () -> printPassed name time)
+        let printFailed name error time =
+            lock locker (fun () -> printFailed name error time)
+        let printException name ex time =
+            lock locker (fun () -> printException name ex time)
         flattenEval ignore printPassed printFailed printException pmap
 
     let runEval eval tests = 
