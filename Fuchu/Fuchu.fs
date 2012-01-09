@@ -70,27 +70,28 @@ module F =
             | TestList tests -> List.collect (loop parentName testList) tests
         loop "" []
 
-    let failExceptions = [ 
-        "NUnit.Framework.AssertionException"
-        "Gallio.Framework.Assertions.AssertionFailureException"
-        "Xunit.Sdk.AssertException"
-    ]
-    let eval beforeRun onPassed onFailed onException map =
-        let execOne (name: string, test) = 
-            beforeRun name
-            try
-                test()
-                onPassed name
-                name, Passed
-            with e ->
-                if List.exists ((=) (e.GetType().FullName)) failExceptions
-                    then 
-                        onFailed name e.Message
-                        name, Failed e.Message
-                    else
-                        onException name e
-                        name, Exception e
-        map execOne
+    let eval =
+        let failExceptions = [ 
+            "NUnit.Framework.AssertionException"
+            "Gallio.Framework.Assertions.AssertionFailureException"
+            "Xunit.Sdk.AssertException"
+        ]
+        fun beforeRun onPassed onFailed onException map ->
+            let execOne (name: string, test) = 
+                beforeRun name
+                try
+                    test()
+                    onPassed name
+                    name, Passed
+                with e ->
+                    if List.exists ((=) (e.GetType().FullName)) failExceptions
+                        then 
+                            onFailed name e.Message
+                            name, Failed e.Message
+                        else
+                            onException name e
+                            name, Exception e
+            map execOne
 
     let flattenEval beforeRun onPassed onFailed onException map tests =
         flatten tests |> eval beforeRun onPassed onFailed onException map
@@ -99,19 +100,11 @@ module F =
     let printFailed = printfn "%s: Failed: %s"
     let printException = printfn "%s: Exception: %A"
 
-    [<Extension>]
-    [<CompiledName("Run")>]
-    let run tests = 
-        let results = flattenEval ignore printPassed printFailed printException Seq.map tests
-        let summary = sumTestResults results
-        Console.WriteLine summary
-        testResultCountsToErrorLevel summary
+    let flattenEvalSeq = flattenEval ignore printPassed printFailed printException Seq.map
 
     let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select f
 
-    [<Extension>]
-    [<CompiledName("RunParallel")>]
-    let runParallel tests = 
+    let flattenEvalPar =
         let locker = obj()
         let printPassed name = 
             lock locker (fun () -> printPassed name)
@@ -119,10 +112,21 @@ module F =
             lock locker (fun () -> printFailed name error)
         let printException name ex =
             lock locker (fun () -> printException name ex)
-        let results = flattenEval ignore printPassed printFailed printException pmap tests
+        flattenEval ignore printPassed printFailed printException pmap
+
+    let runEval eval tests = 
+        let results = eval tests
         let summary = sumTestResults results
         Console.WriteLine summary
         testResultCountsToErrorLevel summary
+
+    [<Extension>]
+    [<CompiledName("Run")>]
+    let run tests = runEval flattenEvalSeq tests
+
+    [<Extension>]
+    [<CompiledName("RunParallel")>]
+    let runParallel tests = runEval flattenEvalPar tests
 
 open System.Reflection
 
