@@ -33,12 +33,18 @@ module F =
         Failed: int
         Errored: int
     }
-        with override x.ToString() =
+        with 
+        override x.ToString() =
                         sprintf "%d tests run: %d passed, %d failed, %d errored\n"
                             (x.Errored + x.Failed + x.Passed)
                             x.Passed
                             x.Failed
                             x.Errored
+        static member (+) (c1: TestResultCounts, c2: TestResultCounts) = 
+            { Passed = c1.Passed + c2.Passed
+              Failed = c1.Failed + c2.Failed
+              Errored = c1.Errored + c2.Errored }
+            
 
     let testResultCountsToErrorLevel (c: TestResultCounts) =
         (if c.Failed > 0 then 1 else 0) ||| (if c.Errored > 0 then 2 else 0)
