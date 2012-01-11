@@ -30,7 +30,7 @@ type FuchuRunner() =
                                         TimeSpan = time)
                 listener.TestFinished result)
     let run listener = 
-        flattenEval ignore (onPassed listener) (onFailed listener) (onException listener) pmap
+        eval ignore (onPassed listener) (onFailed listener) (onException listener) pmap
 
     let resultCountsToTDNetResult (c: TestResultCounts) =
         match c.Passed, c.Failed, c.Errored with

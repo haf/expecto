@@ -80,7 +80,7 @@ module F =
           Errored = get 2 
           Time = results |> Seq.map (fun r -> r.Time) |> TimeSpan.sum }
 
-    let flatten =
+    let toTestCodeList =
         let rec loop parentName testList =
             function
             | TestLabel (name, test) -> 
@@ -89,7 +89,7 @@ module F =
             | TestList tests -> List.collect (loop parentName testList) tests
         loop "" []
 
-    let eval =
+    let evalTestList =
         let failExceptions = [ 
             "NUnit.Framework.AssertionException"
             "Gallio.Framework.Assertions.AssertionFailureException"
@@ -121,19 +121,19 @@ module F =
                               Time = w.Elapsed }
             map execOne
 
-    let flattenEval beforeRun onPassed onFailed onException map tests =
-        let r = flatten tests |> eval beforeRun onPassed onFailed onException map
+    let eval beforeRun onPassed onFailed onException map tests =
+        let r = toTestCodeList tests |> evalTestList beforeRun onPassed onFailed onException map
         Seq.toList r
 
     let printPassed = printfn "%s: Passed (%A)"
     let printFailed = printfn "%s: Failed: %s (%A)"
     let printException = printfn "%s: Exception: %A (%A)"
 
-    let flattenEvalSeq = flattenEval ignore printPassed printFailed printException Seq.map
+    let evalSeq = eval ignore printPassed printFailed printException Seq.map
 
     let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select f
 
-    let flattenEvalPar =
+    let evalPar =
         let locker = obj()
         let printPassed name time = 
             lock locker (fun () -> printPassed name time)
@@ -141,7 +141,7 @@ module F =
             lock locker (fun () -> printFailed name error time)
         let printException name ex time =
             lock locker (fun () -> printException name ex time)
-        flattenEval ignore printPassed printFailed printException pmap
+        eval ignore printPassed printFailed printException pmap
 
     let runEval eval tests = 
         let results = eval tests
@@ -151,11 +151,11 @@ module F =
 
     [<Extension>]
     [<CompiledName("Run")>]
-    let run tests = runEval flattenEvalSeq tests
+    let run tests = runEval evalSeq tests
 
     [<Extension>]
     [<CompiledName("RunParallel")>]
-    let runParallel tests = runEval flattenEvalPar tests
+    let runParallel tests = runEval evalPar tests
 
 open System.Reflection
 
