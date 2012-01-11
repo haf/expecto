@@ -164,6 +164,9 @@ type Test with
     static member NewCase (f: Action) = 
         TestCase f.Invoke
 
+    static member NewCase (label, f: Action) = 
+        TestCase f.Invoke |> withLabel label
+
     static member NewList ([<ParamArray>] tests) = 
         Array.toList tests |> TestList
 
