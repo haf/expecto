@@ -84,10 +84,14 @@ module F =
         let rec loop parentName testList =
             function
             | TestLabel (name, test) -> 
-                loop (parentName + "/" + name) testList test
+                let fullName = 
+                    if parentName = null
+                        then name
+                        else parentName + "/" + name
+                loop fullName testList test
             | TestCase test -> (parentName, test)::testList
             | TestList tests -> List.collect (loop parentName testList) tests
-        loop "" []
+        loop null []
 
     let evalTestList =
         let failExceptions = [ 
