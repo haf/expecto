@@ -18,10 +18,6 @@ module F =
     type internal TimeSpan with
         static member sum = Seq.fold (+) TimeSpan.Zero
 
-    #if INTERACTIVE
-    fsi.AddPrinter(fun (t: TimeSpan) -> t.ToString())
-    #endif
-
     let withLabel label test = TestLabel (label, test)
 
     let inline (->>) label testList =
@@ -35,29 +31,29 @@ module F =
         | Ignored of string
         | Failed of string
         | Exception of exn
-        with
-            static member isPassed =
-                function
-                | Passed -> true
-                | _ -> false
-            static member isIgnored =
-                function
-                | Ignored _ -> true
-                | _ -> false
-            static member isFailed =
-                function
-                | Failed _ -> true
-                | _ -> false
-            static member isException =
-                function
-                | Exception _ -> true
-                | _ -> false
-            override x.ToString() =
-                match x with
-                | Passed -> "Passed"
-                | Ignored reason -> "Ignored: " + reason
-                | Failed error -> "Failed: " + error
-                | Exception e -> "Exception: " + e.ToString()
+        override x.ToString() = 
+            match x with
+            | Passed -> "Passed"
+            | Ignored reason -> "Ignored: " + reason
+            | Failed error -> "Failed: " + error
+            | Exception e -> "Exception: " + e.ToString()
+        static member isPassed =
+            function
+            | Passed -> true
+            | _ -> false
+        static member isIgnored =
+            function
+            | Ignored _ -> true
+            | _ -> false
+        static member isFailed =
+            function
+            | Failed _ -> true
+            | _ -> false
+        static member isException =
+            function
+            | Exception _ -> true
+            | _ -> false
+
 
     type TestResultCounts = {
         Passed: int
@@ -84,23 +80,22 @@ module F =
         static member toErrorLevel (c: TestResultCounts) =
             (if c.Failed > 0 then 1 else 0) ||| (if c.Errored > 0 then 2 else 0)
         member x.ToErrorLevel() = TestResultCounts.toErrorLevel x
-            
+
+    [<StructuredFormatDisplay("{Description}")>]
     type TestRunResult = {
         Name: string
         Result: TestResult
         Time: TimeSpan
-    }
-        with
-        override x.ToString() =
+    }        
+        with 
+        override x.ToString() = 
             sprintf "%s: %s (%A)" x.Name (x.Result.ToString()) x.Time
+        member x.Description = x.ToString()
         static member isPassed (r: TestRunResult) = TestResult.isPassed r.Result
         static member isIgnored (r: TestRunResult) = TestResult.isIgnored r.Result
         static member isFailed (r: TestRunResult) = TestResult.isFailed r.Result
         static member isException (r: TestRunResult) = TestResult.isException r.Result
-
-    #if INTERACTIVE
-    fsi.AddPrinter(fun (t: TestRunResult) -> t.ToString())
-    #endif
+        static member isFailedOrException r = TestRunResult.isFailed r || TestRunResult.isException r
 
     let sumTestResults (results: #seq<TestRunResult>) =
         let counts = 

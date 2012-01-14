@@ -6,4 +6,4 @@ open Fuchu
 open Fuchu.Tests
 
 evalSilent tests
-|> Seq.filter TestRunResult.isFailed
+|> Seq.filter TestRunResult.isFailedOrException
