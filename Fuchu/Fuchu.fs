@@ -15,10 +15,17 @@ type Test =
 [<AutoOpen>]
 [<Extension>]
 module F =
-    type TimeSpan with
+
+    type internal TimeSpan with
         static member sum = Seq.fold (+) TimeSpan.Zero
 
     let withLabel label test = TestLabel (label, test)
+
+    let inline (->>) label testList =
+        TestList testList |> withLabel label
+
+    let inline (-->) label t = 
+        TestCase t |> withLabel label
 
     type TestResult = 
         | Passed
@@ -85,7 +92,7 @@ module F =
             function
             | TestLabel (name, test) -> 
                 let fullName = 
-                    if parentName = null
+                    if String.IsNullOrEmpty parentName
                         then name
                         else parentName + "/" + name
                 loop fullName testList test
