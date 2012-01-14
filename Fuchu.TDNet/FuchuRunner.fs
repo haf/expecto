@@ -12,6 +12,15 @@ type FuchuRunner() =
                                         State = TestState.Passed,
                                         TimeSpan = time)
                 listener.TestFinished result)
+
+    let onIgnored (listener: ITestListener) name reason = 
+        lock locker
+            (fun () ->
+                let result = TestResult(Name = name,
+                                        State = TestState.Ignored,
+                                        Message = reason)
+                listener.TestFinished result)
+
     let onFailed (listener: ITestListener) name error time = 
         lock locker             
             (fun () -> 
@@ -20,6 +29,7 @@ type FuchuRunner() =
                                         Message = error,
                                         TimeSpan = time)
                 listener.TestFinished result)
+
     let onException (listener: ITestListener) name ex time =
         lock locker
             (fun () -> 
@@ -29,8 +39,9 @@ type FuchuRunner() =
                                         StackTrace = ex.ToString(),
                                         TimeSpan = time)
                 listener.TestFinished result)
+
     let run listener = 
-        eval ignore (onPassed listener) (onFailed listener) (onException listener) pmap
+        eval ignore (onPassed listener) (onIgnored listener) (onFailed listener) (onException listener) pmap
 
     let resultCountsToTDNetResult (c: TestResultCounts) =
         match c.Passed, c.Failed, c.Errored with

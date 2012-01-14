@@ -21,6 +21,9 @@ let evalTeamCity (test: Test) : TestRunResult list =
     let printPassed name time = 
         use writer = getWriter name
         lock locker (fun () -> writer.WriteDuration time)
+    let printIgnored name reason = 
+        use writer = getWriter name
+        lock locker (fun () -> writer.WriteIgnored reason)
     let printFailed name error time =
         use writer = getWriter name
         lock locker (fun () -> 
@@ -31,6 +34,6 @@ let evalTeamCity (test: Test) : TestRunResult list =
         lock locker (fun () -> 
                         writer.WriteDuration time
                         writer.WriteFailed(ex.Message, ex.ToString()))
-    eval ignore printPassed printFailed printException pmap test
+    eval ignore printPassed printIgnored printFailed printException pmap test
 
 let run = runEval evalTeamCity

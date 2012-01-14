@@ -29,31 +29,36 @@ module F =
 
     type TestResult = 
         | Passed
+        | Ignored of string
         | Failed of string
         | Exception of exn
 
     let testResultToString =
         function
         | Passed -> "Passed"
+        | Ignored reason -> "Ignored: " + reason
         | Failed error -> "Failed: " + error
         | Exception e -> "Exception: " + e.ToString()
 
     type TestResultCounts = {
         Passed: int
+        Ignored: int
         Failed: int
         Errored: int
         Time: TimeSpan
     }
         with 
         override x.ToString() =
-                        sprintf "%d tests run: %d passed, %d failed, %d errored (%A)\n"
+                        sprintf "%d tests run: %d passed, %d ignored, %d failed, %d errored (%A)\n"
                             (x.Errored + x.Failed + x.Passed)
                             x.Passed
+                            x.Ignored
                             x.Failed
                             x.Errored
                             x.Time
         static member (+) (c1: TestResultCounts, c2: TestResultCounts) = 
             { Passed = c1.Passed + c2.Passed
+              Ignored = c1.Ignored + c2.Ignored
               Failed = c1.Failed + c2.Failed
               Errored = c1.Errored + c2.Errored
               Time = c1.Time + c2.Time }
@@ -74,8 +79,9 @@ module F =
             |> Seq.map (fun r -> r.Result)
             |> Seq.countBy (function
                             | Passed -> 0
-                            | Failed _ -> 1
-                            | Exception _ -> 2)
+                            | Ignored _ -> 1
+                            | Failed _ -> 2
+                            | Exception _ -> 3)
             |> dict
         let get i = 
             match counts.TryGetValue i with
@@ -83,8 +89,9 @@ module F =
             | _ -> 0
 
         { Passed = get 0
-          Failed = get 1
-          Errored = get 2 
+          Ignored = get 1
+          Failed = get 2
+          Errored = get 3
           Time = results |> Seq.map (fun r -> r.Time) |> TimeSpan.sum }
 
     let toTestCodeList =
@@ -106,7 +113,14 @@ module F =
             "Gallio.Framework.Assertions.AssertionFailureException"
             "Xunit.Sdk.AssertException"
         ]
-        fun beforeRun onPassed onFailed onException map ->
+        let ignoreExceptions = [
+            "NUnit.Framework.IgnoreException"
+        ]
+        let (|ExceptionInList|_|) l e = 
+            if List.exists ((=) (e.GetType().FullName)) l
+                then Some()
+                else None
+        fun beforeRun onPassed onIgnored onFailed onException map ->
             let execOne (name: string, test) = 
                 beforeRun name
                 let w = System.Diagnostics.Stopwatch.StartNew()
@@ -119,28 +133,34 @@ module F =
                       Time = w.Elapsed }
                 with e ->
                     w.Stop()
-                    if List.exists ((=) (e.GetType().FullName)) failExceptions
-                        then 
-                            onFailed name e.Message w.Elapsed
-                            { Name = name
-                              Result = Failed e.Message
-                              Time = w.Elapsed }
-                        else
-                            onException name e w.Elapsed
-                            { Name = name
-                              Result = Failed e.Message
-                              Time = w.Elapsed }
+                    match e with
+                    | ExceptionInList failExceptions ->
+                        onFailed name e.Message w.Elapsed
+                        { Name = name
+                          Result = Failed e.Message
+                          Time = w.Elapsed }
+                    | ExceptionInList ignoreExceptions ->
+                        onIgnored name e.Message
+                        { Name = name
+                          Result = Ignored e.Message
+                          Time = w.Elapsed }
+                    | _ ->
+                        onException name e w.Elapsed
+                        { Name = name
+                          Result = Failed e.Message
+                          Time = w.Elapsed }
             map execOne
 
-    let eval beforeRun onPassed onFailed onException map tests =
-        let r = toTestCodeList tests |> evalTestList beforeRun onPassed onFailed onException map
+    let eval beforeRun onPassed onIgnored onFailed onException map tests =
+        let r = toTestCodeList tests |> evalTestList beforeRun onPassed onIgnored onFailed onException map
         Seq.toList r
 
     let printPassed = printfn "%s: Passed (%A)"
+    let printIgnored = printfn "%s: Ignored: %s"
     let printFailed = printfn "%s: Failed: %s (%A)"
     let printException = printfn "%s: Exception: %A (%A)"
 
-    let evalSeq = eval ignore printPassed printFailed printException Seq.map
+    let evalSeq = eval ignore printPassed printIgnored printFailed printException Seq.map
 
     let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select f
 
@@ -148,11 +168,13 @@ module F =
         let locker = obj()
         let printPassed name time = 
             lock locker (fun () -> printPassed name time)
+        let printIgnored name reason = 
+            lock locker (fun () -> printIgnored name reason)
         let printFailed name error time =
             lock locker (fun () -> printFailed name error time)
         let printException name ex time =
             lock locker (fun () -> printException name ex time)
-        eval ignore printPassed printFailed printException pmap
+        eval ignore printPassed printIgnored printFailed printException pmap
 
     let runEval eval tests = 
         let results = eval tests
