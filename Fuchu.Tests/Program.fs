@@ -1,4 +1,6 @@
-﻿open System
+﻿module Fuchu.Tests
+
+open System
 open Fuchu
 open NUnit.Framework
 
