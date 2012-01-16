@@ -26,6 +26,15 @@ module F =
     let inline (-->) label t = 
         TestCase t |> withLabel label
 
+    let bracket setup teardown f () =
+        let v = setup()
+        try
+            f v
+            teardown v
+        with e ->
+            teardown v
+            reraise()
+
     type TestResult = 
         | Passed
         | Ignored of string
@@ -232,6 +241,12 @@ type Test with
     static member NewList ([<ParamArray>] tests) = 
         Array.toList tests |> TestList
 
+    static member NewList (name, [<ParamArray>] tests) = 
+        Array.toList tests |> TestList |> withLabel name
+
+    static member NewList (name, tests: Func<Test seq>) = 
+        Test.NewList(name, tests.Invoke() |> Seq.toArray)
+
     static member NewList ([<ParamArray>] tests) =
         tests |> Array.map Test.NewCase |> Test.NewList
 
@@ -269,4 +284,11 @@ type Test with
         |> TestList
         |> withLabel (a.FullName.Split ',').[0]
 
-        
+    static member Setup (setup: Func<_>, teardown: Action<_>) =
+        let f (test: Action<_>) = 
+            let r = bracket setup.Invoke teardown.Invoke test.Invoke
+            Action r
+        Func<_,_> f
+
+    static member Setup (setup: Func<'a>): Func<Action<'a>, Action> when 'a :> IDisposable =
+        Test.Setup(setup, fun d -> d.Dispose())

@@ -1,6 +1,7 @@
 ﻿module Fuchu.Tests
 
 open System
+open System.IO
 open Fuchu
 open NUnit.Framework
 
@@ -53,6 +54,26 @@ let tests =
                     match eval  test with
                     | [{ Result = Ignored "a" }] -> ()
                     | x -> Assert.Fail "Wrong test evaluation"
+        ]
+        "Setup & teardown" ->> [
+            let withMemoryStream = bracket (fun () -> new MemoryStream())
+                                           (fun s -> 
+                                                Assert.AreEqual(5, s.Capacity)
+                                                s.Dispose())
+            yield "1" --> withMemoryStream (fun ms -> ms.Capacity <- 5)
+            yield "2" --> withMemoryStream (fun ms -> ms.Capacity <- 5)
+        ]
+        "Setup & teardown 2" ->> [
+            let tests = [
+                "1", fun (ms: MemoryStream) -> ms.Capacity <- 5
+                "2", fun ms -> ms.Capacity <- 5
+            ]
+            let withMemoryStream = bracket (fun () -> new MemoryStream())
+                                           (fun s -> 
+                                                Assert.AreEqual(5, s.Capacity)
+                                                s.Dispose())
+            for name,test in tests ->
+                name --> withMemoryStream test
         ]
     ]
 
