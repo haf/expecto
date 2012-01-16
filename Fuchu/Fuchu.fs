@@ -140,6 +140,12 @@ module F =
             | TestList tests -> List.collect (loop parentName testList) tests
         loop null []
 
+    let rec wrap f = 
+        function
+        | TestCase test -> TestCase (f test)
+        | TestList testList -> TestList (List.map (wrap f) testList)
+        | TestLabel (label, test) -> TestLabel (label, wrap f test)
+
     let evalTestList =
         let failExceptions = [ 
             "NUnit.Framework.AssertionException"
@@ -299,3 +305,6 @@ type Test with
 
     static member Setup (setup: Func<'a>): Func<Action<'a>, Action> when 'a :> IDisposable =
         Test.Setup(setup, fun d -> d.Dispose())
+
+    [<Extension>]
+    static member Wrap (test, f: Func<_,_>) = wrap f.Invoke test
