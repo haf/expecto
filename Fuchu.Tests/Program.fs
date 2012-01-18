@@ -4,9 +4,10 @@ open System
 open System.IO
 open Fuchu
 open NUnit.Framework
+open FSharpx
 
 let tests = 
-    "" ->> [
+    TestList [
         "basic" --> 
             fun () -> Assert.AreEqual(4, 2+2)
         "sumTestResults" ->> [
@@ -74,6 +75,33 @@ let tests =
                                                 s.Dispose())
             for name,test in tests ->
                 name --> withMemoryStream test
+        ]
+        "Test filter" ->> [
+            let tests = 
+                TestList [
+                    "a" --> ignore
+                    "b" --> ignore
+                    "c" ->> [
+                        "d" --> ignore
+                        "e" --> ignore
+                    ]
+                ]
+            yield "with one testcase" -->
+                fun () -> 
+                    let t = Test.filter ((=) "a") tests |> Test.toTestCodeList
+                    Assert.AreEqual(1, t.Length)
+            yield "with nested testcase" -->
+                fun () -> 
+                    let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList
+                    Assert.AreEqual(1, t.Length)
+            yield "with one testlist" -->
+                fun () -> 
+                    let t = Test.filter (Strings.contains "c") tests |> Test.toTestCodeList
+                    Assert.AreEqual(2, t.Length)
+            yield "with no results" -->
+                fun () -> 
+                    let t = Test.filter ((=) "z") tests |> Test.toTestCodeList
+                    Assert.AreEqual(0, t.Length)
         ]
     ]
 

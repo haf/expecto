@@ -23,6 +23,7 @@ type Test =
                 | TestCase test -> (parentName, test)::testList
                 | TestList tests -> List.collect (loop parentName testList) tests
             loop null []
+
         static member wrap f =
             let rec loop = 
                 function
@@ -30,6 +31,13 @@ type Test =
                 | TestList testList -> TestList (List.map loop testList)
                 | TestLabel (label, test) -> TestLabel (label, loop test)
             loop
+
+        static member filter pred =
+            Test.toTestCodeList 
+            >> Seq.filter (fst >> pred)
+            >> Seq.map (fun (name, test) -> TestLabel (name, TestCase test))
+            >> Seq.toList
+            >> TestList
 
 [<AutoOpen>]
 [<Extension>]

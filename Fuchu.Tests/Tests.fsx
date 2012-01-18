@@ -5,5 +5,9 @@
 open Fuchu
 open Fuchu.Tests
 
-evalSilent tests
-|> Seq.filter TestRunResult.isFailedOrException
+tests
+|> Test.filter (fun n -> n.Contains "Exception")
+|> evalSilent
+
+//evalSilent tests
+//|> Seq.filter TestRunResult.isFailedOrException
