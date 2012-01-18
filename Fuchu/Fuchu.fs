@@ -255,23 +255,23 @@ type Test with
         | TestList l -> testList.Invoke l
         | TestLabel (label, t) -> testLabel.Invoke(label,t)
 
-    static member NewCase (f: Action) = 
+    static member Case (f: Action) = 
         TestCase f.Invoke
 
-    static member NewCase (label, f: Action) = 
+    static member Case (label, f: Action) = 
         TestCase f.Invoke |> withLabel label
 
-    static member NewList ([<ParamArray>] tests) = 
+    static member List ([<ParamArray>] tests) = 
         Array.toList tests |> TestList
 
-    static member NewList (name, [<ParamArray>] tests) = 
+    static member List (name, [<ParamArray>] tests) = 
         Array.toList tests |> TestList |> withLabel name
 
-    static member NewList (name, tests: Func<Test seq>) = 
-        Test.NewList(name, tests.Invoke() |> Seq.toArray)
+    static member List (name, tests: Func<Test seq>) = 
+        Test.List(name, tests.Invoke() |> Seq.toArray)
 
-    static member NewList ([<ParamArray>] tests) =
-        tests |> Array.map Test.NewCase |> Test.NewList
+    static member List ([<ParamArray>] tests) =
+        tests |> Array.map Test.Case |> Test.List
 
     [<Extension>]
     static member WithLabel (test, label) = TestLabel (label, test)
@@ -289,7 +289,7 @@ type Test with
         |> Seq.map (fun m -> m :?> MethodInfo)
         |> Seq.filter (fun m -> m.ReturnType = typeof<System.Void> && m.GetParameters().Length = 0)
         |> Seq.map (fun m -> m.Name, toFunc m)
-        |> Seq.map (fun (name, code) -> Test.NewCase code |> withLabel name)
+        |> Seq.map (fun (name, code) -> Test.Case code |> withLabel name)
         |> Seq.toList
         |> TestList
 
