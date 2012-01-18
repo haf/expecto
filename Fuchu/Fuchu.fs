@@ -14,6 +14,7 @@ type Test =
 [<AutoOpen>]
 [<Extension>]
 module F =
+    let inline internal (==) x y = LanguagePrimitives.PhysicalEquality x y
 
     type internal TimeSpan with
         static member sum = Seq.fold (+) TimeSpan.Zero
@@ -298,7 +299,10 @@ type Test with
         |> withLabel (a.FullName.Split ',').[0]
 
     static member Setup (setup: Func<_>, teardown: Action<_>) =
+        if setup == null then raise (ArgumentNullException("setup"))
+        if teardown == null then raise (ArgumentNullException("teardown"))
         let f (test: Action<_>) = 
+            if test == null then raise (ArgumentNullException("test"))
             let r = bracket setup.Invoke teardown.Invoke test.Invoke
             Action r
         Func<_,_> f
