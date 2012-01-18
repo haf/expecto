@@ -10,6 +10,26 @@ type Test =
     | TestCase of TestCode
     | TestList of Test list
     | TestLabel of string * Test
+    with
+        static member toTestCodeList =
+            let rec loop parentName testList =
+                function
+                | TestLabel (name, test) -> 
+                    let fullName = 
+                        if String.IsNullOrEmpty parentName
+                            then name
+                            else parentName + "/" + name
+                    loop fullName testList test
+                | TestCase test -> (parentName, test)::testList
+                | TestList tests -> List.collect (loop parentName testList) tests
+            loop null []
+        static member wrap f =
+            let rec loop = 
+                function
+                | TestCase test -> TestCase (f test)
+                | TestList testList -> TestList (List.map loop testList)
+                | TestLabel (label, test) -> TestLabel (label, loop test)
+            loop
 
 [<AutoOpen>]
 [<Extension>]
@@ -128,25 +148,6 @@ module F =
           Errored = get 3
           Time = results |> Seq.map (fun r -> r.Time) |> TimeSpan.sum }
 
-    let toTestCodeList =
-        let rec loop parentName testList =
-            function
-            | TestLabel (name, test) -> 
-                let fullName = 
-                    if String.IsNullOrEmpty parentName
-                        then name
-                        else parentName + "/" + name
-                loop fullName testList test
-            | TestCase test -> (parentName, test)::testList
-            | TestList tests -> List.collect (loop parentName testList) tests
-        loop null []
-
-    let rec wrap f = 
-        function
-        | TestCase test -> TestCase (f test)
-        | TestList testList -> TestList (List.map (wrap f) testList)
-        | TestLabel (label, test) -> TestLabel (label, wrap f test)
-
     let evalTestList =
         let failExceptions = [ 
             "NUnit.Framework.AssertionException"
@@ -192,7 +193,7 @@ module F =
             map execOne
 
     let eval beforeRun onPassed onIgnored onFailed onException map tests =
-        let r = toTestCodeList tests |> evalTestList beforeRun onPassed onIgnored onFailed onException map
+        let r = Test.toTestCodeList tests |> evalTestList beforeRun onPassed onIgnored onFailed onException map
         Seq.toList r
 
     let printPassed = printfn "%s: Passed (%A)"
@@ -311,4 +312,4 @@ type Test with
         Test.Setup(setup, fun d -> d.Dispose())
 
     [<Extension>]
-    static member Wrap (test, f: Func<_,_>) = wrap f.Invoke test
+    static member Wrap (test, f: Func<_,_>) = Test.wrap f.Invoke test
