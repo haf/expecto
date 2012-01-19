@@ -3,6 +3,7 @@
 open System
 open System.Linq
 open System.Runtime.CompilerServices
+open System.Reflection
 
 type TestCode = unit -> unit
 
@@ -244,7 +245,18 @@ module F =
     [<CompiledName("RunParallel")>]
     let runParallel tests = runEval evalPar tests
 
-open System.Reflection
+    type internal Type with
+        member t.HasAttribute (attr: string) =
+            t.GetCustomAttributes true
+            |> Seq.filter (fun a -> a.GetType().FullName = attr)
+            |> Seq.length |> (<) 0
+
+    type internal MemberInfo with
+        member m.HasAttribute (attr: string) =
+            m.GetCustomAttributes true
+            |> Seq.filter (fun a -> a.GetType().FullName = attr)
+            |> Seq.length |> (<) 0
+
 
 [<Extension>]
 type Test with
@@ -306,6 +318,25 @@ type Test with
         |> Seq.toList
         |> TestList
         |> withLabel (a.FullName.Split ',').[0]
+
+
+    static member FromNUnitType (t: Type) =
+        let testType = 
+            [t]
+            |> Seq.filter (fun t -> t.HasAttribute "NUnit.Framework.TestFixtureAttribute")
+        let methods = 
+            testType
+            |> Seq.collect (fun _ -> t.GetMethods())
+            |> Seq.filter (fun m -> m.HasAttribute "NUnit.Framework.TestAttribute")
+            |> Seq.toList
+        let testObj = testType |> Seq.map Activator.CreateInstance
+        TestList [
+            for o in testObj ->
+                o.GetType().FullName ->> [
+                    for m in methods ->
+                        m.Name --> fun () -> m.Invoke(o, null) |> ignore
+                ]
+        ]
 
     static member Setup (setup: Func<_>, teardown: Action<_>) =
         if setup == null then raise (ArgumentNullException("setup"))

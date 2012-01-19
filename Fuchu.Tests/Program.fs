@@ -6,6 +6,25 @@ open Fuchu
 open NUnit.Framework
 open FSharpx
 
+[<TestFixture>]
+type ATestFixture() =
+    [<Test>]
+    member x.ATest() = ()
+
+    [<Test>]
+    member x.AnotherTest() = Assert.Fail()
+
+[<TestFixture>]
+type ATestFixtureWithSetup() =
+    [<Test>]
+    member x.ATest() = ()
+
+    [<SetUp>]
+    member x.ASetup() = ()
+
+    [<TearDown>]
+    member x.ATeardown() = ()
+
 let tests = 
     TestList [
         "basic" --> 
@@ -102,6 +121,27 @@ let tests =
                 fun () -> 
                     let t = Test.filter ((=) "z") tests |> Test.toTestCodeList
                     Assert.AreEqual(0, t.Length)
+        ]
+        "From NUnit" ->> [
+            "nothing" -->
+                fun () ->
+                    let test = Test.FromNUnitType typeof<string>
+                    let result = evalSilent test
+                    Assert.AreEqual(0, result.Length)
+
+            "basic" --> 
+                fun () -> 
+                    let test = Test.FromNUnitType typeof<ATestFixture>
+                    let result = evalSilent test
+                    Assert.AreEqual(2, result.Length)
+                    Assert.AreEqual("Fuchu.Tests+ATestFixture/ATest", result.[0].Name)
+                    Assert.AreEqual("Fuchu.Tests+ATestFixture/AnotherTest", result.[1].Name)
+                    Assert.True(TestResult.isPassed result.[0].Result)
+                    Assert.True(TestResult.isFailed result.[1].Result)
+
+            "with setup" -->
+                fun () ->
+                    ()
         ]
     ]
 
