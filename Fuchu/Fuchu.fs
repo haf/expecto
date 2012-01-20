@@ -11,34 +11,36 @@ type Test =
     | TestCase of TestCode
     | TestList of Test list
     | TestLabel of string * Test
-    with
-        static member toTestCodeList =
-            let rec loop parentName testList =
-                function
-                | TestLabel (name, test) -> 
-                    let fullName = 
-                        if String.IsNullOrEmpty parentName
-                            then name
-                            else parentName + "/" + name
-                    loop fullName testList test
-                | TestCase test -> (parentName, test)::testList
-                | TestList tests -> List.collect (loop parentName testList) tests
-            loop null []
 
-        static member wrap f =
-            let rec loop = 
-                function
-                | TestCase test -> TestCase (f test)
-                | TestList testList -> TestList (List.map loop testList)
-                | TestLabel (label, test) -> TestLabel (label, loop test)
-            loop
+[<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
+module Test =
+    let toTestCodeList =
+        let rec loop parentName testList =
+            function
+            | TestLabel (name, test) -> 
+                let fullName = 
+                    if String.IsNullOrEmpty parentName
+                        then name
+                        else parentName + "/" + name
+                loop fullName testList test
+            | TestCase test -> (parentName, test)::testList
+            | TestList tests -> List.collect (loop parentName testList) tests
+        loop null []
 
-        static member filter pred =
-            Test.toTestCodeList 
-            >> Seq.filter (fst >> pred)
-            >> Seq.map (fun (name, test) -> TestLabel (name, TestCase test))
-            >> Seq.toList
-            >> TestList
+    let wrap f =
+        let rec loop = 
+            function
+            | TestCase test -> TestCase (f test)
+            | TestList testList -> TestList (List.map loop testList)
+            | TestLabel (label, test) -> TestLabel (label, loop test)
+        loop
+
+    let filter pred =
+        toTestCodeList 
+        >> Seq.filter (fst >> pred)
+        >> Seq.map (fun (name, test) -> TestLabel (name, TestCase test))
+        >> Seq.toList
+        >> TestList
 
 [<AutoOpen>]
 [<Extension>]
@@ -341,7 +343,7 @@ type Test with
                     let inline invoke x = invoke o x
                     Seq.iter invoke fixtureSetupMethods
                     for m in testMethods ->
-                        m.Name --> 
+                        m.Name -->
                             fun () -> 
                                 try
                                     Seq.iter invoke setupMethods
