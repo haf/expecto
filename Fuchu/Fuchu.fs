@@ -328,18 +328,13 @@ type Test with
             testType
             |> Seq.collect (fun _ -> t.GetMethods())
             |> Seq.toList
-        let testMethods =
+        let inline methodsWithAttr attr = 
             methods
-            |> Seq.filter (fun m -> m.HasAttribute "NUnit.Framework.TestAttribute")
+            |> Seq.filter (fun m -> m.HasAttribute attr)
             |> Seq.toList
-        let setupMethods = 
-            methods
-            |> Seq.filter (fun m -> m.HasAttribute "NUnit.Framework.SetUpAttribute")
-            |> Seq.toList
-        let teardownMethods =
-            methods
-            |> Seq.filter (fun m -> m.HasAttribute "NUnit.Framework.TearDownAttribute")
-            |> Seq.toList
+        let testMethods = methodsWithAttr "NUnit.Framework.TestAttribute"
+        let setupMethods = methodsWithAttr "NUnit.Framework.SetUpAttribute"
+        let teardownMethods = methodsWithAttr "NUnit.Framework.TearDownAttribute"
 
         let inline invoke o (m: MethodInfo) =
             m.Invoke(o, null) |> ignore
