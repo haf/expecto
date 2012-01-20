@@ -151,15 +151,19 @@ let tests =
                     let result = evalSilent test
                     Assert.AreEqual(0, result.Length)
 
-            "basic" --> 
-                fun () -> 
-                    let test = Test.FromNUnitType typeof<ATestFixture>
-                    let result = evalSilent test
-                    Assert.AreEqual(2, result.Length)
-                    Assert.AreEqual("Fuchu.Tests+ATestFixture/ATest", result.[0].Name)
-                    Assert.AreEqual("Fuchu.Tests+ATestFixture/AnotherTest", result.[1].Name)
-                    Assert.True(TestResult.isPassed result.[0].Result)
-                    Assert.True(TestResult.isFailed result.[1].Result)
+            "basic" ->> [
+                let test = Test.FromNUnitType typeof<ATestFixture>
+                let result = evalSilent test
+                yield "read tests" -->
+                    fun () ->
+                        Assert.AreEqual(2, result.Length)
+                        Assert.AreEqual("Fuchu.Tests+ATestFixture/ATest", result.[0].Name)
+                        Assert.AreEqual("Fuchu.Tests+ATestFixture/AnotherTest", result.[1].Name)
+                yield "executed tests" -->
+                    fun () ->
+                        Assert.True(TestResult.isPassed result.[0].Result)
+                        Assert.True(TestResult.isFailed result.[1].Result)
+            ]
 
             "with setup" -->
                 fun () ->
