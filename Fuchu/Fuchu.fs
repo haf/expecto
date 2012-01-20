@@ -288,12 +288,6 @@ type Test with
     [<Extension>]
     static member WithLabel (test, label) = TestLabel (label, test)
 
-    [<Extension>]
-    static member Add (test, add) = TestList [test; TestCase add]
-
-    [<Extension>]
-    static member Add (test, add) = TestList [test; add]
-
     static member FromMember (m: MemberInfo) =
         let toFunc (m: MethodInfo) = Action(fun () -> unbox (m.Invoke(null, [||])))
         [m]

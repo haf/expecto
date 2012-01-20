@@ -7,8 +7,9 @@ open Fuchu
 open Fuchu.Tests
 
 tests
-|> Test.filter (fun n -> n.Contains "NUnit")
+|> Test.filter (fun n -> not <| n.Contains "NUnit")
 |> evalSilent
+|> Seq.filter TestRunResult.isFailedOrException
 
 //evalSilent tests
 //|> Seq.filter TestRunResult.isFailedOrException
