@@ -337,10 +337,10 @@ type Test with
         TestList [
             for t in testType ->
                 t.FullName ->> [
+                    let o = Activator.CreateInstance t
+                    let inline invoke x = invoke o x
+                    Seq.iter invoke fixtureSetupMethods
                     for m in testMethods ->
-                        let o = Activator.CreateInstance t
-                        let inline invoke x = invoke o x
-                        Seq.iter invoke fixtureSetupMethods
                         m.Name --> 
                             fun () -> 
                                 try
