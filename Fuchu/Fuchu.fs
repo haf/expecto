@@ -327,14 +327,36 @@ type Test with
         let methods = 
             testType
             |> Seq.collect (fun _ -> t.GetMethods())
+            |> Seq.toList
+        let testMethods =
+            methods
             |> Seq.filter (fun m -> m.HasAttribute "NUnit.Framework.TestAttribute")
             |> Seq.toList
-        let testObj = testType |> Seq.map Activator.CreateInstance
+        let setupMethods = 
+            methods
+            |> Seq.filter (fun m -> m.HasAttribute "NUnit.Framework.SetUpAttribute")
+            |> Seq.toList
+        let teardownMethods =
+            methods
+            |> Seq.filter (fun m -> m.HasAttribute "NUnit.Framework.TearDownAttribute")
+            |> Seq.toList
+
+        let inline invoke o (m: MethodInfo) =
+            m.Invoke(o, null) |> ignore
+
         TestList [
-            for o in testObj ->
-                o.GetType().FullName ->> [
-                    for m in methods ->
-                        m.Name --> fun () -> m.Invoke(o, null) |> ignore
+            for t in testType ->
+                t.FullName ->> [
+                    for m in testMethods ->
+                        let o = Activator.CreateInstance t
+                        let inline invoke x = invoke o x
+                        m.Name --> 
+                            fun () -> 
+                                try
+                                    Seq.iter invoke setupMethods
+                                    invoke m
+                                finally
+                                    Seq.iter invoke teardownMethods
                 ]
         ]
 

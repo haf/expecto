@@ -16,14 +16,36 @@ type ATestFixture() =
 
 [<TestFixture>]
 type ATestFixtureWithSetup() =
+    let mutable value = 0
+
+    static let mutable tearDownCalled = false
+
+    static member TearDownCalled = tearDownCalled
+
     [<Test>]
-    member x.ATest() = ()
+    member x.ATest() = 
+        if value <> 2 then Assert.Fail()
 
     [<SetUp>]
-    member x.ASetup() = ()
+    member x.ASetup() = 
+        value <- 2
 
     [<TearDown>]
-    member x.ATeardown() = ()
+    member x.ATeardown() = 
+        tearDownCalled <- true
+
+[<TestFixture>]
+type ATestFixtureWithExceptionAndTeardown() =
+    static let mutable tearDownCalled = false
+
+    static member TearDownCalled = tearDownCalled
+
+    [<Test>]
+    member x.ATest() = failwith ""        
+
+    [<TearDown>]
+    member x.ATeardown() = 
+        tearDownCalled <- true
 
 let tests = 
     TestList [
@@ -141,7 +163,21 @@ let tests =
 
             "with setup" -->
                 fun () ->
-                    ()
+                    let test = Test.FromNUnitType typeof<ATestFixtureWithSetup>
+                    Assert.False(ATestFixtureWithSetup.TearDownCalled, "TearDown was called")
+                    let result = evalSilent test
+                    Assert.AreEqual(1, result.Length)
+                    Assert.True(TestResult.isPassed result.[0].Result, "Test not passed")
+                    Assert.True(ATestFixtureWithSetup.TearDownCalled, "TearDown was not called")
+
+            "with teardown and exception in test" -->
+                fun () ->
+                    let test = Test.FromNUnitType typeof<ATestFixtureWithExceptionAndTeardown>
+                    Assert.False(ATestFixtureWithExceptionAndTeardown.TearDownCalled, "TearDown was called")
+                    let result = evalSilent test
+                    Assert.AreEqual(1, result.Length)
+                    Assert.True(TestResult.isFailed result.[0].Result, "Test not failed")
+                    Assert.True(ATestFixtureWithExceptionAndTeardown.TearDownCalled, "TearDown was not called")
         ]
     ]
 
