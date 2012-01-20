@@ -335,6 +335,7 @@ type Test with
         let testMethods = methodsWithAttr "NUnit.Framework.TestAttribute"
         let setupMethods = methodsWithAttr "NUnit.Framework.SetUpAttribute"
         let teardownMethods = methodsWithAttr "NUnit.Framework.TearDownAttribute"
+        let fixtureSetupMethods = methodsWithAttr "NUnit.Framework.TestFixtureSetUpAttribute"
 
         let inline invoke o (m: MethodInfo) =
             m.Invoke(o, null) |> ignore
@@ -345,6 +346,7 @@ type Test with
                     for m in testMethods ->
                         let o = Activator.CreateInstance t
                         let inline invoke x = invoke o x
+                        Seq.iter invoke fixtureSetupMethods
                         m.Name --> 
                             fun () -> 
                                 try
