@@ -275,6 +275,14 @@ type Test with
     static member Case (label, f: Action) = 
         TestCase f.Invoke |> withLabel label
 
+    [<Extension>]
+    static member List tests = 
+        Seq.toList tests |> TestList
+
+    [<Extension>]
+    static member List (tests, name) = 
+        Seq.toList tests |> TestList |> withLabel name
+
     static member List ([<ParamArray>] tests) = 
         Array.toList tests |> TestList
 

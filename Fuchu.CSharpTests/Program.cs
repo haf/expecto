@@ -18,10 +18,8 @@ namespace Fuchu.CSharpTests {
                                       , Test.Case("2", setupMemoryStream(s => s.Capacity = 5)));
         }
 
-        public static readonly Test MainTest = Test.List("", Tests);
-
         private static int Main(string[] args) {
-            return MainTest.Run();
+            return Tests().List().Run();
         }
     }
 }
