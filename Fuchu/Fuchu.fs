@@ -311,6 +311,9 @@ type Test with
     [<Extension>]
     static member WithLabel (test, label) = TestLabel (label, test)
 
+    [<Extension>]
+    static member Run tests = Seq.toList tests |> TestList |> run
+
     static member FromMember (m: MemberInfo) =
         let toFunc (m: MethodInfo) = Action(fun () -> unbox (m.Invoke(null, [||])))
         [m]

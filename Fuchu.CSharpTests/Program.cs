@@ -4,22 +4,24 @@ using NUnit.Framework;
 
 namespace Fuchu.CSharpTests {
     internal class Program {
-        public static IEnumerable<Test> Tests() {
-            yield return Test.Case("Basic test", () => Assert.AreEqual(4, 2 + 2));
+        public static IEnumerable<Test> Tests {
+            get {
+                yield return Test.Case("Basic test", () => Assert.AreEqual(4, 2 + 2));
 
-            var setupMemoryStream =
-                Test.Setup<MemoryStream>(setup: () => new MemoryStream(),
-                           teardown: s => {
-                               Assert.AreEqual(5, s.Capacity);
-                               s.Dispose();
-                           });
-            yield return Test.List("setup & teardown",
-                                      Test.Case("1", setupMemoryStream(s => s.Capacity = 5))
-                                      , Test.Case("2", setupMemoryStream(s => s.Capacity = 5)));
+                var setupMemoryStream =
+                    Test.Setup<MemoryStream>(setup: () => new MemoryStream(),
+                               teardown: s => {
+                                   Assert.AreEqual(5, s.Capacity);
+                                   s.Dispose();
+                               });
+                yield return Test.List("setup & teardown",
+                                          Test.Case("1", setupMemoryStream(s => s.Capacity = 5))
+                                          , Test.Case("2", setupMemoryStream(s => s.Capacity = 5)));
+            }
         }
 
         private static int Main(string[] args) {
-            return Tests().List().Run();
+            return Tests.Run();
         }
     }
 }
