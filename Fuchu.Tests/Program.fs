@@ -1,6 +1,7 @@
 ﻿module Fuchu.Tests
 
 open System
+open System.Threading
 open System.IO
 open Fuchu
 open NUnit.Framework
@@ -179,6 +180,18 @@ let tests =
                     Assert.AreEqual(1, result.Length)
                     Assert.True(TestResult.isFailed result.[0].Result, "Test not failed")
                     Assert.True(ATestFixtureWithExceptionAndTeardown.TearDownCalled, "TearDown was not called")
+        ]
+        "Timeout" ->> [
+            "fail" -->
+                fun _ ->
+                    let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100))
+                    let result = evalSilent test |> sumTestResults
+                    Assert.AreEqual(1, result.Failed)
+            "pass" -->
+                fun _ ->
+                    let test = TestCase(Test.timeout 1000 ignore)
+                    let result = evalSilent test |> sumTestResults
+                    Assert.AreEqual(1, result.Passed)
         ]
     ]
 

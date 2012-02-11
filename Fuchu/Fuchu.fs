@@ -12,6 +12,9 @@ type Test =
     | TestList of Test list
     | TestLabel of string * Test
 
+type AssertException(msg) =
+    inherit Exception(msg)
+
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
     let toTestCodeList =
@@ -41,6 +44,12 @@ module Test =
         >> Seq.map (fun (name, test) -> TestLabel (name, TestCase test))
         >> Seq.toList
         >> TestList
+
+    let timeout timeout (test: TestCode) : TestCode =
+        let testFunc = Func<_,_> test
+        let asyncTestFunc = Async.FromBeginEnd((fun (b,c) -> testFunc.BeginInvoke((),b,c)), testFunc.EndInvoke)
+        fun () -> Async.RunSynchronously(asyncTestFunc, timeout = timeout)
+
 
 [<AutoOpen>]
 [<Extension>]
@@ -160,7 +169,8 @@ module F =
           Time = results |> Seq.map (fun r -> r.Time) |> TimeSpan.sum }
 
     let evalTestList =
-        let failExceptions = [ 
+        let failExceptions = [
+            "Fuchu.AssertException"
             "NUnit.Framework.AssertionException"
             "Gallio.Framework.Assertions.AssertionFailureException"
             "Xunit.Sdk.AssertException"
@@ -378,3 +388,5 @@ type Test with
 
     [<Extension>]
     static member Wrap (test, f: Func<_,_>) = Test.wrap f.Invoke test
+
+    static member Timeout(timeout, test) = Test.timeout timeout test
