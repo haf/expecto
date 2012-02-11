@@ -88,12 +88,9 @@ let tests =
         "Exception handling" ->> [
             "NUnit ignore" --> 
                 fun () ->
-                    let ignore2 _ _ = ()
-                    let ignore3 _ _ _ = ()
-                    let eval = eval ignore ignore2 ignore2 ignore3 ignore3 Seq.map
                     let test() = Assert.Ignore "a"
                     let test = TestCase test
-                    match eval  test with
+                    match evalSilent test with
                     | [{ Result = Ignored "a" }] -> ()
                     | x -> Assert.Fail "Wrong test evaluation"
         ]
