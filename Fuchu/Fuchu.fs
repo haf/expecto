@@ -207,17 +207,20 @@ module F =
         let r = Test.toTestCodeList tests |> evalTestList beforeRun onPassed onIgnored onFailed onException map
         Seq.toList r
 
+    let printStartTest = printfn "Running '%s'"
     let printPassed = printfn "%s: Passed (%A)"
     let printIgnored = printfn "%s: Ignored: %s"
     let printFailed = printfn "%s: Failed: %s (%A)"
     let printException = printfn "%s: Exception: %A (%A)"
 
-    let evalSeq = eval ignore printPassed printIgnored printFailed printException Seq.map
+    let evalSeq = eval printStartTest printPassed printIgnored printFailed printException Seq.map
 
     let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select f
 
     let evalPar =
         let locker = obj()
+        let printStartTest name = 
+            lock locker (fun () -> printStartTest name)
         let printPassed name time = 
             lock locker (fun () -> printPassed name time)
         let printIgnored name reason = 
@@ -226,7 +229,7 @@ module F =
             lock locker (fun () -> printFailed name error time)
         let printException name ex time =
             lock locker (fun () -> printException name ex time)
-        eval ignore printPassed printIgnored printFailed printException pmap
+        eval printStartTest printPassed printIgnored printFailed printException pmap
 
     let evalSilent = 
         let ignore2 _ _ = ()
