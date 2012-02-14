@@ -390,6 +390,9 @@ type Test with
         Test.Setup(setup, fun d -> d.Dispose())
 
     [<Extension>]
-    static member Wrap (test, f: Func<_,_>) = Test.wrap f.Invoke test
+    static member Wrap (test, f: Func<Action,Action>) = 
+        test |> Test.wrap (fun t -> f.Invoke(Action t).Invoke)
 
-    static member Timeout(timeout, test) = Test.timeout timeout test
+    [<Extension>]
+    static member Timeout(test: Action, timeout) = 
+        Action(Test.timeout timeout test.Invoke)
