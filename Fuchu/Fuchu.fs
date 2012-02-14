@@ -15,6 +15,22 @@ type Test =
 type AssertException(msg) =
     inherit Exception(msg)
 
+// from http://blogs.msdn.com/b/chrsmith/archive/2008/10/01/f-zen.aspx
+[<AutoOpen>]
+module internal Helpers =
+    /// Colored printf
+    let cprintf c fmt = 
+
+        Printf.kprintf 
+            (fun s -> 
+                let old = System.Console.ForegroundColor 
+                try 
+                  System.Console.ForegroundColor <- c;
+                  System.Console.Write s
+                finally
+                  System.Console.ForegroundColor <- old) 
+            fmt
+        
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
     let toTestCodeList =
@@ -222,11 +238,11 @@ module F =
         let r = Test.toTestCodeList tests |> evalTestList beforeRun onPassed onIgnored onFailed onException map
         Seq.toList r
 
-    let printStartTest = printfn "Running '%s'"
-    let printPassed = printfn "%s: Passed (%A)"
-    let printIgnored = printfn "%s: Ignored: %s"
-    let printFailed = printfn "%s: Failed: %s (%A)"
-    let printException = printfn "%s: Exception: %A (%A)"
+    let printStartTest = cprintf ConsoleColor.Gray "Running '%s'\n"
+    let printPassed = cprintf ConsoleColor.DarkGreen "%s: Passed (%A)\n"
+    let printIgnored = cprintf ConsoleColor.DarkYellow "%s: Ignored: %s\n"
+    let printFailed = cprintf ConsoleColor.DarkRed "%s: Failed: %s (%A)\n"
+    let printException = cprintf ConsoleColor.DarkRed "%s: Exception: %A (%A)\n"
 
     let evalSeq = eval printStartTest printPassed printIgnored printFailed printException Seq.map
 
@@ -254,7 +270,11 @@ module F =
     let runEval eval tests = 
         let results = eval tests
         let summary = sumTestResults results
-        Console.WriteLine summary
+        let color =
+            if summary.Errored > 0 || summary.Failed > 0
+                then ConsoleColor.Red
+                else ConsoleColor.Green
+        cprintf color "%s" (summary.ToString())
         summary.ToErrorLevel()
 
     [<Extension>]
