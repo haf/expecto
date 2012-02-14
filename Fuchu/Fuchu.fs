@@ -48,7 +48,12 @@ module Test =
     let timeout timeout (test: TestCode) : TestCode =
         let testFunc = Func<_,_> test
         let asyncTestFunc = Async.FromBeginEnd((fun (b,c) -> testFunc.BeginInvoke((),b,c)), testFunc.EndInvoke)
-        fun () -> Async.RunSynchronously(asyncTestFunc, timeout = timeout)
+        fun () -> 
+            try
+                Async.RunSynchronously(asyncTestFunc, timeout = timeout)
+            with :? TimeoutException ->
+                let ts = TimeSpan.FromMilliseconds (float timeout)
+                raise <| AssertException(sprintf "Timeout (%A)" ts)
 
 
 [<AutoOpen>]
