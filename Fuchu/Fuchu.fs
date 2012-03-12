@@ -285,12 +285,6 @@ module F =
     [<CompiledName("RunParallel")>]
     let runParallel tests = runEval evalPar tests
 
-    type internal Type with
-        member t.HasAttribute (attr: string) =
-            t.GetCustomAttributes true
-            |> Seq.filter (fun a -> a.GetType().FullName = attr)
-            |> Seq.length |> (<) 0
-
     type internal MemberInfo with
         member m.HasAttribute (attr: string) =
             m.GetCustomAttributes true
