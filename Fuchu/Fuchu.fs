@@ -237,8 +237,9 @@ module F =
             map execOne
 
     let eval beforeRun onPassed onIgnored onFailed onException map tests =
-        let r = Test.toTestCodeList tests |> evalTestList beforeRun onPassed onIgnored onFailed onException map
-        Seq.toList r
+        Test.toTestCodeList tests 
+        |> evalTestList beforeRun onPassed onIgnored onFailed onException map
+        |> Seq.toList
 
     let printStartTest = cprintf ConsoleColor.Gray "Running '%s'\n"
     let printPassed = cprintf ConsoleColor.DarkGreen "%s: Passed (%A)\n"
