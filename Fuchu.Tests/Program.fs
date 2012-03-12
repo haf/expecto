@@ -96,10 +96,11 @@ let tests =
                     | x -> Assert.Fail "Wrong test evaluation"
         ]
         "Setup & teardown" ->> [
-            let withMemoryStream = bracket (fun () -> new MemoryStream())
-                                           (fun s -> 
-                                                Assert.AreEqual(5, s.Capacity)
-                                                s.Dispose())
+            let withMemoryStream f () =
+                use s = new MemoryStream()
+                let r = f s
+                Assert.AreEqual(5, s.Capacity)
+                r
             yield "1" --> withMemoryStream (fun ms -> ms.Capacity <- 5)
             yield "2" --> withMemoryStream (fun ms -> ms.Capacity <- 5)
         ]
@@ -108,10 +109,11 @@ let tests =
                 "1", fun (ms: MemoryStream) -> ms.Capacity <- 5
                 "2", fun ms -> ms.Capacity <- 5
             ]
-            let withMemoryStream = bracket (fun () -> new MemoryStream())
-                                           (fun s -> 
-                                                Assert.AreEqual(5, s.Capacity)
-                                                s.Dispose())
+            let withMemoryStream f () =
+                use s = new MemoryStream()
+                let r = f s
+                Assert.AreEqual(5, s.Capacity)
+                r
             for name,test in tests ->
                 name --> withMemoryStream test
         ]

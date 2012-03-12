@@ -15,10 +15,19 @@ type Test =
 type AssertException(msg) =
     inherit Exception(msg)
 
-// from http://blogs.msdn.com/b/chrsmith/archive/2008/10/01/f-zen.aspx
-[<AutoOpen>]
 module internal Helpers =
+
+    let disposable f = 
+        { new IDisposable with
+            member x.Dispose() = f() }
+
+    let bracket setup teardown f () =
+        let v = setup()
+        use dummy = disposable (fun () -> teardown v)
+        f v
+
     /// Colored printf
+    // from http://blogs.msdn.com/b/chrsmith/archive/2008/10/01/f-zen.aspx
     let cprintf c fmt = 
 
         Printf.kprintf 
@@ -75,6 +84,8 @@ module Test =
 [<AutoOpen>]
 [<Extension>]
 module F =
+    open Helpers
+
     let inline internal (==) x y = LanguagePrimitives.PhysicalEquality x y
 
     type internal TimeSpan with
@@ -87,16 +98,6 @@ module F =
 
     let inline (-->) label t = 
         TestCase t |> withLabel label
-
-    let bracket setup teardown f () =
-        let v = setup()
-        try
-            let r = f v
-            teardown v
-            r
-        with e ->
-            teardown v
-            reraise()
 
     type TestResult = 
         | Passed
@@ -294,7 +295,7 @@ module F =
 
 
 [<Extension>]
-type Test with
+type Test with    
     [<Extension>]
     static member Switch(test, testCase: Func<_,_>, testList: Func<_,_>, testLabel: Func<_,_,_>) =
         match test with
@@ -402,11 +403,11 @@ type Test with
         if teardown == null then raise (ArgumentNullException("teardown"))
         let f (test: Action<_>) = 
             if test == null then raise (ArgumentNullException("test"))
-            let r = bracket setup.Invoke teardown.Invoke test.Invoke
+            let r = Helpers.bracket setup.Invoke teardown.Invoke test.Invoke
             Action r
         Func<_,_> f
 
-    static member Setup (setup: Func<'a>): Func<Action<'a>, Action> when 'a :> IDisposable =
+    static member SetupDisposable (setup: Func<'a>): Func<Action<'a>, Action> when 'a :> IDisposable =
         Test.Setup(setup, fun d -> d.Dispose())
 
     [<Extension>]
