@@ -91,8 +91,9 @@ module F =
     let bracket setup teardown f () =
         let v = setup()
         try
-            f v
+            let r = f v
             teardown v
+            r
         with e ->
             teardown v
             reraise()
