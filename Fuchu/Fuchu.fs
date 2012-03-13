@@ -361,11 +361,11 @@ type Test with
         |> TestList
         |> withLabel (a.FullName.Split ',').[0]
 
-
+    static member private NUnitAttr = sprintf "NUnit.Framework.%sAttribute"
     static member FromNUnitType (t: Type) =
         let testType = 
             [t]
-            |> Seq.filter (fun t -> t.HasAttribute "NUnit.Framework.TestFixtureAttribute")
+            |> Seq.filter (fun t -> t.HasAttribute (Test.NUnitAttr "TestFixture"))
         let methods = 
             testType
             |> Seq.collect (fun _ -> t.GetMethods())
@@ -374,10 +374,10 @@ type Test with
             methods
             |> Seq.filter (fun m -> m.HasAttribute attr)
             |> Seq.toList
-        let testMethods = methodsWithAttr "NUnit.Framework.TestAttribute"
-        let setupMethods = methodsWithAttr "NUnit.Framework.SetUpAttribute"
-        let teardownMethods = methodsWithAttr "NUnit.Framework.TearDownAttribute"
-        let fixtureSetupMethods = methodsWithAttr "NUnit.Framework.TestFixtureSetUpAttribute"
+        let testMethods = methodsWithAttr (Test.NUnitAttr "Test")
+        let setupMethods = methodsWithAttr (Test.NUnitAttr "SetUp")
+        let teardownMethods = methodsWithAttr (Test.NUnitAttr "TearDown")
+        let fixtureSetupMethods = methodsWithAttr (Test.NUnitAttr "TestFixtureSetUp")
 
         let inline invoke o (m: MethodInfo) =
             m.Invoke(o, null) |> ignore
