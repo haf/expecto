@@ -50,9 +50,9 @@ type ATestFixtureWithExceptionAndTeardown() =
 
 let tests = 
     TestList [
-        "basic" --> 
+        "basic" => 
             fun () -> Assert.AreEqual(4, 2+2)
-        "sumTestResults" ->> [
+        "sumTestResults" =>> [
             let sumTestResultsTests = 
                 [
                     { TestRunResult.Name = ""; Result = Passed; Time = TimeSpan.FromMinutes 2. }
@@ -63,31 +63,31 @@ let tests =
                     { TestRunResult.Name = ""; Result = Passed; Time = TimeSpan.FromMinutes 7. }
                 ]
             let r = sumTestResults sumTestResultsTests
-            yield "Passed" -->
+            yield "Passed" =>
                 fun () -> Assert.AreEqual(3, r.Passed)
-            yield "Failed" -->
+            yield "Failed" =>
                 fun () -> Assert.AreEqual(2, r.Failed)
-            yield "Exception" -->
+            yield "Exception" =>
                 fun () -> Assert.AreEqual(1, r.Errored)
-            yield "Time" -->
+            yield "Time" =>
                 fun () -> Assert.AreEqual(TimeSpan.FromMinutes 27., r.Time)
         ]
-        "TestResultCounts" ->> [
+        "TestResultCounts" =>> [
             let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }
-            yield "plus" ->> [
+            yield "plus" =>> [
                 let c2 = { Passed = 2; Ignored = 6; Failed = 3; Errored = 4; Time = TimeSpan.FromSeconds 25. }
                 let r = c1 + c2
-                yield "Passed" --> fun () -> Assert.AreEqual(3, r.Passed)
-                yield "Ignored" --> fun () -> Assert.AreEqual(11, r.Ignored)
-                yield "Failed" --> fun () -> Assert.AreEqual(5, r.Failed)
-                yield "Errored" --> fun () -> Assert.AreEqual(7, r.Errored)
-                yield "Time" --> fun () -> Assert.AreEqual(TimeSpan.FromSeconds 45., r.Time)
+                yield "Passed" => fun () -> Assert.AreEqual(3, r.Passed)
+                yield "Ignored" => fun () -> Assert.AreEqual(11, r.Ignored)
+                yield "Failed" => fun () -> Assert.AreEqual(5, r.Failed)
+                yield "Errored" => fun () -> Assert.AreEqual(7, r.Errored)
+                yield "Time" => fun () -> Assert.AreEqual(TimeSpan.FromSeconds 45., r.Time)
             ]
-            yield "ToString" --> 
+            yield "ToString" => 
                 fun () -> Assert.AreEqual("6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n", c1.ToString())
         ]
-        "Exception handling" ->> [
-            "NUnit ignore" --> 
+        "Exception handling" =>> [
+            "NUnit ignore" => 
                 fun () ->
                     let test() = Assert.Ignore "a"
                     let test = TestCase test
@@ -95,16 +95,16 @@ let tests =
                     | [{ Result = Ignored "a" }] -> ()
                     | x -> Assert.Fail "Wrong test evaluation"
         ]
-        "Setup & teardown" ->> [
+        "Setup & teardown" =>> [
             let withMemoryStream f () =
                 use s = new MemoryStream()
                 let r = f s
                 Assert.AreEqual(5, s.Capacity)
                 r
-            yield "1" --> withMemoryStream (fun ms -> ms.Capacity <- 5)
-            yield "2" --> withMemoryStream (fun ms -> ms.Capacity <- 5)
+            yield "1" => withMemoryStream (fun ms -> ms.Capacity <- 5)
+            yield "2" => withMemoryStream (fun ms -> ms.Capacity <- 5)
         ]
-        "Setup & teardown 2" ->> [
+        "Setup & teardown 2" =>> [
             let tests = [
                 "1", fun (ms: MemoryStream) -> ms.Capacity <- 5
                 "2", fun ms -> ms.Capacity <- 5
@@ -115,57 +115,68 @@ let tests =
                 Assert.AreEqual(5, s.Capacity)
                 r
             for name,test in tests ->
-                name --> withMemoryStream test
+                name => withMemoryStream test
         ]
-        "Test filter" ->> [
+        "Setup & teardown 3" =>> [
+            let withMemoryStream f () =
+                use ms = new MemoryStream()
+                f ms
+            yield! withMemoryStream +> [
+                "can read" ==> 
+                    fun ms -> Assert.True(ms.CanRead)
+                "can write" ==>
+                    fun ms -> Assert.True(ms.CanWrite)
+            ]
+        ]
+        "Test filter" =>> [
             let tests = 
                 TestList [
-                    "a" --> ignore
-                    "b" --> ignore
-                    "c" ->> [
-                        "d" --> ignore
-                        "e" --> ignore
+                    "a" => ignore
+                    "b" => ignore
+                    "c" =>> [
+                        "d" => ignore
+                        "e" => ignore
                     ]
                 ]
-            yield "with one testcase" -->
+            yield "with one testcase" =>
                 fun () -> 
                     let t = Test.filter ((=) "a") tests |> Test.toTestCodeList
                     Assert.AreEqual(1, t.Length)
-            yield "with nested testcase" -->
+            yield "with nested testcase" =>
                 fun () -> 
                     let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList
                     Assert.AreEqual(1, t.Length)
-            yield "with one testlist" -->
+            yield "with one testlist" =>
                 fun () -> 
                     let t = Test.filter (Strings.contains "c") tests |> Test.toTestCodeList
                     Assert.AreEqual(2, t.Length)
-            yield "with no results" -->
+            yield "with no results" =>
                 fun () -> 
                     let t = Test.filter ((=) "z") tests |> Test.toTestCodeList
                     Assert.AreEqual(0, t.Length)
         ]
-        "From NUnit" ->> [
-            "nothing" -->
+        "From NUnit" =>> [
+            "nothing" =>
                 fun () ->
                     let test = Test.FromNUnitType typeof<string>
                     let result = evalSilent test
                     Assert.AreEqual(0, result.Length)
 
-            "basic" ->> [
+            "basic" =>> [
                 let test = Test.FromNUnitType typeof<ATestFixture>
                 let result = evalSilent test
-                yield "read tests" -->
+                yield "read tests" =>
                     fun () ->
                         Assert.AreEqual(2, result.Length)
                         Assert.AreEqual("Fuchu.Tests+ATestFixture/ATest", result.[0].Name)
                         Assert.AreEqual("Fuchu.Tests+ATestFixture/AnotherTest", result.[1].Name)
-                yield "executed tests" -->
+                yield "executed tests" =>
                     fun () ->
                         Assert.True(TestResult.isPassed result.[0].Result)
                         Assert.True(TestResult.isFailed result.[1].Result)
             ]
 
-            "with setup" -->
+            "with setup" =>
                 fun () ->
                     let test = Test.FromNUnitType typeof<ATestFixtureWithSetup>
                     Assert.False(ATestFixtureWithSetup.TearDownCalled, "TearDown was called")
@@ -174,7 +185,7 @@ let tests =
                     Assert.True(TestResult.isPassed result.[0].Result, "Test not passed")
                     Assert.True(ATestFixtureWithSetup.TearDownCalled, "TearDown was not called")
 
-            "with teardown and exception in test" -->
+            "with teardown and exception in test" =>
                 fun () ->
                     let test = Test.FromNUnitType typeof<ATestFixtureWithExceptionAndTeardown>
                     Assert.False(ATestFixtureWithExceptionAndTeardown.TearDownCalled, "TearDown was called")
@@ -183,13 +194,13 @@ let tests =
                     Assert.True(TestResult.isFailed result.[0].Result, "Test not failed")
                     Assert.True(ATestFixtureWithExceptionAndTeardown.TearDownCalled, "TearDown was not called")
         ]
-        "Timeout" ->> [
-            "fail" -->
+        "Timeout" =>> [
+            "fail" =>
                 fun _ ->
                     let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100))
                     let result = evalSilent test |> sumTestResults
                     Assert.AreEqual(1, result.Failed)
-            "pass" -->
+            "pass" =>
                 fun _ ->
                     let test = TestCase(Test.timeout 1000 ignore)
                     let result = evalSilent test |> sumTestResults

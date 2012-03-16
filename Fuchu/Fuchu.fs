@@ -93,11 +93,17 @@ module F =
 
     let withLabel label test = TestLabel (label, test)
 
-    let inline (->>) label testList =
+    let inline (=>>) label testList =
         TestList testList |> withLabel label
 
-    let inline (-->) label t = 
+    let inline (=>) label t = 
         TestCase t |> withLabel label
+
+    let inline (+>) f =
+         Seq.map (fun (name, partialTest) ->
+                        name => f partialTest)
+
+    let inline (==>) name test = name,test
 
     type TestResult = 
         | Passed
@@ -384,12 +390,12 @@ type Test with
 
         TestList [
             for t in testType ->
-                t.FullName ->> [
+                t.FullName =>> [
                     let o = Activator.CreateInstance t
                     let inline invoke x = invoke o x
                     Seq.iter invoke fixtureSetupMethods
                     for m in testMethods ->
-                        m.Name -->
+                        m.Name =>
                             fun () -> 
                                 try
                                     Seq.iter invoke setupMethods
