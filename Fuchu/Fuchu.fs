@@ -55,13 +55,11 @@ module Test =
             | TestList tests -> List.collect (loop parentName testList) tests
         loop null []
 
-    let wrap f =
-        let rec loop = 
-            function
-            | TestCase test -> TestCase (f test)
-            | TestList testList -> TestList (List.map loop testList)
-            | TestLabel (label, test) -> TestLabel (label, loop test)
-        loop
+    let rec wrap f =
+        function
+        | TestCase test -> TestCase (f test)
+        | TestList testList -> TestList (List.map (wrap f) testList)
+        | TestLabel (label, test) -> TestLabel (label, wrap f test)
 
     let filter pred =
         toTestCodeList 
