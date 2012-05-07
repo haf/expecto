@@ -12,14 +12,20 @@ namespace Fuchu.CSharpTests {
                 yield return 
                     Test.Case("Basic test", () => Assert.AreEqual(4, 2 + 2));
 
+                Func<Action<MemoryStream>, Action> withMemoryStream =
+                    f => () => {
+                        using (var ms = new MemoryStream())
+                            f(ms);
+                    };
+                
                 yield return 
-                    Test.List("Setup & teardown with memorystream", new[] {
-                        Test.Case("Can read", withMemoryStream(ms => {
+                    Test.List("Setup & teardown with memorystream", withMemoryStream, new[] {
+                        Test.Case("Can read", (MemoryStream ms) => {
                             Assert.True(ms.CanRead);
-                        })),
-                        Test.Case("Can write", withMemoryStream(ms => {
+                        }),
+                        Test.Case("Can write", (MemoryStream ms) => {
                             Assert.True(ms.CanWrite);
-                        })),
+                        }),
                     });
 
                 var withTempFile =
@@ -44,13 +50,6 @@ namespace Fuchu.CSharpTests {
                             }
                         }));
             }
-        }
-
-        static Action withMemoryStream(Action<MemoryStream> f) {
-            return () => {
-                using (var ms = new MemoryStream())
-                    f(ms);
-            };
         }
 
         private static int Main(string[] args) {

@@ -314,6 +314,9 @@ type Test with
     static member Case (label, f: Action) = 
         TestCase f.Invoke |> withLabel label
 
+    static member Case (label: string, f: Action<_>) = 
+        label ==> f
+
     [<Extension>]
     static member List tests = 
         Seq.toList tests |> TestList
@@ -333,6 +336,10 @@ type Test with
 
     static member List ([<ParamArray>] tests) =
         tests |> Array.map Test.Case |> Test.List
+
+    static member List (name, setup: Func<_,_>, [<ParamArray>] tests) =
+        let tests = tests |> Array.map (fun (name, test) -> Test.Case(name, setup.Invoke test))
+        Test.List(name, tests)
 
     [<Extension>]
     static member WithLabel (test, label) = TestLabel (label, test)
