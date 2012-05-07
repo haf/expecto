@@ -29,7 +29,7 @@ namespace Fuchu.CSharpTests {
 
                 var withTempFile =
                     Test.Setup<string>(setup: Path.GetTempFileName,
-                                       teardown: f => { File.Delete(f); });
+                                       teardown: File.Delete);
 
                 // composing setups/teardowns
                 Func<Action<MemoryStream, string>, Action> withMemoryStreamAndTempFile =
