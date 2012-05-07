@@ -12,11 +12,6 @@ namespace Fuchu.CSharpTests {
                 yield return 
                     Test.Case("Basic test", () => Assert.AreEqual(4, 2 + 2));
 
-                // setup/teardown
-                var withMemoryStream =
-                    Test.Setup<MemoryStream>(setup: () => new MemoryStream(),
-                                             teardown: s => { s.Dispose(); });
-
                 yield return 
                     Test.List("Setup & teardown with memorystream", new[] {
                         Test.Case("Can read", withMemoryStream(ms => {
@@ -49,6 +44,13 @@ namespace Fuchu.CSharpTests {
                             }
                         }));
             }
+        }
+
+        static Action withMemoryStream(Action<MemoryStream> f) {
+            return () => {
+                using (var ms = new MemoryStream())
+                    f(ms);
+            };
         }
 
         private static int Main(string[] args) {
