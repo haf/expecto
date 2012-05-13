@@ -306,7 +306,7 @@ module F =
 [<Extension>]
 type Test with    
     [<Extension>]
-    static member Switch(test, testCase: Func<_,_>, testList: Func<_,_>, testLabel: Func<_,_,_>) =
+    static member Match(test, testCase: Func<_,_>, testList: Func<_,_>, testLabel: Func<_,_,_>) =
         match test with
         | TestCase c -> testCase.Invoke c
         | TestList l -> testList.Invoke l
