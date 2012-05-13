@@ -131,7 +131,7 @@ module F =
             | Exception _ -> true
             | _ -> false
 
-
+    [<StructuredFormatDisplay("{Description}")>]
     type TestResultCounts = {
         Passed: int
         Ignored: int
@@ -148,6 +148,7 @@ module F =
                             x.Failed
                             x.Errored
                             x.Time
+        member x.Description = x.ToString()
         static member (+) (c1: TestResultCounts, c2: TestResultCounts) = 
             { Passed = c1.Passed + c2.Passed
               Ignored = c1.Ignored + c2.Ignored
