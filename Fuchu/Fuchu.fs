@@ -256,17 +256,20 @@ module F =
     let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select f
 
     let evalPar =
-        let locker = obj()
+        let flock =
+            let locker = obj()
+            lock locker
+        
         let printStartTest name = 
-            lock locker (fun () -> printStartTest name)
+            flock (fun () -> printStartTest name)
         let printPassed name time = 
-            lock locker (fun () -> printPassed name time)
+            flock (fun () -> printPassed name time)
         let printIgnored name reason = 
-            lock locker (fun () -> printIgnored name reason)
+            flock (fun () -> printIgnored name reason)
         let printFailed name error time =
-            lock locker (fun () -> printFailed name error time)
+            flock (fun () -> printFailed name error time)
         let printException name ex time =
-            lock locker (fun () -> printException name ex time)
+            flock (fun () -> printException name ex time)
         eval printStartTest printPassed printIgnored printFailed printException pmap
 
     let evalSilent = 

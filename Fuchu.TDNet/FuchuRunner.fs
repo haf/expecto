@@ -5,8 +5,9 @@ open Fuchu
 
 type FuchuRunner() =
     let locker = obj()
+    let flock x = lock locker x
     let onPassed (listener: ITestListener) name time = 
-        lock locker 
+        flock
             (fun () -> 
                 let result = TestResult(Name = name, 
                                         State = TestState.Passed,
@@ -14,7 +15,7 @@ type FuchuRunner() =
                 listener.TestFinished result)
 
     let onIgnored (listener: ITestListener) name reason = 
-        lock locker
+        flock
             (fun () ->
                 let result = TestResult(Name = name,
                                         State = TestState.Ignored,
@@ -22,7 +23,7 @@ type FuchuRunner() =
                 listener.TestFinished result)
 
     let onFailed (listener: ITestListener) name error time = 
-        lock locker             
+        flock
             (fun () -> 
                 let result = TestResult(Name = name, 
                                         State = TestState.Failed, 
@@ -31,7 +32,7 @@ type FuchuRunner() =
                 listener.TestFinished result)
 
     let onException (listener: ITestListener) name ex time =
-        lock locker
+        flock
             (fun () -> 
                 let result = TestResult(Name = name, 
                                         State = TestState.Failed, 
