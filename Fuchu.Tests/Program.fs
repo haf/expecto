@@ -10,6 +10,12 @@ module Tests =
     open NUnit.Framework
     open FSharpx
 
+    [<Tests>]
+    let testA = TestLabel ("test A", TestList [])
+
+    [<Tests>]
+    let testB() = TestLabel ("test B", TestList [])
+
     let tests = 
         TestList [
             "basic" => 
@@ -167,6 +173,27 @@ module Tests =
                         let test = TestCase(Test.timeout 1000 ignore)
                         let result = evalSilent test |> sumTestResults
                         Assert.AreEqual(1, result.Passed)
+            ]
+            "Reflection" =>> [
+                let thisModuleType = Type.GetType "Fuchu.Tests, Fuchu.Tests"
+                let getMember name =
+                    ArraySegment(thisModuleType.GetMember name)
+                    |> Option.fromArraySegment
+                let getTest = 
+                    getMember
+                    >> Option.map Test.FromMember
+                    >> Option.bind (function TestLabel(name, _) -> Some name | _ -> None)
+
+                yield "from member" => 
+                    fun _ ->
+                        match getTest "testA" with
+                        | Some name -> Assert.AreEqual("test A", name)
+                        | _ -> Assert.Fail "no test found"
+                yield "from function" =>
+                    fun _ ->
+                        match getTest "testB" with
+                        | Some name -> Assert.AreEqual("test B", name)
+                        | _ -> Assert.Fail "no test found"
             ]
         ]
 

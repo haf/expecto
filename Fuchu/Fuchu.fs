@@ -15,6 +15,10 @@ type Test =
 type AssertException(msg) =
     inherit Exception(msg)
 
+[<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
+type TestsAttribute() = 
+    inherit Attribute()
+
 module internal Helpers =
 
     let disposable f = 
@@ -297,11 +301,16 @@ module F =
     let runParallel tests = runEval evalPar tests
 
     type internal MemberInfo with
-        member m.HasAttribute (attr: string) =
+        member m.HasAttribute (pred: Type -> bool) =
             m.GetCustomAttributes true
-            |> Seq.filter (fun a -> a.GetType().FullName = attr)
+            |> Seq.filter (fun a -> pred(a.GetType()))
             |> Seq.length |> (<) 0
 
+        member m.HasAttribute (attr: Type) =
+            m.HasAttribute ((=) attr)
+
+        member m.HasAttribute (attr: string) =
+            m.HasAttribute (fun (t: Type) -> t.FullName = attr)    
 
 [<Extension>]
 type Test with    
@@ -351,30 +360,37 @@ type Test with
     [<Extension>]
     static member Run tests = Seq.toList tests |> TestList |> run
 
-    static member FromMember (m: MemberInfo) =
-        let toFunc (m: MethodInfo) = Action(fun () -> unbox (m.Invoke(null, [||])))
-        [m]
-        |> Seq.filter (fun m -> m.MemberType = MemberTypes.Method)
-        |> Seq.map (fun m -> m :?> MethodInfo)
-        |> Seq.filter (fun m -> m.ReturnType = typeof<System.Void> && m.GetParameters().Length = 0)
-        |> Seq.map (fun m -> m.Name, toFunc m)
-        |> Seq.map (fun (name, code) -> Test.Case code |> withLabel name)
-        |> Seq.toList
-        |> TestList
+    static member FromMember (m: MemberInfo) : Test =
+        let t = 
+            [m]
+            |> List.filter (fun m -> m.HasAttribute typeof<TestsAttribute>)
+            |> List.choose (fun m ->
+                               match box m with
+                               | :? MethodInfo as m -> 
+                                    if m.ReturnType = typeof<Test>
+                                        then Some(unbox (m.Invoke(null, null)))
+                                        else None
+                               | :? PropertyInfo as m -> 
+                                    if m.PropertyType = typeof<Test>
+                                        then Some(unbox (m.GetValue(null, null)))
+                                        else None
+                               | _ -> None)
+            |> List.tryFind (fun _ -> true)
+        match t with
+        | None -> TestList []
+        | Some t -> t
 
     static member FromType (t: Type) =
         t.GetMethods(BindingFlags.Public ||| BindingFlags.Static)
         |> Seq.map Test.FromMember
         |> Seq.toList
         |> TestList
-        |> withLabel t.Name
 
     static member FromAssembly (a: Assembly) =
         a.GetExportedTypes()
         |> Seq.map Test.FromType
         |> Seq.toList
         |> TestList
-        |> withLabel (a.FullName.Split ',').[0]
 
     static member private NUnitAttr = sprintf "NUnit.Framework.%sAttribute"
     static member FromNUnitType (t: Type) =
@@ -385,7 +401,7 @@ type Test with
             testType
             |> Seq.collect (fun _ -> t.GetMethods())
             |> Seq.toList
-        let inline methodsWithAttr attr = 
+        let inline methodsWithAttr (attr: string) = 
             methods
             |> Seq.filter (fun m -> m.HasAttribute attr)
             |> Seq.toList
