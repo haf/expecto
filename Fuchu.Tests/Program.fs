@@ -184,7 +184,7 @@ module Tests =
                     |> Option.fromArraySegment
                 let getTest = 
                     getMember
-                    >> Option.bind Test.FromMember
+                    >> Option.bind testFromMember
                     >> Option.bind (function TestLabel(name, _) -> Some name | _ -> None)
 
                 yield "from member" => 
@@ -199,7 +199,7 @@ module Tests =
                         | _ -> Assert.Fail "no test found"
                 yield "from type" =>
                     fun _ ->
-                        match Test.FromType Dummy.thisModuleType with
+                        match testFromType Dummy.thisModuleType with
                         | TestList 
                           [
                             TestLabel("test A", TestList [])

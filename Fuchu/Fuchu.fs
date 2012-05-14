@@ -310,7 +310,38 @@ module F =
             m.HasAttribute ((=) attr)
 
         member m.HasAttribute (attr: string) =
-            m.HasAttribute (fun (t: Type) -> t.FullName = attr)    
+            m.HasAttribute (fun (t: Type) -> t.FullName = attr)
+
+    let testFromMember (m: MemberInfo): Test option =
+        [m]
+        |> List.filter (fun m -> m.HasAttribute typeof<TestsAttribute>)
+        |> List.choose (fun m ->
+                            match box m with
+                            | :? MethodInfo as m -> 
+                                if m.ReturnType = typeof<Test>
+                                    then Some(unbox (m.Invoke(null, null)))
+                                    else None
+                            | :? PropertyInfo as m -> 
+                                if m.PropertyType = typeof<Test>
+                                    then Some(unbox (m.GetValue(null, null)))
+                                    else None
+                            | _ -> None)
+        |> List.tryFind (fun _ -> true)
+
+    let testFromType (t: Type) =
+        let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
+        let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
+        t.GetMethods bindingFlags |> asMembers
+        |> Seq.append (t.GetProperties bindingFlags |> asMembers)
+        |> Seq.choose testFromMember
+        |> Seq.toList
+        |> TestList
+
+    let testFromAssembly (a: Assembly) =
+        a.GetExportedTypes()
+        |> Seq.map testFromType
+        |> Seq.toList
+        |> TestList
 
 [<Extension>]
 type Test with    
@@ -360,36 +391,6 @@ type Test with
     [<Extension>]
     static member Run tests = Seq.toList tests |> TestList |> run
 
-    static member FromMember (m: MemberInfo): Test option =
-        [m]
-        |> List.filter (fun m -> m.HasAttribute typeof<TestsAttribute>)
-        |> List.choose (fun m ->
-                            match box m with
-                            | :? MethodInfo as m -> 
-                                if m.ReturnType = typeof<Test>
-                                    then Some(unbox (m.Invoke(null, null)))
-                                    else None
-                            | :? PropertyInfo as m -> 
-                                if m.PropertyType = typeof<Test>
-                                    then Some(unbox (m.GetValue(null, null)))
-                                    else None
-                            | _ -> None)
-        |> List.tryFind (fun _ -> true)
-
-    static member FromType (t: Type) =
-        let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
-        let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
-        t.GetMethods bindingFlags |> asMembers
-        |> Seq.append (t.GetProperties bindingFlags |> asMembers)
-        |> Seq.choose Test.FromMember
-        |> Seq.toList
-        |> TestList
-
-    static member FromAssembly (a: Assembly) =
-        a.GetExportedTypes()
-        |> Seq.map Test.FromType
-        |> Seq.toList
-        |> TestList
 
     static member private NUnitAttr = sprintf "NUnit.Framework.%sAttribute"
     static member FromNUnitType (t: Type) =
