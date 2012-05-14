@@ -56,11 +56,12 @@ type FuchuRunner() =
 
     interface ITestRunner with
         member x.RunAssembly(listener, assembly) = 
-            let test = Test.FromAssembly assembly
-            runAndSummary listener test
+            Test.FromAssembly assembly
+            |> runAndSummary listener 
         member x.RunMember(listener, assembly, metod) = 
-            let test = Test.FromMember metod
-            runAndSummary listener test
+            match Test.FromMember metod with
+            | Some test -> runAndSummary listener test
+            | None -> TestRunState.NoTests
         member x.RunNamespace(listener, assembly, ns) =
             let test = 
                 assembly.GetExportedTypes()

@@ -1,20 +1,24 @@
 ﻿namespace Fuchu
 
-module Tests =
+open System
 
-    open Fuchu.NUnitTestTypes
-    open System
-    open System.Threading
-    open System.IO
-    open Fuchu
-    open NUnit.Framework
-    open FSharpx
-
+module Dummy =
     [<Tests>]
     let testA = TestLabel ("test A", TestList [])
 
     [<Tests>]
     let testB() = TestLabel ("test B", TestList [])
+
+    let thisModuleType = Type.GetType "Fuchu.Dummy, Fuchu.Tests"
+
+module Tests =
+
+    open Fuchu.NUnitTestTypes
+    open System.Threading
+    open System.IO
+    open Fuchu
+    open NUnit.Framework
+    open FSharpx
 
     let tests = 
         TestList [
@@ -174,14 +178,13 @@ module Tests =
                         let result = evalSilent test |> sumTestResults
                         Assert.AreEqual(1, result.Passed)
             ]
-            "Reflection" =>> [
-                let thisModuleType = Type.GetType "Fuchu.Tests, Fuchu.Tests"
+            "Reflection" =>> [                
                 let getMember name =
-                    ArraySegment(thisModuleType.GetMember name)
+                    ArraySegment(Dummy.thisModuleType.GetMember name)
                     |> Option.fromArraySegment
                 let getTest = 
                     getMember
-                    >> Option.map Test.FromMember
+                    >> Option.bind Test.FromMember
                     >> Option.bind (function TestLabel(name, _) -> Some name | _ -> None)
 
                 yield "from member" => 
@@ -194,6 +197,16 @@ module Tests =
                         match getTest "testB" with
                         | Some name -> Assert.AreEqual("test B", name)
                         | _ -> Assert.Fail "no test found"
+                yield "from type" =>
+                    fun _ ->
+                        match Test.FromType Dummy.thisModuleType with
+                        | TestList 
+                          [
+                            TestLabel("test A", TestList [])
+                            TestLabel("test B", TestList [])
+                          ] -> ()
+                        | x -> Assert.Fail (sprintf "TestList expected, found %A" x)
+
             ]
         ]
 

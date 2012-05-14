@@ -360,29 +360,28 @@ type Test with
     [<Extension>]
     static member Run tests = Seq.toList tests |> TestList |> run
 
-    static member FromMember (m: MemberInfo) : Test =
-        let t = 
-            [m]
-            |> List.filter (fun m -> m.HasAttribute typeof<TestsAttribute>)
-            |> List.choose (fun m ->
-                               match box m with
-                               | :? MethodInfo as m -> 
-                                    if m.ReturnType = typeof<Test>
-                                        then Some(unbox (m.Invoke(null, null)))
-                                        else None
-                               | :? PropertyInfo as m -> 
-                                    if m.PropertyType = typeof<Test>
-                                        then Some(unbox (m.GetValue(null, null)))
-                                        else None
-                               | _ -> None)
-            |> List.tryFind (fun _ -> true)
-        match t with
-        | None -> TestList []
-        | Some t -> t
+    static member FromMember (m: MemberInfo): Test option =
+        [m]
+        |> List.filter (fun m -> m.HasAttribute typeof<TestsAttribute>)
+        |> List.choose (fun m ->
+                            match box m with
+                            | :? MethodInfo as m -> 
+                                if m.ReturnType = typeof<Test>
+                                    then Some(unbox (m.Invoke(null, null)))
+                                    else None
+                            | :? PropertyInfo as m -> 
+                                if m.PropertyType = typeof<Test>
+                                    then Some(unbox (m.GetValue(null, null)))
+                                    else None
+                            | _ -> None)
+        |> List.tryFind (fun _ -> true)
 
     static member FromType (t: Type) =
-        t.GetMethods(BindingFlags.Public ||| BindingFlags.Static)
-        |> Seq.map Test.FromMember
+        let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
+        let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
+        t.GetMethods bindingFlags |> asMembers
+        |> Seq.append (t.GetProperties bindingFlags |> asMembers)
+        |> Seq.choose Test.FromMember
         |> Seq.toList
         |> TestList
 
