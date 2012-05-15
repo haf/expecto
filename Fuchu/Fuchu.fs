@@ -331,17 +331,26 @@ module F =
     let testFromType (t: Type) =
         let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
         let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
-        t.GetMethods bindingFlags |> asMembers
-        |> Seq.append (t.GetProperties bindingFlags |> asMembers)
-        |> Seq.choose testFromMember
-        |> Seq.toList
-        |> TestList
+        let tests = 
+            t.GetMethods bindingFlags |> asMembers
+            |> Seq.append (t.GetProperties bindingFlags |> asMembers)
+            |> Seq.choose testFromMember
+            |> Seq.toList
+        match tests with
+        | [] -> None
+        | x -> Some (TestList x)
 
-    let testFromAssembly (a: Assembly) =
-        a.GetExportedTypes()
-        |> Seq.map testFromType
-        |> Seq.toList
-        |> TestList
+    let testFromAssemblyWithFilter typeFilter (a: Assembly) =
+        let tests = 
+            a.GetExportedTypes()
+            |> Seq.filter typeFilter
+            |> Seq.choose testFromType
+            |> Seq.toList
+        match tests with
+        | [] -> None
+        | x -> Some (TestList x)
+
+    let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
 
     type RunOptions = { Parallel: bool }
     let internal parseArgs (args: string[]) =
@@ -352,7 +361,12 @@ module F =
         let run = if options.Parallel then runParallel else run
         run tests
     let defaultMain tests = parseArgs >> defaultMainWithOptions tests
-    let defaultMainThisAssembly = defaultMain (testFromAssembly (Assembly.GetEntryAssembly()))
+    let defaultMainThisAssembly args = 
+        let tests =
+            match testFromAssembly (Assembly.GetEntryAssembly()) with
+            | Some t -> t
+            | None -> TestList []
+        defaultMain tests args
         
 [<Extension>]
 type Test with    

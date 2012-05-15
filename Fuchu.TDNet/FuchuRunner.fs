@@ -51,24 +51,16 @@ type FuchuRunner() =
         | 0, 0, 0            -> TestRunState.NoTests
         | _                  -> TestRunState.Success
 
-    let runAndSummary listener test =
-        run listener test |> sumTestResults |> resultCountsToTDNetResult
+    let runAndSummary listener =
+        function
+        | Some test -> run listener test |> sumTestResults |> resultCountsToTDNetResult
+        | None -> TestRunState.NoTests
 
     interface ITestRunner with
         member x.RunAssembly(listener, assembly) = 
-            testFromAssembly assembly
-            |> runAndSummary listener 
+            testFromAssembly assembly |> runAndSummary listener
         member x.RunMember(listener, assembly, metod) = 
-            match testFromMember metod with
-            | Some test -> runAndSummary listener test
-            | None -> TestRunState.NoTests
+            testFromMember metod |> runAndSummary listener 
         member x.RunNamespace(listener, assembly, ns) =
-            let test = 
-                assembly.GetExportedTypes()
-                |> Seq.filter (fun t -> t.Namespace = ns)
-                |> Seq.map testFromType
-                |> Seq.toList
-                |> TestList
-                |> withLabel (assembly.FullName.Split ',').[0]
-            runAndSummary listener test
-
+            testFromAssemblyWithFilter (fun t -> t.Namespace = ns) assembly
+            |> runAndSummary listener 

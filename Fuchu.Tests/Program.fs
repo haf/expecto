@@ -11,6 +11,9 @@ module Dummy =
 
     let thisModuleType = Type.GetType "Fuchu.Dummy, Fuchu.Tests"
 
+module EmptyModule =
+    let thisModuleType = Type.GetType "Fuchu.EmptyModule, Fuchu.Tests"
+
 module Tests =
 
     open Fuchu.NUnitTestTypes
@@ -200,13 +203,16 @@ module Tests =
                 yield "from type" =>
                     fun _ ->
                         match testFromType Dummy.thisModuleType with
-                        | TestList 
-                          [
-                            TestLabel("test A", TestList [])
-                            TestLabel("test B", TestList [])
-                          ] -> ()
+                        | Some (TestList 
+                                  [
+                                    TestLabel("test A", TestList [])
+                                    TestLabel("test B", TestList [])
+                                  ]) -> ()
                         | x -> Assert.Fail (sprintf "TestList expected, found %A" x)
-
+                yield "from empty type" =>
+                    fun _ ->
+                        let test = testFromType EmptyModule.thisModuleType 
+                        Assert.AreEqual(None, test)
             ]
         ]
 
