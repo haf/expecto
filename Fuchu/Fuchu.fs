@@ -465,9 +465,6 @@ type Test with
             Action r
         Func<_,_> f
 
-    static member SetupDisposable (setup: Func<'a>): Func<Action<'a>, Action> when 'a :> IDisposable =
-        Test.Setup(setup, fun d -> d.Dispose())
-
     [<Extension>]
     static member Wrap (test, f: Func<Action,Action>) = 
         test |> Test.wrap (fun t -> f.Invoke(Action t).Invoke)
