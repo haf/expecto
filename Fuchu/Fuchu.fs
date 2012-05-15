@@ -418,9 +418,11 @@ type Test with
 
     static member private NUnitAttr = sprintf "NUnit.Framework.%sAttribute"
     static member FromNUnitType (t: Type) =
+        let ignoreAttr = Test.NUnitAttr "Ignore"
         let testType = 
             [t]
             |> Seq.filter (fun t -> t.HasAttribute (Test.NUnitAttr "TestFixture"))
+            |> Seq.filter (fun t -> not (t.HasAttribute ignoreAttr))
         let methods = 
             testType
             |> Seq.collect (fun _ -> t.GetMethods())
@@ -428,8 +430,9 @@ type Test with
         let inline methodsWithAttr (attr: string) = 
             methods
             |> Seq.filter (fun m -> m.HasAttribute attr)
-            |> Seq.toList
-        let testMethods = methodsWithAttr (Test.NUnitAttr "Test")
+        let testMethods = 
+            methodsWithAttr (Test.NUnitAttr "Test")
+            |> Seq.filter (fun m -> not (m.HasAttribute ignoreAttr))
         let setupMethods = methodsWithAttr (Test.NUnitAttr "SetUp")
         let teardownMethods = methodsWithAttr (Test.NUnitAttr "TearDown")
         let fixtureSetupMethods = methodsWithAttr (Test.NUnitAttr "TestFixtureSetUp")

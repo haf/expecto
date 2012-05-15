@@ -12,6 +12,10 @@ module NUnitTestTypes =
         [<Test>]
         member x.AnotherTest() = Assert.Fail()
 
+        [<Test>]
+        [<Ignore>]
+        member x.IgnoredTest() = ()
+
     [<TestFixture>]
     type ATestFixtureWithSetup() =
         let mutable value = 0
