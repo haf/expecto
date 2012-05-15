@@ -343,6 +343,17 @@ module F =
         |> Seq.toList
         |> TestList
 
+    type RunOptions = { Parallel: bool }
+    let internal parseArgs (args: string[]) =
+        let defaultOptions = { RunOptions.Parallel = false }
+        let opts = [ "m", fun o -> { o with Parallel = true } ]
+        opts |> Seq.fold (fun o (a,f) -> f o) defaultOptions
+    let defaultMainWithOptions tests (options: RunOptions) = 
+        let run = if options.Parallel then runParallel else run
+        run tests
+    let defaultMain tests = parseArgs >> defaultMainWithOptions tests
+    let defaultMainThisAssembly = defaultMain (testFromAssembly (Assembly.GetEntryAssembly()))
+        
 [<Extension>]
 type Test with    
     [<Extension>]
@@ -391,7 +402,6 @@ type Test with
     [<Extension>]
     static member Run tests = Seq.toList tests |> TestList |> run
 
-
     static member private NUnitAttr = sprintf "NUnit.Framework.%sAttribute"
     static member FromNUnitType (t: Type) =
         let testType = 
@@ -410,8 +420,7 @@ type Test with
         let teardownMethods = methodsWithAttr (Test.NUnitAttr "TearDown")
         let fixtureSetupMethods = methodsWithAttr (Test.NUnitAttr "TestFixtureSetUp")
 
-        let inline invoke o (m: MethodInfo) =
-            m.Invoke(o, null) |> ignore
+        let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
 
         TestList [
             for t in testType ->

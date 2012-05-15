@@ -211,5 +211,4 @@ module Tests =
         ]
 
     [<EntryPoint>]
-    let main args =
-        run tests
+    let main args = run tests
