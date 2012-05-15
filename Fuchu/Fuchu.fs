@@ -456,7 +456,7 @@ type Test with
                 ]
         ]
 
-    static member Setup (setup: Func<_>, teardown: Action<_>) =
+    static member Fixture (setup: Func<_>, teardown: Action<_>) =
         if setup == null then raise (ArgumentNullException("setup"))
         if teardown == null then raise (ArgumentNullException("teardown"))
         let f (test: Action<_>) = 

@@ -29,7 +29,7 @@ namespace Fuchu.CSharpTests {
                     });
 
                 var withTempFile =
-                    Test.Setup<string>(setup: Path.GetTempFileName,
+                    Test.Fixture<string>(setup: Path.GetTempFileName,
                                        teardown: File.Delete);
 
                 // composing setups/teardowns
