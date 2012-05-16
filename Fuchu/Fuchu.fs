@@ -301,20 +301,20 @@ module F =
     let runParallel tests = runEval evalPar tests
 
     type internal MemberInfo with
-        member m.HasAttribute (pred: Type -> bool) =
+        member m.HasAttributePred (pred: Type -> bool) =
             m.GetCustomAttributes true
             |> Seq.filter (fun a -> pred(a.GetType()))
             |> Seq.length |> (<) 0
 
-        member m.HasAttribute (attr: Type) =
-            m.HasAttribute ((=) attr)
+        member m.HasAttributeType (attr: Type) =
+            m.HasAttributePred ((=) attr)
 
         member m.HasAttribute (attr: string) =
-            m.HasAttribute (fun (t: Type) -> t.FullName = attr)
+            m.HasAttributePred (fun (t: Type) -> t.FullName = attr)
 
     let testFromMember (m: MemberInfo): Test option =
         [m]
-        |> List.filter (fun m -> m.HasAttribute typeof<TestsAttribute>)
+        |> List.filter (fun m -> m.HasAttributeType typeof<TestsAttribute>)
         |> List.choose (fun m ->
                             match box m with
                             | :? MethodInfo as m -> 
@@ -427,15 +427,15 @@ type Test with
             testType
             |> Seq.collect (fun _ -> t.GetMethods())
             |> Seq.toList
-        let inline methodsWithAttr (attr: string) = 
+        let inline methodsWithAttrs (attr: string seq) = 
             methods
-            |> Seq.filter (fun m -> m.HasAttribute attr)
+            |> Seq.filter (fun m -> Seq.exists m.HasAttribute attr)
         let testMethods = 
-            methodsWithAttr (Test.NUnitAttr "Test")
+            methodsWithAttrs [Test.NUnitAttr "Test"]
             |> Seq.filter (fun m -> not (m.HasAttribute ignoreAttr))
-        let setupMethods = methodsWithAttr (Test.NUnitAttr "SetUp")
-        let teardownMethods = methodsWithAttr (Test.NUnitAttr "TearDown")
-        let fixtureSetupMethods = methodsWithAttr (Test.NUnitAttr "TestFixtureSetUp")
+        let setupMethods = methodsWithAttrs [Test.NUnitAttr "SetUp"]
+        let teardownMethods = methodsWithAttrs [Test.NUnitAttr "TearDown"]
+        let fixtureSetupMethods = methodsWithAttrs [Test.NUnitAttr "TestFixtureSetUp"]
 
         let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
 
