@@ -19,7 +19,7 @@ type AssertException(msg) =
 type TestsAttribute() = 
     inherit Attribute()
 
-module internal Helpers =
+module Helpers =
 
     let disposable f = 
         { new IDisposable with
