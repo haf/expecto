@@ -85,7 +85,7 @@ module Test =
 
 [<AutoOpen>]
 [<Extension>]
-module F =
+module Fuchu =
     open Helpers
 
     let inline internal (==) x y = LanguagePrimitives.PhysicalEquality x y
