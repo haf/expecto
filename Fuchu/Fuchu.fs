@@ -369,7 +369,7 @@ module F =
         defaultMain tests args
         
 [<Extension>]
-type Test with    
+type Test with
     [<Extension>]
     static member Match(test, testCase: Func<_,_>, testList: Func<_,_>, testLabel: Func<_,_,_>) =
         match test with
@@ -415,46 +415,6 @@ type Test with
 
     [<Extension>]
     static member Run tests = Seq.toList tests |> TestList |> run
-
-    static member private NUnitAttr = sprintf "NUnit.Framework.%sAttribute"
-    static member FromNUnitType (t: Type) =
-        let ignoreAttr = Test.NUnitAttr "Ignore"
-        let testType = 
-            [t]
-            |> Seq.filter (fun t -> t.HasAttribute (Test.NUnitAttr "TestFixture"))
-            |> Seq.filter (fun t -> not (t.HasAttribute ignoreAttr))
-        let methods = 
-            testType
-            |> Seq.collect (fun _ -> t.GetMethods())
-            |> Seq.toList
-        let inline methodsWithAttrs (attr: string seq) = 
-            methods
-            |> Seq.filter (fun m -> Seq.exists m.HasAttribute attr)
-        let testMethods = 
-            methodsWithAttrs [Test.NUnitAttr "Test"]
-            |> Seq.filter (fun m -> not (m.HasAttribute ignoreAttr))
-        let setupMethods = methodsWithAttrs [Test.NUnitAttr "SetUp"]
-        let teardownMethods = methodsWithAttrs [Test.NUnitAttr "TearDown"]
-        let fixtureSetupMethods = methodsWithAttrs [Test.NUnitAttr "TestFixtureSetUp"]
-
-        let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
-
-        TestList [
-            for t in testType ->
-                t.FullName =>> [
-                    let o = Activator.CreateInstance t
-                    let inline invoke x = invoke o x
-                    Seq.iter invoke fixtureSetupMethods
-                    for m in testMethods ->
-                        m.Name =>
-                            fun () -> 
-                                try
-                                    Seq.iter invoke setupMethods
-                                    invoke m
-                                finally
-                                    Seq.iter invoke teardownMethods
-                ]
-        ]
 
     static member Fixture (setup: Func<_>, teardown: Action<_>) =
         if setup == null then raise (ArgumentNullException("setup"))

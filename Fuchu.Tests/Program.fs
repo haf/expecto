@@ -16,6 +16,7 @@ module EmptyModule =
 
 module Tests =
 
+    open Fuchu.NUnit
     open Fuchu.NUnitTestTypes
     open System.Threading
     open System.IO
@@ -133,12 +134,12 @@ module Tests =
             "From NUnit" =>> [
                 "nothing" =>
                     fun () ->
-                        let test = Test.FromNUnitType typeof<string>
+                        let test = NUnitTestToFuchu typeof<string>
                         let result = evalSilent test
                         Assert.AreEqual(0, result.Length)
 
                 "basic" =>> [
-                    let test = Test.FromNUnitType typeof<ATestFixture>
+                    let test = NUnitTestToFuchu typeof<ATestFixture>
                     let result = evalSilent test
                     yield "read tests" =>
                         fun () ->
@@ -153,7 +154,7 @@ module Tests =
 
                 "with setup" =>
                     fun () ->
-                        let test = Test.FromNUnitType typeof<ATestFixtureWithSetup>
+                        let test = NUnitTestToFuchu typeof<ATestFixtureWithSetup>
                         Assert.False(ATestFixtureWithSetup.TearDownCalled, "TearDown was called")
                         let result = evalSilent test
                         Assert.AreEqual(1, result.Length)
@@ -162,7 +163,7 @@ module Tests =
 
                 "with teardown and exception in test" =>
                     fun () ->
-                        let test = Test.FromNUnitType typeof<ATestFixtureWithExceptionAndTeardown>
+                        let test = NUnitTestToFuchu typeof<ATestFixtureWithExceptionAndTeardown>
                         Assert.False(ATestFixtureWithExceptionAndTeardown.TearDownCalled, "TearDown was called")
                         let result = evalSilent test
                         Assert.AreEqual(1, result.Length)
