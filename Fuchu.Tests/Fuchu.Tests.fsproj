@@ -39,6 +39,7 @@
   <ItemGroup>
     <Compile Include="Prelude.fs" />
     <Compile Include="NUnitTestTypes.fs" />
+    <Compile Include="NUnitTests.fs" />
     <Compile Include="Tests.fs" />
     <None Include="Tests.fsx" />
   </ItemGroup>
