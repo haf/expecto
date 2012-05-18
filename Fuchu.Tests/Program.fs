@@ -24,6 +24,7 @@ module Tests =
     open NUnit.Framework
     open FSharpx
 
+    [<Tests>]
     let tests = 
         TestList [
             "basic" => 
@@ -218,4 +219,4 @@ module Tests =
         ]
 
     [<EntryPoint>]
-    let main args = run tests
+    let main args = defaultMainThisAssembly args
