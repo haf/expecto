@@ -7,8 +7,13 @@ module NUnit =
     open Fuchu.Helpers
     
     let private NUnitAttr = sprintf "NUnit.Framework.%sAttribute"
+    let private ignoreAttr = NUnitAttr "Ignore"
+    let private create (t: Type) =
+        try
+            Activator.CreateInstance t
+        with e -> raise (Exception(sprintf "Couldn't instantiate test type %s" t.FullName, e))
+
     let NUnitTestToFuchu (t: Type) =
-        let ignoreAttr = NUnitAttr "Ignore"
         let testType = 
             [t]
             |> Seq.filter (fun t -> not (t.HasAttribute ignoreAttr))
@@ -29,11 +34,6 @@ module NUnit =
         let fixtureSetupMethods = methodsWithAttrs [NUnitAttr "TestFixtureSetUp"]
 
         let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
-
-        let create (t: Type) =
-            try
-                Activator.CreateInstance t
-            with e -> raise (Exception(sprintf "Couldn't instantiate test type %s" t.FullName, e))
 
         TestList [
             if testMethods.Length > 0 then
