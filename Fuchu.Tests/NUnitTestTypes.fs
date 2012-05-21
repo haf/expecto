@@ -4,7 +4,6 @@ module NUnitTestTypes =
 
     open NUnit.Framework
 
-    [<TestFixture>]
     type ATestFixture() =
         [<Test>]
         member x.ATest() = ()
@@ -16,7 +15,6 @@ module NUnitTestTypes =
         [<Ignore>]
         member x.IgnoredTest() = ()
 
-    [<TestFixture>]
     type ATestFixtureWithSetup() =
         let mutable value = 0
 

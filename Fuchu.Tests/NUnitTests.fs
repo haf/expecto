@@ -12,8 +12,9 @@ module NUnitTests =
             "nothing" =>
                 fun () ->
                     let test = NUnitTestToFuchu typeof<string>
-                    let result = evalSilent test
-                    Assert.AreEqual(0, result.Length)
+                    match test with
+                    | TestList [] -> ()
+                    | _ -> Assert.Fail(sprintf "Should have been TestList [], but was %A" test)
 
             "basic" =>> [
                 let test = NUnitTestToFuchu typeof<ATestFixture>
