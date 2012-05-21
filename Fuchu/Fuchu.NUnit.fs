@@ -1,8 +1,10 @@
 ﻿namespace Fuchu
 
 module NUnit =
+    open Fuchu
     open System
     open System.Reflection
+    open Fuchu.Helpers
     
     let private NUnitAttr = sprintf "NUnit.Framework.%sAttribute"
     let NUnitTestToFuchu (t: Type) =

@@ -43,6 +43,18 @@ module Helpers =
                 finally
                   System.Console.ForegroundColor <- old) 
             fmt
+
+    type MemberInfo with
+        member m.HasAttributePred (pred: Type -> bool) =
+            m.GetCustomAttributes true
+            |> Seq.filter (fun a -> pred(a.GetType()))
+            |> Seq.length |> (<) 0
+
+        member m.HasAttributeType (attr: Type) =
+            m.HasAttributePred ((=) attr)
+
+        member m.HasAttribute (attr: string) =
+            m.HasAttributePred (fun (t: Type) -> t.FullName = attr)
         
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
@@ -299,18 +311,6 @@ module Fuchu =
     [<Extension>]
     [<CompiledName("RunParallel")>]
     let runParallel tests = runEval evalPar tests
-
-    type internal MemberInfo with
-        member m.HasAttributePred (pred: Type -> bool) =
-            m.GetCustomAttributes true
-            |> Seq.filter (fun a -> pred(a.GetType()))
-            |> Seq.length |> (<) 0
-
-        member m.HasAttributeType (attr: Type) =
-            m.HasAttributePred ((=) attr)
-
-        member m.HasAttribute (attr: string) =
-            m.HasAttributePred (fun (t: Type) -> t.FullName = attr)
 
     let testFromMember (m: MemberInfo): Test option =
         [m]
