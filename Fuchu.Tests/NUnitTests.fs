@@ -22,8 +22,9 @@ module NUnitTests =
                 yield "read tests" =>
                     fun () ->
                         Assert.AreEqual(2, result.Length)
-                        Assert.AreEqual("Fuchu.NUnitTestTypes+ATestFixture/ATest", result.[0].Name)
-                        Assert.AreEqual("Fuchu.NUnitTestTypes+ATestFixture/AnotherTest", result.[1].Name)
+                        let testName s = sprintf "%s/%s" typeof<ATestFixture>.FullName s
+                        Assert.AreEqual(testName "ATest", result.[0].Name)
+                        Assert.AreEqual(testName "AnotherTest", result.[1].Name)
                 yield "executed tests" =>
                     fun () ->
                         Assert.True(TestResult.isPassed result.[0].Result)
