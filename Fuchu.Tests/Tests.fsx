@@ -1,10 +1,16 @@
-﻿#r @"..\lib\NUnit.Framework.dll"
+﻿#I @"..\lib"
+#r "NUnit.Framework.dll"
 #load @"..\Fuchu\Fuchu.fs"
-#load @"..\Fuchu\Fuchu.NUnit.fs"
-#load @"NUnitTestTypes.fs"
-#load @"NUnitTests.fs"
+#load @"..\Fuchu\xUnitHelpers.fs"
+#load @"..\Fuchu\Fuchu.MbUnit.fs"
+#r "Gallio.dll"
+#r "MbUnit.dll"
+#load @"MbUnitTestTypes.fs"
+#load @"MbUnitTests.fs"
 
 open System
 open Fuchu
 
-run NUnitTests.tests
+MbUnitTests.tests
+|> Test.filter (fun n -> n.Contains "StaticTestFactory")
+|> run

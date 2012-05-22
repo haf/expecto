@@ -5,13 +5,10 @@ module NUnit =
     open System
     open System.Reflection
     open Fuchu.Helpers
+    open Fuchu.XunitHelpers
     
     let private NUnitAttr = sprintf "NUnit.Framework.%sAttribute"
     let private ignoreAttr = NUnitAttr "Ignore"
-    let private create (t: Type) =
-        try
-            Activator.CreateInstance t
-        with e -> raise (Exception(sprintf "Couldn't instantiate test type %s" t.FullName, e))
 
     let NUnitTestToFuchu (t: Type) =
         let testType = 
