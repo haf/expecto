@@ -3,6 +3,7 @@
 module MbUnit =
     open Fuchu
     open System
+    open System.Linq
     open System.Reflection
     open Fuchu.Helpers
     open Fuchu.XunitHelpers
@@ -28,6 +29,9 @@ module MbUnit =
     let private gallioActionTypeName = "Gallio.Common.Action, Gallio"
     let private gallioActionType = lazy Type.GetType gallioActionTypeName
     let private gallioActionInvokeMethod = lazy gallioActionType.Value.GetMethod "Invoke"
+
+    let private categoryAttributeType = lazy Type.GetType "MbUnit.Framework.CategoryAttribute, MbUnit"
+    let private categoryAttributeNameProperty = lazy categoryAttributeType.Value.GetProperty "Category"
 
     let rec private buildMbUnitTest (o: obj) =
         let typeName = o.GetType().AssemblyQualifiedName
@@ -76,22 +80,26 @@ module MbUnit =
 
         let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
 
+        let testCategory (m: MemberInfo) =
+            m.GetCustomAttributes(categoryAttributeType.Value, true)
+            |> Array.map (fun a -> categoryAttributeNameProperty.Value.GetValue(a, null) :?> string)
+            |> Enumerable.FirstOrDefault
+
         TestList [
             if testMethods.Length > 0 then
-                for t in testType ->
-                    t.FullName =>> [
-                        let o = create t
-                        let inline invoke x = invoke o x
-                        Seq.iter invoke fixtureSetupMethods
-                        for m in testMethods ->
-                            m.Name =>
-                                fun () -> 
-                                    try
-                                        Seq.iter invoke setupMethods
-                                        invoke m
-                                    finally
-                                        Seq.iter invoke teardownMethods
-                    ]
+                yield t.FullName + testCategory t =>> [
+                    let o = create t
+                    let inline invoke x = invoke o x
+                    Seq.iter invoke fixtureSetupMethods
+                    for m in testMethods ->
+                        m.Name + testCategory m =>
+                            fun () -> 
+                                try
+                                    Seq.iter invoke setupMethods
+                                    invoke m
+                                finally
+                                    Seq.iter invoke teardownMethods
+                ]
             if staticTests.Length > 0 then
-                yield t.FullName =>> staticTests
+                yield t.FullName + testCategory t =>> staticTests
         ]

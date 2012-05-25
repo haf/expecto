@@ -7,7 +7,7 @@ module MbUnitTests =
     open NUnit.Framework
     
     [<Tests>]
-    let tests =
+    let tests() =
         "From MbUnit" =>> [
             "nothing" =>
                 fun () ->
@@ -31,8 +31,24 @@ module MbUnitTests =
                         Assert.True(TestResult.isFailed result.Value.[1].Result)
             ]
 
+            "category" =>> [
+                let test = MbUnitTestToFuchu typeof<ATestFixtureWithExceptionAndTeardown>
+                yield "in type" =>
+                    fun _ ->
+                        match test with
+                        | TestList [ TestLabel(listname, TestList _)] -> 
+                            StringAssert.Contains("fixture category", listname)
+                        | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
+                yield "in test" =>
+                    fun _ ->
+                        match test with
+                        | TestList [ TestLabel(_, TestList [TestLabel(name, _)])] -> 
+                            StringAssert.Contains("test category", name)
+                        | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
+            ]
+
             "with StaticTestFactory" =>
-                fun() ->
+                fun _ ->
                     let testType = typeof<ATestFixtureWithStaticTestFactories>
                     let test = MbUnitTestToFuchu testType
                     let testName = testType.Name

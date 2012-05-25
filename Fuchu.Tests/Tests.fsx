@@ -11,6 +11,6 @@
 open System
 open Fuchu
 
-MbUnitTests.tests
-|> Test.filter (fun n -> n.Contains "StaticTestFactory")
+MbUnitTests.tests()
+|> Test.filter (fun n -> n.Contains "category")
 |> run

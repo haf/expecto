@@ -22,7 +22,7 @@ module Tests =
     open NUnit.Framework
 
     [<Tests>]
-    let tests = 
+    let tests() = 
         TestList [
             "basic" => 
                 fun () -> Assert.AreEqual(4, 2+2)

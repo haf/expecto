@@ -8,7 +8,7 @@ module MbUnitTestTypes =
         member x.ATest() = ()
 
         [<Test>]
-        member x.AnotherTest() = Assert.Fail()
+        member x.AnotherTest() = failwith ""
 
         [<Test>]
         [<Ignore>]
@@ -23,7 +23,7 @@ module MbUnitTestTypes =
 
         [<Test>]
         member x.ATest() = 
-            if value <> 2 then Assert.Fail()
+            if value <> 2 then Assert.Fail("")
 
         [<SetUp>]
         member x.ASetup() = 
@@ -34,13 +34,15 @@ module MbUnitTestTypes =
             tearDownCalled <- true
 
     [<TestFixture>]
+    [<Category "fixture category">]
     type ATestFixtureWithExceptionAndTeardown() =
         static let mutable tearDownCalled = false
 
         static member TearDownCalled = tearDownCalled
 
         [<Test>]
-        member x.ATest() = failwith ""        
+        [<Category "test category">]
+        member x.ATest() = failwith ""
 
         [<TearDown>]
         member x.ATeardown() = 

@@ -217,6 +217,7 @@ module Fuchu =
             "Fuchu.AssertException"
             "NUnit.Framework.AssertionException"
             "Gallio.Framework.Assertions.AssertionFailureException"
+            "Gallio.Framework.Assertions.AssertionException"
             "Xunit.Sdk.AssertException"
         ]
         let ignoreExceptions = [
