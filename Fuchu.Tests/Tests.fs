@@ -9,10 +9,10 @@ module Dummy =
     [<Tests>]
     let testB() = TestLabel ("test B", TestList [])
 
-    let thisModuleType = Type.GetType "Fuchu.Dummy, Fuchu.Tests"
+    let thisModuleType = lazy Type.GetType "Fuchu.Dummy, Fuchu.Tests"
 
 module EmptyModule =
-    let thisModuleType = Type.GetType "Fuchu.EmptyModule, Fuchu.Tests"
+    let thisModuleType = lazy Type.GetType "Fuchu.EmptyModule, Fuchu.Tests"
 
 module Tests =
     open Fuchu
@@ -143,7 +143,7 @@ module Tests =
             ]
             "Reflection" =>> [                
                 let getMember name =
-                    ArraySegment(Dummy.thisModuleType.GetMember name)
+                    ArraySegment(Dummy.thisModuleType.Value.GetMember name)
                     |> Option.fromArraySegment
                 let getTest = 
                     getMember
@@ -162,7 +162,7 @@ module Tests =
                         | _ -> Assert.Fail "no test found"
                 yield "from type" =>
                     fun _ ->
-                        match testFromType Dummy.thisModuleType with
+                        match testFromType Dummy.thisModuleType.Value with
                         | Some (TestList 
                                   [
                                     TestLabel("test A", TestList [])
@@ -171,10 +171,20 @@ module Tests =
                         | x -> Assert.Fail (sprintf "TestList expected, found %A" x)
                 yield "from empty type" =>
                     fun _ ->
-                        let test = testFromType EmptyModule.thisModuleType 
+                        let test = testFromType EmptyModule.thisModuleType.Value
                         Assert.AreEqual(None, test)
+            ]
+
+            "parse args" =>> [
+                "default" => 
+                    fun _ ->
+                        let opts = parseArgs [||]
+                        Assert.False opts.Parallel
+
+                "parallel" => 
+                    fun _ ->
+                        let opts = parseArgs [|"/m"|]
+                        Assert.True opts.Parallel
             ]
         ]
 
-    [<EntryPoint>]
-    let main args = defaultMainThisAssembly args

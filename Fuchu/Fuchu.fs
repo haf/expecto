@@ -354,10 +354,13 @@ module Fuchu =
     let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
 
     type RunOptions = { Parallel: bool }
-    let internal parseArgs (args: string[]) =
+    let parseArgs =
         let defaultOptions = { RunOptions.Parallel = false }
-        let opts = [ "m", fun o -> { o with Parallel = true } ]
-        opts |> Seq.fold (fun o (a,f) -> f o) defaultOptions
+        let opts = [ "/m", fun o -> { o with RunOptions.Parallel = true } ]
+        fun (args: string[]) ->
+            (defaultOptions, args) 
+            ||> Seq.fold (fun opt arg -> 
+                            (opt, opts) ||> Seq.fold (fun o (a,f) -> if a = arg then f o else o))
     let defaultMainWithOptions tests (options: RunOptions) = 
         let run = if options.Parallel then runParallel else run
         run tests
