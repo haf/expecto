@@ -436,3 +436,7 @@ type Test with
     [<Extension>]
     static member Timeout(test: Action, timeout) = 
         Action(Test.timeout timeout test.Invoke)
+
+    [<Extension>]
+    static member Where(test, pred: Func<_,_>) = 
+        Test.filter pred.Invoke test
