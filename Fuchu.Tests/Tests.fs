@@ -114,19 +114,19 @@ module Tests =
                     ]
                 yield "with one testcase" =>
                     fun () -> 
-                        let t = Test.filter ((=) "a") tests |> Test.toTestCodeList
+                        let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
                         Assert.AreEqual(1, t.Length)
                 yield "with nested testcase" =>
                     fun () -> 
-                        let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList
+                        let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList |> Seq.toList
                         Assert.AreEqual(1, t.Length)
                 yield "with one testlist" =>
                     fun () -> 
-                        let t = Test.filter (Strings.contains "c") tests |> Test.toTestCodeList
+                        let t = Test.filter (Strings.contains "c") tests |> Test.toTestCodeList |> Seq.toList
                         Assert.AreEqual(2, t.Length)
                 yield "with no results" =>
                     fun () -> 
-                        let t = Test.filter ((=) "z") tests |> Test.toTestCodeList
+                        let t = Test.filter ((=) "z") tests |> Test.toTestCodeList |> Seq.toList
                         Assert.AreEqual(0, t.Length)
             ]
             "Timeout" =>> [

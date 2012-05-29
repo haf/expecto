@@ -67,9 +67,9 @@ module Test =
                         then name
                         else parentName + "/" + name
                 loop fullName testList test
-            | TestCase test -> (parentName, test)::testList
-            | TestList tests -> List.collect (loop parentName testList) (Seq.toList tests)
-        loop null []
+            | TestCase test -> (parentName, test)::(Seq.toList testList) :> _ seq
+            | TestList tests -> Seq.collect (loop parentName testList) tests
+        loop null Seq.empty
 
     let rec wrap f =
         function
