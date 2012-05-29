@@ -85,9 +85,9 @@ module MbUnit =
             |> Array.map (fun a -> categoryAttributeNameProperty.Value.GetValue(a, null) :?> string)
             |> Enumerable.FirstOrDefault
 
-        TestList [
+        TestList (seq {
             if testMethods.Length > 0 then
-                yield t.FullName + testCategory t =>> [
+                yield t.FullName + testCategory t =>> seq {
                     let o = create t
                     let inline invoke x = invoke o x
                     Seq.iter invoke fixtureSetupMethods
@@ -99,7 +99,7 @@ module MbUnit =
                                     invoke m
                                 finally
                                     Seq.iter invoke teardownMethods
-                ]
+                }
             if staticTests.Length > 0 then
                 yield t.FullName + testCategory t =>> staticTests
-        ]
+        })

@@ -32,10 +32,10 @@ module NUnit =
 
         let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
 
-        TestList [
+        TestList (seq {
             if testMethods.Length > 0 then
                 for t in testType ->
-                    t.FullName =>> [
+                    t.FullName =>> seq {
                         let o = create t
                         let inline invoke x = invoke o x
                         Seq.iter invoke fixtureSetupMethods
@@ -47,5 +47,5 @@ module NUnit =
                                         invoke m
                                     finally
                                         Seq.iter invoke teardownMethods
-                    ]
-        ]
+                    }
+        })
