@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu", "Fuchu\Fuchu.fsproj", "{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.Tests", "Fuchu.Tests\Fuchu.Tests.fsproj", "{4182E778-F6C2-4BA4-BFC7-19DB54890E18}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu", "Fuchu\Fuchu.fsproj", "{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuchu.CSharpTests", "Fuchu.CSharpTests\Fuchu.CSharpTests.csproj", "{5ED1DDC5-9B80-4F5C-BFDD-B5EC9C143AE3}"
 EndProject
