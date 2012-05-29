@@ -13,7 +13,7 @@ module MbUnitTests =
                 fun () ->
                     let test = MbUnitTestToFuchu typeof<string>
                     match test with
-                    | TestList [] -> ()
+                    | TestList _ -> ()
                     | _ -> Assert.Fail(sprintf "Should have been TestList [], but was %A" test)
 
             "basic" =>> [
@@ -36,14 +36,21 @@ module MbUnitTests =
                 yield "in type" =>
                     fun _ ->
                         match test with
-                        | TestList [ TestLabel(listname, TestList _)] -> 
-                            StringAssert.Contains("fixture category", listname)
+                        | TestList t -> 
+                            match Seq.toList t with
+                            | [ TestLabel(listname, TestList _)] -> StringAssert.Contains("fixture category", listname)
+                            | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
                         | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
                 yield "in test" =>
                     fun _ ->
                         match test with
-                        | TestList [ TestLabel(_, TestList [TestLabel(name, _)])] -> 
-                            StringAssert.Contains("test category", name)
+                        | TestList t -> 
+                            match Seq.toList t with
+                            | [ TestLabel(_, TestList t)] -> 
+                                match Seq.toList t with
+                                | [TestLabel(name, _)] -> StringAssert.Contains("test category", name)
+                                | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
+                            | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
                         | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
             ]
 
@@ -54,15 +61,8 @@ module MbUnitTests =
                     let testName = testType.Name
                     match test with
                     | TestList 
-                      [
-                        TestLabel(_, TestList 
-                                     [
-                                        TestLabel("suite name", 
-                                                  TestList [
-                                                    TestLabel("test 1", TestCase(_))
-                                                    TestLabel("test 2", TestCase(_))
-                                                  ])
-                                     ])
-                      ] -> ()
+                        (Seq.One (TestLabel(_, TestList 
+                                                 (Seq.One (TestLabel("suite name", 
+                                                              TestList (Seq.Two (TestLabel("test 1", TestCase _), TestLabel("test 2", TestCase _))))))))) -> ()
                     | _ -> Assert.Fail(sprintf "unexpected %A" test)
         ]

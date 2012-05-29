@@ -13,7 +13,7 @@ module NUnitTests =
                 fun () ->
                     let test = NUnitTestToFuchu typeof<string>
                     match test with
-                    | TestList [] -> ()
+                    | TestList _ -> ()
                     | _ -> Assert.Fail(sprintf "Should have been TestList [], but was %A" test)
 
             "basic" =>> [

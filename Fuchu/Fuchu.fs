@@ -9,7 +9,7 @@ type TestCode = unit -> unit
 
 type Test = 
     | TestCase of TestCode
-    | TestList of Test list
+    | TestList of Test seq
     | TestLabel of string * Test
 
 type AssertException(msg) =
@@ -68,20 +68,19 @@ module Test =
                         else parentName + "/" + name
                 loop fullName testList test
             | TestCase test -> (parentName, test)::testList
-            | TestList tests -> List.collect (loop parentName testList) tests
+            | TestList tests -> List.collect (loop parentName testList) (Seq.toList tests)
         loop null []
 
     let rec wrap f =
         function
         | TestCase test -> TestCase (f test)
-        | TestList testList -> TestList (List.map (wrap f) testList)
+        | TestList testList -> TestList (Seq.map (wrap f) testList)
         | TestLabel (label, test) -> TestLabel (label, wrap f test)
 
     let filter pred =
         toTestCodeList 
         >> Seq.filter (fst >> pred)
         >> Seq.map (fun (name, test) -> TestLabel (name, TestCase test))
-        >> Seq.toList
         >> TestList
 
     let timeout timeout (test: TestCode) : TestCode =
@@ -391,24 +390,21 @@ type Test with
         label ==> f
 
     [<Extension>]
-    static member List tests = 
-        Seq.toList tests |> TestList
+    static member List (tests, name) = 
+        TestList tests |> withLabel name
 
     [<Extension>]
-    static member List (tests, name) = 
-        Seq.toList tests |> TestList |> withLabel name
-
     static member List ([<ParamArray>] tests) = 
-        Array.toList tests |> TestList
+        TestList tests
 
     static member List (name, [<ParamArray>] tests) = 
-        Array.toList tests |> TestList |> withLabel name
+        TestList tests |> withLabel name
 
     static member List (name, tests: Func<Test seq>) = 
         Test.List(name, tests.Invoke() |> Seq.toArray)
 
     static member List ([<ParamArray>] tests) =
-        tests |> Array.map Test.Case |> Test.List
+        tests |> Seq.map Test.Case |> TestList
 
     static member List (name, setup: Func<_,_>, [<ParamArray>] tests) =
         let tests = tests |> Array.map (fun (name, test) -> Test.Case(name, setup.Invoke test))
@@ -418,7 +414,7 @@ type Test with
     static member WithLabel (test, label) = TestLabel (label, test)
 
     [<Extension>]
-    static member Run tests = Seq.toList tests |> TestList |> run
+    static member Run tests = TestList tests |> run
 
     static member Fixture (setup: Func<_>, teardown: Action<_>) =
         if setup == null then raise (ArgumentNullException("setup"))
