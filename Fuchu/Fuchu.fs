@@ -20,6 +20,8 @@ type TestsAttribute() =
     inherit Attribute()
 
 module Helpers =
+    let ignore2 _ _ = ()
+    let ignore3 _ _ _ = ()
 
     let disposable f = 
         { new IDisposable with
@@ -263,12 +265,12 @@ module Fuchu =
         |> Seq.toList
 
     let printStartTest = cprintf ConsoleColor.Gray "Running '%s'\n"
-    let printPassed = cprintf ConsoleColor.DarkGreen "%s: Passed (%A)\n"
+    let printPassed x = cprintf ConsoleColor.DarkGreen "%s: Passed (%A)\n" x
     let printIgnored = cprintf ConsoleColor.DarkYellow "%s: Ignored: %s\n"
     let printFailed = cprintf ConsoleColor.DarkRed "%s: Failed: %s (%A)\n"
     let printException = cprintf ConsoleColor.DarkRed "%s: Exception: %A (%A)\n"
 
-    let evalSeq = eval printStartTest printPassed printIgnored printFailed printException Seq.map
+    let evalSeq = eval ignore ignore2 ignore2 printFailed printException Seq.map
 
     let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select f
 
@@ -287,11 +289,9 @@ module Fuchu =
             flock (fun () -> printFailed name error time)
         let printException name ex time =
             flock (fun () -> printException name ex time)
-        eval printStartTest printPassed printIgnored printFailed printException pmap
+        eval ignore ignore2 ignore2 printFailed printException pmap
 
     let evalSilent = 
-        let ignore2 _ _ = ()
-        let ignore3 _ _ _ = ()
         eval ignore ignore2 ignore2 ignore3 ignore3 Seq.map
 
     let runEval eval tests = 
