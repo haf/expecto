@@ -98,8 +98,7 @@ module Test =
 
 open Helpers
 
-[<AutoOpen>]
-[<Extension>]
+[<AutoOpen; Extension>]
 module Fuchu =
 
     let withLabel label test = TestLabel (label, test)
@@ -276,8 +275,7 @@ module Fuchu =
         let printException = flock3 printException
         eval ignore ignore2 ignore2 printFailed printException pmap
 
-    let evalSilent = 
-        eval ignore ignore2 ignore2 ignore3 ignore3 Seq.map
+    let evalSilent = eval ignore ignore2 ignore2 ignore3 ignore3 Seq.map
 
     let runEval eval tests = 
         let results = eval tests
@@ -285,12 +283,10 @@ module Fuchu =
         tprintf "%s" (summary.ToString())
         summary.ToErrorLevel()
 
-    [<Extension>]
-    [<CompiledName("Run")>]
+    [<Extension; CompiledName("Run")>]
     let run tests = runEval evalSeq tests
     
-    [<Extension>]
-    [<CompiledName("RunParallel")>]
+    [<Extension; CompiledName("RunParallel")>]
     let runParallel tests = runEval evalPar tests
 
     let testFromMember (m: MemberInfo): Test option =
