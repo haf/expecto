@@ -46,6 +46,6 @@ module NUnitTests =
                     Assert.False(ATestFixtureWithExceptionAndTeardown.TearDownCalled, "TearDown was called")
                     let result = evalSilent test
                     Assert.AreEqual(1, result.Length)
-                    Assert.True(TestResult.isFailed result.[0].Result, "Test not failed")
+                    Assert.True(TestResult.isException result.[0].Result, "Test not failed")
                     Assert.True(ATestFixtureWithExceptionAndTeardown.TearDownCalled, "TearDown was not called")
         ]
