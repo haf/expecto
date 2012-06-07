@@ -277,11 +277,9 @@ module Fuchu =
         let flock =
             let locker = obj()
             lock locker
-        
-        let printFailed name error time =
-            flock (fun () -> printFailed name error time)
-        let printException name ex time =
-            flock (fun () -> printException name ex time)
+        let inline flock3 f a b c = flock (fun () -> f a b c)
+        let printFailed = flock3 printFailed 
+        let printException = flock3 printException
         eval ignore ignore2 ignore2 printFailed printException pmap
 
     let evalSilent = 
