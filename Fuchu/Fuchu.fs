@@ -151,16 +151,11 @@ module Fuchu =
         Failed: int
         Errored: int
         Time: TimeSpan
-    }
-        with 
+    } with 
         override x.ToString() =
                         sprintf "%d tests run: %d passed, %d ignored, %d failed, %d errored (%A)\n"
                             (x.Errored + x.Failed + x.Passed)
-                            x.Passed
-                            x.Ignored
-                            x.Failed
-                            x.Errored
-                            x.Time
+                            x.Passed x.Ignored x.Failed x.Errored x.Time
         member x.Description = x.ToString()
         static member (+) (c1: TestResultCounts, c2: TestResultCounts) = 
             { Passed = c1.Passed + c2.Passed
@@ -177,8 +172,7 @@ module Fuchu =
         Name: string
         Result: TestResult
         Time: TimeSpan
-    }        
-        with 
+    } with 
         override x.ToString() = 
             sprintf "%s: %s (%A)" x.Name (x.Result.ToString()) x.Time
         member x.Description = x.ToString()
