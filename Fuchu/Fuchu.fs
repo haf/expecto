@@ -20,6 +20,11 @@ type TestsAttribute() =
     inherit Attribute()
 
 module Helpers =
+    let internal (==) x y = LanguagePrimitives.PhysicalEquality x y
+
+    type TimeSpan with
+        static member sum = Seq.fold (+) TimeSpan.Zero
+
     let ignore2 _ _ = ()
     let ignore3 _ _ _ = ()
 
@@ -45,6 +50,18 @@ module Helpers =
                 finally
                   System.Console.ForegroundColor <- old) 
             fmt
+    
+    open System.Diagnostics
+    Trace.AutoFlush <- true
+    Trace.Listeners.Add(new ConsoleTraceListener()) |> ignore
+    let tprintf fmt = Printf.kprintf Trace.Write fmt
+
+    open System.Text.RegularExpressions
+    let exnToString =
+        let rx = lazy Regex(" at (.*) in (.*):line (\d+)", RegexOptions.Compiled ||| RegexOptions.Multiline)
+        fun (e: Exception) -> 
+            rx.Value.Replace(e.ToString(), "$2($3,1): $1")
+
 
     type MemberInfo with
         member m.HasAttributePred (pred: Type -> bool) =
@@ -95,16 +112,11 @@ module Test =
                 let ts = TimeSpan.FromMilliseconds (float timeout)
                 raise <| AssertException(sprintf "Timeout (%A)" ts)
 
+open Helpers
 
 [<AutoOpen>]
 [<Extension>]
 module Fuchu =
-    open Helpers
-
-    let inline internal (==) x y = LanguagePrimitives.PhysicalEquality x y
-
-    type internal TimeSpan with
-        static member sum = Seq.fold (+) TimeSpan.Zero
 
     let withLabel label test = TestLabel (label, test)
 
@@ -130,7 +142,7 @@ module Fuchu =
             | Passed -> "Passed"
             | Ignored reason -> "Ignored: " + reason
             | Failed error -> "Failed: " + error
-            | Exception e -> "Exception: " + e.ToString()
+            | Exception e -> "Exception: " + exnToString e
         static member isPassed =
             function
             | Passed -> true
@@ -255,7 +267,7 @@ module Fuchu =
                     | _ ->
                         onException name e w.Elapsed
                         { Name = name
-                          Result = Failed e.Message
+                          Result = TestResult.Exception e
                           Time = w.Elapsed }
             map execOne
 
@@ -264,11 +276,17 @@ module Fuchu =
         |> evalTestList beforeRun onPassed onIgnored onFailed onException map
         |> Seq.toList
 
-    let printStartTest = cprintf ConsoleColor.Gray "Running '%s'\n"
-    let printPassed x = cprintf ConsoleColor.DarkGreen "%s: Passed (%A)\n" x
-    let printIgnored = cprintf ConsoleColor.DarkYellow "%s: Ignored: %s\n"
-    let printFailed = cprintf ConsoleColor.DarkRed "%s: Failed: %s (%A)\n"
-    let printException = cprintf ConsoleColor.DarkRed "%s: Exception: %A (%A)\n"
+//    let printStartTest = cprintf ConsoleColor.Gray "Running '%s'\n"
+//    let printPassed x = cprintf ConsoleColor.DarkGreen "%s: Passed (%A)\n" x
+//    let printIgnored = cprintf ConsoleColor.DarkYellow "%s: Ignored: %s\n"
+//    let printFailed = cprintf ConsoleColor.DarkRed "%s: Failed: %s (%A)\n"
+//    let printException = cprintf ConsoleColor.DarkRed "%s: Exception: %A (%A)\n"
+
+    let printStartTest = tprintf "Running '%s'\n"
+    let printPassed x = tprintf "%s: Passed (%A)\n" x
+    let printIgnored = tprintf "%s: Ignored: %s\n"
+    let printFailed = tprintf "%s: Failed: %s (%A)\n"
+    let printException name ex = tprintf "%s: Exception: %s (%A)\n" name (exnToString ex)
 
     let evalSeq = eval ignore ignore2 ignore2 printFailed printException Seq.map
 
@@ -301,7 +319,8 @@ module Fuchu =
             if summary.Errored > 0 || summary.Failed > 0
                 then ConsoleColor.Red
                 else ConsoleColor.Green
-        cprintf color "%s" (summary.ToString())
+        //cprintf color "%s" (summary.ToString())
+        tprintf "%s" (summary.ToString())
         summary.ToErrorLevel()
 
     [<Extension>]
