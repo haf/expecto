@@ -38,9 +38,14 @@ module Helpers =
         f v
 
     open System.Diagnostics
-    Trace.AutoFlush <- true
-    Trace.Listeners.Add(new ConsoleTraceListener()) |> ignore
-    let tprintf fmt = Printf.kprintf Trace.Write fmt
+    let traceInit = 
+        lazy (
+            Trace.AutoFlush <- true
+            Trace.Listeners.Add(new ConsoleTraceListener()) |> ignore
+        )
+    let tprintf fmt = 
+        traceInit.Value
+        Printf.kprintf Trace.Write fmt
 
     open System.Text.RegularExpressions
     let rx = lazy Regex(" at (.*) in (.*):line (\d+)", RegexOptions.Compiled ||| RegexOptions.Multiline)
