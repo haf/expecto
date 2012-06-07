@@ -37,20 +37,6 @@ module Helpers =
         use dummy = disposable (fun () -> teardown v)
         f v
 
-    /// Colored printf
-    // from http://blogs.msdn.com/b/chrsmith/archive/2008/10/01/f-zen.aspx
-    let cprintf c fmt = 
-
-        Printf.kprintf 
-            (fun s -> 
-                let old = System.Console.ForegroundColor 
-                try 
-                  System.Console.ForegroundColor <- c
-                  System.Console.Write s
-                finally
-                  System.Console.ForegroundColor <- old) 
-            fmt
-    
     open System.Diagnostics
     Trace.AutoFlush <- true
     Trace.Listeners.Add(new ConsoleTraceListener()) |> ignore
@@ -280,15 +266,6 @@ module Fuchu =
         |> evalTestList beforeRun onPassed onIgnored onFailed onException map
         |> Seq.toList
 
-//    let printStartTest = cprintf ConsoleColor.Gray "Running '%s'\n"
-//    let printPassed x = cprintf ConsoleColor.DarkGreen "%s: Passed (%A)\n" x
-//    let printIgnored = cprintf ConsoleColor.DarkYellow "%s: Ignored: %s\n"
-//    let printFailed = cprintf ConsoleColor.DarkRed "%s: Failed: %s (%A)\n"
-//    let printException = cprintf ConsoleColor.DarkRed "%s: Exception: %A (%A)\n"
-
-    let printStartTest = tprintf "Running '%s'\n"
-    let printPassed x = tprintf "%s: Passed (%A)\n" x
-    let printIgnored = tprintf "%s: Ignored: %s\n"
     let printFailed = tprintf "%s: Failed: %s (%A)\n"
     let printException name ex = tprintf "%s: Exception: %s (%A)\n" name (exnToString ex)
 
@@ -301,12 +278,6 @@ module Fuchu =
             let locker = obj()
             lock locker
         
-        let printStartTest name = 
-            flock (fun () -> printStartTest name)
-        let printPassed name time = 
-            flock (fun () -> printPassed name time)
-        let printIgnored name reason = 
-            flock (fun () -> printIgnored name reason)
         let printFailed name error time =
             flock (fun () -> printFailed name error time)
         let printException name ex time =
@@ -319,11 +290,6 @@ module Fuchu =
     let runEval eval tests = 
         let results = eval tests
         let summary = sumTestResults results
-        let color =
-            if summary.Errored > 0 || summary.Failed > 0
-                then ConsoleColor.Red
-                else ConsoleColor.Green
-        //cprintf color "%s" (summary.ToString())
         tprintf "%s" (summary.ToString())
         summary.ToErrorLevel()
 
