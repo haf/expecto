@@ -17,18 +17,18 @@ module NUnitTests =
                     | _ -> Assert.Fail(sprintf "Should have been TestList [], but was %A" test)
 
             "basic" =>> [
-                let test = NUnitTestToFuchu typeof<ATestFixture>
-                let result = evalSilent test
+                let test = lazy NUnitTestToFuchu typeof<ATestFixture>
+                let result = lazy evalSilent test.Value
                 yield "read tests" =>
                     fun () ->
-                        Assert.AreEqual(2, result.Length)
+                        Assert.AreEqual(2, result.Value.Length)
                         let testName s = sprintf "%s/%s" typeof<ATestFixture>.FullName s
-                        Assert.AreEqual(testName "ATest", result.[0].Name)
-                        Assert.AreEqual(testName "AnotherTest", result.[1].Name)
+                        Assert.AreEqual(testName "ATest", result.Value.[0].Name)
+                        Assert.AreEqual(testName "AnotherTest", result.Value.[1].Name)
                 yield "executed tests" =>
                     fun () ->
-                        Assert.True(TestResult.isPassed result.[0].Result)
-                        Assert.True(TestResult.isFailed result.[1].Result)
+                        Assert.True(TestResult.isPassed result.Value.[0].Result)
+                        Assert.True(TestResult.isFailed result.Value.[1].Result)
             ]
 
             "with setup" =>
