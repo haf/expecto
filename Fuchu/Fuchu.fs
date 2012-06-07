@@ -45,7 +45,7 @@ module Helpers =
             (fun s -> 
                 let old = System.Console.ForegroundColor 
                 try 
-                  System.Console.ForegroundColor <- c;
+                  System.Console.ForegroundColor <- c
                   System.Console.Write s
                 finally
                   System.Console.ForegroundColor <- old) 
@@ -57,11 +57,9 @@ module Helpers =
     let tprintf fmt = Printf.kprintf Trace.Write fmt
 
     open System.Text.RegularExpressions
-    let exnToString =
-        let rx = lazy Regex(" at (.*) in (.*):line (\d+)", RegexOptions.Compiled ||| RegexOptions.Multiline)
-        fun (e: Exception) -> 
-            rx.Value.Replace(e.ToString(), "$2($3,1): $1")
-
+    let rx = lazy Regex(" at (.*) in (.*):line (\d+)", RegexOptions.Compiled ||| RegexOptions.Multiline)
+    let stackTraceToString s = rx.Value.Replace(s, "$2($3,1): $1")
+    let exnToString (e: Exception) = stackTraceToString (e.ToString())
 
     type MemberInfo with
         member m.HasAttributePred (pred: Type -> bool) =
@@ -244,7 +242,7 @@ module Fuchu =
             let execOne (name: string, test) = 
                 beforeRun name
                 let w = System.Diagnostics.Stopwatch.StartNew()
-                try                    
+                try
                     test()
                     w.Stop()
                     onPassed name w.Elapsed
@@ -255,9 +253,15 @@ module Fuchu =
                     w.Stop()
                     match e with
                     | ExceptionInList failExceptions ->
-                        onFailed name e.Message w.Elapsed
+                        let msg =
+                            let firstLine = 
+                                (stackTraceToString e.StackTrace).Split('\n') 
+                                |> Seq.filter (fun q -> q.Contains ",1): ") 
+                                |> Enumerable.FirstOrDefault
+                            sprintf "%s%s\n" e.Message firstLine
+                        onFailed name msg w.Elapsed
                         { Name = name
-                          Result = Failed e.Message
+                          Result = Failed msg
                           Time = w.Elapsed }
                     | ExceptionInList ignoreExceptions ->
                         onIgnored name e.Message
