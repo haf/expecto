@@ -17,8 +17,8 @@ module MbUnitTests =
                     | _ -> Assert.Fail(sprintf "Should have been TestList [], but was %A" test)
 
             "basic" =>> [
-                let test = MbUnitTestToFuchu typeof<ATestFixture>
-                let result = lazy evalSilent test
+                let test = lazy MbUnitTestToFuchu typeof<ATestFixture>
+                let result = lazy evalSilent test.Value
                 yield "read tests" =>
                     fun () ->
                         Assert.AreEqual(2, result.Value.Length)
@@ -28,14 +28,14 @@ module MbUnitTests =
                 yield "executed tests" =>
                     fun () ->
                         Assert.True(TestResult.isPassed result.Value.[0].Result)
-                        Assert.True(TestResult.isFailed result.Value.[1].Result)
+                        Assert.True(TestResult.isException result.Value.[1].Result)
             ]
 
             "category" =>> [
-                let test = MbUnitTestToFuchu typeof<ATestFixtureWithExceptionAndTeardown>
+                let test = lazy MbUnitTestToFuchu typeof<ATestFixtureWithExceptionAndTeardown>
                 yield "in type" =>
                     fun _ ->
-                        match test with
+                        match test.Value with
                         | TestList t -> 
                             match Seq.toList t with
                             | [ TestLabel(listname, TestList _)] -> StringAssert.Contains("fixture category", listname)
@@ -43,7 +43,7 @@ module MbUnitTests =
                         | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
                 yield "in test" =>
                     fun _ ->
-                        match test with
+                        match test.Value with
                         | TestList t -> 
                             match Seq.toList t with
                             | [ TestLabel(_, TestList t)] -> 
@@ -57,9 +57,9 @@ module MbUnitTests =
             "with StaticTestFactory" =>
                 fun _ ->
                     let testType = typeof<ATestFixtureWithStaticTestFactories>
-                    let test = MbUnitTestToFuchu testType
+                    let test = lazy MbUnitTestToFuchu testType
                     let testName = testType.Name
-                    match test with
+                    match test.Value with
                     | TestList 
                         (Seq.One (TestLabel(_, TestList 
                                                  (Seq.One (TestLabel("suite name", 
