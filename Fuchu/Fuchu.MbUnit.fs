@@ -96,7 +96,10 @@ module MbUnit =
                             fun () -> 
                                 try
                                     Seq.iter invoke setupMethods
-                                    invoke m
+                                    try
+                                        invoke m
+                                    with
+                                    | :? TargetInvocationException as e -> raise e.InnerException
                                 finally
                                     Seq.iter invoke teardownMethods
                 }
