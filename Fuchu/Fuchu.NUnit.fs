@@ -22,6 +22,7 @@ module NUnit =
         let inline methodsWithAttrs (attr: string seq) = 
             methods
             |> Seq.filter (fun m -> Seq.exists m.HasAttribute attr)
+            |> Seq.toList
         let testMethods = 
             methodsWithAttrs [NUnitAttr "Test"]
             |> Seq.filter (fun m -> not (m.HasAttribute ignoreAttr))
@@ -33,22 +34,5 @@ module NUnit =
         let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
 
         TestList (seq {
-            if testMethods.Length > 0 then
-                for t in testType ->
-                    t.FullName =>> seq {
-                        let o = create t
-                        let inline invoke x = invoke o x
-                        Seq.iter invoke fixtureSetupMethods
-                        for m in testMethods ->
-                            m.Name =>
-                                fun () -> 
-                                    try
-                                        Seq.iter invoke setupMethods
-                                        try
-                                            invoke m
-                                        with
-                                        | :? TargetInvocationException as e -> raise e.InnerException
-                                    finally
-                                        Seq.iter invoke teardownMethods
-                    }
+            yield buildTestSuite testMethods fixtureSetupMethods setupMethods teardownMethods t (fun _ -> "") invoke
         })

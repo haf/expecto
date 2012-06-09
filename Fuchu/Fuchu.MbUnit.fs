@@ -50,6 +50,7 @@ module MbUnit =
 
     let private MbUnitAttr = sprintf "MbUnit.Framework.%sAttribute"
     let private ignoreAttr = MbUnitAttr "Ignore"
+
     let MbUnitTestToFuchu (t: Type) =
         let testType = 
             [t]
@@ -86,23 +87,7 @@ module MbUnit =
             |> Enumerable.FirstOrDefault
 
         TestList (seq {
-            if testMethods.Length > 0 then
-                yield t.FullName + testCategory t =>> seq {
-                    let o = create t
-                    let inline invoke x = invoke o x
-                    Seq.iter invoke fixtureSetupMethods
-                    for m in testMethods ->
-                        m.Name + testCategory m =>
-                            fun () -> 
-                                try
-                                    Seq.iter invoke setupMethods
-                                    try
-                                        invoke m
-                                    with
-                                    | :? TargetInvocationException as e -> raise e.InnerException
-                                finally
-                                    Seq.iter invoke teardownMethods
-                }
+            yield buildTestSuite testMethods fixtureSetupMethods setupMethods teardownMethods t testCategory invoke
             if staticTests.Length > 0 then
                 yield t.FullName + testCategory t =>> staticTests
         })
