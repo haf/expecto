@@ -22,7 +22,7 @@ module Tests =
     open NUnit.Framework
 
     [<Tests>]
-    let tests() = 
+    let tests = 
         TestList [
             "basic" => 
                 fun () -> Assert.AreEqual(4, 2+2)
@@ -36,15 +36,15 @@ module Tests =
                         { TestRunResult.Name = ""; Result = Failed ""; Time = TimeSpan.FromMinutes 6. }
                         { TestRunResult.Name = ""; Result = Passed; Time = TimeSpan.FromMinutes 7. }
                     ]
-                let r = sumTestResults sumTestResultsTests
+                let r = lazy sumTestResults sumTestResultsTests
                 yield "Passed" =>
-                    fun () -> Assert.AreEqual(3, r.Passed)
+                    fun () -> Assert.AreEqual(3, r.Value.Passed)
                 yield "Failed" =>
-                    fun () -> Assert.AreEqual(2, r.Failed)
+                    fun () -> Assert.AreEqual(2, r.Value.Failed)
                 yield "Exception" =>
-                    fun () -> Assert.AreEqual(1, r.Errored)
+                    fun () -> Assert.AreEqual(1, r.Value.Errored)
                 yield "Time" =>
-                    fun () -> Assert.AreEqual(TimeSpan.FromMinutes 27., r.Time)
+                    fun () -> Assert.AreEqual(TimeSpan.FromMinutes 27., r.Value.Time)
             ]
             "TestResultCounts" =>> [
                 let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }

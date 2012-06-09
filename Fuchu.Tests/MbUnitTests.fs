@@ -7,7 +7,7 @@ module MbUnitTests =
     open NUnit.Framework
     
     [<Tests>]
-    let tests() =
+    let tests =
         "From MbUnit" =>> [
             "nothing" =>
                 fun () ->
