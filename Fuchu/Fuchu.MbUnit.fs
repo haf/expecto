@@ -52,26 +52,26 @@ module MbUnit =
     let private ignoreAttr = MbUnitAttr "Ignore"
 
     let MbUnitTestToFuchu (t: Type) =
-        let testType = 
-            [t]
-            |> Seq.filter (fun t -> not (t.HasAttribute ignoreAttr))
-            |> Seq.toList
-        let methods = 
-            testType
-            |> Seq.collect (fun _ -> t.GetMethods())
-            |> Seq.toList
-        let inline methodsWithAttrs (attr: string seq) = 
-            methods
-            |> Seq.filter (fun m -> Seq.exists m.HasAttribute attr)
-            |> Seq.toList
-        let testMethods = 
-            methodsWithAttrs [MbUnitAttr "Test"]
-            |> Seq.filter (fun m -> not (m.HasAttribute ignoreAttr))
-            |> Seq.toList
-        let setupMethods = methodsWithAttrs [MbUnitAttr "SetUp"]
-        let teardownMethods = methodsWithAttrs [MbUnitAttr "TearDown"]
-        let fixtureSetupMethods = methodsWithAttrs [MbUnitAttr "FixtureSetUp"]
-        let staticTestFactories = methodsWithAttrs [MbUnitAttr "StaticTestFactory"]
+
+        let testCategory (m: MemberInfo) =
+            m.GetCustomAttributes(categoryAttributeType.Value, true)
+            |> Array.map (fun a -> categoryAttributeNameProperty.Value.GetValue(a, null) :?> string)
+            |> Enumerable.FirstOrDefault
+
+        let test = 
+            TestToFuchu
+                (MbUnitAttr "Ignore")
+                (MbUnitAttr "Test")
+                (MbUnitAttr "SetUp")
+                (MbUnitAttr "TearDown")
+                (MbUnitAttr "FixtureSetUp")
+                testCategory
+                t
+
+        let staticTestFactories = 
+            let methods = methods ignoreAttr t
+            let methodsWithAttrs = methodsWithAttrs methods
+            methodsWithAttrs [MbUnitAttr "StaticTestFactory"]
 
         let staticTests = 
             staticTestFactories
@@ -79,15 +79,8 @@ module MbUnit =
             |> Seq.map (buildMbUnitTest >> MbUnitTestToFuchuTest)
             |> Seq.toList
 
-        let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
-
-        let testCategory (m: MemberInfo) =
-            m.GetCustomAttributes(categoryAttributeType.Value, true)
-            |> Array.map (fun a -> categoryAttributeNameProperty.Value.GetValue(a, null) :?> string)
-            |> Enumerable.FirstOrDefault
-
         TestList (seq {
-            yield buildTestSuite testMethods fixtureSetupMethods setupMethods teardownMethods t testCategory invoke
+            yield test
             if staticTests.Length > 0 then
                 yield t.FullName + testCategory t =>> staticTests
         })
