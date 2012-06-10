@@ -242,7 +242,7 @@ module Fuchu =
                                 (stackTraceToString e.StackTrace).Split('\n') 
                                 |> Seq.filter (fun q -> q.Contains ",1): ") 
                                 |> Enumerable.FirstOrDefault
-                            sprintf "%s%s\n" e.Message firstLine
+                            sprintf "\n%s\n%s\n" e.Message firstLine
                         onFailed name msg w.Elapsed
                         { Name = name
                           Result = Failed msg
