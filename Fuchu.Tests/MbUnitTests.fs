@@ -61,7 +61,7 @@ module MbUnitTests =
                     let testName = testType.Name
                     match test with
                     | TestList 
-                        (Seq.One (TestLabel(_, TestList 
+                        (Seq.Two (TestList _, TestLabel(_, TestList 
                                                  (Seq.One (TestLabel("suite name", 
                                                               TestList (Seq.Two (TestLabel("test 1", TestCase _), TestLabel("test 2", TestCase _))))))))) -> ()
                     | _ -> Assert.Fail(sprintf "unexpected %A" test)
