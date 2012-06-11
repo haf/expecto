@@ -37,15 +37,10 @@ module Helpers =
         use dummy = disposable (fun () -> teardown v)
         f v
 
-    open System.Diagnostics
-    let traceInit = 
-        lazy (
-            Trace.AutoFlush <- true
-            Trace.Listeners.Add(new ConsoleTraceListener()) |> ignore
-        )
     let tprintf fmt = 
-        traceInit.Value
-        Printf.kprintf Trace.Write fmt
+        Printf.kprintf (fun s -> 
+                            System.Diagnostics.Trace.Write s
+                            Console.WriteLine s) fmt
 
     open System.Text.RegularExpressions
     let rx = lazy Regex(" at (.*) in (.*):line (\d+)", RegexOptions.Compiled ||| RegexOptions.Multiline)
