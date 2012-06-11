@@ -1,9 +1,10 @@
 ﻿namespace Fuchu
 
 module XunitHelpers =
+    open Fuchu
+    open Fuchu.Helpers
     open System
     open System.Reflection
-    open Fuchu.Helpers
 
     let create (t: Type) =
         try

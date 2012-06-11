@@ -38,28 +38,28 @@ module MbUnitTests =
                         match test.Value with
                         | TestList t -> 
                             match Seq.toList t with
-                            | [ TestLabel(listname, TestList _)] -> StringAssert.Contains("fixture category", listname)
-                            | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
-                        | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
+                            | [ TestList (Seq.One (TestLabel(listname, TestList _)))] -> StringAssert.Contains("fixture category", listname)
+                            | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test.Value)
+                        | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test.Value)
                 yield "in test" =>
                     fun _ ->
                         match test.Value with
                         | TestList t -> 
                             match Seq.toList t with
-                            | [ TestLabel(_, TestList t)] -> 
+                            | [ TestList (Seq.One (TestLabel(_, TestList t)))] -> 
                                 match Seq.toList t with
-                                | [TestLabel(name, _)] -> StringAssert.Contains("test category", name)
-                                | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
-                            | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
-                        | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test)
+                                | [ TestLabel(name, _)] -> StringAssert.Contains("test category", name)
+                                | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test.Value)
+                            | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test.Value)
+                        | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test.Value)
             ]
 
             "with StaticTestFactory" =>
                 fun _ ->
                     let testType = typeof<ATestFixtureWithStaticTestFactories>
-                    let test = lazy MbUnitTestToFuchu testType
+                    let test = MbUnitTestToFuchu testType
                     let testName = testType.Name
-                    match test.Value with
+                    match test with
                     | TestList 
                         (Seq.One (TestLabel(_, TestList 
                                                  (Seq.One (TestLabel("suite name", 
