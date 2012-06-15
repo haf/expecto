@@ -39,6 +39,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Fuchu.fs" />
     <Compile Include="xUnitHelpers.fs" />
     <Compile Include="Fuchu.NUnit.fs" />
