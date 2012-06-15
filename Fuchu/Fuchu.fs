@@ -126,6 +126,12 @@ module Fuchu =
             | Ignored reason -> "Ignored: " + reason
             | Failed error -> "Failed: " + error
             | Exception e -> "Exception: " + exnToString e
+        static member tag = 
+            function
+            | Passed -> 0
+            | Ignored _ -> 1
+            | Failed _ -> 2
+            | Exception _ -> 3
         static member isPassed =
             function
             | Passed -> true
@@ -185,21 +191,17 @@ module Fuchu =
         let counts = 
             results 
             |> Seq.map (fun r -> r.Result)
-            |> Seq.countBy (function
-                            | Passed -> 0
-                            | Ignored _ -> 1
-                            | Failed _ -> 2
-                            | Exception _ -> 3)
+            |> Seq.countBy TestResult.tag
             |> dict
-        let get i = 
-            match counts.TryGetValue i with
+        let get result = 
+            match counts.TryGetValue (TestResult.tag result) with
             | true, v -> v
             | _ -> 0
 
-        { Passed = get 0
-          Ignored = get 1
-          Failed = get 2
-          Errored = get 3
+        { Passed = get TestResult.Passed
+          Ignored = get (TestResult.Ignored "")
+          Failed = get (TestResult.Failed "")
+          Errored = get (TestResult.Exception null)
           Time = results |> Seq.map (fun r -> r.Time) |> TimeSpan.sum }
 
     let evalTestList =
