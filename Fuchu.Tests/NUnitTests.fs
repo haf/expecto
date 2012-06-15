@@ -13,12 +13,11 @@ module NUnitTests =
                 fun () ->
                     let test = NUnitTestToFuchu typeof<string>
                     match test with
-                    | TestList _ -> ()
+                    | TestList Seq.Empty -> ()
                     | _ -> Assert.Fail(sprintf "Should have been TestList [], but was %A" test)
 
             "basic" =>> [
-                let test = lazy NUnitTestToFuchu typeof<ATestFixture>
-                let result = lazy evalSilent test.Value
+                let result = lazy evalSilent (NUnitTestToFuchu typeof<ATestFixture>)
                 yield "read tests" =>
                     fun () ->
                         Assert.AreEqual(2, result.Value.Length)
