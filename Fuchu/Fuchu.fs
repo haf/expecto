@@ -305,27 +305,27 @@ module Fuchu =
                             | _ -> None)
         |> List.tryFind (fun _ -> true)
 
-    let testFromType (t: Type) =
+    let listToTestListOption = 
+        function
+        | [] -> None
+        | x -> Some (TestList x)
+        
+    let testFromType =
         let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
         let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
-        let tests = 
+        fun (t: Type) ->
             t.GetMethods bindingFlags |> asMembers
             |> Seq.append (t.GetProperties bindingFlags |> asMembers)
             |> Seq.choose testFromMember
             |> Seq.toList
-        match tests with
-        | [] -> None
-        | x -> Some (TestList x)
+            |> listToTestListOption
 
     let testFromAssemblyWithFilter typeFilter (a: Assembly) =
-        let tests = 
-            a.GetExportedTypes()
-            |> Seq.filter typeFilter
-            |> Seq.choose testFromType
-            |> Seq.toList
-        match tests with
-        | [] -> None
-        | x -> Some (TestList x)
+        a.GetExportedTypes()
+        |> Seq.filter typeFilter
+        |> Seq.choose testFromType
+        |> Seq.toList
+        |> listToTestListOption
 
     let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
 
