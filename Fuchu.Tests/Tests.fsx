@@ -1,19 +1,14 @@
 ﻿#I @"..\lib"
 #r "NUnit.Framework.dll"
-#r "Gallio.dll"
-#r "MbUnit.dll"
 #r "FSharpx.Core.dll"
 #load @"..\Fuchu\Fuchu.fs"
-#load @"..\Fuchu\xUnitHelpers.fs"
-#load @"..\Fuchu\Fuchu.MbUnit.fs"
 #load @"Prelude.fs"
-#load @"MbUnitTestTypes.fs"
-#load @"MbUnitTests.fs"
+#load @"Tests.fs"
 
 open System
 open Fuchu
-open Fuchu.MbUnitTests
+open Fuchu.Tests
 
 tests
-//|> Test.filter (fun n -> n.Contains "parse args")
+|> Test.filter (fun n -> n.Contains "Reflection")
 |> run

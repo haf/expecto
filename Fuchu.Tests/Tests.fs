@@ -3,6 +3,8 @@
 open System
 
 module Dummy =
+    open Fuchu
+
     [<Tests>]
     let testA = TestLabel ("test A", TestList [])
 
@@ -143,8 +145,8 @@ module Tests =
             ]
             "Reflection" =>> [                
                 let getMember name =
-                    ArraySegment(Dummy.thisModuleType.Value.GetMember name)
-                    |> Option.fromArraySegment
+                    Dummy.thisModuleType.Value.GetMember name
+                    |> Array.tryFind (fun _ -> true)
                 let getTest = 
                     getMember
                     >> Option.bind testFromMember
