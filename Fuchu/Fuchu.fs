@@ -22,9 +22,6 @@ type TestsAttribute() =
 module Helpers =
     let internal (==) x y = LanguagePrimitives.PhysicalEquality x y
 
-    type TimeSpan with
-        static member sum = Seq.fold (+) TimeSpan.Zero
-
     let ignore2 _ _ = ()
     let ignore3 _ _ _ = ()
 
@@ -202,7 +199,7 @@ module Fuchu =
           Ignored = get (TestResult.Ignored "")
           Failed = get (TestResult.Failed "")
           Errored = get (TestResult.Exception null)
-          Time = results |> Seq.map (fun r -> r.Time) |> TimeSpan.sum }
+          Time = results |> Seq.map (fun r -> r.Time) |> Seq.fold (+) TimeSpan.Zero }
 
     let evalTestList =
         let failExceptions = [
