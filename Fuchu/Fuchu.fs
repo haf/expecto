@@ -103,14 +103,11 @@ open Helpers
 
 [<AutoOpen; Extension>]
 module Fuchu =
-
-    let withLabel label test = TestLabel (label, test)
-
     let inline (=>>) label testList =
-        TestList testList |> withLabel label
+        TestLabel(label, TestList testList)
 
     let inline (=>) label t = 
-        TestCase t |> withLabel label
+        TestLabel(label, TestCase t)
 
     let inline (+>) f =
          Seq.map (fun (name, partialTest) ->
@@ -375,21 +372,21 @@ type Test with
         TestCase f.Invoke
 
     static member Case (label, f: Action) = 
-        TestCase f.Invoke |> withLabel label
+        TestLabel(label, TestCase f.Invoke)
 
     static member Case (label: string, f: Action<_>) = 
         label ==> f
 
     [<Extension>]
     static member List (tests, name) = 
-        TestList tests |> withLabel name
+        TestLabel(name, TestList tests)
 
     [<Extension>]
     static member List ([<ParamArray>] tests) = 
         TestList tests
 
     static member List (name, [<ParamArray>] tests) = 
-        TestList tests |> withLabel name
+        TestLabel(name, TestList tests)
 
     static member List (name, tests: Func<Test seq>) = 
         Test.List(name, tests.Invoke() |> Seq.toArray)
@@ -400,9 +397,6 @@ type Test with
     static member List (name, setup: Func<_,_>, [<ParamArray>] tests) =
         let tests = tests |> Array.map (fun (name, test) -> Test.Case(name, setup.Invoke test))
         Test.List(name, tests)
-
-    [<Extension>]
-    static member WithLabel (test, label) = TestLabel (label, test)
 
     [<Extension>]
     static member Run tests = TestList tests |> run
