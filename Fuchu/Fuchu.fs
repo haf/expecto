@@ -5,8 +5,10 @@ open System.Linq
 open System.Runtime.CompilerServices
 open System.Reflection
 
+/// Actual test function
 type TestCode = unit -> unit
 
+/// Test tree
 type Test = 
     | TestCase of TestCode
     | TestList of Test seq
@@ -58,6 +60,7 @@ module Helpers =
         
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
+    /// Flattens a tree of tests
     let toTestCodeList =
         let rec loop parentName testList =
             function
@@ -71,18 +74,21 @@ module Test =
             | TestList tests -> Seq.collect (loop parentName testList) tests
         loop null Seq.empty
 
+    /// Maps all TestCodes in a Test
     let rec wrap f =
         function
         | TestCase test -> TestCase (f test)
         | TestList testList -> TestList (Seq.map (wrap f) testList)
         | TestLabel (label, test) -> TestLabel (label, wrap f test)
 
+    /// Filter tests by name
     let filter pred =
         toTestCodeList 
         >> Seq.filter (fst >> pred)
         >> Seq.map (fun (name, test) -> TestLabel (name, TestCase test))
         >> TestList
 
+    /// Applies a timeout to a test
     let timeout timeout (test: TestCode) : TestCode =
         let testFunc = Func<_,_> test
         let asyncTestFunc = Async.FromBeginEnd((fun (b,c) -> testFunc.BeginInvoke((),b,c)), testFunc.EndInvoke)
@@ -276,15 +282,17 @@ module Fuchu =
 
     let evalSilent = eval ignore ignore2 ignore2 ignore3 ignore3 Seq.map
 
-    let runEval eval tests = 
+    let runEval eval (tests: Test) = 
         let results = eval tests
         let summary = sumTestResults results
         tprintf "%s" (summary.ToString())
         summary.ToErrorLevel()
 
+    /// Runs tests
     [<Extension; CompiledName("Run")>]
     let run tests = runEval evalSeq tests
     
+    /// Runs tests in parallel
     [<Extension; CompiledName("RunParallel")>]
     let runParallel tests = runEval evalPar tests
 
@@ -326,6 +334,7 @@ module Fuchu =
         |> Seq.toList
         |> listToTestListOption
 
+    /// Gets tests marked with TestsAttribute from an assembly
     let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
 
     type RunOptions = { Parallel: bool }
@@ -336,10 +345,16 @@ module Fuchu =
             (defaultOptions, args) 
             ||> Seq.fold (fun opt arg -> 
                             (opt, opts) ||> Seq.fold (fun o (a,f) -> if a = arg then f o else o))
+
+    /// Runs tests with supplied options. Returns 0 if all tests passed, otherwise 1
     let defaultMainWithOptions tests (options: RunOptions) = 
         let run = if options.Parallel then runParallel else run
         run tests
+
+    /// Runs tests with supplied command-line options. Returns 0 if all tests passed, otherwise 1
     let defaultMain tests = parseArgs >> defaultMainWithOptions tests
+
+    /// Runs tests in this assembly with supplied command-line options. Returns 0 if all tests passed, otherwise 1
     let defaultMainThisAssembly args = 
         let tests =
             match testFromAssembly (Assembly.GetEntryAssembly()) with
@@ -401,14 +416,17 @@ type Test with
             Action r
         Func<_,_> f
 
+    /// Maps all TestCodes in a Test
     [<Extension>]
     static member Wrap (test, f: Func<Action,Action>) = 
         test |> Test.wrap (fun t -> f.Invoke(Action t).Invoke)
 
+    /// Applies a timeout to a test
     [<Extension>]
     static member Timeout(test: Action, timeout) = 
         Action(Test.timeout timeout test.Invoke)
 
+    /// Filter tests by name
     [<Extension>]
     static member Where(test, pred: Func<_,_>) = 
         Test.filter pred.Invoke test
