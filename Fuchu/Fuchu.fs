@@ -378,24 +378,21 @@ type Test with
         TestCase f.Invoke
 
     static member Case (label, f: Action) = 
-        TestLabel(label, TestCase f.Invoke)
+        label => f.Invoke
 
     static member Case (label: string, f: Action<_>) = 
         label ==> f
 
     [<Extension>]
     static member List (tests, name) = 
-        TestLabel(name, TestList tests)
+        name =>> tests
 
     [<Extension>]
     static member List ([<ParamArray>] tests) = 
         TestList tests
 
-    static member List (name, [<ParamArray>] tests) = 
-        TestLabel(name, TestList tests)
-
-    static member List (name, tests: Func<Test seq>) = 
-        Test.List(name, tests.Invoke() |> Seq.toArray)
+    static member List (name, [<ParamArray>] tests: Test[]) = 
+        name =>> tests
 
     static member List ([<ParamArray>] tests) =
         tests |> Seq.map Test.Case |> TestList
