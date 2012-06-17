@@ -180,13 +180,13 @@ module Tests =
                         Assert.AreEqual(None, test)
             ]
 
-            "parse args" =>> [
-                "default" => 
+            testList "parse args" [
+                testCase "default" <|
                     fun _ ->
                         let opts = parseArgs [||]
                         Assert.False opts.Parallel
 
-                "parallel" => 
+                testCase "parallel" <|
                     fun _ ->
                         let opts = parseArgs [|"/m"|]
                         Assert.True opts.Parallel

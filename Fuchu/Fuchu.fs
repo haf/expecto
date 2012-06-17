@@ -317,11 +317,12 @@ module Tests =
     open Impl
     open Helpers
 
-    let inline (=>>) label testList =
-        TestLabel(label, TestList testList)
+    let inline testList name tests = TestLabel(name, TestList tests)
+    let inline testCase name test = TestLabel(name, TestCase test)
 
-    let inline (=>) label t = 
-        TestLabel(label, TestCase t)
+    let inline (=>>) name tests = testList name tests
+
+    let inline (=>) name test = testCase name test
 
     let inline (+>) f =
          Seq.map (fun (name, partialTest) ->
