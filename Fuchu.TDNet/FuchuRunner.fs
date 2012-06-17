@@ -2,6 +2,7 @@
 
 open TestDriven.Framework
 open Fuchu
+open Fuchu.Impl
 
 type FuchuRunner() =
     let locker = obj()

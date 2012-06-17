@@ -22,8 +22,6 @@ type TestsAttribute() =
     inherit Attribute()
 
 module Helpers =
-    let internal (==) x y = LanguagePrimitives.PhysicalEquality x y
-
     let ignore2 _ _ = ()
     let ignore3 _ _ _ = ()
 
@@ -99,21 +97,9 @@ module Test =
                 let ts = TimeSpan.FromMilliseconds (float timeout)
                 raise <| AssertException(sprintf "Timeout (%A)" ts)
 
-open Helpers
 
-[<AutoOpen; Extension>]
-module Fuchu =
-    let inline (=>>) label testList =
-        TestLabel(label, TestList testList)
-
-    let inline (=>) label t = 
-        TestLabel(label, TestCase t)
-
-    let inline (+>) f =
-         Seq.map (fun (name, partialTest) ->
-                        name => f partialTest)
-
-    let inline (==>) name test = name,test
+module Impl =
+    open Helpers
 
     type TestResult = 
         | Passed
@@ -285,14 +271,6 @@ module Fuchu =
         tprintf "%s" (summary.ToString())
         summary.ToErrorLevel()
 
-    /// Runs tests
-    [<Extension; CompiledName("Run")>]
-    let run tests = runEval evalSeq tests
-    
-    /// Runs tests in parallel
-    [<Extension; CompiledName("RunParallel")>]
-    let runParallel tests = runEval evalPar tests
-
     let testFromMember (m: MemberInfo): Test option =
         [m]
         |> List.filter (fun m -> m.HasAttributeType typeof<TestsAttribute>)
@@ -333,6 +311,31 @@ module Fuchu =
 
     /// Gets tests marked with TestsAttribute from an assembly
     let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
+
+[<AutoOpen; Extension>]
+module Fuchu =
+    open Impl
+    open Helpers
+
+    let inline (=>>) label testList =
+        TestLabel(label, TestList testList)
+
+    let inline (=>) label t = 
+        TestLabel(label, TestCase t)
+
+    let inline (+>) f =
+         Seq.map (fun (name, partialTest) ->
+                        name => f partialTest)
+
+    let inline (==>) name test = name,test
+
+    /// Runs tests
+    [<Extension; CompiledName("Run")>]
+    let run tests = runEval evalSeq tests
+    
+    /// Runs tests in parallel
+    [<Extension; CompiledName("RunParallel")>]
+    let runParallel tests = runEval evalPar tests
 
     type RunOptions = { Parallel: bool }
     let parseArgs =
@@ -402,10 +405,10 @@ type Test with
     static member Run tests = TestList tests |> run
 
     static member Fixture (setup: Func<_>, teardown: Action<_>) =
-        if setup == null then raise (ArgumentNullException("setup"))
-        if teardown == null then raise (ArgumentNullException("teardown"))
+        if setup = null then raise (ArgumentNullException("setup"))
+        if teardown = null then raise (ArgumentNullException("teardown"))
         let f (test: Action<_>) = 
-            if test == null then raise (ArgumentNullException("test"))
+            if test = null then raise (ArgumentNullException("test"))
             let r = Helpers.bracket setup.Invoke teardown.Invoke test.Invoke
             Action r
         Func<_,_> f

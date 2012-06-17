@@ -1,5 +1,6 @@
 ﻿module Fuchu.TeamCity
 
+open Fuchu.Impl
 open System
 open JetBrains.TeamCity.ServiceMessages.Write
 open JetBrains.TeamCity.ServiceMessages.Write.Special

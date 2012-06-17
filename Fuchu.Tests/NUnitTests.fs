@@ -2,6 +2,7 @@
 
 module NUnitTests = 
     open Fuchu
+    open Fuchu.Impl
     open Fuchu.NUnit
     open Fuchu.NUnitTestTypes
     open NUnit.Framework

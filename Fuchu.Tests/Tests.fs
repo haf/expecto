@@ -18,6 +18,7 @@ module EmptyModule =
 
 module Tests =
     open Fuchu
+    open Fuchu.Impl
     open System.Threading
     open System.IO
     open FSharpx
