@@ -105,19 +105,19 @@ module Impl =
         | Passed
         | Ignored of string
         | Failed of string
-        | Exception of exn
+        | Error of exn
         override x.ToString() = 
             match x with
             | Passed -> "Passed"
             | Ignored reason -> "Ignored: " + reason
             | Failed error -> "Failed: " + error
-            | Exception e -> "Exception: " + exnToString e
+            | Error e -> "Exception: " + exnToString e
         static member tag = 
             function
             | Passed -> 0
             | Ignored _ -> 1
             | Failed _ -> 2
-            | Exception _ -> 3
+            | Error _ -> 3
         static member isPassed =
             function
             | Passed -> true
@@ -132,7 +132,7 @@ module Impl =
             | _ -> false
         static member isException =
             function
-            | Exception _ -> true
+            | Error _ -> true
             | _ -> false
 
     [<StructuredFormatDisplay("{Description}")>]
@@ -187,7 +187,7 @@ module Impl =
         { Passed = get TestResult.Passed
           Ignored = get (TestResult.Ignored "")
           Failed = get (TestResult.Failed "")
-          Errored = get (TestResult.Exception null)
+          Errored = get (TestResult.Error null)
           Time = results |> Seq.map (fun r -> r.Time) |> Seq.fold (+) TimeSpan.Zero }
 
     let evalTestList =
@@ -238,7 +238,7 @@ module Impl =
                     | _ ->
                         onException name e w.Elapsed
                         { Name = name
-                          Result = TestResult.Exception e
+                          Result = TestResult.Error e
                           Time = w.Elapsed }
             map execOne
 
