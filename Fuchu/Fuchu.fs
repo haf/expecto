@@ -347,14 +347,17 @@ module Tests =
                             (opt, opts) ||> Seq.fold (fun o (a,f) -> if a = arg then f o else o))
 
     /// Runs tests with supplied options. Returns 0 if all tests passed, otherwise 1
+    [<CompiledNameAttribute("DefaultMainWithOptions")>]
     let defaultMainWithOptions tests (options: RunOptions) = 
         let run = if options.Parallel then runParallel else run
         run tests
-
+    
     /// Runs tests with supplied command-line options. Returns 0 if all tests passed, otherwise 1
+    [<CompiledNameAttribute("DefaultMain")>]
     let defaultMain tests = parseArgs >> defaultMainWithOptions tests
 
     /// Runs tests in this assembly with supplied command-line options. Returns 0 if all tests passed, otherwise 1
+    [<CompiledNameAttribute("DefaultMainThisAssembly")>]
     let defaultMainThisAssembly args = 
         let tests =
             match testFromAssembly (Assembly.GetEntryAssembly()) with
