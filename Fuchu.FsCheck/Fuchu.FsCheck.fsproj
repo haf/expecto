@@ -2,18 +2,17 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{4182e778-f6c2-4ba4-bfc7-19db54890e18}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Fuchu.Tests</RootNamespace>
-    <AssemblyName>Fuchu.Tests</AssemblyName>
+    <ProjectGuid>{58507646-335a-460e-b283-77a2baf0d3a8}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Fuchu.FsCheck</RootNamespace>
+    <AssemblyName>Fuchu.FsCheck</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <Name>Fuchu.Tests</Name>
-    <TargetFrameworkProfile />
+    <Name>Fuchu.FsCheck</Name>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -21,31 +20,21 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-    <DocumentationFile>bin\Debug\Fuchu.Tests.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Fuchu.FsCheck.XML</DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-    <DocumentationFile>bin\Release\Fuchu.Tests.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\Fuchu.FsCheck.XML</DocumentationFile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
-    <Compile Include="Prelude.fs" />
-    <Compile Include="NUnitTestTypes.fs" />
-    <Compile Include="NUnitTests.fs" />
-    <Compile Include="MbUnitTestTypes.fs" />
-    <Compile Include="MbUnitTests.fs" />
-    <Compile Include="Tests.fs" />
-    <Compile Include="FsCheckTests.fs" />
-    <Compile Include="Main.fs" />
-    <None Include="Tests.fsx" />
+    <Compile Include="FsCheck.fs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -53,39 +42,19 @@
       <HintPath>..\packages\FsCheck.0.7.1\lib\net35\FsCheck.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="FSharp.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="FSharpx.Core">
-      <HintPath>..\lib\FSharpx.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Gallio">
-      <HintPath>..\lib\Gallio.dll</HintPath>
-    </Reference>
-    <Reference Include="MbUnit">
-      <HintPath>..\lib\MbUnit.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
-    <Reference Include="nunit.framework">
-      <HintPath>..\lib\nunit.framework.dll</HintPath>
-    </Reference>
+    <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <ProjectReference Include="..\Fuchu.FsCheck\Fuchu.FsCheck.fsproj">
-      <Name>Fuchu.FsCheck</Name>
-      <Project>{58507646-335a-460e-b283-77a2baf0d3a8}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\Fuchu.TeamCity\Fuchu.TeamCity.fsproj">
-      <Name>Fuchu.TeamCity</Name>
-      <Project>{c316cfaa-13f8-452a-ada1-1ab9535aa25d}</Project>
-      <Private>True</Private>
-    </ProjectReference>
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Fuchu\Fuchu.fsproj">
       <Name>Fuchu</Name>
       <Project>{c0d55728-10a9-4a7a-9df9-d2f21f663ac2}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="../.nuget/BuildMagic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
 	<Target Name="BeforeBuild">

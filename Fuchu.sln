@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{423450
 		.nuget\packages.config = .nuget\packages.config
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.FsCheck", "Fuchu.FsCheck\Fuchu.FsCheck.fsproj", "{58507646-335A-460E-B283-77A2BAF0D3A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +78,16 @@ Global
 		{C316CFAA-13F8-452A-ADA1-1AB9535AA25D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{C316CFAA-13F8-452A-ADA1-1AB9535AA25D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{C316CFAA-13F8-452A-ADA1-1AB9535AA25D}.Release|x86.ActiveCfg = Release|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

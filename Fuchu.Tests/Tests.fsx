@@ -1,14 +1,13 @@
 ﻿#I @"..\lib"
 #r "NUnit.Framework.dll"
+#r @"..\packages\FsCheck.0.7.1\lib\net35\FsCheck.dll"
 #r "FSharpx.Core.dll"
 #load @"..\Fuchu\Fuchu.fs"
-#load @"Prelude.fs"
-#load @"Tests.fs"
+#load @"..\Fuchu.FsCheck\FsCheck.fs"
+#load @"FsCheckTests.fs"
 
 open System
 open Fuchu
-open Fuchu.Tests
 
-tests
-|> Test.filter (fun n -> n.Contains "Reflection")
+FsCheckTests.runFsCheckTests
 |> run
