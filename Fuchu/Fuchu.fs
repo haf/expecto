@@ -313,7 +313,7 @@ module Impl =
     let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
 
 [<AutoOpen; Extension>]
-module Fuchu =
+module Tests =
     open Impl
     open Helpers
 
