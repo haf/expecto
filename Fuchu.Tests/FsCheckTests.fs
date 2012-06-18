@@ -12,7 +12,7 @@ module FsCheckTests =
                     a + b = b + a
             testProperty "Product is distributive over addition" <|
                 fun a b c -> 
-                    a * (b + c) = a * a + a * c
+                    a * (b + c) = a * a + a * c // wrong on purpose to test failures
         ]
 
     open NUnit.Framework
