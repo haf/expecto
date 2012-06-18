@@ -8,16 +8,13 @@ module FsCheck =
 
     let internal runner = 
         { new IRunner with
-            member x.OnStartFixture t =
-                tprintf "%s" (onStartFixtureToString t)
-            member x.OnArguments (ntest,args, every) =
-                tprintf "%s" (every ntest args)
-            member x.OnShrink(args, everyShrink) =
-                tprintf "%s" (everyShrink args)
+            member x.OnStartFixture t = ()
+            member x.OnArguments (ntest,args, every) = ()
+            member x.OnShrink(args, everyShrink) = ()
             member x.OnFinished(name,testResult) = 
                 let msg = onFinishedToString name testResult
                 match testResult with
-                | TestResult.True _ -> tprintf "%s" msg
+                | TestResult.True _ -> ()
                 | _ -> failtest msg
         }
 
