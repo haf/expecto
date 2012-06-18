@@ -154,9 +154,8 @@ module Impl =
               Failed = c1.Failed + c2.Failed
               Errored = c1.Errored + c2.Errored
               Time = c1.Time + c2.Time }
-        static member toErrorLevel (c: TestResultCounts) =
+        static member errorCode (c: TestResultCounts) =
             (if c.Failed > 0 then 1 else 0) ||| (if c.Errored > 0 then 2 else 0)
-        member x.ToErrorLevel() = TestResultCounts.toErrorLevel x
 
     [<StructuredFormatDisplay("{Description}")>]
     type TestRunResult = {
@@ -293,7 +292,7 @@ module Impl =
         let results = eval tests
         let summary = sumTestResults results
         tprintf "%s" (summary.ToString())
-        summary.ToErrorLevel()
+        TestResultCounts.errorCode summary
 
     let testFromMember (m: MemberInfo): Test option =
         [m]
