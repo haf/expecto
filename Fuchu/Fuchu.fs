@@ -289,8 +289,6 @@ module Impl =
                 Exception = printException }
         eval printer pmap
 
-    let evalSilent = eval TestPrinters.Default Seq.map
-
     let runEval eval (tests: Test) = 
         let results = eval tests
         let summary = sumTestResults results

@@ -19,3 +19,11 @@ module Seq =
         if a.Length = 2
             then Some (a.[0], a.[1])
             else None
+
+[<AutoOpen>]
+module TestHelpers = 
+    open Fuchu
+    open Fuchu.Impl
+
+    let evalSilent = eval TestPrinters.Default Seq.map
+
