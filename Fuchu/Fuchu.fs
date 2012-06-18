@@ -208,7 +208,7 @@ module Impl =
 
     let evalTestList =
         let failExceptions = [
-            "Fuchu.AssertException"
+            typeof<AssertException>.FullName
             "NUnit.Framework.AssertionException"
             "Gallio.Framework.Assertions.AssertionFailureException"
             "Gallio.Framework.Assertions.AssertionException"
