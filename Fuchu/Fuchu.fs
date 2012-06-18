@@ -37,7 +37,7 @@ module Helpers =
     let tprintf fmt = 
         Printf.kprintf (fun s -> 
                             System.Diagnostics.Trace.Write s
-                            Console.WriteLine s) fmt
+                            Console.Write s) fmt
 
     open System.Text.RegularExpressions
     let rx = lazy Regex(" at (.*) in (.*):line (\d+)", RegexOptions.Compiled ||| RegexOptions.Multiline)
