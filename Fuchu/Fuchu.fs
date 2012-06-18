@@ -274,7 +274,7 @@ module Impl =
 
         eval printer Seq.map
 
-    let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select f
+    let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select(f) :> _ seq
 
     let evalPar =
         let flock =
