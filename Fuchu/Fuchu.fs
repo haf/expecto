@@ -317,6 +317,9 @@ module Tests =
     open Impl
     open Helpers
 
+    let inline failtest msg = raise <| AssertException msg
+    let inline failtestf fmt = Printf.ksprintf (fun msg -> raise <| AssertException msg) fmt
+
     let inline testList name tests = TestLabel(name, TestList tests)
     let inline testCase name test = TestLabel(name, TestCase test)
 

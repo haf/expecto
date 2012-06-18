@@ -26,4 +26,4 @@ module FsCheckTests =
                 Assert.AreEqual(TestResult.Passed, results.[0].Result)
                 match results.[1].Result with
                 | TestResult.Failed _ -> ()
-                | x -> raise <| AssertException (sprintf "Expected Failed, actual %A" x)
+                | x -> failtestf "Expected Failed, actual %A" x

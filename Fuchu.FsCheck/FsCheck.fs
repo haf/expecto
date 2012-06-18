@@ -18,7 +18,7 @@ module FsCheck =
                 let msg = onFinishedToString name testResult
                 match testResult with
                 | TestResult.True _ -> tprintf "%s" msg
-                | _ -> raise <| AssertException msg
+                | _ -> failtest msg
         }
 
     let internal config = 
