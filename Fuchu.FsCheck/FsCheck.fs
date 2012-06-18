@@ -1,5 +1,6 @@
 ﻿namespace Fuchu
 
+[<AutoOpen>]
 module FsCheck =
     open Fuchu
     open Fuchu.Helpers
