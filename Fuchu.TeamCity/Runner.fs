@@ -35,6 +35,12 @@ let evalTeamCity (test: Test) : TestRunResult list =
         lock locker (fun () -> 
                         writer.WriteDuration time
                         writer.WriteFailed(ex.Message, ex.ToString()))
-    eval ignore printPassed printIgnored printFailed printException pmap test
+    let printers = 
+        { TestPrinters.BeforeRun = beforeRun
+          Passed = printPassed
+          Ignored = printIgnored
+          Failed = printFailed
+          Exception = printException }
+    eval printers pmap test
 
 let run = runEval evalTeamCity

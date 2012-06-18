@@ -43,7 +43,13 @@ type FuchuRunner() =
                 listener.TestFinished result)
 
     let run listener = 
-        eval ignore (onPassed listener) (onIgnored listener) (onFailed listener) (onException listener) pmap
+        let printers = 
+            { TestPrinters.BeforeRun = ignore
+              Passed = onPassed listener
+              Ignored = onIgnored listener
+              Failed = onFailed listener
+              Exception = onException listener }
+        eval printers pmap
 
     let resultCountsToTDNetResult (c: TestResultCounts) =
         match c.Passed, c.Failed, c.Errored with

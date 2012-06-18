@@ -190,6 +190,22 @@ module Impl =
           Errored = get (TestResult.Error null)
           Time = results |> Seq.map (fun r -> r.Time) |> Seq.fold (+) TimeSpan.Zero }
 
+    type TestPrinters = {
+        BeforeRun: string -> unit
+        Passed: string -> TimeSpan -> unit
+        Ignored: string -> string -> unit
+        Failed: string -> string -> TimeSpan -> unit
+        Exception: string -> exn -> TimeSpan -> unit
+    } with
+        static member Default = {
+            BeforeRun = ignore
+            Passed = ignore2
+            Ignored = ignore2
+            Failed = ignore3
+            Exception = ignore3
+        }
+
+
     let evalTestList =
         let failExceptions = [
             "Fuchu.AssertException"
@@ -205,14 +221,14 @@ module Impl =
             if List.exists ((=) (e.GetType().FullName)) l
                 then Some()
                 else None
-        fun beforeRun onPassed onIgnored onFailed onException map ->
+        fun (printers: TestPrinters) map ->
             let execOne (name: string, test) = 
-                beforeRun name
+                printers.BeforeRun name
                 let w = System.Diagnostics.Stopwatch.StartNew()
                 try
                     test()
                     w.Stop()
-                    onPassed name w.Elapsed
+                    printers.Passed name w.Elapsed
                     { Name = name
                       Result = Passed
                       Time = w.Elapsed }
@@ -226,31 +242,37 @@ module Impl =
                                 |> Seq.filter (fun q -> q.Contains ",1): ") 
                                 |> Enumerable.FirstOrDefault
                             sprintf "\n%s\n%s\n" e.Message firstLine
-                        onFailed name msg w.Elapsed
+                        printers.Failed name msg w.Elapsed
                         { Name = name
                           Result = Failed msg
                           Time = w.Elapsed }
                     | ExceptionInList ignoreExceptions ->
-                        onIgnored name e.Message
+                        printers.Ignored name e.Message
                         { Name = name
                           Result = Ignored e.Message
                           Time = w.Elapsed }
                     | _ ->
-                        onException name e w.Elapsed
+                        printers.Exception name e w.Elapsed
                         { Name = name
                           Result = TestResult.Error e
                           Time = w.Elapsed }
             map execOne
 
-    let eval beforeRun onPassed onIgnored onFailed onException map tests =
+    let eval (printer: TestPrinters) map tests =
         Test.toTestCodeList tests 
-        |> evalTestList beforeRun onPassed onIgnored onFailed onException map
+        |> evalTestList printer map
         |> Seq.toList
 
     let printFailed = tprintf "%s: Failed: %s (%A)\n"
     let printException name ex = tprintf "%s: Exception: %s (%A)\n" name (exnToString ex)
 
-    let evalSeq = eval ignore ignore2 ignore2 printFailed printException Seq.map
+    let evalSeq = 
+        let printer = 
+            { TestPrinters.Default with 
+                Failed = printFailed
+                Exception = printException }
+
+        eval printer Seq.map
 
     let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select f
 
@@ -261,9 +283,13 @@ module Impl =
         let inline flock3 f a b c = flock (fun () -> f a b c)
         let printFailed = flock3 printFailed 
         let printException = flock3 printException
-        eval ignore ignore2 ignore2 printFailed printException pmap
+        let printer = 
+            { TestPrinters.Default with 
+                Failed = printFailed
+                Exception = printException }
+        eval printer pmap
 
-    let evalSilent = eval ignore ignore2 ignore2 ignore3 ignore3 Seq.map
+    let evalSilent = eval TestPrinters.Default Seq.map
 
     let runEval eval (tests: Test) = 
         let results = eval tests
