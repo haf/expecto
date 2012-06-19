@@ -60,7 +60,14 @@ module Tests =
                     yield "Errored" => fun () -> Assert.AreEqual(7, r.Errored)
                     yield "Time" => fun () -> Assert.AreEqual(TimeSpan.FromSeconds 45., r.Time)
                 ]
+                yield testList "autoplus" [
+                    yield testProperty "Passed" <|
+                        fun (a: TestResultCounts) b ->
+                            let r = a + b
+                            r.Time = a.Time + b.Time
+                ]
                 yield "ToString" => 
+                    let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }
                     fun () -> Assert.AreEqual("6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n", c1.ToString())
             ]
             "Exception handling" =>> [

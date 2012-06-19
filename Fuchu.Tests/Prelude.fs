@@ -24,6 +24,38 @@ module Seq =
 module TestHelpers = 
     open Fuchu
     open Fuchu.Impl
+    open FsCheck
 
     let evalSilent = eval TestPrinters.Default Seq.map
 
+    let genInt64 = 
+        lazy (
+            let inline uuint64 x = uint64 (uint32 x)
+            Gen.two Arb.generate<int>
+            |> Gen.map (fun (h,l) -> int64 ((uuint64 h <<< 32) ||| uuint64 l))
+        )
+
+    let arbTimeSpan = 
+        lazy (
+            let genTimeSpan = genInt64.Value |> Gen.map (fun ticks -> TimeSpan ticks)
+            let shrink (t: TimeSpan) = 
+                if t.Days > 0 then
+                    seq { yield TimeSpan(0, t.Hours, t.Minutes, t.Seconds, t.Milliseconds) }
+                elif t.Hours > 0 then
+                    seq { yield TimeSpan(0, 0, t.Minutes, t.Seconds, t.Milliseconds) }
+                elif t.Minutes > 0 then
+                    seq { yield TimeSpan(0, 0, 0, t.Seconds, t.Milliseconds) }
+                elif t.Seconds > 0 then
+                    seq { yield TimeSpan(0, 0, 0, 0, t.Milliseconds) }
+                elif t.Milliseconds > 0 then
+                    seq { yield TimeSpan(0L) }
+                else
+                    Seq.empty
+            Arb.fromGenShrink (genTimeSpan, shrink)
+        )
+
+    type ArbRegistrations = 
+        static member Int64() = Arb.fromGen genInt64.Value
+        static member TimeSpan() = arbTimeSpan.Value
+
+    Arb.register<ArbRegistrations>() |> ignore

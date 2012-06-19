@@ -46,6 +46,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Fuchu.FsCheck\Fuchu.FsCheck.fsproj">
+      <Project>{58507646-335A-460E-B283-77A2BAF0D3A8}</Project>
+      <Name>Fuchu.FsCheck</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Fuchu.TDNet\Fuchu.TDNet.fsproj">
       <Project>{0C7F95E5-C77C-4856-88BB-857639490343}</Project>
       <Name>Fuchu.TDNet</Name>
