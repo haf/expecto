@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using FsCheck.Fluent;
 using NUnit.Framework;
 
 namespace Fuchu.CSharpTests {
@@ -49,6 +50,10 @@ namespace Fuchu.CSharpTests {
                                 Assert.AreEqual(msg.Length, fileLength);
                             }
                         }));
+
+                // FsCheck integration
+                yield return FsCheck.Property("Addition is commutative",
+                                              Spec.ForAny<int, int>((a, b) => a + b == b + a));
             }
         }
 

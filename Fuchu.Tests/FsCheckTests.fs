@@ -3,7 +3,6 @@
 module FsCheckTests = 
     open Fuchu
     open Fuchu.Impl
-    open Fuchu.FsCheck
 
     let properties = 
         testList "FsCheck" [

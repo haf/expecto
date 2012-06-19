@@ -1,7 +1,9 @@
 ﻿namespace Fuchu
 
-[<AutoOpen>]
-module FsCheck =
+open global.FsCheck.Fluent
+
+[<AutoOpen; CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
+module FuchuFsCheck =
     open Fuchu
     open Fuchu.Helpers
     open global.FsCheck
@@ -22,9 +24,16 @@ module FsCheck =
     let internal config = 
         { Config.Default with
             Runner = runner }
-
+    
     let testProperty name property =
         testCase name <|
             fun _ ->
                 ignore Runner.init.Value
                 FsCheck.Check.One(name, config, property)
+
+type FsCheck =
+    static member Property(name, property: SpecBuilder<_>) =
+        testProperty name (property.Build())
+
+    static member Property(name, property: SpecBuilder<_,_>) =
+        testProperty name (property.Build())
