@@ -53,7 +53,7 @@ namespace Fuchu.CSharpTests {
 
                 // FsCheck integration
                 yield return FsCheck.Property("Addition is commutative",
-                                              Spec.ForAny<int, int>((a, b) => a + b == b + a));
+                                              (int a, int b) => a + b == b + a);
             }
         }
 
