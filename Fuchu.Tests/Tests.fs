@@ -50,23 +50,29 @@ module Tests =
                     fun () -> Assert.AreEqual(TimeSpan.FromMinutes 27., r.Value.Time)
             ]
             "TestResultCounts" =>> [
-                let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }
-                yield "plus" =>> [
-                    let c2 = { Passed = 2; Ignored = 6; Failed = 3; Errored = 4; Time = TimeSpan.FromSeconds 25. }
-                    let r = c1 + c2
-                    yield "Passed" => fun () -> Assert.AreEqual(3, r.Passed)
-                    yield "Ignored" => fun () -> Assert.AreEqual(11, r.Ignored)
-                    yield "Failed" => fun () -> Assert.AreEqual(5, r.Failed)
-                    yield "Errored" => fun () -> Assert.AreEqual(7, r.Errored)
-                    yield "Time" => fun () -> Assert.AreEqual(TimeSpan.FromSeconds 45., r.Time)
-                ]
-                yield testList "autoplus" [
-                    yield testProperty "Passed" <|
+                "plus" =>> [
+                    testProperty "Passed" <|
+                        fun (a: TestResultCounts) b ->
+                            let r = a + b
+                            r.Passed = a.Passed + b.Passed
+                    testProperty "Ignored" <|
+                        fun (a: TestResultCounts) b ->
+                            let r = a + b
+                            r.Ignored = a.Ignored + b.Ignored
+                    testProperty "Failed" <|
+                        fun (a: TestResultCounts) b ->
+                            let r = a + b
+                            r.Failed = a.Failed + b.Failed
+                    testProperty "Errored" <|
+                        fun (a: TestResultCounts) b ->
+                            let r = a + b
+                            r.Errored = a.Errored + b.Errored
+                    testProperty "Time" <|
                         fun (a: TestResultCounts) b ->
                             let r = a + b
                             r.Time = a.Time + b.Time
                 ]
-                yield "ToString" => 
+                "ToString" => 
                     let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }
                     fun () -> Assert.AreEqual("6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n", c1.ToString())
             ]

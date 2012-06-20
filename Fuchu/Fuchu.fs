@@ -335,6 +335,8 @@ module Impl =
     /// Gets tests marked with TestsAttribute from an assembly
     let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
 
+    let testFromThisAssembly () = testFromAssembly (Assembly.GetEntryAssembly())
+
 [<AutoOpen; Extension>]
 module Tests =
     open Impl
