@@ -24,9 +24,12 @@ module Seq =
 module TestHelpers = 
     open Fuchu
     open Fuchu.Impl
-    open FsCheck
 
     let evalSilent = eval TestPrinters.Default Seq.map
+
+    // These generators will probably be included in the next release of FsCheck
+
+    open FsCheck
 
     let genInt64 = 
         lazy (
