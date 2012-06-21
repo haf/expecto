@@ -44,6 +44,13 @@ module Helpers =
     let stackTraceToString s = rx.Value.Replace(s, "$2($3,1): $1")
     let exnToString (e: Exception) = stackTraceToString (e.ToString())
 
+    module Seq =
+        let cons x xs = 
+            seq {
+                yield x
+                yield! xs
+            }
+
     type MemberInfo with
         member m.HasAttributePred (pred: Type -> bool) =
             m.GetCustomAttributes true
@@ -58,6 +65,8 @@ module Helpers =
         
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
+    open Helpers
+
     /// Flattens a tree of tests
     let toTestCodeList =
         let rec loop parentName testList =
@@ -68,7 +77,7 @@ module Test =
                         then name
                         else parentName + "/" + name
                 loop fullName testList test
-            | TestCase test -> (parentName, test)::(Seq.toList testList) :> _ seq
+            | TestCase test -> Seq.cons (parentName, test) testList
             | TestList tests -> Seq.collect (loop parentName testList) tests
         loop null Seq.empty
 
