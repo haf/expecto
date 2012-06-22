@@ -18,7 +18,7 @@ Here's the simplest test possible:
         testCase "A simple test" <| 
             fun _ -> Assert.AreEqual(4, 2+2)
 
-Tests can be grouped:
+Tests can be grouped (with arbitrary nesting):
 
     let tests = 
         testList "A test group" [
@@ -103,3 +103,14 @@ Reference [FsCheck](http://fscheck.codeplex.com/) and Fuchu.FsCheck to check pro
 
     run properties
     
+In C#:
+
+    static Test Properties =
+        Test.List("FsCheck", new[] {
+            FsCheck.Property("Addition is commutative",
+                                (int a, int b) => a + b == b + a),
+            FsCheck.Property("Product is distributive over addition",
+                                (int a, int b, int c) => a * (b + c) == a * b + a * c),
+        });
+
+You can mix FsCheck properties with regular test cases and test lists at will.
