@@ -304,6 +304,10 @@ module Impl =
         |> List.filter (fun m -> m.HasAttributeType typeof<TestsAttribute>)
         |> List.choose (fun m ->
                             match box m with
+                            | :? FieldInfo as m ->
+                                if m.FieldType = typeof<Test>
+                                    then Some(unbox (m.GetValue(null)))
+                                    else None
                             | :? MethodInfo as m -> 
                                 if m.ReturnType = typeof<Test>
                                     then Some(unbox (m.Invoke(null, null)))
@@ -324,8 +328,10 @@ module Impl =
         let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
         let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
         fun (t: Type) ->
-            t.GetMethods bindingFlags |> asMembers
-            |> Seq.append (t.GetProperties bindingFlags |> asMembers)
+            [ t.GetMethods bindingFlags |> asMembers
+              t.GetProperties bindingFlags |> asMembers
+              t.GetFields bindingFlags |> asMembers ]
+            |> Seq.collect id
             |> Seq.choose testFromMember
             |> Seq.toList
             |> listToTestListOption
