@@ -86,6 +86,7 @@ module Tests =
                         | x -> Assert.Fail "Wrong test evaluation"
             ]
             "Setup & teardown" =>> [
+                // just demoing how you can use a higher-order function as setup/teardown
                 let withMemoryStream f () =
                     use s = new MemoryStream()
                     let r = f s
@@ -95,6 +96,7 @@ module Tests =
                 yield "2" => withMemoryStream (fun ms -> ms.Capacity <- 5)
             ]
             "Setup & teardown 2" =>> [
+                // just demoing how you can use a higher-order function as setup/teardown
                 let tests = [
                     "1", fun (ms: MemoryStream) -> ms.Capacity <- 5
                     "2", fun ms -> ms.Capacity <- 5
@@ -115,6 +117,13 @@ module Tests =
                     "can read" ==> 
                         fun ms -> Assert.True(ms.CanRead)
                     "can write" ==>
+                        fun ms -> Assert.True(ms.CanWrite)
+                ]
+                // alt syntax
+                yield! testFixture withMemoryStream [
+                    "can read", 
+                        fun ms -> Assert.True(ms.CanRead)
+                    "can write",
                         fun ms -> Assert.True(ms.CanWrite)
                 ]
             ]

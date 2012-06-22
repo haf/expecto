@@ -45,11 +45,7 @@ module Helpers =
     let exnToString (e: Exception) = stackTraceToString (e.ToString())
 
     module Seq =
-        let cons x xs = 
-            seq {
-                yield x
-                yield! xs
-            }
+        let cons x xs = seq { yield x; yield! xs }
 
     type MemberInfo with
         member m.HasAttributePred (pred: Type -> bool) =
@@ -356,15 +352,13 @@ module Tests =
 
     let inline testList name tests = TestLabel(name, TestList tests)
     let inline testCase name test = TestLabel(name, TestCase test)
+    let inline testFixture setup = 
+         Seq.map (fun (name, partialTest) ->
+                        testCase name (setup partialTest))
 
     let inline (=>>) name tests = testList name tests
-
     let inline (=>) name test = testCase name test
-
-    let inline (+>) f =
-         Seq.map (fun (name, partialTest) ->
-                        name => f partialTest)
-
+    let inline (+>) f = testFixture f
     let inline (==>) name test = name,test
 
     /// Runs tests
