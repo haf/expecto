@@ -52,6 +52,8 @@ In C#:
             });
         }
     }
+    
+For more examples see the [F# tests](https://github.com/mausch/Fuchu/blob/master/Fuchu.Tests/Tests.fs) and the [C# tests](https://github.com/mausch/Fuchu/blob/master/Fuchu.CSharpTests/Program.cs)
 
 
 ## Running tests ##
