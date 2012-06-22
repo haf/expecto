@@ -25,7 +25,7 @@ Tests can be grouped:
             testCase "one test" <|
                 fun _ -> Assert.AreEqual(4, 2+2)
             testCase "another test" <|
-                fun _ -> 
+                fun _ -> Assert.AreEqual(3, 3+3)
         ]
 
 You can also use a more compact syntax if you don't mind the operators:
@@ -39,7 +39,7 @@ You can also use a more compact syntax if you don't mind the operators:
             "one test" =>
                 fun _ -> Assert.AreEqual(4, 2+2)
             "another test" =>
-                fun _ -> 
+                fun _ -> Assert.AreEqual(3, 3+3)
         ]
 
 ## Running tests ##
@@ -61,3 +61,19 @@ You can single out tests by filtering them by name. For example:
 
 You can use the F# REPL to run tests this way.
 
+## FsCheck integration ##
+
+Reference [FsCheck](http://fscheck.codeplex.com/) and Fuchu.FsCheck to check properties:
+
+    let properties = 
+        testList "FsCheck" [
+            testProperty "Addition is commutative" <|
+                fun a b -> 
+                    a + b = b + a
+            testProperty "Product is distributive over addition" <|
+                fun a b c -> 
+                    a * (b + c) = a * b + a * c
+        ]
+
+    run properties
+    
