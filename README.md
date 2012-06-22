@@ -41,6 +41,18 @@ You can also use a more compact syntax if you don't mind the operators:
             "another test" =>
                 fun _ -> Assert.AreEqual(3, 3+3)
         ]
+        
+In C#:
+
+    static Test ATest {
+        get {
+            return Test.List("A test group", new[] {
+                Test.Case("one test", () => Assert.AreEqual(4, 2+2)),
+                Test.Case("another test", () => Assert.AreEqual(6, 3+3)),
+            });
+        }
+    }
+
 
 ## Running tests ##
 
@@ -53,6 +65,8 @@ which returns 1 if any tests failed, otherwise 0. Useful for returning to the op
     [<EntryPoint>]
     let main args = defaultMainThisAssembly args
     
+This `defaultMainThisAssembly` function admits a "/m" parameter passed through the command-line to run tests in parallel.
+    
 You can single out tests by filtering them by name. For example:
 
     tests
@@ -60,6 +74,18 @@ You can single out tests by filtering them by name. For example:
     |> run
 
 You can use the F# REPL to run tests this way.
+
+In C#:
+
+    static int Main(string[] args) {
+        return ATest.Run(); // or RunParallel()
+    }
+
+Or scanning for tests marked with the [Tests] attribute:
+
+    static int Main(string[] args) {
+        return Tests.DefaultMainThisAssembly(args);
+    }
 
 ## FsCheck integration ##
 
