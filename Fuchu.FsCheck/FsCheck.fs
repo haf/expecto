@@ -39,8 +39,17 @@ type FsCheck =
     static member Property(name, property: SpecBuilder<_,_>) =
         testProperty name (property.Build())
 
+    static member Property(name, property: SpecBuilder<_,_,_>) =
+        testProperty name (property.Build())
+
     static member Property(name, property: Func<_,bool>) =
         testProperty name property.Invoke
 
     static member Property(name, property: Func<_,_,bool>) =
         testProperty name (fun a b -> property.Invoke(a,b))
+
+    static member Property(name, property: Func<_,_,_,bool>) =
+        testProperty name (fun a b c -> property.Invoke(a,b,c))
+
+    static member Property(name, property: Func<_,_,_,_,bool>) =
+        testProperty name (fun a b c d -> property.Invoke(a,b,c,d))
