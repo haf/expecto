@@ -184,13 +184,10 @@ module Tests =
                 yield "from type" =>
                     fun _ ->
                         match testFromType Dummy.thisModuleType.Value with
-                        | Some (TestList t) ->
-                            match Seq.toList t with
-                            | [
-                                TestLabel("test A", TestList _)
-                                TestLabel("test B", TestList _)
-                              ] -> ()
-                            | x -> Assert.Fail (sprintf "TestList expected, found %A" x)
+                        | Some (TestList (
+                                    Seq.Two (
+                                        TestLabel("test B", TestList _), 
+                                        TestLabel("test A", TestList _)))) -> ()
                         | x -> Assert.Fail (sprintf "TestList expected, found %A" x)
                 yield "from empty type" =>
                     fun _ ->
