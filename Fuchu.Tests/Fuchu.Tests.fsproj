@@ -45,12 +45,12 @@
     <Compile Include="Tests.fs" />
     <Compile Include="FsCheckTests.fs" />
     <Compile Include="Main.fs" />
-    <None Include="Tests.fsx" />
     <None Include="packages.config" />
+    <None Include="Tests.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsCheck">
-      <HintPath>..\packages\FsCheck.0.7.1\lib\net35\FsCheck.dll</HintPath>
+      <HintPath>..\packages\FsCheck.0.8.1.0\lib\net40-Client\FsCheck.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />

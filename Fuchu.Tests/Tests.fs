@@ -51,26 +51,22 @@ module Tests =
             ]
             "TestResultCounts" =>> [
                 "plus" =>> [
-                    testProperty "Passed" <|
-                        fun (a: TestResultCounts) b ->
-                            let r = a + b
-                            r.Passed = a.Passed + b.Passed
-                    testProperty "Ignored" <|
-                        fun (a: TestResultCounts) b ->
-                            let r = a + b
-                            r.Ignored = a.Ignored + b.Ignored
-                    testProperty "Failed" <|
-                        fun (a: TestResultCounts) b ->
-                            let r = a + b
-                            r.Failed = a.Failed + b.Failed
-                    testProperty "Errored" <|
-                        fun (a: TestResultCounts) b ->
-                            let r = a + b
-                            r.Errored = a.Errored + b.Errored
-                    testProperty "Time" <|
-                        fun (a: TestResultCounts) b ->
-                            let r = a + b
-                            r.Time = a.Time + b.Time
+                    let testResultCountsSum name f =
+                        testProperty name 
+                            (FsCheck.Prop.forAll twoTestResultCounts.Value <|
+                                fun (a,b) ->
+                                    let r = a + b
+                                    f a b r)
+                    yield testResultCountsSum "Passed" <|
+                        fun a b r -> r.Passed = a.Passed + b.Passed
+                    yield testResultCountsSum "Ignored" <|
+                        fun a b r -> r.Ignored = a.Ignored + b.Ignored
+                    yield testResultCountsSum "Failed" <|
+                        fun a b r -> r.Failed = a.Failed + b.Failed
+                    yield testResultCountsSum "Errored" <|
+                        fun a b r -> r.Errored = a.Errored + b.Errored
+                    yield testResultCountsSum "Time" <|
+                        fun a b r -> r.Time = a.Time + b.Time
                 ]
                 "ToString" => 
                     let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }

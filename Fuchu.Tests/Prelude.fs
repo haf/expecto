@@ -27,38 +27,54 @@ module TestHelpers =
 
     let evalSilent = eval TestPrinters.Default Seq.map
 
-    // These generators will probably be included in the next release of FsCheck
-
     open FsCheck
 
-    let genInt64 = 
+    let genLimitedTimeSpan = 
         lazy (
-            let inline uuint64 x = uint64 (uint32 x)
-            Gen.two Arb.generate<int>
-            |> Gen.map (fun (h,l) -> int64 ((uuint64 h <<< 32) ||| uuint64 l))
+            Arb.generate<TimeSpan> 
+            |> Gen.suchThat (fun t -> t.Days = 0)
         )
 
-    let arbTimeSpan = 
+    let genTestResultCounts = 
         lazy (
-            let genTimeSpan = genInt64.Value |> Gen.map (fun ticks -> TimeSpan ticks)
-            let shrink (t: TimeSpan) = 
-                if t.Days > 0 then
-                    seq { yield TimeSpan(0, t.Hours, t.Minutes, t.Seconds, t.Milliseconds) }
-                elif t.Hours > 0 then
-                    seq { yield TimeSpan(0, 0, t.Minutes, t.Seconds, t.Milliseconds) }
-                elif t.Minutes > 0 then
-                    seq { yield TimeSpan(0, 0, 0, t.Seconds, t.Milliseconds) }
-                elif t.Seconds > 0 then
-                    seq { yield TimeSpan(0, 0, 0, 0, t.Milliseconds) }
-                elif t.Milliseconds > 0 then
-                    seq { yield TimeSpan(0L) }
-                else
-                    Seq.empty
-            Arb.fromGenShrink (genTimeSpan, shrink)
+            gen {
+                let! passed = Arb.generate<int>
+                let! ignored = Arb.generate<int>
+                let! failed = Arb.generate<int>
+                let! errored = Arb.generate<int>
+                let! time = genLimitedTimeSpan.Value
+                return {
+                    TestResultCounts.Passed = passed
+                    Ignored = ignored
+                    Failed = failed
+                    Errored = errored
+                    Time = time
+                }
+            }
         )
 
-    type ArbRegistrations = 
-        static member Int64() = Arb.fromGen genInt64.Value
-        static member TimeSpan() = arbTimeSpan.Value
+    let shrinkTestResultCounts (c: TestResultCounts) : TestResultCounts seq = 
+        seq {
+            for passed in Arb.shrink c.Passed do
+            for ignored in Arb.shrink c.Ignored do
+            for failed in Arb.shrink c.Failed do
+            for errored in Arb.shrink c.Errored do
+            for time in Arb.shrink c.Time ->
+            {
+                TestResultCounts.Passed = passed
+                Ignored = ignored
+                Failed = failed
+                Errored = errored
+                Time = time
+            }
+        }
 
-    Arb.register<ArbRegistrations>() |> ignore
+    let arbTestResultCounts = 
+        lazy (
+            Arb.fromGenShrink(genTestResultCounts.Value, shrinkTestResultCounts)
+        )
+
+    let twoTestResultCounts = 
+        lazy (
+            Gen.two arbTestResultCounts.Value.Generator |> Arb.fromGen
+        )
