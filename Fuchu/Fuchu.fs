@@ -294,8 +294,10 @@ module Impl =
         eval printer pmap
 
     let runEval eval (tests: Test) = 
+        let w = System.Diagnostics.Stopwatch.StartNew()
         let results = eval tests
-        let summary = sumTestResults results
+        w.Stop()
+        let summary = { sumTestResults results with Time = w.Elapsed }
         tprintf "%s" (summary.ToString())
         TestResultCounts.errorCode summary
 
