@@ -91,21 +91,26 @@ Or scanning for tests marked with the [Tests] attribute:
 
 ## FsCheck integration ##
 
-Reference [FsCheck](http://fscheck.codeplex.com/) and Fuchu.FsCheck to check properties:
+Reference [FsCheck](http://fscheck.codeplex.com/) and Fuchu.FsCheck to test properties:
 
+
+    let config = { FsCheck.Config.Default with MaxTest = 10000 }
+    
     let properties = 
         testList "FsCheck" [
             testProperty "Addition is commutative" <|
                 fun a b -> 
                     a + b = b + a
-            testProperty "Product is distributive over addition" <|
+            
+            // you can also override the FsCheck config
+            testPropertyWithOptions config "Product is distributive over addition" <|
                 fun a b c -> 
                     a * (b + c) = a * b + a * c
         ]
 
     run properties
     
-In C#:
+In C# (can't override FsCheck config at the moment):
 
     static Test Properties =
         Test.List("FsCheck", new[] {
