@@ -4,7 +4,7 @@ open Fuchu
 
 [<EntryPoint>]
 let main args = 
-    defaultMainThisAssembly args
-//    match Impl.testFromThisAssembly() with
-//    | Some t -> runParallel t
-//    | _ -> 0
+    //defaultMainThisAssembly args
+    match Impl.testFromThisAssembly() with
+    | Some t -> runParallel t
+    | _ -> 0

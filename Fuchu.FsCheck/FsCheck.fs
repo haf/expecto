@@ -7,6 +7,7 @@ open global.FsCheck.Fluent
 module FuchuFsCheck =
     open Fuchu
     open Fuchu.Helpers
+    open Fuchu.Impl
     open global.FsCheck
     open global.FsCheck.Runner
 
@@ -25,12 +26,17 @@ module FuchuFsCheck =
     let internal config = 
         { Config.Default with
             Runner = runner }
-    
-    let testProperty name property =
+
+    let testPropertyWithConfig (config: Config) name property = 
+        let config = 
+            { config with
+                Runner = runner }
         testCase name <|
             fun _ ->
                 ignore Runner.init.Value
                 FsCheck.Check.One(name, config, property)
+    
+    let testProperty name = testPropertyWithConfig config name
 
 type FsCheck =
     static member Property(name, property: SpecBuilder<_>) =

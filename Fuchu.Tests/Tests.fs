@@ -24,6 +24,10 @@ module Tests =
     open FSharpx
     open NUnit.Framework
 
+
+    let testProperty name = 
+        testPropertyWithConfig { FsCheck.Config.Default with MaxTest = 100000 } name
+
     [<Tests>]
     let tests = 
         TestList [
