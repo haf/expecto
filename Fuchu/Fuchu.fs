@@ -426,7 +426,7 @@ type Test with
         name =>> tests
 
     [<Extension>]
-    static member List ([<ParamArray>] tests) = 
+    static member List tests = 
         TestList tests
 
     static member List (name, [<ParamArray>] tests: Test[]) = 
