@@ -4,6 +4,10 @@
 It draws heavily from Haskell's [test-framework](http://batterseapower.github.com/test-framework/) and [HUnit](http://hunit.sourceforge.net/).   
 You can read about the rationale and underlying concepts in [this blog post](http://bugsquash.blogspot.com/2012/06/fuchu-functional-test-library-for-net.html).
 
+## Binaries ##
+
+Binaries are available on [Github](https://github.com/mausch/Fuchu/downloads) and [NuGet](http://nuget.org/packages?q=Fuchu).
+
 ## Writing tests ##
 
 Firstly, it should be noted that Fuchu does not implement any assertions at the moment. You're free to use NUnit, MbUnit, or any other test framework for assertions.
