@@ -12,6 +12,6 @@
     <tags>test testing</tags>
   </metadata>
   <files>
-    <file src="Fuchu\bin\Release\Fuchu.*" target="lib"/>
+    <file src="Fuchu\bin\Release\Fuchu.*" target="lib\net40-client"/>
   </files>
 </package>

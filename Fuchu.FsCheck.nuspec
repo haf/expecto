@@ -16,6 +16,6 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="Fuchu.FsCheck\bin\Release\Fuchu.FsCheck.*" target="lib"/>
+    <file src="Fuchu.FsCheck\bin\Release\Fuchu.FsCheck.*" target="lib\net40-client"/>
   </files>
 </package>
