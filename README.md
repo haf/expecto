@@ -107,7 +107,7 @@ Reference [FsCheck](http://fscheck.codeplex.com/) and Fuchu.FsCheck to test prop
                     a + b = b + a
             
             // you can also override the FsCheck config
-            testPropertyWithOptions config "Product is distributive over addition" <|
+            testPropertyWithConfig config "Product is distributive over addition" <|
                 fun a b c -> 
                     a * (b + c) = a * b + a * c
         ]
