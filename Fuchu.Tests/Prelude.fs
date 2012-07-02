@@ -10,16 +10,14 @@ module Seq =
             else Cons(Seq.head l, Seq.skip 1 l)
 
     let (|One|_|) l = 
-        let a = Seq.toList l
-        if a.Length = 1
-            then Some a.[0]
-            else None
+        match Seq.toList l with
+        | [x] -> Some x
+        | _ -> None
 
     let (|Two|_|) l = 
-        let a = Seq.toList l
-        if a.Length = 2
-            then Some (a.[0], a.[1])
-            else None
+        match Seq.toList l with
+        | [x;y] -> Some(x,y)
+        | _ -> None
 
 module String =
     let (|StartsWith|_|) (expected: string) (e: string) = 
