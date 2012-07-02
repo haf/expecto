@@ -463,10 +463,10 @@ type Test with
     static member Run tests = TestList tests |> run
 
     static member Fixture (setup: Func<_>, teardown: Action<_>) =
-        if setup = null then raise (ArgumentNullException("setup"))
-        if teardown = null then raise (ArgumentNullException("teardown"))
+        if setup = null then nullArg "setup"
+        if teardown = null then nullArg "teardown"
         let f (test: Action<_>) = 
-            if test = null then raise (ArgumentNullException("test"))
+            if test = null then nullArg "test"
             let r = Helpers.bracket setup.Invoke teardown.Invoke test.Invoke
             Action r
         Func<_,_> f
