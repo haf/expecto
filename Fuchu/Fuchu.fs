@@ -22,8 +22,8 @@ type TestsAttribute() =
     inherit Attribute()
 
 module Helpers =
-    let ignore2 _ _ = ()
-    let ignore3 _ _ _ = ()
+    let inline ignore2 _ = ignore
+    let inline ignore3 _ = ignore2
 
     let tryGetType t = 
         try
