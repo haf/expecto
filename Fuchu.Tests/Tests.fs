@@ -255,5 +255,27 @@ module Tests =
                     assertTrue "parse fr-FR passes" (TestResult.isPassed results.["parse/fr-FR"])
             ]
 
-        ]
+            testList "assertions" [
+                testList "raise" [
+                    testCase "pass" <| fun _ ->
+                        assertRaise "" typeof<ArgumentNullException> (fun _ -> nullArg "")
 
+                    testCase "fail with incorrect exception" <| fun _ ->
+                        let test () = assertRaise "" typeof<ArgumentException> (fun _ -> nullArg "")
+                        assertTestFails test
+                    
+                    testCase "fail with no exception" <| fun _ ->
+                        let test () = assertRaise "" typeof<ArgumentException> ignore
+                        assertTestFails test
+                ]
+
+                testList "string contain" [
+                    testCase "pass" <| fun _ ->
+                        assertStringContains "" "hello" "hello world"
+
+                    testCase "fail" <| fun _ ->
+                        let test () = assertStringContains "" "a" "hello world"
+                        assertTestFails test
+                ]
+            ]
+        ]
