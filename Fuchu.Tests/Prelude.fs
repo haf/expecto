@@ -5,6 +5,16 @@ open FSharpx
 
 [<AutoOpen>]
 module Assert = 
+    let inline assertNone preface =
+        let preface = 
+            if String.IsNullOrEmpty preface
+                then ""
+                else preface + "\n"
+        
+        function
+        | Some x -> failtestf "%sExpected None, actual Some (%A)" preface x
+        | _ -> ()
+
     let inline assertEqual preface =
         let preface = 
             if String.IsNullOrEmpty preface

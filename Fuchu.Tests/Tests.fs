@@ -201,8 +201,7 @@ module Tests =
                 yield "from empty type" =>
                     fun _ ->
                         let test = testFromType EmptyModule.thisModuleType.Value
-                        if not test.IsNone
-                            then failtestf "Expected None, was %A" test
+                        assertNone "" test
             ]
 
             testList "parse args" [
