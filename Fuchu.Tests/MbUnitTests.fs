@@ -5,7 +5,6 @@ module MbUnitTests =
     open Fuchu.Impl
     open Fuchu.MbUnit
     open Fuchu.MbUnitTestTypes
-    open NUnit.Framework
     
     [<Tests>]
     let tests =
@@ -15,20 +14,21 @@ module MbUnitTests =
                     let test = MbUnitTestToFuchu typeof<string>
                     match test with
                     | TestList (Seq.One (TestList Seq.Empty)) -> ()
-                    | _ -> Assert.Fail(sprintf "Should have been TestList [], but was %A" test)
+                    | _ -> failtestf "Should have been TestList [], but was %A" test
 
             "basic" =>> [
                 let result = lazy evalSilent (MbUnitTestToFuchu typeof<ATestFixture>)
                 yield "read tests" =>
                     fun () ->
-                        Assert.AreEqual(2, result.Value.Length)
+                        result.Value.Length =? 2
                         let testName s = sprintf "%s/%s" typeof<ATestFixture>.FullName s
-                        Assert.AreEqual(testName "ATest", result.Value.[0].Name)
-                        Assert.AreEqual(testName "AnotherTest", result.Value.[1].Name)
+                        result.Value.[0].Name =? testName "ATest"
+                        result.Value.[1].Name =? testName "AnotherTest"
+
                 yield "executed tests" =>
                     fun () ->
-                        Assert.True(TestResult.isPassed result.Value.[0].Result)
-                        Assert.True(TestResult.isException result.Value.[1].Result)
+                        TestResult.isPassed result.Value.[0].Result =? true
+                        TestResult.isException result.Value.[1].Result =? true
             ]
 
             "category" =>> [
@@ -36,22 +36,19 @@ module MbUnitTests =
                 yield "in type" =>
                     fun _ ->
                         match test.Value with
-                        | TestList t -> 
-                            match Seq.toList t with
-                            | [ TestList (Seq.One (TestLabel(listname, TestList _)))] -> StringAssert.Contains("fixture category", listname)
-                            | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test.Value)
-                        | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test.Value)
+                        | TestList 
+                            (Seq.One (TestList 
+                                        (Seq.One (TestLabel(String.Contains "fixture category", TestList _))))) -> ()
+                        | _ -> failtestf "Expected test with categories, found %A" test.Value
+
                 yield "in test" =>
                     fun _ ->
                         match test.Value with
-                        | TestList t -> 
-                            match Seq.toList t with
-                            | [ TestList (Seq.One (TestLabel(_, TestList t)))] -> 
-                                match Seq.toList t with
-                                | [ TestLabel(name, _)] -> StringAssert.Contains("test category", name)
-                                | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test.Value)
-                            | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test.Value)
-                        | _ -> Assert.Fail (sprintf "Expected test with categories, found %A" test.Value)
+                        | TestList 
+                            (Seq.One (TestList 
+                                        (Seq.One (TestLabel(_, TestList 
+                                                                (Seq.One (TestLabel(String.Contains "test category", _)))))))) -> ()
+                        | _ -> failtestf "Expected test with categories, found %A" test.Value
             ]
 
             "with StaticTestFactory" =>
@@ -61,8 +58,9 @@ module MbUnitTests =
                     let testName = testType.Name
                     match test with
                     | TestList 
-                        (Seq.Two (TestList _, TestLabel(_, TestList 
-                                                 (Seq.One (TestLabel("suite name", 
-                                                              TestList (Seq.Two (TestLabel("test 1", TestCase _), TestLabel("test 2", TestCase _))))))))) -> ()
-                    | _ -> Assert.Fail(sprintf "unexpected %A" test)
+                        (Seq.Two (TestList _, 
+                            TestLabel(_, TestList 
+                                (Seq.One (TestLabel("suite name", TestList 
+                                            (Seq.Two (TestLabel("test 1", TestCase _), TestLabel("test 2", TestCase _))))))))) -> ()
+                    | _ -> failtestf "unexpected %A" test
         ]

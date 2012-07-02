@@ -25,13 +25,12 @@ module Tests =
     open System.Threading
     open System.IO
     open FSharpx
-    open NUnit.Framework
 
     [<Tests>]
     let tests = 
         TestList [
             "basic" => 
-                fun () -> Assert.AreEqual(4, 2+2)
+                fun () -> 2+2 =? 4
             "sumTestResults" =>> [
                 let sumTestResultsTests = 
                     [
@@ -44,13 +43,13 @@ module Tests =
                     ]
                 let r = lazy sumTestResults sumTestResultsTests
                 yield "Passed" =>
-                    fun () -> Assert.AreEqual(3, r.Value.Passed)
+                    fun () -> r.Value.Passed =? 3
                 yield "Failed" =>
-                    fun () -> Assert.AreEqual(2, r.Value.Failed)
+                    fun () -> r.Value.Failed =? 2
                 yield "Exception" =>
-                    fun () -> Assert.AreEqual(1, r.Value.Errored)
+                    fun () -> r.Value.Errored =? 1
                 yield "Time" =>
-                    fun () -> Assert.AreEqual(TimeSpan.FromMinutes 27., r.Value.Time)
+                    fun () -> r.Value.Time =? TimeSpan.FromMinutes 27.
             ]
             "TestResultCounts" =>> [
                 "plus" =>> [
@@ -73,13 +72,13 @@ module Tests =
                 ]
                 "ToString" => 
                     let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }
-                    fun () -> Assert.AreEqual("6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n", c1.ToString())
+                    fun () -> c1.ToString() =? "6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n"
             ]
 
             "Exception handling" =>> [
                 "NUnit ignore" => 
                     fun () ->
-                        let test() = Assert.Ignore "a"
+                        let test() = NUnit.Framework.Assert.Ignore "a"
                         let test = TestCase test
                         match evalSilent test with
                         | [{ Result = Ignored "a" }] -> ()
@@ -99,7 +98,7 @@ module Tests =
                 let withMemoryStream f () =
                     use s = new MemoryStream()
                     let r = f s
-                    Assert.AreEqual(5, s.Capacity)
+                    s.Capacity =? 5
                     r
                 yield "1" => withMemoryStream (fun ms -> ms.Capacity <- 5)
                 yield "2" => withMemoryStream (fun ms -> ms.Capacity <- 5)
@@ -113,7 +112,7 @@ module Tests =
                 let withMemoryStream f () =
                     use s = new MemoryStream()
                     let r = f s
-                    Assert.AreEqual(5, s.Capacity)
+                    s.Capacity =? 5
                     r
                 for name,test in tests ->
                     name => withMemoryStream test
@@ -124,16 +123,17 @@ module Tests =
                     f ms
                 yield! withMemoryStream +> [
                     "can read" ==> 
-                        fun ms -> Assert.True(ms.CanRead)
+                        fun ms -> 
+                            if not (ms.CanRead) then failtest "Can't read!"
                     "can write" ==>
-                        fun ms -> Assert.True(ms.CanWrite)
+                        fun ms -> ms.CanWrite =? true
                 ]
                 // alt syntax
                 yield! testFixture withMemoryStream [
                     "can read", 
-                        fun ms -> Assert.True(ms.CanRead)
+                        fun ms -> ms.CanRead =? true
                     "can write",
-                        fun ms -> Assert.True(ms.CanWrite)
+                        fun ms -> ms.CanWrite =? true
                 ]
             ]
             "Test filter" =>> [
@@ -149,31 +149,31 @@ module Tests =
                 yield "with one testcase" =>
                     fun () -> 
                         let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
-                        Assert.AreEqual(1, t.Length)
+                        t.Length =? 1 // same as assertEqual "" 1 t.Length
                 yield "with nested testcase" =>
                     fun () -> 
                         let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList |> Seq.toList
-                        Assert.AreEqual(1, t.Length)
+                        t.Length =? 1
                 yield "with one testlist" =>
                     fun () -> 
                         let t = Test.filter (Strings.contains "c") tests |> Test.toTestCodeList |> Seq.toList
-                        Assert.AreEqual(2, t.Length)
+                        t.Length =? 2
                 yield "with no results" =>
                     fun () -> 
                         let t = Test.filter ((=) "z") tests |> Test.toTestCodeList |> Seq.toList
-                        Assert.AreEqual(0, t.Length)
+                        t.Length =? 0
             ]
             "Timeout" =>> [
                 "fail" =>
                     fun _ ->
                         let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100))
                         let result = evalSilent test |> sumTestResults
-                        Assert.AreEqual(1, result.Failed)
+                        result.Failed =? 1
                 "pass" =>
                     fun _ ->
                         let test = TestCase(Test.timeout 1000 ignore)
                         let result = evalSilent test |> sumTestResults
-                        Assert.AreEqual(1, result.Passed)
+                        result.Passed =? 1
             ]
             "Reflection" =>> [                
                 let getMember name =
@@ -186,14 +186,10 @@ module Tests =
 
                 yield "from member" => 
                     fun _ ->
-                        match getTest "testA" with
-                        | Some name -> Assert.AreEqual("test A", name)
-                        | _ -> Assert.Fail "no test found"
+                        getTest "testA" =? Some "test A"
                 yield "from function" =>
                     fun _ ->
-                        match getTest "testB" with
-                        | Some name -> Assert.AreEqual("test B", name)
-                        | _ -> Assert.Fail "no test found"
+                        getTest "testB" =? Some "test B"
                 yield "from type" =>
                     fun _ ->
                         match testFromType Dummy.thisModuleType.Value with
@@ -201,23 +197,24 @@ module Tests =
                                     Seq.Two (
                                         TestLabel("test B", TestList _), 
                                         TestLabel("test A", TestList _)))) -> ()
-                        | x -> Assert.Fail (sprintf "TestList expected, found %A" x)
+                        | x -> failtestf "TestList expected, found %A" x
                 yield "from empty type" =>
                     fun _ ->
                         let test = testFromType EmptyModule.thisModuleType.Value
-                        Assert.AreEqual(None, test)
+                        if not test.IsNone
+                            then failtestf "Expected None, was %A" test
             ]
 
             testList "parse args" [
                 testCase "default" <|
                     fun _ ->
                         let opts = parseArgs [||]
-                        Assert.False opts.Parallel
+                        opts.Parallel =? false
 
                 testCase "parallel" <|
                     fun _ ->
                         let opts = parseArgs [|"/m"|]
-                        Assert.True opts.Parallel
+                        opts.Parallel =? true
             ]
         ]
 

@@ -5,7 +5,6 @@ module NUnitTests =
     open Fuchu.Impl
     open Fuchu.NUnit
     open Fuchu.NUnitTestTypes
-    open NUnit.Framework
 
     [<Tests>]
     let tests = 
@@ -15,37 +14,50 @@ module NUnitTests =
                     let test = NUnitTestToFuchu typeof<string>
                     match test with
                     | TestList Seq.Empty -> ()
-                    | _ -> Assert.Fail(sprintf "Should have been TestList [], but was %A" test)
+                    | _ -> failtestf "Should have been TestList [], but was %A" test
 
             "basic" =>> [
                 let result = lazy evalSilent (NUnitTestToFuchu typeof<ATestFixture>)
                 yield "read tests" =>
                     fun () ->
-                        Assert.AreEqual(2, result.Value.Length)
+                        assertEqual "test list length"
+                            2 result.Value.Length
                         let testName s = sprintf "%s/%s" typeof<ATestFixture>.FullName s
-                        Assert.AreEqual(testName "ATest", result.Value.[0].Name)
-                        Assert.AreEqual(testName "AnotherTest", result.Value.[1].Name)
+                        assertEqual "first test name" 
+                            (testName "ATest") result.Value.[0].Name
+                        assertEqual "second test name" 
+                            (testName "AnotherTest") result.Value.[1].Name
+
                 yield "executed tests" =>
                     fun () ->
-                        Assert.True(TestResult.isPassed result.Value.[0].Result)
-                        Assert.True(TestResult.isFailed result.Value.[1].Result)
+                        if not (TestResult.isPassed result.Value.[0].Result) 
+                            then failtestf "Expected first test to be passed, actual %A" result.Value.[0].Result
+                        if not (TestResult.isFailed result.Value.[1].Result) 
+                            then failtestf "Expected second test to be failed, actual %A" result.Value.[1].Result
             ]
 
             "with setup" =>
                 fun () ->
                     let test = NUnitTestToFuchu typeof<ATestFixtureWithSetup>
-                    Assert.False(ATestFixtureWithSetup.TearDownCalled, "TearDown was called")
+                    if ATestFixtureWithSetup.TearDownCalled 
+                        then failtest "TearDown was called"
                     let result = evalSilent test
-                    Assert.AreEqual(1, result.Length)
-                    Assert.True(TestResult.isPassed result.[0].Result, "Test not passed")
-                    Assert.True(ATestFixtureWithSetup.TearDownCalled, "TearDown was not called")
+                    assertEqual "test list length" 
+                        1 result.Length
+                    if not (TestResult.isPassed result.[0].Result)
+                        then failtest "test not passed"
+                    if not ATestFixtureWithSetup.TearDownCalled
+                        then failtest "TearDown was not called"
 
             "with teardown and exception in test" =>
                 fun () ->
                     let test = NUnitTestToFuchu typeof<ATestFixtureWithExceptionAndTeardown>
-                    Assert.False(ATestFixtureWithExceptionAndTeardown.TearDownCalled, "TearDown was called")
+                    if ATestFixtureWithExceptionAndTeardown.TearDownCalled
+                        then failtest "TearDown was called"
                     let result = evalSilent test
-                    Assert.AreEqual(1, result.Length)
-                    Assert.True(TestResult.isException result.[0].Result, "Test not failed")
-                    Assert.True(ATestFixtureWithExceptionAndTeardown.TearDownCalled, "TearDown was not called")
+                    assertEqual "test list length" 1 result.Length
+                    if not (TestResult.isException result.[0].Result)
+                        then failtest "Test not failed"
+                    if not ATestFixtureWithExceptionAndTeardown.TearDownCalled
+                        then failtest "TearDown was not called"
         ]

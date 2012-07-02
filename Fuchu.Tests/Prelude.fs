@@ -3,6 +3,20 @@
 open System
 open FSharpx
 
+[<AutoOpen>]
+module Assert = 
+    let inline assertEqual preface =
+        let preface = 
+            if String.IsNullOrEmpty preface
+                then ""
+                else preface + "\n"
+        fun expected actual ->
+            if expected <> actual then
+                failtestf "%sExpected: %A\nActual: %A" preface expected actual
+
+    let inline (=?) actual expected =
+        assertEqual null expected actual
+
 module Seq = 
     let (|Empty|Cons|) l = 
         if Seq.isEmpty l
@@ -20,13 +34,19 @@ module Seq =
         | _ -> None
 
 module String =
-    let (|StartsWith|_|) (expected: string) (e: string) = 
+    let internal stringMatch f expected e =
         if e = null && expected = null then
             Some()
         elif e = null || expected = null then
             None
-        else 
-            e.StartsWith(expected) |> Option.fromBool
+        else
+            f e expected |> Option.fromBool
+
+    let (|StartsWith|_|) =
+        stringMatch (fun (s: string) -> s.StartsWith)
+
+    let (|Contains|_|) =
+        stringMatch (fun (s: string) -> s.Contains)
 
 [<AutoOpen>]
 module TestHelpers = 
