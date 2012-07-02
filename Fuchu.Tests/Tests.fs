@@ -248,10 +248,11 @@ module Tests =
                         |> Seq.map (fun r -> r.Name, r.Result)
                         |> Map.ofSeq
 
-                    results.Count ==? 3
-                    TestResult.isFailed results.["parse/en-US"] ==? true
-                    TestResult.isPassed results.["parse/es-AR"] ==? true
-                    TestResult.isPassed results.["parse/fr-FR"] ==? true
+                    assertEqual "results count" 3 results.Count
+                    let inline assertTrue msg = assertEqual msg true
+                    assertTrue "parse en-US fails" (TestResult.isFailed results.["parse/en-US"])
+                    assertTrue "parse es-AR passes" (TestResult.isPassed results.["parse/es-AR"])
+                    assertTrue "parse fr-FR passes" (TestResult.isPassed results.["parse/fr-FR"])
             ]
 
         ]
