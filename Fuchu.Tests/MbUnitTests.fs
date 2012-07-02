@@ -20,15 +20,15 @@ module MbUnitTests =
                 let result = lazy evalSilent (MbUnitTestToFuchu typeof<ATestFixture>)
                 yield "read tests" =>
                     fun () ->
-                        result.Value.Length =? 2
+                        result.Value.Length ==? 2
                         let testName s = sprintf "%s/%s" typeof<ATestFixture>.FullName s
-                        result.Value.[0].Name =? testName "ATest"
-                        result.Value.[1].Name =? testName "AnotherTest"
+                        result.Value.[0].Name ==? testName "ATest"
+                        result.Value.[1].Name ==? testName "AnotherTest"
 
                 yield "executed tests" =>
                     fun () ->
-                        TestResult.isPassed result.Value.[0].Result =? true
-                        TestResult.isException result.Value.[1].Result =? true
+                        TestResult.isPassed result.Value.[0].Result ==? true
+                        TestResult.isException result.Value.[1].Result ==? true
             ]
 
             "category" =>> [

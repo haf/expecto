@@ -30,7 +30,7 @@ module Tests =
     let tests = 
         TestList [
             "basic" => 
-                fun () -> 2+2 =? 4
+                fun () -> 2+2 ==? 4
             "sumTestResults" =>> [
                 let sumTestResultsTests = 
                     [
@@ -43,13 +43,13 @@ module Tests =
                     ]
                 let r = lazy sumTestResults sumTestResultsTests
                 yield "Passed" =>
-                    fun () -> r.Value.Passed =? 3
+                    fun () -> r.Value.Passed ==? 3
                 yield "Failed" =>
-                    fun () -> r.Value.Failed =? 2
+                    fun () -> r.Value.Failed ==? 2
                 yield "Exception" =>
-                    fun () -> r.Value.Errored =? 1
+                    fun () -> r.Value.Errored ==? 1
                 yield "Time" =>
-                    fun () -> r.Value.Time =? TimeSpan.FromMinutes 27.
+                    fun () -> r.Value.Time ==? TimeSpan.FromMinutes 27.
             ]
             "TestResultCounts" =>> [
                 "plus" =>> [
@@ -72,7 +72,7 @@ module Tests =
                 ]
                 "ToString" => 
                     let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }
-                    fun () -> c1.ToString() =? "6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n"
+                    fun () -> c1.ToString() ==? "6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n"
             ]
 
             "Exception handling" =>> [
@@ -98,7 +98,7 @@ module Tests =
                 let withMemoryStream f () =
                     use s = new MemoryStream()
                     let r = f s
-                    s.Capacity =? 5
+                    s.Capacity ==? 5
                     r
                 yield "1" => withMemoryStream (fun ms -> ms.Capacity <- 5)
                 yield "2" => withMemoryStream (fun ms -> ms.Capacity <- 5)
@@ -112,7 +112,7 @@ module Tests =
                 let withMemoryStream f () =
                     use s = new MemoryStream()
                     let r = f s
-                    s.Capacity =? 5
+                    s.Capacity ==? 5
                     r
                 for name,test in tests ->
                     name => withMemoryStream test
@@ -126,14 +126,14 @@ module Tests =
                         fun ms -> 
                             if not (ms.CanRead) then failtest "Can't read!"
                     "can write" ==>
-                        fun ms -> ms.CanWrite =? true
+                        fun ms -> ms.CanWrite ==? true
                 ]
                 // alt syntax
                 yield! testFixture withMemoryStream [
                     "can read", 
-                        fun ms -> ms.CanRead =? true
+                        fun ms -> ms.CanRead ==? true
                     "can write",
-                        fun ms -> ms.CanWrite =? true
+                        fun ms -> ms.CanWrite ==? true
                 ]
             ]
             "Test filter" =>> [
@@ -149,31 +149,31 @@ module Tests =
                 yield "with one testcase" =>
                     fun () -> 
                         let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
-                        t.Length =? 1 // same as assertEqual "" 1 t.Length
+                        t.Length ==? 1 // same as assertEqual "" 1 t.Length
                 yield "with nested testcase" =>
                     fun () -> 
                         let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList |> Seq.toList
-                        t.Length =? 1
+                        t.Length ==? 1
                 yield "with one testlist" =>
                     fun () -> 
                         let t = Test.filter (Strings.contains "c") tests |> Test.toTestCodeList |> Seq.toList
-                        t.Length =? 2
+                        t.Length ==? 2
                 yield "with no results" =>
                     fun () -> 
                         let t = Test.filter ((=) "z") tests |> Test.toTestCodeList |> Seq.toList
-                        t.Length =? 0
+                        t.Length ==? 0
             ]
             "Timeout" =>> [
                 "fail" =>
                     fun _ ->
                         let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100))
                         let result = evalSilent test |> sumTestResults
-                        result.Failed =? 1
+                        result.Failed ==? 1
                 "pass" =>
                     fun _ ->
                         let test = TestCase(Test.timeout 1000 ignore)
                         let result = evalSilent test |> sumTestResults
-                        result.Passed =? 1
+                        result.Passed ==? 1
             ]
             "Reflection" =>> [                
                 let getMember name =
@@ -186,10 +186,10 @@ module Tests =
 
                 yield "from member" => 
                     fun _ ->
-                        getTest "testA" =? Some "test A"
+                        getTest "testA" ==? Some "test A"
                 yield "from function" =>
                     fun _ ->
-                        getTest "testB" =? Some "test B"
+                        getTest "testB" ==? Some "test B"
                 yield "from type" =>
                     fun _ ->
                         match testFromType Dummy.thisModuleType.Value with
@@ -208,12 +208,12 @@ module Tests =
                 testCase "default" <|
                     fun _ ->
                         let opts = parseArgs [||]
-                        opts.Parallel =? false
+                        opts.Parallel ==? false
 
                 testCase "parallel" <|
                     fun _ ->
                         let opts = parseArgs [|"/m"|]
-                        opts.Parallel =? true
+                        opts.Parallel ==? true
             ]
         ]
 

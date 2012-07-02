@@ -24,7 +24,7 @@ module Assert =
             if expected <> actual then
                 failtestf "%sExpected: %A\nActual: %A" preface expected actual
 
-    let inline (=?) actual expected =
+    let inline (==?) actual expected =
         assertEqual null expected actual
 
 module Seq = 
