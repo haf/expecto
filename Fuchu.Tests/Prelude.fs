@@ -1,6 +1,7 @@
 ﻿namespace Fuchu
 
 open System
+open FSharpx
 
 module Seq = 
     let (|Empty|Cons|) l = 
@@ -19,6 +20,15 @@ module Seq =
         if a.Length = 2
             then Some (a.[0], a.[1])
             else None
+
+module String =
+    let (|StartsWith|_|) (expected: string) (e: string) = 
+        if e = null && expected = null then
+            Some()
+        elif e = null || expected = null then
+            None
+        else 
+            e.StartsWith(expected) |> Option.fromBool
 
 [<AutoOpen>]
 module TestHelpers = 

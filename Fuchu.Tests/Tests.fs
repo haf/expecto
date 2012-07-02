@@ -16,6 +16,9 @@ module Dummy =
 module EmptyModule =
     let thisModuleType = lazy Type.GetType "Fuchu.EmptyModule, Fuchu.Tests"
 
+type CustomNUnitException(msg) =
+    inherit NUnit.Framework.AssertionException(msg)
+
 module Tests =
     open Fuchu
     open Fuchu.Impl
@@ -76,6 +79,7 @@ module Tests =
                     let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }
                     fun () -> Assert.AreEqual("6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n", c1.ToString())
             ]
+
             "Exception handling" =>> [
                 "NUnit ignore" => 
                     fun () ->
@@ -83,8 +87,17 @@ module Tests =
                         let test = TestCase test
                         match evalSilent test with
                         | [{ Result = Ignored "a" }] -> ()
-                        | x -> Assert.Fail "Wrong test evaluation"
+                        | x -> failtestf "Wrong test evaluation\n %A" x
+
+                "Inherit AssertionException counts as failure" =>
+                    fun _ ->
+                        let test () = raise (new CustomNUnitException("hello"))
+                        let test = TestCase test
+                        match evalSilent test with
+                        | [{ Result = Failed (String.StartsWith "\nhello") }] -> ()
+                        | x -> failtestf "Wrong test evaluation\n %A" x
             ]
+
             "Setup & teardown" =>> [
                 // just demoing how you can use a higher-order function as setup/teardown
                 let withMemoryStream f () =

@@ -25,6 +25,11 @@ module Helpers =
     let ignore2 _ _ = ()
     let ignore3 _ _ _ = ()
 
+    let tryGetType t = 
+        try
+            Type.GetType(t, true) |> Some
+        with _ -> None
+
     let disposable f = 
         { new IDisposable with
             member x.Dispose() = f() }
@@ -212,19 +217,24 @@ module Impl =
 
     let evalTestList =
         let failExceptions = [
-            typeof<AssertException>.FullName
-            "NUnit.Framework.AssertionException"
-            "Gallio.Framework.Assertions.AssertionFailureException"
-            "Gallio.Framework.Assertions.AssertionException"
-            "Xunit.Sdk.AssertException"
+            typeof<AssertException>.AssemblyQualifiedName
+            "NUnit.Framework.AssertionException, NUnit.Framework"
+            "Gallio.Framework.Assertions.AssertionFailureException, Gallio"
+            "Gallio.Framework.Assertions.AssertionException, Gallio"
+            "Xunit.Sdk.AssertException, Xunit"
         ]
         let ignoreExceptions = [
-            "NUnit.Framework.IgnoreException"
+            "NUnit.Framework.IgnoreException, NUnit.Framework"
         ]
-        let (|ExceptionInList|_|) l e = 
-            if List.exists ((=) (e.GetType().FullName)) l
+        let failExceptionTypes = lazy List.choose tryGetType failExceptions
+        let ignoreExceptionTypes = lazy List.choose tryGetType ignoreExceptions
+
+        let (|ExceptionInList|_|) (l: Type list) (e: #exn) = 
+            let et = e.GetType()
+            if l |> List.exists (fun x -> x.IsAssignableFrom et)
                 then Some()
                 else None
+
         fun (printers: TestPrinters) map ->
             let execOne (name: string, test) = 
                 printers.BeforeRun name
@@ -239,7 +249,7 @@ module Impl =
                 with e ->
                     w.Stop()
                     match e with
-                    | ExceptionInList failExceptions ->
+                    | ExceptionInList failExceptionTypes.Value ->
                         let msg =
                             let firstLine = 
                                 (stackTraceToString e.StackTrace).Split('\n') 
@@ -250,7 +260,7 @@ module Impl =
                         { Name = name
                           Result = Failed msg
                           Time = w.Elapsed }
-                    | ExceptionInList ignoreExceptions ->
+                    | ExceptionInList ignoreExceptionTypes.Value ->
                         printers.Ignored name e.Message
                         { Name = name
                           Result = Ignored e.Message
