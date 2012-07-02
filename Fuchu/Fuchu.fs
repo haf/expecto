@@ -82,12 +82,20 @@ module Test =
             | TestList tests -> Seq.collect (loop parentName testList) tests
         loop null Seq.empty
 
-    /// Maps all TestCodes in a Test
+    /// Recursively maps all TestCodes in a Test
     let rec wrap f =
         function
         | TestCase test -> TestCase (f test)
         | TestList testList -> TestList (Seq.map (wrap f) testList)
         | TestLabel (label, test) -> TestLabel (label, wrap f test)
+
+    /// Recursively replaces TestCodes in a Test
+    let rec replaceTestCode f =
+        function
+        | TestLabel (label, TestCase test) -> f label test
+        | TestCase test -> f null test
+        | TestList testList -> TestList (Seq.map (replaceTestCode f) testList)
+        | TestLabel (label, test) -> TestLabel (label, replaceTestCode f test)
 
     /// Filter tests by name
     let filter pred =

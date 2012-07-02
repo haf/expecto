@@ -25,6 +25,7 @@ module Tests =
     open System.Threading
     open System.IO
     open FSharpx
+    open System.Globalization
 
     [<Tests>]
     let tests = 
@@ -215,5 +216,43 @@ module Tests =
                         let opts = parseArgs [|"/m"|]
                         opts.Parallel ==? true
             ]
+
+            testList "transformations" [
+                testCase "multiple cultures" <| fun _ ->
+
+                    let withCulture culture f x = 
+                        let c = Thread.CurrentThread.CurrentCulture
+                        try
+                            Thread.CurrentThread.CurrentCulture <- culture
+                            f x
+                        finally
+                            Thread.CurrentThread.CurrentCulture <- c
+
+                    let test = testCase "parse" <| fun _ ->
+                        (Single.Parse("123,33") = 123.33f) ==? true
+
+                    let cultures = 
+                        ["en-US"; "es-AR"; "fr-FR"]
+                        |> List.map CultureInfo.GetCultureInfo
+
+                    let culturizedTests = 
+                        test |> Test.replaceTestCode 
+                            (fun name test ->
+                                testList name [
+                                    for c in cultures ->
+                                        testCase c.Name (withCulture c test)
+                                ])
+
+                    let results = 
+                        evalSilent culturizedTests
+                        |> Seq.map (fun r -> r.Name, r.Result)
+                        |> Map.ofSeq
+
+                    results.Count ==? 3
+                    TestResult.isFailed results.["parse/en-US"] ==? true
+                    TestResult.isPassed results.["parse/es-AR"] ==? true
+                    TestResult.isPassed results.["parse/fr-FR"] ==? true
+            ]
+
         ]
 
