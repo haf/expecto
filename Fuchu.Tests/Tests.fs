@@ -92,6 +92,15 @@ module Tests =
                         match evalSilent test with
                         | [{ Result = Failed (String.StartsWith "\nhello") }] -> ()
                         | x -> failtestf "Wrong test evaluation\n %A" x
+
+                "Fuchu ignore" => 
+                    fun _ ->
+                        let test () = skiptest "b"
+                        let test = TestCase test
+                        match evalSilent test with
+                        | [{ Result = Ignored "b" }] -> ()
+                        | x -> failtestf "Wrong test evaluation\n %A" x
+
             ]
 
             "Setup & teardown" =>> [

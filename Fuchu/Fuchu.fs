@@ -14,8 +14,9 @@ type Test =
     | TestList of Test seq
     | TestLabel of string * Test
 
-type AssertException(msg) =
-    inherit Exception(msg)
+type FuchuException(msg) = inherit Exception(msg)
+type AssertException(msg) = inherit FuchuException(msg)
+type IgnoreException(msg) = inherit FuchuException(msg)
 
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
 type TestsAttribute() = 
@@ -233,6 +234,7 @@ module Impl =
         ]
         let ignoreExceptions = [
             "NUnit.Framework.IgnoreException, NUnit.Framework"
+            typeof<IgnoreException>.AssemblyQualifiedName
         ]
         let failExceptionTypes = lazy List.choose tryGetType failExceptions
         let ignoreExceptionTypes = lazy List.choose tryGetType ignoreExceptions
@@ -375,6 +377,9 @@ module Tests =
 
     let inline failtest msg = raise <| AssertException msg
     let inline failtestf fmt = Printf.ksprintf (fun msg -> raise <| AssertException msg) fmt
+
+    let inline skiptest msg = raise <| IgnoreException msg
+    let inline skiptestf fmt = Printf.ksprintf (fun msg -> raise <| IgnoreException msg) fmt
 
     let inline testList name tests = TestLabel(name, TestList tests)
     let inline testCase name test = TestLabel(name, TestCase test)
