@@ -51,6 +51,12 @@ namespace Fuchu.CSharpTests {
                             }
                         }));
 
+                yield return
+                    Test.Case("skipped test", () => 
+                        Test.Skip("I just wanted to {0} this {1}", "skip", "test"));
+
+                //yield return Test.Case("failed test", () => Test.Fail(""));
+
                 // FsCheck integration
                 yield return FsCheck.Property("Addition is commutative",
                                               (int a, int b) => a + b == b + a);

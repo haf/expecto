@@ -490,3 +490,9 @@ type Test with
     [<Extension>]
     static member Where(test, pred: Func<_,_>) = 
         Test.filter pred.Invoke test
+
+    static member Skip(reason: string, [<ParamArray>] args: obj[]) =
+        skiptest (String.Format(reason, args)) |> ignore
+
+    static member Fail(reason: string, [<ParamArray>] args: obj[]) =
+        failtest (String.Format(reason, args)) |> ignore
