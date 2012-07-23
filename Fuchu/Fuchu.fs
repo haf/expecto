@@ -18,6 +18,7 @@ type FuchuException(msg) = inherit Exception(msg)
 type AssertException(msg) = inherit FuchuException(msg)
 type IgnoreException(msg) = inherit FuchuException(msg)
 
+/// Marks a top-level test for scanning
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
 type TestsAttribute() = 
     inherit Attribute()
@@ -31,14 +32,12 @@ module Helpers =
             Type.GetType(t, true) |> Some
         with _ -> None
 
-    let disposable f = 
-        { new IDisposable with
-            member x.Dispose() = f() }
-
     let bracket setup teardown f () =
         let v = setup()
-        use dummy = disposable (fun () -> teardown v)
-        f v
+        try
+            f v
+        finally
+            teardown v
 
     let tprintf fmt = 
         Printf.kprintf (fun s -> 
@@ -208,6 +207,7 @@ module Impl =
           Errored = get (TestResult.Error null)
           Time = results |> Seq.map (fun r -> r.Time) |> Seq.fold (+) TimeSpan.Zero }
 
+    // Hooks to print report through test run
     type TestPrinters = {
         BeforeRun: string -> unit
         Passed: string -> TimeSpan -> unit
@@ -223,7 +223,8 @@ module Impl =
             Exception = ignore3
         }
 
-
+    /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
+    /// Returns list of results.
     let evalTestList =
         let failExceptions = [
             typeof<AssertException>.AssemblyQualifiedName
@@ -282,6 +283,8 @@ module Impl =
                           Time = w.Elapsed }
             map execOne
 
+    /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
+    /// Returns list of results.
     let eval (printer: TestPrinters) map tests =
         Test.toTestCodeList tests 
         |> evalTestList printer map
@@ -365,9 +368,10 @@ module Impl =
         |> Seq.toList
         |> listToTestListOption
 
-    /// Gets tests marked with TestsAttribute from an assembly
+    /// Scan tests marked with TestsAttribute from an assembly
     let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
 
+    /// Scan tests marked with TestsAttribute from entry assembly
     let testFromThisAssembly () = testFromAssembly (Assembly.GetEntryAssembly())
 
 [<AutoOpen; Extension>]
@@ -375,10 +379,14 @@ module Tests =
     open Impl
     open Helpers
 
+    /// Fail this test
     let inline failtest msg = raise <| AssertException msg
+    /// Fail this test
     let inline failtestf fmt = Printf.ksprintf (fun msg -> raise <| AssertException msg) fmt
 
+    /// Skip this test
     let inline skiptest msg = raise <| IgnoreException msg
+    /// Skip this test
     let inline skiptestf fmt = Printf.ksprintf (fun msg -> raise <| IgnoreException msg) fmt
 
     let inline testList name tests = TestLabel(name, TestList tests)
@@ -403,7 +411,10 @@ module Tests =
     [<Extension; CompiledName("RunParallel")>]
     let runParallel tests = runEval evalPar tests
 
+    // Runner options
     type RunOptions = { Parallel: bool }
+
+    /// Parses command-line arguments
     let parseArgs =
         let defaultOptions = { RunOptions.Parallel = false }
         let opts = [ "/m", fun o -> { o with RunOptions.Parallel = true } ]
@@ -433,6 +444,7 @@ module Tests =
         
 [<Extension>]
 type Test with
+    /// Pattern matching over a Test
     [<Extension>]
     static member Match(test, testCase: Func<_,_>, testList: Func<_,_>, testLabel: Func<_,_,_>) =
         match test with
@@ -440,12 +452,15 @@ type Test with
         | TestList l -> testList.Invoke l
         | TestLabel (label, t) -> testLabel.Invoke(label,t)
 
+    /// Test unit
     static member Case (f: Action) = 
         TestCase f.Invoke
 
+    /// Test unit
     static member Case (label, f: Action) = 
         label => f.Invoke
 
+    /// Parameterized test
     static member Case (label: string, f: Action<_>) = 
         label ==> f
 
@@ -463,13 +478,16 @@ type Test with
     static member List ([<ParamArray>] tests) =
         tests |> Seq.map Test.Case |> TestList
 
+    /// Builds a list of parameterized tests
     static member List (name, setup: Func<_,_>, [<ParamArray>] tests) =
         let tests = tests |> Array.map (fun (name, test) -> Test.Case(name, setup.Invoke test))
         Test.List(name, tests)
 
+    // Run a list of tests
     [<Extension>]
     static member Run tests = TestList tests |> run
 
+    /// Builds a setup/teardown function to apply to parameterized tests
     static member Fixture (setup: Func<_>, teardown: Action<_>) =
         if setup = null then nullArg "setup"
         if teardown = null then nullArg "teardown"
@@ -494,8 +512,10 @@ type Test with
     static member Where(test, pred: Func<_,_>) = 
         Test.filter pred.Invoke test
 
+    /// Skip this test
     static member Skip(reason: string, [<ParamArray>] args: obj[]) =
         skiptest (String.Format(reason, args)) |> ignore
 
+    /// Fail this test
     static member Fail(reason: string, [<ParamArray>] args: obj[]) =
         failtest (String.Format(reason, args)) |> ignore
