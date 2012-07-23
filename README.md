@@ -10,40 +10,37 @@ Binaries are available on [Github](https://github.com/mausch/Fuchu/downloads) an
 
 ## Writing tests ##
 
-Firstly, it should be noted that Fuchu does not implement any assertions at the moment. You're free to use NUnit, MbUnit, or any other test framework for assertions.
-
 Here's the simplest test possible:
 
 
     open Fuchu
-    open NUnit.Framework
 
     let simpleTest = 
         testCase "A simple test" <| 
-            fun _ -> Assert.AreEqual(4, 2+2)
+            fun _ -> Assert.Equal("2+2", 4, 2+2)
 
 Tests can be grouped (with arbitrary nesting):
 
     let tests = 
         testList "A test group" [
             testCase "one test" <|
-                fun _ -> Assert.AreEqual(4, 2+2)
+                fun _ -> Assert.Equal("2+2", 4, 2+2)
             testCase "another test" <|
-                fun _ -> Assert.AreEqual(3, 3+3)
+                fun _ -> Assert.Equal("3+3", 3, 3+3)
         ]
 
 You can also use a more compact syntax if you don't mind the operators:
 
     let simpleTest = 
         "A simple test" =>
-            fun _ -> Assert.AreEqual(4, 2+2)
+            fun _ -> Assert.Equal("2+2", 4, 2+2)
 
     let tests = 
         "A test group" =>> [
             "one test" =>
-                fun _ -> Assert.AreEqual(4, 2+2)
+                fun _ -> Assert.Equal("2+2", 4, 2+2)
             "another test" =>
-                fun _ -> Assert.AreEqual(3, 3+3)
+                fun _ -> Assert.Equal("3+3", 3, 3+3)
         ]
         
 In C#:
@@ -51,14 +48,19 @@ In C#:
     static Test ATest {
         get {
             return Test.List("A test group", new[] {
-                Test.Case("one test", () => Assert.AreEqual(4, 2+2)),
-                Test.Case("another test", () => Assert.AreEqual(6, 3+3)),
+                Test.Case("one test", () => Assert.Equal("2+2", 4, 2+2)),
+                Test.Case("another test", () => Assert.Equal("3+3", 3, 3+3)),
             });
         }
     }
     
+The first parameter in the assertions describes the assertion. This is usually an optional parameter in most test frameworks; in Fuchu it's required to foster descriptive failures, so you'll get a failure like "3+3 Expected value 3, actual 6" instead of just "Expected value 3, actual 6".
+
 For more examples, including a few ways to do common things in other test frameworks like setup/teardown and parameterized tests, see the [F# tests](https://github.com/mausch/Fuchu/blob/master/Fuchu.Tests/Tests.fs) and the [C# tests](https://github.com/mausch/Fuchu/blob/master/Fuchu.CSharpTests/Program.cs)
 
+## Assertions ##
+
+Fuchu is mainly oriented to test organization. Although it does have a few basic assertions, you're encouraged to write your own specialized assertions for each project (they're only a couple of lines in F#), or use some other library for assertions, like [Unquote](http://code.google.com/p/unquote/), [FsUnit](https://github.com/dmohl/FsUnit), or even MbUnit or NUnit.
 
 ## Running tests ##
 
@@ -124,4 +126,4 @@ In C# (can't override FsCheck config at the moment):
                                 (int a, int b, int c) => a * (b + c) == a * b + a * c),
         });
 
-You can mix FsCheck properties with regular test cases and test lists at will.
+You can freely mix FsCheck properties with regular test cases and test lists.
