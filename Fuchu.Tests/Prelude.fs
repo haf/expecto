@@ -2,52 +2,6 @@
 
 open System
 open FSharpx
-
-[<AutoOpen>]
-module Assert = 
-    let nullBool2 f a b =
-        if a = null && a = null then
-            true
-        elif a = null || b = null then
-            false
-        else
-            f b a
-        
-    let addNewLine s = 
-        if String.IsNullOrEmpty s
-            then ""
-            else s + "\n"
-
-    let inline assertNone preface =
-        let preface = addNewLine preface
-        function
-        | Some x -> failtestf "%sExpected None, actual Some (%A)" preface x
-        | _ -> ()
-
-    let inline assertEqual preface =
-        let preface = addNewLine preface
-        fun expected actual ->
-            if expected <> actual then
-                failtestf "%sExpected: %A\nActual: %A" preface expected actual
-
-    let inline (==?) actual expected =
-        assertEqual null expected actual
-
-    let inline assertStringContains preface =
-        let run = nullBool2 (fun (actual: string) (expected: string) -> actual.Contains expected)
-        let preface = addNewLine preface
-        fun expected actual ->
-            if not (run expected actual)
-                then failtestf "%sExpected string to contain '%s'\nActual: %s" preface expected actual
-
-    let inline assertRaise preface (ex: Type) f =
-        let preface = addNewLine preface
-        try
-            f()
-            failtestf "%sExpected exception '%s' but no exception was raised" preface ex.FullName
-        with e ->
-            if e.GetType() <> ex
-                then failtestf "%sExpected exception '%s' but raised:\n%A" preface ex.FullName e
                 
 module Seq = 
     let (|Empty|Cons|) l = 
@@ -66,6 +20,14 @@ module Seq =
         | _ -> None
 
 module String =
+    let internal nullBool2 f a b =
+        if a = null && a = null then
+            true
+        elif a = null || b = null then
+            false
+        else
+            f b a
+
     let internal nullOption2 f a b =
         nullBool2 f a b |> Option.fromBool
 

@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Fuchu.fs" />
+    <Compile Include="Assertions.fs" />
     <Compile Include="xUnitHelpers.fs" />
     <Compile Include="Fuchu.NUnit.fs" />
     <Compile Include="Fuchu.MbUnit.fs" />

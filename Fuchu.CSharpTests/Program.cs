@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using FsCheck.Fluent;
-using NUnit.Framework;
+using Fuchu;
 
-namespace Fuchu.CSharpTests {
+namespace FuchuCSharpTests {
     internal class Program {
         public static IEnumerable<Test> Tests {
             get {
                 // simplest test
                 yield return 
-                    Test.Case("Basic test", () => Assert.AreEqual(4, 2 + 2));
+                    Test.Case("Basic test", () => Assert.Equal("2+2", 4, 2 + 2));
 
                 Func<Action<MemoryStream>, Action> withMemoryStream =
                     f => () => {
@@ -22,10 +21,10 @@ namespace Fuchu.CSharpTests {
                 yield return 
                     Test.List("Setup & teardown with memorystream", withMemoryStream, new[] {
                         Test.Case("Can read", (MemoryStream ms) => {
-                            Assert.True(ms.CanRead);
+                            Assert.Equal("can read", true, ms.CanRead);
                         }),
                         Test.Case("Can write", (MemoryStream ms) => {
-                            Assert.True(ms.CanWrite);
+                            Assert.Equal("can write", true, ms.CanWrite);
                         }),
                     });
 
@@ -47,7 +46,7 @@ namespace Fuchu.CSharpTests {
                                 ms.Position = 0;
                                 File.WriteAllBytes(filename, ms.ToArray());
                                 var fileLength = new FileInfo(filename).Length;
-                                Assert.AreEqual(msg.Length, fileLength);
+                                Assert.Equal("file length", msg.Length, fileLength);
                             }
                         }));
 
@@ -58,8 +57,8 @@ namespace Fuchu.CSharpTests {
                 //yield return Test.Case("failed test", () => Test.Fail(""));
 
                 // FsCheck integration
-                yield return FsCheck.Property("Addition is commutative",
-                                              (int a, int b) => a + b == b + a);
+                yield return Fuchu.FsCheck.Property("Addition is commutative",
+                                                        (int a, int b) => a + b == b + a);
             }
         }
 

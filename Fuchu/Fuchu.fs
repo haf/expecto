@@ -386,6 +386,9 @@ module Tests =
     let inline testFixture setup = 
          Seq.map (fun (name, partialTest) ->
                         testCase name (setup partialTest))
+    let inline testParam param =
+         Seq.map (fun (name, partialTest) ->
+                        testCase name (partialTest param))
 
     let inline (=>>) name tests = testList name tests
     let inline (=>) name test = testCase name test

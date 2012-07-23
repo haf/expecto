@@ -27,11 +27,13 @@ module Tests =
     open FSharpx
     open System.Globalization
 
+    let (==?) actual expected = Assert.Equal("", expected, actual)
+
     [<Tests>]
     let tests = 
         TestList [
             "basic" => 
-                fun () -> 2+2 ==? 4
+                fun () -> Assert.Equal("2+2", 4, 2+2)
             "sumTestResults" =>> [
                 let sumTestResultsTests = 
                     [
@@ -211,7 +213,7 @@ module Tests =
                 yield "from empty type" =>
                     fun _ ->
                         let test = testFromType EmptyModule.thisModuleType.Value
-                        assertNone "" test
+                        Assert.None("", test)
             ]
 
             testList "parse args" [
@@ -257,8 +259,8 @@ module Tests =
                         |> Seq.map (fun r -> r.Name, r.Result)
                         |> Map.ofSeq
 
-                    assertEqual "results count" 3 results.Count
-                    let inline assertTrue msg = assertEqual msg true
+                    Assert.Equal("results count", 3, results.Count)
+                    let inline assertTrue msg x = Assert.Equal(msg, true, x)
                     assertTrue "parse en-US fails" (TestResult.isFailed results.["parse/en-US"])
                     assertTrue "parse es-AR passes" (TestResult.isPassed results.["parse/es-AR"])
                     assertTrue "parse fr-FR passes" (TestResult.isPassed results.["parse/fr-FR"])
@@ -267,23 +269,23 @@ module Tests =
             testList "assertions" [
                 testList "raise" [
                     testCase "pass" <| fun _ ->
-                        assertRaise "" typeof<ArgumentNullException> (fun _ -> nullArg "")
+                        Assert.Raise("", typeof<ArgumentNullException>, fun _ -> nullArg "")
 
                     testCase "fail with incorrect exception" <| fun _ ->
-                        let test () = assertRaise "" typeof<ArgumentException> (fun _ -> nullArg "")
+                        let test () = Assert.Raise("", typeof<ArgumentException>, fun _ -> nullArg "")
                         assertTestFails test
                     
                     testCase "fail with no exception" <| fun _ ->
-                        let test () = assertRaise "" typeof<ArgumentException> ignore
+                        let test () = Assert.Raise("", typeof<ArgumentNullException>, ignore)
                         assertTestFails test
                 ]
 
                 testList "string contain" [
                     testCase "pass" <| fun _ ->
-                        assertStringContains "" "hello" "hello world"
+                        Assert.StringContains("", "hello", "hello world")
 
                     testCase "fail" <| fun _ ->
-                        let test () = assertStringContains "" "a" "hello world"
+                        let test () = Assert.StringContains("", "a", "hello world")
                         assertTestFails test
                 ]
             ]

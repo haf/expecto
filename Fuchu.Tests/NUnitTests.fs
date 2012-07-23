@@ -20,13 +20,10 @@ module NUnitTests =
                 let result = lazy evalSilent (NUnitTestToFuchu typeof<ATestFixture>)
                 yield "read tests" =>
                     fun () ->
-                        assertEqual "test list length"
-                            2 result.Value.Length
+                        Assert.Equal("test list length", 2, result.Value.Length)
                         let testName s = sprintf "%s/%s" typeof<ATestFixture>.FullName s
-                        assertEqual "first test name" 
-                            (testName "ATest") result.Value.[0].Name
-                        assertEqual "second test name" 
-                            (testName "AnotherTest") result.Value.[1].Name
+                        Assert.Equal("first test name", testName "ATest", result.Value.[0].Name)
+                        Assert.Equal("second test name", testName "AnotherTest", result.Value.[1].Name)
 
                 yield "executed tests" =>
                     fun () ->
@@ -42,8 +39,7 @@ module NUnitTests =
                     if ATestFixtureWithSetup.TearDownCalled 
                         then failtest "TearDown was called"
                     let result = evalSilent test
-                    assertEqual "test list length" 
-                        1 result.Length
+                    Assert.Equal("test list length", 1, result.Length)
                     if not (TestResult.isPassed result.[0].Result)
                         then failtest "test not passed"
                     if not ATestFixtureWithSetup.TearDownCalled
@@ -55,7 +51,7 @@ module NUnitTests =
                     if ATestFixtureWithExceptionAndTeardown.TearDownCalled
                         then failtest "TearDown was called"
                     let result = evalSilent test
-                    assertEqual "test list length" 1 result.Length
+                    Assert.Equal("test list length", 1, result.Length)
                     if not (TestResult.isException result.[0].Result)
                         then failtest "Test not failed"
                     if not ATestFixtureWithExceptionAndTeardown.TearDownCalled
