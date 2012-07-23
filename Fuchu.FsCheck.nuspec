@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Fuchu.FsCheck</id>
-    <version>0.1.3</version>
+    <version>0.2.0</version>
     <authors>Mauricio Scheffer</authors>
     <licenseUrl>https://raw.github.com/mausch/Fuchu/aa5db2cf2c88ea3692d67135d93f0bddc3bf2f18/license.txt</licenseUrl>
     <projectUrl>https://github.com/mausch/Fuchu</projectUrl>
@@ -11,7 +11,7 @@
     <copyright>Copyright Mauricio Scheffer 2012</copyright>
     <tags>test testing</tags>
     <dependencies>
-      <dependency id="Fuchu" version="[0.1.3]" />
+      <dependency id="Fuchu" version="[0.2.0]" />
       <dependency id="FsCheck" version="[0.8.1,0.9)" />
     </dependencies>
   </metadata>
