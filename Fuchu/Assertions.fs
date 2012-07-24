@@ -14,8 +14,8 @@ type Assert =
 
     static member NotNull<'a when 'a : null>(msg, actual: 'a) =
         match box actual with
-        | null -> ()
-        | _ -> failtestf "%s\nShould not have been null, actual: %A" msg actual
+        | null -> failtestf "%s\nShould not have been null" msg
+        | _ -> ()
 
     static member Raise(msg, ex: Type, f) =
         try
