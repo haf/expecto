@@ -6,7 +6,7 @@ You can read about the rationale and underlying concepts in [this blog post](htt
 
 ## Binaries ##
 
-Binaries are available on [Github](https://github.com/mausch/Fuchu/downloads) and [NuGet](http://nuget.org/packages?q=Fuchu).
+Binaries are available on [NuGet](http://nuget.org/packages?q=Fuchu).
 
 ## Writing tests ##
 
@@ -127,3 +127,13 @@ In C# (can't override FsCheck config at the moment):
         });
 
 You can freely mix FsCheck properties with regular test cases and test lists.
+
+## More examples ##
+
+Some projects using Fuchu:
+
+* [FsSql](https://github.com/mausch/FsSql/tree/master/FsSql.Tests)
+* [FsFormlets](https://github.com/mausch/FsFormlets/tree/master/Formlets.Tests)
+* UrchiNet ([C#](https://github.com/mausch/UrchiNet/blob/master/UrchiNet.CSharpTests/Tests.cs) and [F#](https://github.com/mausch/UrchiNet/blob/master/UrchiNet.Tests/Tests.fs)
+* [Figment](https://github.com/mausch/Figment/tree/master/Figment.Tests)
+* [NHWebConsole](https://github.com/mausch/NHWebConsole/tree/master/NHWebConsole.Tests)
