@@ -32,9 +32,9 @@ module Tests =
     [<Tests>]
     let tests = 
         TestList [
-            "basic" => 
-                fun () -> Assert.Equal("2+2", 4, 2+2)
-            "sumTestResults" =>> [
+            testCase "basic" <| fun _ -> Assert.Equal("2+2", 4, 2+2)
+
+            testList "sumTestResults" [
                 let sumTestResultsTests = 
                     [
                         { TestRunResult.Name = ""; Result = Passed; Time = TimeSpan.FromMinutes 2. }
@@ -45,17 +45,18 @@ module Tests =
                         { TestRunResult.Name = ""; Result = Passed; Time = TimeSpan.FromMinutes 7. }
                     ]
                 let r = lazy sumTestResults sumTestResultsTests
-                yield "Passed" =>
-                    fun () -> r.Value.Passed ==? 3
-                yield "Failed" =>
-                    fun () -> r.Value.Failed ==? 2
-                yield "Exception" =>
-                    fun () -> r.Value.Errored ==? 1
-                yield "Time" =>
-                    fun () -> r.Value.Time ==? TimeSpan.FromMinutes 27.
+                yield testCase "Passed" <| fun _ -> 
+                    r.Value.Passed ==? 3
+                yield testCase "Failed" <| fun _ ->
+                    r.Value.Failed ==? 2
+                yield testCase "Exception" <| fun _ ->
+                    r.Value.Errored ==? 1
+                yield testCase "Time" <| fun _ ->
+                    r.Value.Time ==? TimeSpan.FromMinutes 27.
             ]
-            "TestResultCounts" =>> [
-                "plus" =>> [
+
+            testList "TestResultCounts" [
+                testList "plus" [
                     let testResultCountsSum name f =
                         testProperty name 
                             (FsCheck.Prop.forAll twoTestResultCounts.Value <|
@@ -73,49 +74,46 @@ module Tests =
                     yield testResultCountsSum "Time" <|
                         fun a b r -> r.Time = a.Time + b.Time
                 ]
-                "ToString" => 
+                testCase "ToString" <| fun _ ->
                     let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }
-                    fun () -> c1.ToString() ==? "6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n"
+                    c1.ToString() ==? "6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n"
             ]
 
-            "Exception handling" =>> [
-                "NUnit ignore" => 
-                    fun () ->
-                        let test() = NUnit.Framework.Assert.Ignore "a"
-                        let test = TestCase test
-                        match evalSilent test with
-                        | [{ Result = Ignored "a" }] -> ()
-                        | x -> failtestf "Wrong test evaluation\n %A" x
+            testList "Exception handling" [
+                testCase "NUnit ignore" <| fun _ ->
+                    let test() = NUnit.Framework.Assert.Ignore "a"
+                    let test = TestCase test
+                    match evalSilent test with
+                    | [{ Result = Ignored "a" }] -> ()
+                    | x -> failtestf "Wrong test evaluation\n %A" x
 
-                "Inherit AssertionException counts as failure" =>
-                    fun _ ->
-                        let test () = raise (new CustomNUnitException("hello"))
-                        let test = TestCase test
-                        match evalSilent test with
-                        | [{ Result = Failed (String.StartsWith "\nhello") }] -> ()
-                        | x -> failtestf "Wrong test evaluation\n %A" x
+                testCase "Inherit AssertionException counts as failure" <| fun _ ->
+                    let test () = raise (new CustomNUnitException("hello"))
+                    let test = TestCase test
+                    match evalSilent test with
+                    | [{ Result = Failed (String.StartsWith "\nhello") }] -> ()
+                    | x -> failtestf "Wrong test evaluation\n %A" x
 
-                "Fuchu ignore" => 
-                    fun _ ->
-                        let test () = skiptest "b"
-                        let test = TestCase test
-                        match evalSilent test with
-                        | [{ Result = Ignored "b" }] -> ()
-                        | x -> failtestf "Wrong test evaluation\n %A" x
-
+                testCase "Fuchu ignore" <| fun _ ->
+                    let test () = skiptest "b"
+                    let test = TestCase test
+                    match evalSilent test with
+                    | [{ Result = Ignored "b" }] -> ()
+                    | x -> failtestf "Wrong test evaluation\n %A" x
             ]
 
-            "Setup & teardown" =>> [
+            testList "Setup & teardown" [
                 // just demoing how you can use a higher-order function as setup/teardown
                 let withMemoryStream f () =
                     use s = new MemoryStream()
                     let r = f s
                     s.Capacity ==? 5
                     r
-                yield "1" => withMemoryStream (fun ms -> ms.Capacity <- 5)
-                yield "2" => withMemoryStream (fun ms -> ms.Capacity <- 5)
+                yield testCase "1" (withMemoryStream (fun ms -> ms.Capacity <- 5))
+                yield testCase "2" (withMemoryStream (fun ms -> ms.Capacity <- 5))
             ]
-            "Setup & teardown 2" =>> [
+
+            testList "Setup & teardown 2" [
                 // just demoing how you can use a higher-order function as setup/teardown
                 let tests = [
                     "1", fun (ms: MemoryStream) -> ms.Capacity <- 5
@@ -127,20 +125,13 @@ module Tests =
                     s.Capacity ==? 5
                     r
                 for name,test in tests ->
-                    name => withMemoryStream test
+                    testCase name (withMemoryStream test)
             ]
-            "Setup & teardown 3" =>> [
+
+            testList "Setup & teardown 3" [
                 let withMemoryStream f () =
                     use ms = new MemoryStream()
                     f ms
-                yield! withMemoryStream +> [
-                    "can read" ==> 
-                        fun ms -> 
-                            if not (ms.CanRead) then failtest "Can't read!"
-                    "can write" ==>
-                        fun ms -> ms.CanWrite ==? true
-                ]
-                // alt syntax
                 yield! testFixture withMemoryStream [
                     "can read", 
                         fun ms -> ms.CanRead ==? true
@@ -148,46 +139,43 @@ module Tests =
                         fun ms -> ms.CanWrite ==? true
                 ]
             ]
-            "Test filter" =>> [
+
+            testList "Test filter" [
                 let tests = 
                     TestList [
-                        "a" => ignore
-                        "b" => ignore
-                        "c" =>> [
-                            "d" => ignore
-                            "e" => ignore
+                        testCase "a" ignore
+                        testCase "b" ignore
+                        testList "c" [
+                            testCase "d" ignore
+                            testCase "e" ignore
                         ]
                     ]
-                yield "with one testcase" =>
-                    fun () -> 
-                        let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
-                        t.Length ==? 1 // same as assertEqual "" 1 t.Length
-                yield "with nested testcase" =>
-                    fun () -> 
-                        let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList |> Seq.toList
-                        t.Length ==? 1
-                yield "with one testlist" =>
-                    fun () -> 
-                        let t = Test.filter (Strings.contains "c") tests |> Test.toTestCodeList |> Seq.toList
-                        t.Length ==? 2
-                yield "with no results" =>
-                    fun () -> 
-                        let t = Test.filter ((=) "z") tests |> Test.toTestCodeList |> Seq.toList
-                        t.Length ==? 0
+                yield testCase "with one testcase" <| fun _ -> 
+                    let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
+                    t.Length ==? 1 // same as assertEqual "" 1 t.Length
+                yield testCase "with nested testcase" <| fun _ ->
+                    let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList |> Seq.toList
+                    t.Length ==? 1
+                yield testCase "with one testlist" <| fun _ ->
+                    let t = Test.filter (Strings.contains "c") tests |> Test.toTestCodeList |> Seq.toList
+                    t.Length ==? 2
+                yield testCase "with no results" <| fun _ ->
+                    let t = Test.filter ((=) "z") tests |> Test.toTestCodeList |> Seq.toList
+                    t.Length ==? 0
             ]
-            "Timeout" =>> [
-                "fail" =>
-                    fun _ ->
-                        let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100))
-                        let result = evalSilent test |> sumTestResults
-                        result.Failed ==? 1
-                "pass" =>
-                    fun _ ->
-                        let test = TestCase(Test.timeout 1000 ignore)
-                        let result = evalSilent test |> sumTestResults
-                        result.Passed ==? 1
+
+            testList "Timeout" [
+                testCase "fail" <| fun _ ->
+                    let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100))
+                    let result = evalSilent test |> sumTestResults
+                    result.Failed ==? 1
+                testCase "pass" <| fun _ ->
+                    let test = TestCase(Test.timeout 1000 ignore)
+                    let result = evalSilent test |> sumTestResults
+                    result.Passed ==? 1
             ]
-            "Reflection" =>> [                
+
+            testList "Reflection" [
                 let getMember name =
                     Dummy.thisModuleType.Value.GetMember name
                     |> Array.tryFind (fun _ -> true)
@@ -196,24 +184,20 @@ module Tests =
                     >> Option.bind testFromMember
                     >> Option.bind (function TestLabel(name, _) -> Some name | _ -> None)
 
-                yield "from member" => 
-                    fun _ ->
-                        getTest "testA" ==? Some "test A"
-                yield "from function" =>
-                    fun _ ->
-                        getTest "testB" ==? Some "test B"
-                yield "from type" =>
-                    fun _ ->
-                        match testFromType Dummy.thisModuleType.Value with
-                        | Some (TestList (
-                                    Seq.Two (
-                                        TestLabel("test B", TestList _), 
-                                        TestLabel("test A", TestList _)))) -> ()
-                        | x -> failtestf "TestList expected, found %A" x
-                yield "from empty type" =>
-                    fun _ ->
-                        let test = testFromType EmptyModule.thisModuleType.Value
-                        Assert.None("", test)
+                yield testCase "from member" <| fun _ ->
+                    getTest "testA" ==? Some "test A"
+                yield testCase"from function" <| fun _ ->
+                    getTest "testB" ==? Some "test B"
+                yield testCase"from type" <| fun _ ->
+                    match testFromType Dummy.thisModuleType.Value with
+                    | Some (TestList (
+                                Seq.Two (
+                                    TestLabel("test B", TestList _), 
+                                    TestLabel("test A", TestList _)))) -> ()
+                    | x -> failtestf "TestList expected, found %A" x
+                yield testCase "from empty type" <| fun _ ->
+                    let test = testFromType EmptyModule.thisModuleType.Value
+                    Assert.None("", test)
             ]
 
             testList "parse args" [

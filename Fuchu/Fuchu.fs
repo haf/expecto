@@ -398,9 +398,13 @@ module Tests =
          Seq.map (fun (name, partialTest) ->
                         testCase name (partialTest param))
 
+    [<Obsolete("Use testList instead")>]
     let inline (=>>) name tests = testList name tests
+    [<Obsolete("Use testCase instead")>]
     let inline (=>) name test = testCase name test
+    [<Obsolete("Use testFixture instead")>]
     let inline (+>) f = testFixture f
+    [<Obsolete("Use a pair instead")>]
     let inline (==>) name test = name,test
 
     /// Runs tests
