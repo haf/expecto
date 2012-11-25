@@ -15,26 +15,26 @@ let getWriter name =
     new TeamCityTestWriter(msgWriter, name)
 
 let evalTeamCity (test: Test) : TestRunResult list =
-    let locker = obj()
+    let withWriter =
+        let locker = obj()
+        fun name f ->
+            let writer = getWriter name
+            lock locker (fun () -> f writer)
+
     let beforeRun name = 
-        let writer = getWriter name
-        lock locker (fun () -> writer.OpenTest())
+        withWriter name <| fun writer -> writer.OpenTest()
     let printPassed name time = 
-        use writer = getWriter name
-        lock locker (fun () -> writer.WriteDuration time)
+        withWriter name <| fun writer -> writer.WriteDuration time
     let printIgnored name reason = 
-        use writer = getWriter name
-        lock locker (fun () -> writer.WriteIgnored reason)
+        withWriter name <| fun writer -> writer.WriteIgnored reason
     let printFailed name error time =
-        use writer = getWriter name
-        lock locker (fun () -> 
-                        writer.WriteDuration time
-                        writer.WriteFailed(error, error))
+        withWriter name <| fun writer ->
+            writer.WriteDuration time
+            writer.WriteFailed(error, error)
     let printException name (ex: #exn) time =
-        use writer = getWriter name
-        lock locker (fun () -> 
-                        writer.WriteDuration time
-                        writer.WriteFailed(ex.Message, ex.ToString()))
+        withWriter name <| fun writer ->
+            writer.WriteDuration time
+            writer.WriteFailed(ex.Message, ex.ToString())
     let printers = 
         { TestPrinters.BeforeRun = beforeRun
           Passed = printPassed
