@@ -29,7 +29,7 @@ module String =
             f b a
 
     let internal nullOption2 f a b =
-        nullBool2 f a b |> Option.fromBool
+        nullBool2 f a b |> Option.ofBool
 
     let (|StartsWith|_|) =
         nullOption2 (fun (s: string) -> s.StartsWith)

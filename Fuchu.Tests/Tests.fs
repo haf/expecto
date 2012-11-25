@@ -38,7 +38,7 @@ module Tests =
                 let sumTestResultsTests = 
                     [
                         { TestRunResult.Name = ""; Result = Passed; Time = TimeSpan.FromMinutes 2. }
-                        { TestRunResult.Name = ""; Result = Error (ArgumentException()); Time = TimeSpan.FromMinutes 3. }
+                        { TestRunResult.Name = ""; Result = TestResult.Error (ArgumentException()); Time = TimeSpan.FromMinutes 3. }
                         { TestRunResult.Name = ""; Result = Failed ""; Time = TimeSpan.FromMinutes 4. }
                         { TestRunResult.Name = ""; Result = Passed; Time = TimeSpan.FromMinutes 5. }
                         { TestRunResult.Name = ""; Result = Failed ""; Time = TimeSpan.FromMinutes 6. }
