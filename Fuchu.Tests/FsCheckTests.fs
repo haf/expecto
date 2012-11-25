@@ -14,15 +14,12 @@ module FsCheckTests =
                     a * (b + c) = a * a + a * c // wrong on purpose to test failures
         ]
 
-    open NUnit.Framework
-        
     [<Tests>]
     let runFsCheckTests = 
-        testCase "run" <|
-            fun _ -> 
-                let results = evalSilent properties
-                Assert.AreEqual(2, results.Length)
-                Assert.AreEqual(TestResult.Passed, results.[0].Result)
-                match results.[1].Result with
-                | TestResult.Failed _ -> ()
-                | x -> failtestf "Expected Failed, actual %A" x
+        testCase "run" <| fun _ -> 
+            let results = evalSilent properties
+            Assert.Equal("results length", 2, results.Length)
+            Assert.Equal("passed count", TestResult.Passed, results.[0].Result)
+            match results.[1].Result with
+            | TestResult.Failed _ -> ()
+            | x -> failtestf "Expected Failed, actual %A" x
