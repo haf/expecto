@@ -398,6 +398,13 @@ module Tests =
          Seq.map (fun (name, partialTest) ->
                         testCase name (partialTest param))
 
+    type TestCaseBuilder(name) = 
+        member x.Zero() = ()
+        member x.Delay f = f
+        member x.Run f = testCase name f
+
+    let inline test name = TestCaseBuilder name
+
     [<Obsolete("Use testList instead")>]
     let inline (=>>) name tests = testList name tests
     [<Obsolete("Use testCase instead")>]

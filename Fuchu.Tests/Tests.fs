@@ -34,6 +34,10 @@ module Tests =
         TestList [
             testCase "basic" <| fun _ -> Assert.Equal("2+2", 4, 2+2)
 
+            test "using computation expression" {
+                Assert.Equal("2+2", 4, 2+2)
+            }
+
             testList "sumTestResults" [
                 let sumTestResultsTests = 
                     [
