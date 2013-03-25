@@ -33,22 +33,21 @@ module XunitHelpers =
 
         let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
 
-        TestList (seq {
+        TestList <| seq {
             if testMethods.Length > 0 then
-                yield t.FullName + testCategory t =>> seq {
+                yield testList (t.FullName + testCategory t) <| seq {
                     let o = create t
                     let inline invoke x = invoke o x
                     Seq.iter invoke fixtureSetupMethods
                     for m in testMethods ->
-                        m.Name + testCategory m =>
-                            fun () -> 
+                        testCase (m.Name + testCategory m) <| fun _ -> 
+                            try
+                                Seq.iter invoke setupMethods
                                 try
-                                    Seq.iter invoke setupMethods
-                                    try
-                                        invoke m
-                                    with
-                                    | :? TargetInvocationException as e -> raise e.InnerException
-                                finally
-                                    Seq.iter invoke teardownMethods
+                                    invoke m
+                                with
+                                | :? TargetInvocationException as e -> raise e.InnerException
+                            finally
+                                Seq.iter invoke teardownMethods
                 }
-        })
+        }

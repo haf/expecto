@@ -462,15 +462,15 @@ type Test with
 
     /// Test unit
     static member Case (label, f: Action) = 
-        label => f.Invoke
+        testCase label f.Invoke
 
     /// Parameterized test
     static member Case (label: string, f: Action<_>) = 
-        label ==> f
+        label, f
 
     [<Extension>]
     static member List (tests, name) = 
-        name =>> tests
+        testList name tests
 
     [<Extension>]
     static member List tests = 
