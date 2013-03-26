@@ -82,5 +82,5 @@ module MbUnit =
         TestList (seq {
             yield test
             if staticTests.Length > 0 then
-                yield t.FullName + testCategory t =>> staticTests
+                yield testList (t.FullName + testCategory t) staticTests
         })

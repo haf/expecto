@@ -484,7 +484,7 @@ type Test with
         TestList tests
 
     static member List (name, [<ParamArray>] tests: Test[]) = 
-        name =>> tests
+        testList name tests
 
     static member List ([<ParamArray>] tests) =
         tests |> Seq.map Test.Case |> TestList
