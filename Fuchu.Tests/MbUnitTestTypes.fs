@@ -1,5 +1,7 @@
 ﻿namespace Fuchu
 
+open System
+
 module MbUnitTestTypes =
     open MbUnit.Framework
     
@@ -9,6 +11,11 @@ module MbUnitTestTypes =
 
         [<Test>]
         member x.AnotherTest() = failwith ""
+
+        [<Test>]
+        [<ExpectedException(typeof<ArgumentException>)>]
+        member x.ATestWithExpectedException() : unit = 
+            invalidArg "" ""
 
         [<Test>]
         [<Ignore>]

@@ -63,6 +63,12 @@ module Helpers =
 
         member m.HasAttribute (attr: string) =
             m.HasAttributePred (fun (t: Type) -> t.FullName = attr)
+
+        member m.GetAttributes (attr: string) : Attribute seq =
+            m.GetCustomAttributes true
+            |> Seq.filter (fun a -> a.GetType().FullName = attr)
+            |> Seq.cast
+            
         
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =

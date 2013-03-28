@@ -20,7 +20,18 @@ module XunitHelpers =
         |> Seq.filter (fun t -> not (t.HasAttribute ignoreAttr))
         |> Seq.collect (fun _ -> t.GetMethods())
 
-    let TestToFuchu ignoreAttr testAttr setupAttr tearDownAttr fixtureSetupAttr (testCategory: MemberInfo -> string) (t: Type) =
+    let propertyValue propertyName o =
+        let prop = o.GetType().GetProperty propertyName
+        prop.GetValue(o, null)
+
+    let expectedException (expectedExceptionAttr, exPropName) (m: MethodInfo) = 
+        m.GetAttributes expectedExceptionAttr
+        |> Seq.map (fun a ->
+                        let v = propertyValue exPropName a :?> Type
+                        v.AssemblyQualifiedName)
+        |> Seq.tryFind (fun _ -> true)
+
+    let TestToFuchu ignoreAttr testAttr setupAttr tearDownAttr fixtureSetupAttr expectedExceptionAttr (testCategory: MemberInfo -> string) (t: Type) =
         let methods = methods ignoreAttr t
         let methodsWithAttrs = methodsWithAttrs methods
         let testMethods = 
@@ -30,6 +41,7 @@ module XunitHelpers =
         let setupMethods = methodsWithAttrs [setupAttr]
         let teardownMethods = methodsWithAttrs [tearDownAttr]
         let fixtureSetupMethods = methodsWithAttrs [fixtureSetupAttr]
+        let expectedException = expectedException expectedExceptionAttr
 
         let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
 
@@ -46,7 +58,14 @@ module XunitHelpers =
                                 try
                                     invoke m
                                 with
-                                | :? TargetInvocationException as e -> raise e.InnerException
+                                | :? TargetInvocationException as e -> 
+                                    match expectedException m with
+                                    | Some expectedExc ->
+                                        let innerExc = e.InnerException.GetType().AssemblyQualifiedName
+                                        if expectedExc <> innerExc
+                                            then failtestf "Expected exception '%s', got '%s'" expectedExc innerExc
+                                    | None ->
+                                        raise e.InnerException
                             finally
                                 Seq.iter invoke teardownMethods
                 }

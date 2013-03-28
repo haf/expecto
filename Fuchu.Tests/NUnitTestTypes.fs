@@ -1,5 +1,7 @@
 ﻿namespace Fuchu
 
+open System
+
 module NUnitTestTypes =
 
     open NUnit.Framework
@@ -10,6 +12,11 @@ module NUnitTestTypes =
 
         [<Test>]
         member x.AnotherTest() = Assert.Fail()
+
+        [<Test>]
+        [<ExpectedException(typeof<ArgumentException>)>]
+        member x.ATestWithExpectedException() : unit = 
+            invalidArg "" ""
 
         [<Test>]
         [<Ignore>]

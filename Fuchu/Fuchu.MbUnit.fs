@@ -65,6 +65,7 @@ module MbUnit =
                 (MbUnitAttr "SetUp")
                 (MbUnitAttr "TearDown")
                 (MbUnitAttr "FixtureSetUp")
+                (MbUnitAttr "ExpectedException", "ExceptionType")
                 testCategory
                 t
 

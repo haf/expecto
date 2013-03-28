@@ -16,4 +16,5 @@ module NUnit =
             (NUnitAttr "SetUp") 
             (NUnitAttr "TearDown")
             (NUnitAttr "TestFixtureSetUp")
+            (NUnitAttr "ExpectedException", "ExpectedException")
             (fun _ -> "")

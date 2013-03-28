@@ -18,7 +18,7 @@ module NUnitTests =
             testList "basic" [
                 let result = lazy evalSilent (NUnitTestToFuchu typeof<ATestFixture>)
                 yield testCase "read tests" <| fun _ ->
-                    Assert.Equal("test list length", 2, result.Value.Length)
+                    Assert.Equal("test list length", 3, result.Value.Length)
                     let testName s = sprintf "%s/%s" typeof<ATestFixture>.FullName s
                     Assert.Equal("first test name", testName "ATest", result.Value.[0].Name)
                     Assert.Equal("second test name", testName "AnotherTest", result.Value.[1].Name)
@@ -28,6 +28,8 @@ module NUnitTests =
                         then failtestf "Expected first test to be passed, actual %A" result.Value.[0].Result
                     if not (TestResult.isFailed result.Value.[1].Result) 
                         then failtestf "Expected second test to be failed, actual %A" result.Value.[1].Result
+                    if not (TestResult.isPassed result.Value.[2].Result) 
+                        then failtestf "Expected third test to be passed, actual %A" result.Value.[2].Result
             ]
 
             testCase "with setup" <| fun _ ->
