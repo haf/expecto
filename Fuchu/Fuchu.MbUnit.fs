@@ -60,12 +60,12 @@ module MbUnit =
 
         let test = 
             TestToFuchu
-                (MbUnitAttr "Ignore")
-                (MbUnitAttr "Test")
-                (MbUnitAttr "SetUp")
-                (MbUnitAttr "TearDown")
-                (MbUnitAttr "FixtureSetUp")
-                (MbUnitAttr "ExpectedException", "ExceptionType")
+                { TestAttributes.Ignore = MbUnitAttr "Ignore"
+                  Test = MbUnitAttr "Test"
+                  Setup = MbUnitAttr "SetUp"
+                  TearDown = MbUnitAttr "TearDown"
+                  FixtureSetup = MbUnitAttr "FixtureSetUp"
+                  ExpectedException = MbUnitAttr "ExpectedException", "ExceptionType" }
                 testCategory
                 t
 

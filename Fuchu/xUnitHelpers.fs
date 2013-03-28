@@ -31,17 +31,27 @@ module XunitHelpers =
                         v.AssemblyQualifiedName)
         |> Seq.tryFind (fun _ -> true)
 
-    let TestToFuchu ignoreAttr testAttr setupAttr tearDownAttr fixtureSetupAttr expectedExceptionAttr (testCategory: MemberInfo -> string) (t: Type) =
-        let methods = methods ignoreAttr t
+    type TestAttributes = {
+        Ignore: string
+        Test: string
+        Setup: string
+        TearDown: string
+        FixtureSetup: string
+        ExpectedException: string * string
+    }
+
+
+    let TestToFuchu (attr: TestAttributes) (testCategory: MemberInfo -> string) (t: Type) =
+        let methods = methods attr.Ignore t
         let methodsWithAttrs = methodsWithAttrs methods
         let testMethods = 
-            methodsWithAttrs [testAttr]
-            |> Seq.filter (fun m -> not (m.HasAttribute ignoreAttr))
+            methodsWithAttrs [attr.Test]
+            |> Seq.filter (fun m -> not (m.HasAttribute attr.Ignore))
             |> Seq.toList
-        let setupMethods = methodsWithAttrs [setupAttr]
-        let teardownMethods = methodsWithAttrs [tearDownAttr]
-        let fixtureSetupMethods = methodsWithAttrs [fixtureSetupAttr]
-        let expectedException = expectedException expectedExceptionAttr
+        let setupMethods = methodsWithAttrs [attr.Setup]
+        let teardownMethods = methodsWithAttrs [attr.TearDown]
+        let fixtureSetupMethods = methodsWithAttrs [attr.FixtureSetup]
+        let expectedException = expectedException attr.ExpectedException
 
         let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
 

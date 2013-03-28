@@ -11,10 +11,10 @@ module NUnit =
 
     let NUnitTestToFuchu : Type -> Test = 
         TestToFuchu 
-            (NUnitAttr "Ignore")
-            (NUnitAttr "Test")
-            (NUnitAttr "SetUp") 
-            (NUnitAttr "TearDown")
-            (NUnitAttr "TestFixtureSetUp")
-            (NUnitAttr "ExpectedException", "ExpectedException")
+            { TestAttributes.Ignore = NUnitAttr "Ignore"
+              Test = NUnitAttr "Test"
+              Setup = NUnitAttr "SetUp"
+              TearDown = NUnitAttr "TearDown"
+              FixtureSetup = NUnitAttr "TestFixtureSetUp"
+              ExpectedException = NUnitAttr "ExpectedException", "ExpectedException" }
             (fun _ -> "")
