@@ -12,7 +12,7 @@
     <tags>test testing</tags>
     <dependencies>
       <dependency id="Fuchu" version="[0.2.1]" />
-      <dependency id="FsCheck" version="[0.8.1,0.9)" />
+      <dependency id="FsCheck" version="[0.8.3,0.9)" />
     </dependencies>
   </metadata>
   <files>
