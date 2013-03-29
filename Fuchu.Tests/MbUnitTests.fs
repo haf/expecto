@@ -18,7 +18,7 @@ module MbUnitTests =
             testList "basic" [
                 let result = lazy evalSilent (MbUnitTestToFuchu typeof<ATestFixture>)
                 yield testCase "read tests" <| fun _ ->
-                    Assert.Equal("length", 3, result.Value.Length)
+                    Assert.Equal("length", 4, result.Value.Length)
                     let testName s = sprintf "%s/%s" typeof<ATestFixture>.FullName s
                     Assert.Equal("first test name", testName "ATest", result.Value.[0].Name)
                     Assert.Equal("second test name", testName "AnotherTest", result.Value.[1].Name)
@@ -28,6 +28,8 @@ module MbUnitTests =
                     Assert.Equal("first test passed", true, TestResult.isPassed result.Value.[0].Result)
                     Assert.Equal("second test errored", true, TestResult.isException result.Value.[1].Result)
                     Assert.Equal("third test passed", true, TestResult.isPassed result.Value.[2].Result)
+                    Assert.Equal("third test failed", true, TestResult.isFailed result.Value.[3].Result)
+                    
             ]
 
             testList "category" [

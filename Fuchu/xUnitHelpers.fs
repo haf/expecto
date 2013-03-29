@@ -65,11 +65,16 @@ module XunitHelpers =
                         testCase (m.Name + testCategory m) <| fun _ -> 
                             try
                                 Seq.iter invoke setupMethods
+                                let expectedException = expectedException m 
                                 try
-                                    invoke m
+                                    let r = invoke m
+                                    match expectedException with
+                                    | Some expectedExc ->
+                                        failtestf "Expected exception '%s' but no exception was thrown" expectedExc
+                                    | None -> r
                                 with
                                 | :? TargetInvocationException as e -> 
-                                    match expectedException m with
+                                    match expectedException with
                                     | Some expectedExc ->
                                         let innerExc = e.InnerException.GetType().AssemblyQualifiedName
                                         if expectedExc <> innerExc

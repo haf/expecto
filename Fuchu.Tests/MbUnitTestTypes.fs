@@ -18,6 +18,11 @@ module MbUnitTestTypes =
             invalidArg "" ""
 
         [<Test>]
+        [<ExpectedException(typeof<ArgumentNullException>)>]
+        member x.ATestWithFailedExpectedException() : unit = 
+            invalidArg "" ""
+
+        [<Test>]
         [<Ignore>]
         member x.IgnoredTest() = ()
 
