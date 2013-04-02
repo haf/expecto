@@ -1,3 +1,4 @@
 msbuild /m /p:Configuration=Release fuchu.sln
-.nuget\bin\nuget pack Fuchu.nuspec
-.nuget\bin\nuget pack Fuchu.FsCheck.nuspec
+.nuget\nuget.exe pack Fuchu.nuspec
+.nuget\nuget.exe pack Fuchu.FsCheck.nuspec
+.nuget\nuget.exe pack Fuchu.MbUnit.nuspec
