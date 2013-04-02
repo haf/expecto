@@ -405,6 +405,15 @@ module Tests =
                         testCase name (partialTest param))
 
     type TestCaseBuilder(name) = 
+        member x.Using(disposable: #IDisposable, f) =
+            try
+                f disposable
+            finally
+                match disposable with
+                | null -> () 
+                | disp -> disp.Dispose()
+        member x.For(sequence: _ seq, f) = 
+            for i in sequence do f i
         member x.Zero() = ()
         member x.Delay f = f
         member x.Run f = testCase name f

@@ -70,9 +70,10 @@ module MbUnitTests =
 
     [<Tests>]            
     let testsToMbUnit =
-        testCase "To MbUnit and back" <| fun _ ->
+        test "To MbUnit and back" {
             let fuchuTests = Fuchu.MbUnit.MbUnitTestToFuchu typeof<MbUnitTestsFromFuchu>
             let result = evalSilent fuchuTests
             for r in result do
                 //printfn "%s passed" r.Name
                 Assert.Equal(sprintf "%s passed" r.Name, TestResult.Passed, r.Result)
+        }
