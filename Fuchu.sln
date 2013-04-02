@@ -11,14 +11,16 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.TDNet", "Fuchu.TDNet\
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.TeamCity", "Fuchu.TeamCity\Fuchu.TeamCity.fsproj", "{C316CFAA-13F8-452A-ADA1-1AB9535AA25D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{4234501A-6E86-4BF7-8B1B-67F7912C3EAD}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\packages.config = .nuget\packages.config
-	EndProjectSection
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.FsCheck", "Fuchu.FsCheck\Fuchu.FsCheck.fsproj", "{58507646-335A-460E-B283-77A2BAF0D3A8}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.MbUnit", "Fuchu.MbUnit\Fuchu.MbUnit.fsproj", "{550F5832-D52F-4C7A-8AA0-0B35A145637F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{C7F9862A-671C-475F-B48B-54F57DCBBD5E}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
