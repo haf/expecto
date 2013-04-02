@@ -44,9 +44,9 @@
     <Compile Include="Prelude.fs" />
     <Compile Include="NUnitTestTypes.fs" />
     <Compile Include="NUnitTests.fs" />
+    <Compile Include="Tests.fs" />
     <Compile Include="MbUnitTestTypes.fs" />
     <Compile Include="MbUnitTests.fs" />
-    <Compile Include="Tests.fs" />
     <Compile Include="FsCheckTests.fs" />
     <Compile Include="Main.fs" />
     <None Include="Tests.fsx" />
@@ -62,11 +62,21 @@
       <HintPath>..\packages\FSharpx.Core.1.6.112\lib\40\Fsharpx.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Gallio">
-      <HintPath>..\lib\Gallio.dll</HintPath>
+    <Reference Include="Gallio, Version=3.4.0.0, Culture=neutral, PublicKeyToken=eb9cfa67ee6ab36e">
+      <Private>True</Private>
+      <HintPath>..\packages\Gallio_MbUnit.3.4.14.0\lib\net40\Gallio.dll</HintPath>
     </Reference>
-    <Reference Include="MbUnit">
-      <HintPath>..\lib\MbUnit.dll</HintPath>
+    <Reference Include="Gallio40, Version=3.4.0.0, Culture=neutral, PublicKeyToken=eb9cfa67ee6ab36e">
+      <Private>True</Private>
+      <HintPath>..\packages\Gallio_MbUnit.3.4.14.0\lib\net40\Gallio40.dll</HintPath>
+    </Reference>
+    <Reference Include="MbUnit, Version=3.4.0.0, Culture=neutral, PublicKeyToken=eb9cfa67ee6ab36e">
+      <Private>True</Private>
+      <HintPath>..\packages\Gallio_MbUnit.3.4.14.0\lib\net40\MbUnit.dll</HintPath>
+    </Reference>
+    <Reference Include="MbUnit40, Version=3.4.0.0, Culture=neutral, PublicKeyToken=eb9cfa67ee6ab36e">
+      <Private>True</Private>
+      <HintPath>..\packages\Gallio_MbUnit.3.4.14.0\lib\net40\MbUnit40.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="nunit.framework">
@@ -77,6 +87,11 @@
     <ProjectReference Include="..\Fuchu.FsCheck\Fuchu.FsCheck.fsproj">
       <Name>Fuchu.FsCheck</Name>
       <Project>{58507646-335a-460e-b283-77a2baf0d3a8}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Fuchu.MbUnit\Fuchu.MbUnit.fsproj">
+      <Name>Fuchu.MbUnit</Name>
+      <Project>{550f5832-d52f-4c7a-8aa0-0b35a145637f}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\Fuchu.TeamCity\Fuchu.TeamCity.fsproj">

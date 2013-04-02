@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.Tests", "Fuchu.Tests\Fuchu.Tests.fsproj", "{4182E778-F6C2-4BA4-BFC7-19DB54890E18}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu", "Fuchu\Fuchu.fsproj", "{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}"
@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{423450
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.FsCheck", "Fuchu.FsCheck\Fuchu.FsCheck.fsproj", "{58507646-335A-460E-B283-77A2BAF0D3A8}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fuchu.MbUnit", "Fuchu.MbUnit\Fuchu.MbUnit.fsproj", "{550F5832-D52F-4C7A-8AA0-0B35A145637F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -88,6 +90,16 @@ Global
 		{58507646-335A-460E-B283-77A2BAF0D3A8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{58507646-335A-460E-B283-77A2BAF0D3A8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{58507646-335A-460E-B283-77A2BAF0D3A8}.Release|x86.ActiveCfg = Release|Any CPU
+		{550F5832-D52F-4C7A-8AA0-0B35A145637F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{550F5832-D52F-4C7A-8AA0-0B35A145637F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{550F5832-D52F-4C7A-8AA0-0B35A145637F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{550F5832-D52F-4C7A-8AA0-0B35A145637F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{550F5832-D52F-4C7A-8AA0-0B35A145637F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{550F5832-D52F-4C7A-8AA0-0B35A145637F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{550F5832-D52F-4C7A-8AA0-0B35A145637F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{550F5832-D52F-4C7A-8AA0-0B35A145637F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{550F5832-D52F-4C7A-8AA0-0B35A145637F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{550F5832-D52F-4C7A-8AA0-0B35A145637F}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

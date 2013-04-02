@@ -62,3 +62,17 @@ module MbUnitTests =
                                         (Seq.Two (TestLabel("test 1", TestCase _), TestLabel("test 2", TestCase _))))))))) -> ()
                 | _ -> failtestf "unexpected %A" test
         ]
+
+    type MbUnitTestsFromFuchu() =
+        [<MbUnit.Framework.StaticTestFactory>]
+        static member Tests() =
+            [Fuchu.MbUnit.FuchuTestToMbUnit "" Fuchu.Tests.tests]
+
+    [<Tests>]            
+    let testsToMbUnit =
+        testCase "To MbUnit and back" <| fun _ ->
+            let fuchuTests = Fuchu.MbUnit.MbUnitTestToFuchu typeof<MbUnitTestsFromFuchu>
+            let result = evalSilent fuchuTests
+            for r in result do
+                //printfn "%s passed" r.Name
+                Assert.Equal(sprintf "%s passed" r.Name, TestResult.Passed, r.Result)

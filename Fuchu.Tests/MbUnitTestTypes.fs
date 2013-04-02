@@ -10,7 +10,8 @@ module MbUnitTestTypes =
         member x.ATest() = ()
 
         [<Test>]
-        member x.AnotherTest() = failwith ""
+        member x.AnotherTest() : unit = 
+            failwith ""
 
         [<Test>]
         [<ExpectedException(typeof<ArgumentException>)>]
