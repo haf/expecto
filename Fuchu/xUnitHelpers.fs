@@ -62,7 +62,7 @@ module XunitHelpers =
                     let inline invoke x = invoke o x
                     Seq.iter invoke fixtureSetupMethods
                     for m in testMethods ->
-                        testCase (m.Name + testCategory m) <| fun _ -> 
+                        test (m.Name + testCategory m) {
                             try
                                 Seq.iter invoke setupMethods
                                 let expectedException = expectedException m 
@@ -83,5 +83,6 @@ module XunitHelpers =
                                         raise e.InnerException
                             finally
                                 Seq.iter invoke teardownMethods
+                        }
                 }
         }
