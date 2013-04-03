@@ -6,41 +6,37 @@ open Fuchu.Impl
 
 type FuchuRunner() =
     let locker = obj()
-    let flock x = lock locker x
+    let funLock x = lock locker x
     let onPassed (listener: ITestListener) name time = 
-        flock
-            (fun () -> 
-                let result = TestResult(Name = name, 
-                                        State = TestState.Passed,
-                                        TimeSpan = time)
-                listener.TestFinished result)
+        funLock <| fun _ -> 
+            let result = TestResult(Name = name, 
+                                    State = TestState.Passed,
+                                    TimeSpan = time)
+            listener.TestFinished result
 
     let onIgnored (listener: ITestListener) name reason = 
-        flock
-            (fun () ->
-                let result = TestResult(Name = name,
-                                        State = TestState.Ignored,
-                                        Message = reason)
-                listener.TestFinished result)
+        funLock <| fun _ ->
+            let result = TestResult(Name = name,
+                                    State = TestState.Ignored,
+                                    Message = reason)
+            listener.TestFinished result
 
     let onFailed (listener: ITestListener) name error time = 
-        flock
-            (fun () -> 
-                let result = TestResult(Name = name, 
-                                        State = TestState.Failed, 
-                                        Message = error,
-                                        TimeSpan = time)
-                listener.TestFinished result)
+        funLock <| fun _ -> 
+            let result = TestResult(Name = name, 
+                                    State = TestState.Failed, 
+                                    Message = error,
+                                    TimeSpan = time)
+            listener.TestFinished result
 
     let onException (listener: ITestListener) name ex time =
-        flock
-            (fun () -> 
-                let result = TestResult(Name = name, 
-                                        State = TestState.Failed, 
-                                        Message = ex.ToString(), 
-                                        StackTrace = ex.ToString(),
-                                        TimeSpan = time)
-                listener.TestFinished result)
+        funLock <| fun _ -> 
+            let result = TestResult(Name = name, 
+                                    State = TestState.Failed, 
+                                    Message = ex.ToString(), 
+                                    StackTrace = ex.ToString(),
+                                    TimeSpan = time)
+            listener.TestFinished result
 
     let run listener = 
         let printers = 

@@ -41,8 +41,8 @@ module XunitHelpers =
     }
 
 
-    let TestToFuchu (attr: TestAttributes) (testCategory: MemberInfo -> string) (t: Type) =
-        let methods = methods attr.Ignore t
+    let TestToFuchu (attr: TestAttributes) (testCategory: MemberInfo -> string) (testType: Type) =
+        let methods = methods attr.Ignore testType
         let methodsWithAttrs = methodsWithAttrs methods
         let testMethods = 
             methodsWithAttrs [attr.Test]
@@ -57,21 +57,21 @@ module XunitHelpers =
 
         TestList <| seq {
             if testMethods.Length > 0 then
-                yield testList (t.FullName + testCategory t) <| seq {
-                    let o = create t
-                    let inline invoke x = invoke o x
+                yield testList (testType.FullName + testCategory testType) <| seq {
+                    let testInstance = create testType
+                    let inline invoke metod = invoke testInstance metod
                     Seq.iter invoke fixtureSetupMethods
-                    for m in testMethods ->
-                        test (m.Name + testCategory m) {
+                    for metod in testMethods ->
+                        test (metod.Name + testCategory metod) {
                             try
                                 Seq.iter invoke setupMethods
-                                let expectedException = expectedException m 
+                                let expectedException = expectedException metod
                                 try
-                                    let r = invoke m
+                                    invoke metod
                                     match expectedException with
                                     | Some expectedExc ->
                                         failtestf "Expected exception '%s' but no exception was thrown" expectedExc
-                                    | None -> r
+                                    | None -> ()
                                 with
                                 | :? TargetInvocationException as e -> 
                                     match expectedException with

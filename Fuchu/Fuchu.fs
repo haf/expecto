@@ -310,12 +310,12 @@ module Impl =
     let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select(f) :> _ seq
 
     let evalPar =
-        let flock =
+        let funLock =
             let locker = obj()
             lock locker
-        let inline flock3 f a b c = flock (fun () -> f a b c)
-        let printFailed = flock3 printFailed 
-        let printException = flock3 printException
+        let inline funLock3 f a b c = funLock (fun () -> f a b c)
+        let printFailed = funLock3 printFailed 
+        let printException = funLock3 printException
         let printer = 
             { TestPrinters.Default with 
                 Failed = printFailed
