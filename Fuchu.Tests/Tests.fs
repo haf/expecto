@@ -227,20 +227,22 @@ module Tests =
                         finally
                             Thread.CurrentThread.CurrentCulture <- c
 
-                    let test = testCase "parse" <| fun _ ->
-                        (Single.Parse("123,33") = 123.33f) ==? true
+                    let testWithCultures (cultures: #seq<CultureInfo>) = 
+                        Test.replaceTestCode <| fun name test ->
+                            testList name [
+                                for c in cultures ->
+                                    testCase c.Name (withCulture c test)
+                            ]
+
+                    let atest = test "parse" {
+                        Single.Parse("123,33") ==? 123.33f
+                    }
 
                     let cultures = 
                         ["en-US"; "es-AR"; "fr-FR"]
                         |> List.map CultureInfo.GetCultureInfo
 
-                    let culturizedTests = 
-                        test |> Test.replaceTestCode 
-                            (fun name test ->
-                                testList name [
-                                    for c in cultures ->
-                                        testCase c.Name (withCulture c test)
-                                ])
+                    let culturizedTests = testWithCultures cultures atest
 
                     let results = 
                         evalSilent culturizedTests
