@@ -423,7 +423,7 @@ module Tests =
                 | disp -> disp.Dispose()
         member x.For(sequence, f) = 
             for i in sequence do f i
-        member x.Combine(f1, f2) = f1
+        member x.Combine(f1, f2) = f2(); f1
         member x.Zero() = ()
         member x.Delay f = f
         member x.Run f = testCase name f

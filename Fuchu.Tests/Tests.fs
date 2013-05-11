@@ -279,4 +279,27 @@ module Tests =
                         assertTestFails test
                 ]
             ]
+
+            testList "computation expression" [
+                let testNormal a =
+                    testCase "" <| fun _ ->
+                        if a < 0
+                            then failtest "negative"
+                        if a > 5
+                            then failwith "over 5"
+                let testCompExp a = 
+                    test "" {
+                        if a < 0
+                            then failtest "negative"
+                        if a > 5
+                            then failwith "over 5"
+                    }
+                for c in [-5; 1; 6] ->
+                    testCase (sprintf "compare comp.exp. and normal with value %d" c) <| fun _ ->
+                        let normal = evalSilent <| testNormal c
+                        let compexp = evalSilent <| testCompExp c
+                        let normalTag = TestResult.tag normal.[0].Result
+                        let compexpTag = TestResult.tag compexp.[0].Result
+                        Assert.Equal("result", normalTag, compexpTag)
+            ]
         ]
