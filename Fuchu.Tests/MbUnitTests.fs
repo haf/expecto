@@ -50,10 +50,9 @@ module MbUnitTests =
                     | _ -> failtestf "Expected test with categories, found %A" test.Value
             ]
 
-            testCase "with StaticTestFactory" <| fun _ ->
+            testCase "with StaticTestFactory in TestSuite" <| fun _ ->
                 let testType = typeof<ATestFixtureWithStaticTestFactories>
                 let test = MbUnitTestToFuchu testType
-                let testName = testType.Name
                 match test with
                 | TestList 
                     (Seq.Two (TestList _, 
@@ -61,6 +60,17 @@ module MbUnitTests =
                             (Seq.One (TestLabel("suite name", TestList 
                                         (Seq.Two (TestLabel("test 1", TestCase _), TestLabel("test 2", TestCase _))))))))) -> ()
                 | _ -> failtestf "unexpected %A" test
+
+            testCase "with StaticTestFactory in list of TestCases" <| fun _ ->
+                let testType = typeof<ATestFixtureWithStaticTestFactories2>
+                let test = MbUnitTestToFuchu testType
+                match test with
+                | TestList 
+                    (Seq.Two (TestList _,
+                        TestLabel(_, TestList
+                            (Seq.Two (TestLabel("test 1", TestCase _), TestLabel("test 2", TestCase _)))))) -> ()
+                | _ -> failtestf "unexpected %A" test
+                
         ]
 
     type MbUnitTestsFromFuchu() =

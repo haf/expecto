@@ -71,3 +71,11 @@ module MbUnitTestTypes =
                     TestCase("test 2", fun () -> ())
                 ]
             [suite]
+
+    type ATestFixtureWithStaticTestFactories2() =
+        [<StaticTestFactory>]
+        static member Tests() =
+            [
+                TestCase("test 1", fun () -> ())
+                TestCase("test 2", fun () -> ())
+            ]
