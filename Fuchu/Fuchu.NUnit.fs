@@ -9,12 +9,15 @@ module NUnit =
     
     let private NUnitAttr = sprintf "NUnit.Framework.%sAttribute"
 
-    let NUnitTestToFuchu : Type -> Test = 
-        TestToFuchu 
-            { TestAttributes.Ignore = NUnitAttr "Ignore"
-              Test = NUnitAttr "Test"
-              Setup = NUnitAttr "SetUp"
-              TearDown = NUnitAttr "TearDown"
-              FixtureSetup = NUnitAttr "TestFixtureSetUp"
-              ExpectedException = NUnitAttr "ExpectedException", "ExpectedException" }
-            (fun _ -> "")
+    let private nUnitAttrs = 
+        { TestAttributes.Ignore = NUnitAttr "Ignore"
+          Test = NUnitAttr "Test"
+          Setup = NUnitAttr "SetUp"
+          TearDown = NUnitAttr "TearDown"
+          FixtureSetup = NUnitAttr "TestFixtureSetUp"
+          ExpectedException = NUnitAttr "ExpectedException", "ExpectedException" }
+
+    let NUnitTestToFuchu (t: Type) = 
+        let getCategory _ = ""
+        let methods = getTestMethods getCategory nUnitAttrs t
+        TestToFuchu nUnitAttrs getCategory t methods

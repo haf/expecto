@@ -15,7 +15,7 @@ module XunitHelpers =
         methods
         |> Seq.filter (fun m -> Seq.exists m.HasAttribute attr)
 
-    let methods ignoreAttr (t: Type) =
+    let nonIgnoredMethods ignoreAttr (t: Type) =
         [t]
         |> Seq.filter (fun t -> not (t.HasAttribute ignoreAttr))
         |> Seq.collect (fun _ -> t.GetMethods())
@@ -40,41 +40,50 @@ module XunitHelpers =
         ExpectedException: string * string
     }
 
+    let inline invoke (o: obj) (m: MethodInfo) = m.Invoke(o, null) |> ignore
 
-    let TestToFuchu (attr: TestAttributes) (testCategory: MemberInfo -> string) (testType: Type) =
-        let methods = methods attr.Ignore testType
+    type TestMethod = {
+        Name: string
+        Invoke: obj -> unit
+        ExpectedException: string option
+    }
+
+    let getTestMethods (testCategory: MethodInfo -> string) (attr: TestAttributes) (testType: Type) =
+        let methods = nonIgnoredMethods attr.Ignore testType
         let methodsWithAttrs = methodsWithAttrs methods
-        let testMethods = 
-            methodsWithAttrs [attr.Test]
-            |> Seq.filter (fun m -> not (m.HasAttribute attr.Ignore))
-            |> Seq.toList
+        methodsWithAttrs [attr.Test]
+        |> Seq.filter (fun m -> not (m.HasAttribute attr.Ignore))
+        |> Seq.filter (fun m -> m.GetParameters().Length = 0)
+        |> Seq.map (fun m -> { TestMethod.Name = m.Name + testCategory m
+                               ExpectedException = expectedException attr.ExpectedException m
+                               Invoke = fun (o: obj) -> invoke o m })
+
+    let TestToFuchu (attr: TestAttributes) (testCategory: Type -> string) (testType: Type) (testMethods: TestMethod seq) =
+        let methods = nonIgnoredMethods attr.Ignore testType
+        let methodsWithAttrs = methodsWithAttrs methods
         let setupMethods = methodsWithAttrs [attr.Setup]
         let teardownMethods = methodsWithAttrs [attr.TearDown]
         let fixtureSetupMethods = methodsWithAttrs [attr.FixtureSetup]
-        let expectedException = expectedException attr.ExpectedException
-
-        let inline invoke o (m: MethodInfo) = m.Invoke(o, null) |> ignore
 
         TestList <| seq {
-            if testMethods.Length > 0 then
+            if Seq.length testMethods > 0 then
                 yield testList (testType.FullName + testCategory testType) <| seq {
                     let testInstance = create testType
                     let inline invoke metod = invoke testInstance metod
                     Seq.iter invoke fixtureSetupMethods
-                    for metod in testMethods ->
-                        test (metod.Name + testCategory metod) {
+                    for tm in testMethods ->
+                        test tm.Name {
                             try
                                 Seq.iter invoke setupMethods
-                                let expectedException = expectedException metod
                                 try
-                                    invoke metod
-                                    match expectedException with
+                                    tm.Invoke testInstance
+                                    match tm.ExpectedException with
                                     | Some expectedExc ->
                                         failtestf "Expected exception '%s' but no exception was thrown" expectedExc
                                     | None -> ()
                                 with
                                 | :? TargetInvocationException as e -> 
-                                    match expectedException with
+                                    match tm.ExpectedException with
                                     | Some expectedExc ->
                                         let innerExc = e.InnerException.GetType().AssemblyQualifiedName
                                         if expectedExc <> innerExc

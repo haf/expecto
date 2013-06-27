@@ -61,6 +61,14 @@ module MbUnitTestTypes =
         member x.ATeardown() = 
             tearDownCalled <- true
 
+    [<TestFixture>]
+    type ATestFixtureWithRow() =
+        [<Test>]
+        [<Row(1000, 10, 100)>]
+        [<Row(4195835, 3145729, 1.3338196)>]
+        member x.DivTest(numerator: double, denominator: double, result: double) =
+            Assert.AreApproximatelyEqual(result, numerator / denominator, 0.00001)
+
     type ATestFixtureWithStaticTestFactories() =
         [<StaticTestFactory>]
         static member Tests() = 

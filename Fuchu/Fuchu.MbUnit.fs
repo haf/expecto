@@ -33,6 +33,10 @@ module MbUnit =
     let private categoryAttributeType = lazy Type.GetType "MbUnit.Framework.CategoryAttribute, MbUnit"
     let private categoryAttributeNameProperty = lazy categoryAttributeType.Value.GetProperty "Category"
 
+    let private rowAttributeType = lazy Type.GetType "MbUnit.Framework.RowAttribute, MbUnit"
+    let private rowAttributeValuesProperty = lazy rowAttributeType.Value.GetProperty "Values"
+    let private rowAttributeGetValues (a: Attribute) = rowAttributeValuesProperty.Value.GetValue(a, null) :?> obj[]
+
     let rec private buildMbUnitTest (o: obj) =
         let typeName = o.GetType().AssemblyQualifiedName
         if typeName.StartsWith testCaseTypeName then
@@ -58,24 +62,35 @@ module MbUnit =
             |> Array.map (fun a -> categoryAttributeNameProperty.Value.GetValue(a, null) :?> string)
             |> Enumerable.FirstOrDefault
 
-        let test = 
-            TestToFuchu
-                { TestAttributes.Ignore = MbUnitAttr "Ignore"
-                  Test = MbUnitAttr "Test"
-                  Setup = MbUnitAttr "SetUp"
-                  TearDown = MbUnitAttr "TearDown"
-                  FixtureSetup = MbUnitAttr "FixtureSetUp"
-                  ExpectedException = MbUnitAttr "ExpectedException", "ExceptionType" }
-                testCategory
-                t
+        let mbUnitAttrs = 
+            { Ignore = MbUnitAttr "Ignore"
+              Test = MbUnitAttr "Test"
+              Setup = MbUnitAttr "SetUp"
+              TearDown = MbUnitAttr "TearDown"
+              FixtureSetup = MbUnitAttr "FixtureSetUp"
+              ExpectedException = MbUnitAttr "ExpectedException", "ExceptionType" }
+        
+        let nonIgnoredMethods = nonIgnoredMethods ignoreAttr t |> methodsWithAttrs
 
-        let staticTestFactories = 
-            let methods = methods ignoreAttr t
-            let methodsWithAttrs = methodsWithAttrs methods
-            methodsWithAttrs [MbUnitAttr "StaticTestFactory"]
+        let rowTests = 
+            let rowAttr = MbUnitAttr "Row"
+            nonIgnoredMethods [rowAttr]
+            |> Seq.collect (fun (m: MethodInfo) -> 
+                                m.GetAttributes rowAttr 
+                                |> Seq.map rowAttributeGetValues
+                                |> Seq.map (fun args -> 
+                                                let argsString = args |> Seq.map (sprintf "%A") |> String.concat ","
+                                                let testName = sprintf "%s(%s)" m.Name argsString
+                                                { TestMethod.Name = testName
+                                                  Invoke = fun o -> m.Invoke(o, args) |> ignore
+                                                  ExpectedException = None }))
+
+        let testMethods = Seq.append (getTestMethods testCategory mbUnitAttrs t) rowTests
+
+        let test = TestToFuchu mbUnitAttrs testCategory t testMethods
 
         let staticTests = 
-            staticTestFactories
+            nonIgnoredMethods [MbUnitAttr "StaticTestFactory"]
             |> Seq.collect (fun m -> m.Invoke(null, null) :?> System.Collections.IEnumerable |> Seq.cast<obj>)
             |> Seq.map (buildMbUnitTest >> MbUnitTestToFuchuTest)
             |> Seq.toList

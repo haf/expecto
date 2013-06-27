@@ -71,6 +71,18 @@ module MbUnitTests =
                             (Seq.Two (TestLabel("test 1", TestCase _), TestLabel("test 2", TestCase _)))))) -> ()
                 | _ -> failtestf "unexpected %A" test
                 
+            testCase "row test" <| fun _ ->
+                let testType = typeof<ATestFixtureWithRow>
+                let test = MbUnitTestToFuchu testType
+                match test with
+                | TestList
+                    (Seq.One (TestList 
+                                (Seq.One(TestLabel(String.Contains "ATestFixtureWithRow", 
+                                            TestList
+                                                (Seq.Two (
+                                                    TestLabel("DivTest(1000,10,100)", TestCase _), 
+                                                    TestLabel("DivTest(4195835,3145729,1.3338196)", TestCase _)))))))) -> ()
+                | _ -> failtestf "unexpected %A" test
         ]
 
     type MbUnitTestsFromFuchu() =
