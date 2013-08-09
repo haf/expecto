@@ -7,3 +7,4 @@
 _ReSharper.*
 packages/*
 .nuget/*.exe
+*.nupkg

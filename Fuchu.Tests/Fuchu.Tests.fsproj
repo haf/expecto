@@ -55,8 +55,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FsCheck, Version=0.8.3.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\FsCheck.0.8.3.0\lib\net40-Client\FsCheck.dll</HintPath>
+    <Reference Include="FsCheck">
+      <HintPath>..\packages\FsCheck.0.9.1.0\lib\net40-Client\FsCheck.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />

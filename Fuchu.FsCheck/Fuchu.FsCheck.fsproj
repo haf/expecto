@@ -47,8 +47,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FsCheck, Version=0.9.0.1, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\FsCheck.0.9.0.1\lib\net40-Client\FsCheck.dll</HintPath>
+    <Reference Include="FsCheck">
+      <HintPath>..\packages\FsCheck.0.9.1.0\lib\net40-Client\FsCheck.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
