@@ -29,20 +29,6 @@ Tests can be grouped (with arbitrary nesting):
                 fun _ -> Assert.Equal("3+3", 3, 3+3)
         ]
 
-You can also use a more compact syntax if you don't mind the operators:
-
-    let simpleTest = 
-        "A simple test" =>
-            fun _ -> Assert.Equal("2+2", 4, 2+2)
-
-    let tests = 
-        "A test group" =>> [
-            "one test" =>
-                fun _ -> Assert.Equal("2+2", 4, 2+2)
-            "another test" =>
-                fun _ -> Assert.Equal("3+3", 3, 3+3)
-        ]
-        
 In C#:
 
     static Test ATest {
