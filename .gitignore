@@ -6,5 +6,4 @@
 */obj
 _ReSharper.*
 packages/*
-.nuget/*.exe
 *.nupkg
