@@ -1,6 +1,7 @@
 @echo off
 
 cls
+if not exist .nuget\nuget.exe msbuild .nuget\nuget.targets /t:CheckPrerequisites
 if not exist packages\FAKE\tools\Fake.exe ( 
 	echo Downloading FAKE...
 	".nuget\NuGet.exe" "install" "FAKE" "-OutputDirectory" "packages" "-ExcludeVersion" "-Prerelease"
