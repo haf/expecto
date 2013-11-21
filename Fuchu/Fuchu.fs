@@ -20,17 +20,11 @@ type IgnoreException(msg) = inherit FuchuException(msg)
 
 /// Marks a top-level test for scanning
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
-type TestsAttribute() = 
-    inherit Attribute()
+type TestsAttribute() = inherit Attribute()
 
 module Helpers =
     let inline ignore2 _ = ignore
     let inline ignore3 _ = ignore2
-
-    let tryGetType t = 
-        try
-            Type.GetType(t, true) |> Some
-        with _ -> None
 
     let bracket setup teardown f () =
         let v = setup()
@@ -39,6 +33,7 @@ module Helpers =
         finally
             teardown v
 
+    /// Print to Console and Trace
     let tprintf fmt = 
         Printf.kprintf (fun s -> 
                             System.Diagnostics.Trace.Write s
@@ -51,6 +46,12 @@ module Helpers =
 
     module Seq =
         let cons x xs = seq { yield x; yield! xs }
+
+    type Type with
+        static member TryGetType t = 
+            try
+                Type.GetType(t, true) |> Some
+            with _ -> None
 
     type MemberInfo with
         member m.HasAttributePred (pred: Type -> bool) =
@@ -213,7 +214,7 @@ module Impl =
           Errored = get (TestResult.Error null)
           Time = results |> Seq.map (fun r -> r.Time) |> Seq.fold (+) TimeSpan.Zero }
 
-    // Hooks to print report through test run
+    /// Hooks to print report through test run
     type TestPrinters = {
         BeforeRun: string -> unit
         Passed: string -> TimeSpan -> unit
@@ -243,8 +244,8 @@ module Impl =
             "NUnit.Framework.IgnoreException, NUnit.Framework"
             typeof<IgnoreException>.AssemblyQualifiedName
         ]
-        let failExceptionTypes = lazy List.choose tryGetType failExceptions
-        let ignoreExceptionTypes = lazy List.choose tryGetType ignoreExceptions
+        let failExceptionTypes = lazy List.choose Type.TryGetType failExceptions
+        let ignoreExceptionTypes = lazy List.choose Type.TryGetType ignoreExceptions
 
         let (|ExceptionInList|_|) (l: Type list) (e: #exn) = 
             let et = e.GetType()
@@ -299,6 +300,7 @@ module Impl =
     let printFailed = tprintf "%s: Failed: %s (%A)\n"
     let printException name ex = tprintf "%s: Exception: %s (%A)\n" name (exnToString ex)
 
+    /// Evaluates tests sequentially
     let evalSeq = 
         let printer = 
             { TestPrinters.Default with 
@@ -309,6 +311,7 @@ module Impl =
 
     let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select(f) :> _ seq
 
+    /// Evaluates tests in parallel
     let evalPar =
         let funLock =
             let locker = obj()
@@ -322,6 +325,7 @@ module Impl =
                 Exception = printException }
         eval printer pmap
 
+    /// Runs tests, returns error code
     let runEval eval (tests: Test) = 
         let w = System.Diagnostics.Stopwatch.StartNew()
         let results = eval tests
@@ -367,6 +371,7 @@ module Impl =
             |> Seq.toList
             |> listToTestListOption
 
+    /// Scan filtered tests marked with TestsAttribute from an assembly
     let testFromAssemblyWithFilter typeFilter (a: Assembly) =
         a.GetExportedTypes()
         |> Seq.filter typeFilter
@@ -395,11 +400,18 @@ module Tests =
     /// Skip this test
     let inline skiptestf fmt = Printf.ksprintf (fun msg -> raise <| IgnoreException msg) fmt
 
+    /// Builds a list/group of tests
     let inline testList name tests = TestLabel(name, TestList tests)
+
+    /// Builds a test case
     let inline testCase name test = TestLabel(name, TestCase test)
+
+    /// Applies a function to a list of values to build test cases
     let inline testFixture setup = 
          Seq.map (fun (name, partialTest) ->
                         testCase name (setup partialTest))
+
+    /// Applies a value to a list of partial tests
     let inline testParam param =
          Seq.map (fun (name, partialTest) ->
                         testCase name (partialTest param))
@@ -477,6 +489,8 @@ module Tests =
             | Some t -> t
             | None -> TestList []
         defaultMain tests args
+
+// Functions for C#/VB.NET :
         
 [<Extension>]
 type Test with
@@ -500,17 +514,21 @@ type Test with
     static member Case (label: string, f: Action<_>) = 
         label, f
 
+    /// Groups tests
     [<Extension>]
     static member List (tests, name) = 
         testList name tests
 
+    /// Creates a group of tests
     [<Extension>]
     static member List tests = 
         TestList tests
 
+    /// Creates a group of tests
     static member List (name, [<ParamArray>] tests: Test[]) = 
         testList name tests
 
+    /// Creates a group of tests
     static member List ([<ParamArray>] tests) =
         tests |> Seq.map Test.Case |> TestList
 
