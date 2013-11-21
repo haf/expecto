@@ -2,6 +2,7 @@
 
 cls
 if not exist packages\FAKE\tools\Fake.exe ( 
+	echo Downloading FAKE...
 	".nuget\NuGet.exe" "install" "FAKE" "-OutputDirectory" "packages" "-ExcludeVersion" "-Prerelease"
 )
 "packages\FAKE\tools\Fake.exe" "build.fsx"
