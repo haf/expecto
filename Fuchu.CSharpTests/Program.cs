@@ -63,9 +63,9 @@ namespace FuchuCSharpTests {
         }
 
         private static int Main(string[] args) {
-            return Tests
-                .Select(t => t.Wrap(x => x.Timeout(2500))) // set a timeout for each test
-                .List()
+            return Test.List(Tests)
+//                .Select(t => t.Wrap(x => x.Timeout(2500))) // set a timeout for each test
+//                .List()
                 .Run(); //.RunParallel(); or run all tests in parallel
         }
     }
