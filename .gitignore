@@ -1,4 +1,5 @@
 *.suo
+*.swp
 *.user
 *.userprefs
 *.pidb
@@ -6,5 +7,6 @@
 */obj
 _ReSharper.*
 packages/*
+**/packages/*
 *.nupkg
 .nuget/*.exe

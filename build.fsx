@@ -5,12 +5,8 @@ open Fake
 open Fake.ProcessHelper
 
 let buildDir = "./build"
-let nugetDir = "./.nuget"
-let packagesDir = "./packages"
 
 Target "Clean" (fun _ -> CleanDirs [buildDir])
-
-Target "RestorePackages" RestorePackages
 
 Target "BuildSolution" (fun _ ->
     MSBuildWithDefaults "Build" ["./Fuchu.sln"]
@@ -20,16 +16,18 @@ Target "BuildSolution" (fun _ ->
 Target "Test" <| fun _ ->
     let errorCode = 
         [
-            @"Fuchu.Tests\bin\Debug\Fuchu.Tests.exe"
-            @"Fuchu.CSharpTests\bin\Debug\Fuchu.CSharpTests.exe"
+            "Fuchu.Tests"
+            "Fuchu.CSharpTests"
         ]
-        |> Seq.map (fun p -> asyncShellExec { defaultParams with Program = p })
+        |> Seq.map (fun t -> t @@ "bin" @@ "Debug" @@ (t + ".exe"))
+        |> Seq.map (fun p -> if not isMono then p,null else "mono",p)
+        |> Seq.map (fun (p,a) -> asyncShellExec { defaultParams with Program = p; CommandLine = a })
         |> Async.Parallel
         |> Async.RunSynchronously
         |> Array.sum
     if errorCode <> 0 then failwith "Error in tests"
 
-"BuildSolution" <== ["Clean"; "RestorePackages"]
+// "BuildSolution" <== ["Clean" ]
 "Test" <== ["BuildSolution"]
 
 RunTargetOrDefault "BuildSolution"
