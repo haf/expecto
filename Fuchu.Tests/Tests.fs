@@ -1,4 +1,4 @@
-﻿namespace Fuchu
+namespace Fuchu
 
 open System
 
@@ -257,6 +257,14 @@ module Tests =
             ]
 
             testList "assertions" [
+                testList "NotEqual" [
+                    testCase "pass" <| fun _ ->
+                        Assert.NotEqual("should be different", "", "monkey")
+                    testCase "fail" <| fun _ ->
+                        let test () = Assert.NotEqual("should fail", "", "")
+                        assertTestFails test
+                ]
+
                 testList "raise" [
                     testCase "pass" <| fun _ ->
                         Assert.Raise("", typeof<ArgumentNullException>, fun _ -> nullArg "")
