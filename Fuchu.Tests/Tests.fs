@@ -260,6 +260,7 @@ module Tests =
                 testList "NotEqual" [
                     testCase "pass" <| fun _ ->
                         Assert.NotEqual("should be different", "", "monkey")
+
                     testCase "fail" <| fun _ ->
                         let test () = Assert.NotEqual("should fail", "", "")
                         assertTestFails test
