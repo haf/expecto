@@ -3,6 +3,11 @@
 open System
 
 type Assert =
+
+    static member NotEqual(msg, negative_case, actual) =
+        if negative_case = actual
+            then failtestf "%s\nExpected: %A\nnot to equal Actual: %A" msg negative_case actual
+
     static member Equal(msg, expected, actual) =
         if expected <> actual 
             then failtestf "%s\nExpected: %A\nActual: %A" msg expected actual
