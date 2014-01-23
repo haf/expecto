@@ -120,6 +120,8 @@ Some projects using Fuchu:
 
 * [FsSql](https://github.com/mausch/FsSql/tree/master/FsSql.Tests)
 * [FsFormlets](https://github.com/mausch/FsFormlets/tree/master/Formlets.Tests)
-* UrchiNet ([C#](https://github.com/mausch/UrchiNet/blob/master/UrchiNet.CSharpTests/Tests.cs) and [F#](https://github.com/mausch/UrchiNet/blob/master/UrchiNet.Tests/Tests.fs)
+* UrchiNet ([C#](https://github.com/mausch/UrchiNet/blob/master/UrchiNet.CSharpTests/Tests.cs) and [F#](https://github.com/mausch/UrchiNet/blob/master/UrchiNet.Tests/Tests.fs))
 * [Figment](https://github.com/mausch/Figment/tree/master/Figment.Tests)
 * [NHWebConsole](https://github.com/mausch/NHWebConsole/tree/master/NHWebConsole.Tests)
+* [Fleece](https://github.com/mausch/Fleece/blob/master/Tests/Tests.fs)
+* [EdmundsNet](https://github.com/mausch/EdmundsNet/blob/master/Tests/Tests.fs)
