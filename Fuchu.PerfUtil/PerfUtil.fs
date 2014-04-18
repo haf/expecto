@@ -10,7 +10,7 @@ module FuchuPerfUtil =
     open Fuchu.Impl
 
     type PerfConfig =
-        {  }
+        { a : string }
 
     type CompareConfig =
         { throwOnError : bool
@@ -34,7 +34,8 @@ module FuchuPerfUtil =
             let results = PerfTest.run tester tests
             () // TODO: handle saving of results
 
-    let testPerfCompare = testPerfCompareWithConfig CompareConfig.Defaults
+    let testPerfCompare<'a when 'a :> ITestable> name (subj : 'a) (alts : 'a list) (tests : 'a PerfTest list) =
+        testPerfCompareWithConfig CompareConfig.Defaults name subj alts tests
 
     let testPerfHistoryWithConfig config name =
         ()
@@ -43,7 +44,14 @@ module FuchuPerfUtil =
         ()
 
 module Usage =
+    open global.PerfUtil
+
+    module Types =
+        type Y = { a : string; b : int }
+        type X = { c : Nullable<int>; d : uint64 }
+
     type Serialiser =
+        inherit ITestable
         abstract member Serialise<'a> : 'a -> unit
 
     type SlowSerialiser() =
@@ -68,17 +76,19 @@ module Usage =
                 System.Threading.Thread.Sleep(20)
 
     let alts : Serialiser list = [ FastSerialiser(); FastSerialiserAlt() ]
+    let subj = SlowSerialiser() :> Serialiser
 
-    testList "performance tests" [
-        testPerfCompare "implementations of Serialiser" (SlowSerialiser()) alts [
-            perfTest "serialising string" <| fun s ->
-                s.Serialise("wowowow")
+    open Types
+
+    let tests =
+        testList "performance tests" [
+            testPerfCompare "implementations of Serialiser" subj alts [
+                perfTest "serialising string" <| fun s ->
+                    s.Serialise("wowowow")
+                perfTest "serialising record" <| fun s ->
+                    s.Serialise { a = "hello world"; b = 42 }
+                ]
             ]
-        ]
-
-type FsCheck =
-    static member PerfCompare(name, _ : TODO) =
-        ()
 
 (* EXAMPLES:
 
