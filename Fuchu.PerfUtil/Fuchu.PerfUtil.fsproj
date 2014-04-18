@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Fuchu.PerfUtil</RootNamespace>
     <AssemblyName>Fuchu.PerfUtil</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Name>Fuchu.PerfUtil</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>

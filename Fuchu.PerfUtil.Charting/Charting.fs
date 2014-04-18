@@ -15,8 +15,8 @@ let plot yaxis (metric : PerfResult -> float) (results : PerfResult list) =
     let values = results |> List.choose (fun r -> if r.HasFailed then None else Some (r.SessionId, metric r))
     let name = results |> List.tryPick (fun r -> let i = r.TestId.IndexOf('.') in Some <| r.TestId.[i+1..])
     Chart.Bar(values, ?Name = name, ?Title = name, YTitle = yaxis)
-    |> Chart.WithYAxis(MajorGrid = dashGrid) 
-    |> Chart.WithXAxis(MajorGrid = dashGrid) 
+    |> Chart.WithYAxis(MajorGrid = dashGrid)
+    |> Chart.WithXAxis(MajorGrid = dashGrid)
     |> fun ch -> ch.ShowChart()
 
 let plotMS (results : TestSession list) = 
