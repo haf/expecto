@@ -4,16 +4,37 @@ open System
 open global.PerfUtil
 
 [<AutoOpen; CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
-module FuchuFsCheck =
+module FuchuPerfUtil =
     open Fuchu
     open Fuchu.Helpers
     open Fuchu.Impl
 
-    let testPerfCompareWithConfig config name =
-        ()
+    type PerfConfig =
+        {  }
 
-    let testPerfCompare config name =
-        ()
+    type CompareConfig =
+        { throwOnError : bool
+          comparer     : IPerformanceComparer
+          verbose      : bool }
+        static member Defaults =
+            { throwOnError = true
+              comparer     = MeanComparer()
+              verbose      = true }
+
+    let perfTest name (testImpl : 'a -> unit when 'a :> ITestable) =
+        { PerfTest.Id = name
+          Test        = testImpl }
+
+    let testPerfCompareWithConfig (conf : CompareConfig) name (subject : 'a) (alternatives : 'a list) (tests : PerfTest<'a> list) =
+        let tester () =
+            new ImplemantationComparer<_>(subject, alternatives, conf.comparer, conf.verbose, conf.throwOnError)
+                :> PerformanceTester<'a>
+
+        testCase name <| fun _ ->
+            let results = PerfTest.run tester tests
+            () // TODO: handle saving of results
+
+    let testPerfCompare = testPerfCompareWithConfig CompareConfig.Defaults
 
     let testPerfHistoryWithConfig config name =
         ()
@@ -21,7 +42,39 @@ module FuchuFsCheck =
     let testPerfHistory name =
         ()
 
-type TODO = int
+module Usage =
+    type Serialiser =
+        abstract member Serialise<'a> : 'a -> unit
+
+    type SlowSerialiser() =
+        interface ITestable with
+            member x.Name = "Slow Serialiser"
+        interface Serialiser with
+            member x.Serialise _ =
+                System.Threading.Thread.Sleep(30)
+
+    type FastSerialiser() =
+        interface ITestable with
+            member x.Name = "Fast Serialiser"
+        interface Serialiser with
+            member x.Serialise _ =
+                System.Threading.Thread.Sleep(10)
+
+    type FastSerialiserAlt() =
+        interface ITestable with
+            member x.Name = "Fast Serialiser Alt"
+        interface Serialiser with
+            member x.Serialise _ =
+                System.Threading.Thread.Sleep(20)
+
+    let alts : Serialiser list = [ FastSerialiser(); FastSerialiserAlt() ]
+
+    testList "performance tests" [
+        testPerfCompare "implementations of Serialiser" (SlowSerialiser()) alts [
+            perfTest "serialising string" <| fun s ->
+                s.Serialise("wowowow")
+            ]
+        ]
 
 type FsCheck =
     static member PerfCompare(name, _ : TODO) =
