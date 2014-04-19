@@ -3,9 +3,6 @@
 open System
 open global.PerfUtil
 
-module PerfUtilFac =
-    let todo () = ()
-
 [<AutoOpen; CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module FuchuPerfUtil =
     open Fuchu
