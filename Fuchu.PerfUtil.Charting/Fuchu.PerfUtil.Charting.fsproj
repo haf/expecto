@@ -54,7 +54,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Charting.fs" />
-    <None Include="Script.fsx" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
