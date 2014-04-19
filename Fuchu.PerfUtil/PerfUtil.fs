@@ -14,77 +14,96 @@ module FuchuPerfUtil =
 
     open System.IO
 
-    type PerfConfig =
-        { a : string }
-
-    type CompareImplsConfig =
-        { throwOnError : bool
-          comparer     : IPerformanceComparer
-          verbose      : bool }
-        static member Defaults =
-            { throwOnError = true
-              comparer     = MeanComparer()
-              verbose      = true }
-
-    /// A configuration for the historical performance development
-    /// for a given thing.
-    type CompareHistoryConfig =
-          /// path to history file
-        { historyFile  : string
-          comparer     : IPerformanceComparer
-          verbose      : bool
-          throwOnError : bool
-          overwrite    : bool }
-        /// Defaults to a xml file in the currently executing DLL's directory
-        /// named the same as the collection of perf tests.
-        static member Defaults testName =
-            { historyFile  = Path.Combine(Path.GetDirectoryName(PerfUtil.DefaultPersistenceFile), testName + ".xml")
-              comparer     = MeanComparer()
-              verbose      = true
-              throwOnError = true
-              overwrite    = true }
-
     /// Create a new performance test. The values given from this method are usable both
-    /// by PerfUtil as well as Fuchu's testPerfCompareWithConfig, testPerfCompare,
+    /// by PerfUtil as well as Fuchu's testPerfImplsWithConfig, testPerfImpls,
     /// testPerfHistoryWithConfig and testPerfHistory. You can give the values from this
     /// function to both Fuchu and PerfUtil.
     let perfTest name (testImpl : 'a -> unit when 'a :> ITestable) =
         { PerfTest.Id = name
           Test        = testImpl }
 
-    let testPerfCompareWithConfig (conf : CompareImplsConfig) name (subject : 'a) (alternatives : 'a list) (tests : PerfTest<'a> list) =
+    type PerfImplsConf =
+          /// Whether to throw <see cref="PerfUtil.PerformanceException" />
+          /// if the subject is slower than the alternative that it is compared to.
+          /// Useful for making sure you don't accidentally write code that degrades
+          /// performance. Defaults to false.
+        { throwOnError  : bool
+          /// The comparer for how much 'better' you need the subject to be. Defaults to
+          /// <see cref="PerfUtil.MeanComparer" />.
+          comparer      : IPerformanceComparer
+          /// Whether to print results to stdout. Defaults to true.
+          verbose       : bool
+          /// An optional function that is called when the perf tests have been completed
+          /// allowing you to extrace the results and save them or display them or show them
+          /// to your mom.
+          handleResults : TestSession list -> unit }
+        static member Defaults =
+            { throwOnError  = false
+              comparer      = MeanComparer()
+              verbose       = true
+              handleResults = fun _ -> () }
+
+    /// Compares given implementation performance against a collection of other implementations.
+    /// Use the 'perfTest' function to easily construct test cases.
+    ///
+    /// <param name="conf">The <see cref="" /> configuration</param>
+    /// <param name="name">Name for the group of performance tests</param>
+    /// <param name="subject">Implementation under test.</param>
+    /// <param name="alternatives">Secondary implementations to be compared against.</param>
+    /// <param name="tests">The performance tests to run against the subject and the alternatives.</param>
+    let testPerfImplsWithConfig (conf : PerfImplsConf) name (subject : 'a) (alternatives : 'a list) (tests : PerfTest<'a> list) =
         let tester () =
             new ImplemantationComparer<_>(subject, alternatives, conf.comparer, conf.verbose, conf.throwOnError)
                 :> PerformanceTester<'a>
 
         testCase name <| fun _ ->
             let results = PerfTest.run tester tests
-            // TODO: handle saving or displaying of results
-            // TODO: handle by saving artifacts? Chart them and save charts?
-            ()
+            conf.handleResults results
 
-    let testPerfCompare<'a when 'a :> ITestable> name (subj : 'a) (alts : 'a list) (tests : 'a PerfTest list) =
-        testPerfCompareWithConfig CompareImplsConfig.Defaults name subj alts tests
+    /// Compares given implementation performance against a collection of other implementations.
+    let testPerfImpls<'a when 'a :> ITestable> name (subj : 'a) (alts : 'a list) (tests : 'a PerfTest list) =
+        testPerfImplsWithConfig PerfImplsConf.Defaults name subj alts tests
 
-    let testPerfHistoryWithConfig (config : CompareHistoryConfig) name (subject : 'a) (testRunId : string) (tests : 'a PerfTest list) =
+    /// A configuration for the historical performance development for a given implementation.
+    type PerfHistoryConf =
+          /// path to history file
+        { historyFile   : string
+          comparer      : IPerformanceComparer
+          verbose       : bool
+          throwOnError  : bool
+          overwrite     : bool
+          handleResults : TestSession list -> unit }
+        /// Defaults to a xml file in the currently executing DLL's directory
+        /// named the same as the collection of perf tests.
+        static member Defaults testName =
+            { historyFile   = Path.Combine(Path.GetDirectoryName(PerfUtil.DefaultPersistenceFile), testName + ".xml")
+              comparer      = MeanComparer()
+              verbose       = true
+              throwOnError  = true
+              overwrite     = true
+              handleResults = fun _ -> () }
+
+    /// Compares current implementation against a collection of past tests.
+    let testPerfHistoryWithConfig (conf : PerfHistoryConf) name (subject : 'a) (testRunId : string) (tests : 'a PerfTest list) =
         let tester =
             new PastImplementationComparer<_>(
-                subject, testRunId, config.historyFile, config.comparer,
-                config.verbose, config.throwOnError, config.overwrite)
+                subject, testRunId, conf.historyFile, conf.comparer,
+                conf.verbose, conf.throwOnError, conf.overwrite)
 
         testCase name <| fun _ ->
             let results = PerfTest.run (fun () -> tester :> PerformanceTester<'a>) tests
             tester.PersistCurrentResults()
+            conf.handleResults results
 
+    /// Compares current implementation against a collection of past tests.
     let testPerfHistory name (subject : 'a) (testRunId : string) =
-        testPerfHistoryWithConfig (CompareHistoryConfig.Defaults name) name subject testRunId
+        testPerfHistoryWithConfig (PerfHistoryConf.Defaults name) name subject testRunId
 
-module Usage =
+module private ExampleUsage =
     open global.PerfUtil
 
     module Types =
         type Y = { a : string; b : int }
-        type X = { c : Nullable<int>; d : uint64 }
 
     type Serialiser =
         inherit ITestable
@@ -126,7 +145,7 @@ module Usage =
     [<Tests>]
     let tests =
         testList "performance comparison tests" [
-            testPerfCompare "implementations of Serialiser" subj alts normal_serlialisation
+            testPerfImpls "implementations of Serialiser" subj alts normal_serlialisation
             testPerfHistory "historical MySlowSerialiser" subj "v1.2.3" normal_serlialisation
         ]
 

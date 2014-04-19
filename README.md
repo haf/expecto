@@ -1,8 +1,12 @@
 # Fuchu #
 
-**Fuchu** is a test library for .NET, supporting C# and VB.NET but with a special focus on F#.   
-It draws heavily from Haskell's [test-framework](http://batterseapower.github.com/test-framework/) and [HUnit](http://hunit.sourceforge.net/).   
-You can read about the rationale and underlying concepts in [this blog post](http://bugsquash.blogspot.com/2012/06/fuchu-functional-test-library-for-net.html).
+**Fuchu** is a test library for .NET, supporting C# and VB.NET but with a special focus on F#.
+It draws heavily from Haskell's [test-framework](http://batterseapower.github.com/test-framework/) and [HUnit](http://hunit.sourceforge.net/).
+You can read about the rationale and underlying concepts in [this blog post](http://bugsquash.blogspot.com/2012/06/fuchu-functional-test-library-for-net.html),
+or TL;DR: tests should be first-class values so that you can move them around and execute
+them in any context that you want. Also, if they are first-class values, then you can take
+extra care with what the test methods return, making integrations with external libraries
+much cheaper.
 
 ## Binaries ##
 
@@ -11,7 +15,6 @@ Binaries are available on [NuGet](http://nuget.org/packages?q=Fuchu).
 ## Writing tests ##
 
 Here's the simplest test possible:
-
 
     open Fuchu
 
@@ -55,6 +58,8 @@ The test runner is the test assembly itself. It's recommended to compile your te
     run simpleTest // or runParallel
     
 which returns 1 if any tests failed, otherwise 0. Useful for returning to the operating system as error code. Or you can mark the top-level test in each test file with the `[<Tests>]` attribute, then define your main like this:
+
+    open Fuchu
 
     [<EntryPoint>]
     let main args = defaultMainThisAssembly args
@@ -113,6 +118,72 @@ In C# (can't override FsCheck config at the moment):
         });
 
 You can freely mix FsCheck properties with regular test cases and test lists.
+
+## PerfUtil integration ##
+
+The integration with Eirik's PerfUtil project.
+
+    open global.PerfUtil
+
+    module Types =
+        type Y = { a : string; b : int }
+
+    type Serialiser =
+        inherit ITestable
+        abstract member Serialise<'a> : 'a -> unit
+
+    type MySlowSerialiser() =
+        interface ITestable with
+            member x.Name = "Slow Serialiser"
+        interface Serialiser with
+            member x.Serialise _ =
+                System.Threading.Thread.Sleep(30)
+
+    type FastSerialiser() =
+        interface ITestable with
+            member x.Name = "Fast Serialiser"
+        interface Serialiser with
+            member x.Serialise _ =
+                System.Threading.Thread.Sleep(10)
+
+    type FastSerialiserAlt() =
+        interface ITestable with
+            member x.Name = "Fast Serialiser Alt"
+        interface Serialiser with
+            member x.Serialise _ =
+                System.Threading.Thread.Sleep(20)
+
+    let alts : Serialiser list = [ FastSerialiser(); FastSerialiserAlt() ]
+    let subj = MySlowSerialiser() :> Serialiser
+
+    open Types
+
+    let normal_serlialisation : PerfTest<Serialiser> list = [
+        perfTest "serialising string" <| fun s ->
+            s.Serialise("wowowow")
+        perfTest "serialising record" <| fun s ->
+            s.Serialise { a = "hello world"; b = 42 }
+        ]
+
+    [<Tests>]
+    let tests =
+        testList "performance comparison tests" [
+            testPerfImpls "implementations of Serialiser" subj alts normal_serlialisation
+            testPerfHistory "historical MySlowSerialiser" subj "v1.2.3" normal_serlialisation
+        ]
+
+This example shows both a comparison performance test between MySlowSerialiser, FastSerialiser and
+FastSerialiserAlt: `testPerfImpls` and a historical comparison of MySlowSerialiser alone
+which saves an xml file next to the dll on every run.
+
+You can find detailed docs in the source code of PerfUtil.fs on all parameters and data
+structures. All things that can be configured with PerfUtil can be configured with the
+`conf` parameter to `testPerfImplsWithConfig` and `testPerfHistoryWithConfig`.
+
+The functions are discoverable by starting with `testPerf*`.
+
+Handle the results explicitly by giving a config with a value of `handleResults`. Use
+that if you want to export the data to e.g. CSV or TSV.
 
 ## More examples ##
 
