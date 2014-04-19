@@ -22,7 +22,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\Fuchu.PerfUtil.Charting.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Fuchu.PerfUtil.Charting.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,7 +31,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\Fuchu.PerfUtil.Charting.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\Fuchu.PerfUtil.Charting.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="FSharp.Charting">
