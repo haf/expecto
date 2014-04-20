@@ -89,9 +89,9 @@ module FuchuPerfUtil =
         /// named the same as the collection of perf tests.
         static member Defaults testName =
             { historyFile   = Path.Combine(Path.GetDirectoryName(PerfUtil.DefaultPersistenceFile), testName + ".xml")
-              comparer      = MeanComparer()
+              comparer      = MeanComparer(0.05, 1.0)
               verbose       = true
-              throwOnError  = true
+              throwOnError  = false
               overwrite     = true
               handleResults = fun _ -> () }
 
