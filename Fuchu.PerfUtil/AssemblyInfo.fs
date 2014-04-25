@@ -1,13 +1,13 @@
-﻿namespace Fuchu
-
+﻿namespace System
 open System.Reflection
-open System.Runtime.CompilerServices
-open System.Runtime.InteropServices
 
-[<assembly: AssemblyVersion("0.3.0.1")>]
-[<assembly: AssemblyFileVersion("0.3.0.1")>]
-[<assembly: AssemblyTitle("Fuchu.PerfUtil")>]
-[<assembly: AssemblyDescription("Integrates Fuchu with PerfUtil")>]
-[<assembly: AssemblyProduct("Fuchu.PerfUtil")>]
-[<assembly: AssemblyCopyright("Copyright Henrik Feldt 2014")>]
-do()
+[<assembly: AssemblyVersionAttribute("0.4.0.0")>]
+[<assembly: AssemblyFileVersionAttribute("0.4.0.0")>]
+[<assembly: AssemblyTitleAttribute("Fuchu.PerfUtil")>]
+[<assembly: AssemblyProductAttribute("Fuchu.PerfUtil")>]
+[<assembly: AssemblyDescriptionAttribute("Integrates Fuchu with PerfUtil")>]
+[<assembly: AssemblyCopyrightAttribute("Copyright Henrik Feldt 2014")>]
+do ()
+
+module internal AssemblyVersionInformation =
+    let [<Literal>] Version = "0.4.0.0"

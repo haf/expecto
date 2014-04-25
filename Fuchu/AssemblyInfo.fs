@@ -1,14 +1,14 @@
-﻿namespace Fuchu
-
+﻿namespace System
 open System.Reflection
-open System.Runtime.CompilerServices
-open System.Runtime.InteropServices
 
-[<assembly: AssemblyVersion("0.3.0.1")>]
-[<assembly: AssemblyFileVersion("0.3.0.1")>]
-[<assembly: AssemblyTitle("Fuchu")>]
-[<assembly: AssemblyDescription("Functional test library")>]
-[<assembly: AssemblyProduct("Fuchu")>]
-[<assembly: AssemblyCopyright("Copyright Mauricio Scheffer 2013")>]
 [<assembly: AssemblyKeyFileAttribute("../Fuchu.snk")>]
-do()
+[<assembly: AssemblyVersionAttribute("0.4.0.0")>]
+[<assembly: AssemblyFileVersionAttribute("0.4.0.0")>]
+[<assembly: AssemblyTitleAttribute("Fuchu")>]
+[<assembly: AssemblyProductAttribute("Fuchu")>]
+[<assembly: AssemblyDescriptionAttribute("Functional test library")>]
+[<assembly: AssemblyCopyrightAttribute("Copyright Mauricio Scheffer 2014")>]
+do ()
+
+module internal AssemblyVersionInformation =
+    let [<Literal>] Version = "0.4.0.0"
