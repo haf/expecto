@@ -50,6 +50,7 @@
     <Compile Include="MbUnitTestTypes.fs" />
     <Compile Include="MbUnitTests.fs" />
     <Compile Include="FsCheckTests.fs" />
+    <Compile Include="PerfTests.fs" />
     <Compile Include="Main.fs" />
     <None Include="Tests.fsx" />
     <None Include="packages.config" />
@@ -85,6 +86,10 @@
       <Private>True</Private>
       <HintPath>..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="PerfUtil">
+      <HintPath>..\packages\PerfUtil.0.1.5\lib\net40\PerfUtil.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <ProjectReference Include="..\Fuchu.FsCheck\Fuchu.FsCheck.fsproj">
@@ -95,6 +100,11 @@
     <ProjectReference Include="..\Fuchu.MbUnit\Fuchu.MbUnit.fsproj">
       <Name>Fuchu.MbUnit</Name>
       <Project>{550f5832-d52f-4c7a-8aa0-0b35a145637f}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Fuchu.PerfUtil\Fuchu.PerfUtil.fsproj">
+      <Name>Fuchu.PerfUtil</Name>
+      <Project>{ae969ed0-0a3b-44b3-8459-4f19e486434a}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\Fuchu.TeamCity\Fuchu.TeamCity.fsproj">

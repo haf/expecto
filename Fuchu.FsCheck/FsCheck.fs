@@ -28,7 +28,7 @@ module FuchuFsCheck =
             Runner = runner }
 
     let testPropertyWithConfig (config: Config) name property = 
-        let config = 
+        let config =
             { config with
                 Runner = runner }
         testCase name <|
