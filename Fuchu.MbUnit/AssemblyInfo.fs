@@ -10,4 +10,5 @@ open System.Runtime.InteropServices
 [<assembly: AssemblyDescription("Converts Fuchu tests to MbUnit tests")>]
 [<assembly: AssemblyProduct("Fuchu.MbUnit")>]
 [<assembly: AssemblyCopyright("Copyright Mauricio Scheffer 2013")>]
+[<assembly: AssemblyKeyFileAttribute("../Fuchu.snk")>]
 do()

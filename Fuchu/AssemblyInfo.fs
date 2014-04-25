@@ -10,4 +10,5 @@ open System.Runtime.InteropServices
 [<assembly: AssemblyDescription("Functional test library")>]
 [<assembly: AssemblyProduct("Fuchu")>]
 [<assembly: AssemblyCopyright("Copyright Mauricio Scheffer 2013")>]
+[<assembly: AssemblyKeyFileAttribute("../Fuchu.snk")>]
 do()
