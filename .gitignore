@@ -10,3 +10,4 @@ packages/*
 **/packages/*
 *.nupkg
 .nuget/*.exe
+*.sln.ide

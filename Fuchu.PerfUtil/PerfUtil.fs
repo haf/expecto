@@ -36,7 +36,7 @@ module FuchuPerfUtil =
           handleResults : TestSession list -> unit }
         static member Defaults =
             { throwOnError  = false
-              comparer      = MeanComparer()
+              comparer      = WeightedComparer()
               verbose       = true
               handleResults = fun _ -> () }
 
@@ -50,7 +50,7 @@ module FuchuPerfUtil =
     /// <param name="tests">The performance tests to run against the subject and the alternatives.</param>
     let testPerfImplsWithConfig (conf : PerfImplsConf) name (subject : 'a) (alternatives : 'a list) (tests : PerfTest<'a> list) =
         let tester () =
-            new ImplemantationComparer<_>(subject, alternatives, conf.comparer, conf.verbose, conf.throwOnError)
+            new ImplementationComparer<_>(subject, alternatives, conf.comparer, conf.verbose, conf.throwOnError)
                 :> PerformanceTester<'a>
 
         testCase name <| fun _ ->
@@ -89,7 +89,7 @@ module FuchuPerfUtil =
         /// named the same as the collection of perf tests.
         static member Defaults testName =
             { historyFile   = Path.Combine(Path.GetDirectoryName(PerfUtil.DefaultPersistenceFile), testName + ".xml")
-              comparer      = MeanComparer(0.05, 1.0)
+              comparer      = WeightedComparer(0.05, 1.0)
               verbose       = true
               throwOnError  = false
               overwrite     = true

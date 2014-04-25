@@ -43,7 +43,8 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="PerfUtil">
-      <HintPath>..\lib\PerfUtil-28e08aa\net40\PerfUtil.dll</HintPath>
+      <HintPath>..\packages\PerfUtil.0.1.5\lib\net40\PerfUtil.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
