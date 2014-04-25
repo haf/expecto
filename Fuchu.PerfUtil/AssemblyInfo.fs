@@ -8,6 +8,6 @@ open System.Runtime.InteropServices
 [<assembly: AssemblyFileVersion("0.3.0.1")>]
 [<assembly: AssemblyTitle("Fuchu.PerfUtil")>]
 [<assembly: AssemblyDescription("Integrates Fuchu with PerfUtil")>]
-[<assembly: AssemblyProduct("Fuchu.FsCheck")>]
+[<assembly: AssemblyProduct("Fuchu.PerfUtil")>]
 [<assembly: AssemblyCopyright("Copyright Henrik Feldt 2014")>]
 do()
