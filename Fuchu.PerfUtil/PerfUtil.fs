@@ -35,8 +35,7 @@ module FuchuPerfUtil =
           /// Whether to print results to stdout. Defaults to true.
           Verbose       : bool
           /// An optional function that is called when the perf tests have been completed
-          /// allowing you to extrace the results and save them or display them or show them
-          /// to your mom.
+          /// allowing you to extrace the results and save them or display them.
           HandleResults : TestSession list -> unit }
         static member Defaults =
             { ThrowOnError  = false
@@ -87,8 +86,8 @@ module FuchuPerfUtil =
           /// Whether to overwrite previous tests. Defaults to true.
           Overwrite     : bool
           /// An optional function that is called when the perf tests have been completed
-          /// allowing you to extrace the results and save them or display them or show them
-          /// to your mom. It will be passed the path of the xml file with test results and
+          /// allowing you to extrace the results and save them or display them. 
+          /// It will be passed the path of the xml file with test results and
           /// the list of TestSessions that comes from PerfUtil.
           HandleResults : string * TestSession list -> unit }
         /// Defaults to a xml file in the currently executing DLL's directory
@@ -107,11 +106,8 @@ module FuchuPerfUtil =
     /// <param name="conf">Configuration for the historical performance test</param>
     /// <param name="name">Name for the group of performance tests</param>
     /// <param name="subject">(Current) implementation under test.</param>
-    /// <param name="testRunId">The id of the test run; this must be ticking upwards, so
-    /// a recommended value for this parameter is the current assembly version. You can use
-    /// for example https://github.com/Albacore/albacore/#docs-asmver together with
-    /// https://github.com/Albacore/albacore/#versionizer and
-    /// https://github.com/haf/semver to manage your versions in a CI-environment.</param>
+    /// <param name="testRunId">The id of the test run; subsequent runs must grow this value, so
+    /// a recommended value for this parameter is the current assembly version.</param>
     /// <param name="tests">The performance tests to run against the subject and the alternatives.</param>
     let testPerfHistoryWithConfig (conf : PerfHistoryConf) name subject (testRunId: string) tests =
         let tester =
@@ -129,11 +125,8 @@ module FuchuPerfUtil =
     /// </summary>
     /// <param name="name">Name for the group of performance tests</param>
     /// <param name="subject">(Current) implementation under test.</param>
-    /// <param name="testRunId">The id of the test run; this must be ticking upwards, so
-    /// a recommended value for this parameter is the current assembly version. You can use
-    /// for example https://github.com/Albacore/albacore/#docs-asmver together with
-    /// https://github.com/Albacore/albacore/#versionizer and
-    /// https://github.com/haf/semver to manage your versions in a CI-environment.</param>
+    /// <param name="testRunId">The id of the test run; subsequent runs must grow this value, so
+    /// a recommended value for this parameter is the current assembly version.</param>
     /// <param name="tests">The performance tests to run against the subject and the alternatives.</param>
     let testPerfHistory name subject (testRunId : string) =
         testPerfHistoryWithConfig (PerfHistoryConf.Defaults name) name subject testRunId
