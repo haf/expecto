@@ -53,10 +53,10 @@ module FuchuPerfUtil =
     /// <param name="subject">Implementation under test.</param>
     /// <param name="alternatives">Secondary implementations to be compared against.</param>
     /// <param name="tests">The performance tests to run against the subject and the alternatives.</param>
-    let testPerfImplsWithConfig (conf : PerfImplsConf) name (subject : 'a) (alternatives : 'a list) (tests : PerfTest<'a> list) =
+    let testPerfImplsWithConfig (conf : PerfImplsConf) name subject alternatives tests =
         let tester () =
             new ImplementationComparer<_>(subject, alternatives, conf.comparer, conf.verbose, conf.throwOnError)
-                :> PerformanceTester<'a>
+                :> PerformanceTester<_>
 
         testCase name <| fun _ ->
             let results = PerfTest.run tester tests
@@ -113,14 +113,14 @@ module FuchuPerfUtil =
     /// https://github.com/Albacore/albacore/#versionizer and
     /// https://github.com/haf/semver to manage your versions in a CI-environment.</param>
     /// <param name="tests">The performance tests to run against the subject and the alternatives.</param>
-    let testPerfHistoryWithConfig (conf : PerfHistoryConf) name (subject : 'a) (testRunId : string) (tests : 'a PerfTest list) =
+    let testPerfHistoryWithConfig (conf : PerfHistoryConf) name subject (testRunId: string) tests =
         let tester =
             new PastImplementationComparer<_>(
                 subject, testRunId, conf.historyFile, conf.comparer,
                 conf.verbose, conf.throwOnError, conf.overwrite)
 
         testCase name <| fun _ ->
-            let results = PerfTest.run (fun () -> tester :> PerformanceTester<'a>) tests
+            let results = PerfTest.run (fun () -> tester :> PerformanceTester<_>) tests
             tester.PersistCurrentResults()
             conf.handleResults(conf.historyFile, results)
 
@@ -135,7 +135,7 @@ module FuchuPerfUtil =
     /// https://github.com/Albacore/albacore/#versionizer and
     /// https://github.com/haf/semver to manage your versions in a CI-environment.</param>
     /// <param name="tests">The performance tests to run against the subject and the alternatives.</param>
-    let testPerfHistory name (subject : 'a) (testRunId : string) =
+    let testPerfHistory name subject (testRunId : string) =
         testPerfHistoryWithConfig (PerfHistoryConf.Defaults name) name subject testRunId
 
 module private ExampleUsage =
