@@ -20,13 +20,17 @@ module FuchuPerfUtil =
           Test        = testImpl }
 
     type PerfImplsConf =
+          /// <summary>
           /// Whether to throw <see cref="PerfUtil.PerformanceException" />
           /// if the subject is slower than the alternative that it is compared to.
           /// Useful for making sure you don't accidentally write code that degrades
           /// performance. Defaults to false.
+          /// </summary>
         { throwOnError  : bool
+          /// <summary>
           /// The comparer for how much 'better' you need the subject to be. Defaults to
           /// <see cref="PerfUtil.MeanComparer" />.
+          /// </summary>
           comparer      : IPerformanceComparer
           /// Whether to print results to stdout. Defaults to true.
           verbose       : bool
@@ -40,9 +44,10 @@ module FuchuPerfUtil =
               verbose       = true
               handleResults = fun _ -> () }
 
+    /// <summary>
     /// Compares given implementation performance against a collection of other implementations.
     /// Use the 'perfTest' function to easily construct test cases.
-    ///
+    /// </summary>
     /// <param name="conf">The <see cref="" /> configuration</param>
     /// <param name="name">Name for the group of performance tests</param>
     /// <param name="subject">Implementation under test.</param>
@@ -57,10 +62,11 @@ module FuchuPerfUtil =
             let results = PerfTest.run tester tests
             conf.handleResults results
 
+    /// <summary>
     /// Compares given implementation performance against a collection of other implementations.
     /// Use the 'perfTest' function to easily construct test cases. With this function, the configuration
     /// will be the sane defaults; if you want to override them, please see <see cref="testPerfImplsWithConfig" />.
-    ///
+    /// </summary>
     /// <param name="name">Name for the group of performance tests</param>
     /// <param name="subject">Implementation under test.</param>
     /// <param name="alternatives">Secondary implementations to be compared against.</param>
@@ -95,7 +101,9 @@ module FuchuPerfUtil =
               overwrite     = true
               handleResults = fun _ -> () }
 
+    /// <summary>
     /// Compares current implementation against a collection of past tests.
+    /// </summary>
     /// <param name="conf">Configuration for the historical performance test</param>
     /// <param name="name">Name for the group of performance tests</param>
     /// <param name="subject">(Current) implementation under test.</param>
@@ -116,7 +124,9 @@ module FuchuPerfUtil =
             tester.PersistCurrentResults()
             conf.handleResults(conf.historyFile, results)
 
+    /// <summary>
     /// Compares current implementation against a collection of past tests.
+    /// </summary>
     /// <param name="name">Name for the group of performance tests</param>
     /// <param name="subject">(Current) implementation under test.</param>
     /// <param name="testRunId">The id of the test run; this must be ticking upwards, so
