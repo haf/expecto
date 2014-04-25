@@ -26,23 +26,23 @@ module FuchuPerfUtil =
           /// Useful for making sure you don't accidentally write code that degrades
           /// performance. Defaults to false.
           /// </summary>
-        { throwOnError  : bool
+        { ThrowOnError  : bool
           /// <summary>
           /// The comparer for how much 'better' you need the subject to be. Defaults to
           /// <see cref="PerfUtil.MeanComparer" />.
           /// </summary>
-          comparer      : IPerformanceComparer
+          Comparer      : IPerformanceComparer
           /// Whether to print results to stdout. Defaults to true.
-          verbose       : bool
+          Verbose       : bool
           /// An optional function that is called when the perf tests have been completed
           /// allowing you to extrace the results and save them or display them or show them
           /// to your mom.
-          handleResults : TestSession list -> unit }
+          HandleResults : TestSession list -> unit }
         static member Defaults =
-            { throwOnError  = false
-              comparer      = WeightedComparer()
-              verbose       = true
-              handleResults = fun _ -> () }
+            { ThrowOnError  = false
+              Comparer      = WeightedComparer()
+              Verbose       = true
+              HandleResults = fun _ -> () }
 
     /// <summary>
     /// Compares given implementation performance against a collection of other implementations.
@@ -55,12 +55,12 @@ module FuchuPerfUtil =
     /// <param name="tests">The performance tests to run against the subject and the alternatives.</param>
     let testPerfImplsWithConfig (conf : PerfImplsConf) name subject alternatives tests =
         let tester () =
-            new ImplementationComparer<_>(subject, alternatives, conf.comparer, conf.verbose, conf.throwOnError)
+            new ImplementationComparer<_>(subject, alternatives, conf.Comparer, conf.Verbose, conf.ThrowOnError)
                 :> PerformanceTester<_>
 
         testCase name <| fun _ ->
             let results = PerfTest.run tester tests
-            conf.handleResults results
+            conf.HandleResults results
 
     /// <summary>
     /// Compares given implementation performance against a collection of other implementations.
@@ -77,29 +77,29 @@ module FuchuPerfUtil =
     /// A configuration for the historical performance development for a given implementation.
     type PerfHistoryConf =
           /// path to history file
-        { historyFile   : string
-          comparer      : IPerformanceComparer
+        { HistoryFile   : string
+          Comparer      : IPerformanceComparer
           /// Whether to print results to stdout. Defaults to true.
-          verbose       : bool
+          Verbose       : bool
           /// Whether to throw if the subject has gotten worse in comparison to previous runs, 
           /// as decided by the 'comparer'.
-          throwOnError  : bool
+          ThrowOnError  : bool
           /// Whether to overwrite previous tests. Defaults to true.
-          overwrite     : bool
+          Overwrite     : bool
           /// An optional function that is called when the perf tests have been completed
           /// allowing you to extrace the results and save them or display them or show them
           /// to your mom. It will be passed the path of the xml file with test results and
           /// the list of TestSessions that comes from PerfUtil.
-          handleResults : string * TestSession list -> unit }
+          HandleResults : string * TestSession list -> unit }
         /// Defaults to a xml file in the currently executing DLL's directory
         /// named the same as the collection of perf tests.
         static member Defaults testName =
-            { historyFile   = Path.Combine(Path.GetDirectoryName(PerfUtil.DefaultPersistenceFile), testName + ".xml")
-              comparer      = WeightedComparer(0.05, 1.0)
-              verbose       = true
-              throwOnError  = false
-              overwrite     = true
-              handleResults = fun _ -> () }
+            { HistoryFile   = Path.Combine(Path.GetDirectoryName(PerfUtil.DefaultPersistenceFile), testName + ".xml")
+              Comparer      = WeightedComparer(0.05, 1.0)
+              Verbose       = true
+              ThrowOnError  = false
+              Overwrite     = true
+              HandleResults = fun _ -> () }
 
     /// <summary>
     /// Compares current implementation against a collection of past tests.
@@ -116,13 +116,13 @@ module FuchuPerfUtil =
     let testPerfHistoryWithConfig (conf : PerfHistoryConf) name subject (testRunId: string) tests =
         let tester =
             new PastImplementationComparer<_>(
-                subject, testRunId, conf.historyFile, conf.comparer,
-                conf.verbose, conf.throwOnError, conf.overwrite)
+                subject, testRunId, conf.HistoryFile, conf.Comparer,
+                conf.Verbose, conf.ThrowOnError, conf.Overwrite)
 
         testCase name <| fun _ ->
             let results = PerfTest.run (fun () -> tester :> PerformanceTester<_>) tests
             tester.PersistCurrentResults()
-            conf.handleResults(conf.historyFile, results)
+            conf.HandleResults(conf.HistoryFile, results)
 
     /// <summary>
     /// Compares current implementation against a collection of past tests.
