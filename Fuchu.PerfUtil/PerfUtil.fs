@@ -15,7 +15,7 @@ module FuchuPerfUtil =
     /// by PerfUtil as well as Fuchu's testPerfImplsWithConfig, testPerfImpls,
     /// testPerfHistoryWithConfig and testPerfHistory. You can give the values from this
     /// function to both Fuchu and PerfUtil.
-    let perfTest name (testImpl : 'a -> unit when 'a :> ITestable) =
+    let perfTest name testImpl =
         { PerfTest.Id = name
           Test        = testImpl }
 
@@ -71,7 +71,7 @@ module FuchuPerfUtil =
     /// <param name="subject">Implementation under test.</param>
     /// <param name="alternatives">Secondary implementations to be compared against.</param>
     /// <param name="tests">The performance tests to run against the subject and the alternatives.</param>
-    let testPerfImpls<'a when 'a :> ITestable> name (subj : 'a) (alts : 'a list) (tests : 'a PerfTest list) =
+    let testPerfImpls name subj alts tests =
         testPerfImplsWithConfig PerfImplsConf.Defaults name subj alts tests
 
     /// A configuration for the historical performance development for a given implementation.
