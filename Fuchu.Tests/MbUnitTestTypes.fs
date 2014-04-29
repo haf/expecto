@@ -87,3 +87,8 @@ module MbUnitTestTypes =
                 TestCase("test 1", fun () -> ())
                 TestCase("test 2", fun () -> ())
             ]
+
+    [<AbstractClass>]
+    type AbstractWithTest() =
+        [<Test>]
+        member x.ATest() = ()

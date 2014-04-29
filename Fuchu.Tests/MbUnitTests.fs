@@ -83,6 +83,13 @@ module MbUnitTests =
                                                     TestLabel("DivTest(1000,10,100)", TestCase _), 
                                                     TestLabel("DivTest(4195835,3145729,1.3338196)", TestCase _)))))))) -> ()
                 | _ -> failtestf "unexpected %A" test
+
+            testCase "abstract class" <| fun _ ->
+                let testType = typeof<AbstractWithTest>
+                let test = MbUnitTestToFuchu testType
+                match test with
+                | TestList (Seq.One (TestList Seq.Empty)) -> ()
+                | _ -> failtestf "unexpected %A" test
         ]
 
     type MbUnitTestsFromFuchu() =
