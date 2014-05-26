@@ -199,3 +199,4 @@ Some projects using Fuchu:
 * [Fleece](https://github.com/mausch/Fleece/blob/master/Tests/Tests.fs)
 * [EdmundsNet](https://github.com/mausch/EdmundsNet/blob/master/Tests/Tests.fs)
 * [Suave](https://github.com/SuaveIO/suave/blob/master/Tests/Program.fs)
+* [Dyfrig](https://github.com/fsprojects/dyfrig/blob/master/tests/Dyfrig.Tests/Program.fs)
