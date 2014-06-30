@@ -12,8 +12,6 @@ much cheaper.
 
 Binaries are available on [NuGet](http://nuget.org/packages?q=Fuchu).
 
-Or from the build server: [![Build status](https://ci.appveyor.com/api/projects/status/yx9vu4drdudtaya9)](https://ci.appveyor.com/project/mausch/fuchu)
-
 ## Writing tests ##
 
 Here's the simplest test possible:
