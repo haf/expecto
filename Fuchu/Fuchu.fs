@@ -236,12 +236,14 @@ module Impl =
         let failExceptions = [
             typeof<AssertException>.AssemblyQualifiedName
             "NUnit.Framework.AssertionException, NUnit.Framework"
+            "NUnit.Framework.AssertionException, nunit.framework"
             "Gallio.Framework.Assertions.AssertionFailureException, Gallio"
             "Gallio.Framework.Assertions.AssertionException, Gallio"
             "Xunit.Sdk.AssertException, Xunit"
         ]
         let ignoreExceptions = [
             "NUnit.Framework.IgnoreException, NUnit.Framework"
+            "NUnit.Framework.IgnoreException, nunit.framework"
             typeof<IgnoreException>.AssemblyQualifiedName
         ]
         let failExceptionTypes = lazy List.choose Type.TryGetType failExceptions

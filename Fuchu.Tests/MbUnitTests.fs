@@ -82,6 +82,13 @@ module MbUnitTests =
                                                 (Seq.Two (
                                                     TestLabel("DivTest(1000,10,100)", TestCase _), 
                                                     TestLabel("DivTest(4195835,3145729,1.3338196)", TestCase _)))))))) -> ()
+                | TestList
+                    (Seq.One (TestList 
+                                (Seq.One(TestLabel(String.Contains "ATestFixtureWithRow", 
+                                            TestList
+                                                (Seq.Two (
+                                                    TestLabel("DivTest(4195835,3145729,1.3338196)", TestCase _), 
+                                                    TestLabel("DivTest(1000,10,100)", TestCase _)))))))) -> ()
                 | _ -> failtestf "unexpected %A" test
 
             testCase "abstract class" <| fun _ ->

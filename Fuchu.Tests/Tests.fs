@@ -89,21 +89,21 @@ module Tests =
                     let test = TestCase test
                     match evalSilent test with
                     | [{ Result = Ignored "a" }] -> ()
-                    | x -> failtestf "Wrong test evaluation\n %A" x
+                    | x -> failtestf "Expected result = Ignored, got\n %A" x
 
                 testCase "Inherit AssertionException counts as failure" <| fun _ ->
                     let test () = raise (new CustomNUnitException("hello"))
                     let test = TestCase test
                     match evalSilent test with
                     | [{ Result = Failed (String.StartsWith "\nhello") }] -> ()
-                    | x -> failtestf "Wrong test evaluation\n %A" x
+                    | x -> failtestf "Expected result = Failed, got\n %A" x
 
                 testCase "Fuchu ignore" <| fun _ ->
                     let test () = skiptest "b"
                     let test = TestCase test
                     match evalSilent test with
                     | [{ Result = Ignored "b" }] -> ()
-                    | x -> failtestf "Wrong test evaluation\n %A" x
+                    | x -> failtestf "Expected result = Ignored, got\n %A" x
             ]
 
             testList "Setup & teardown" [
