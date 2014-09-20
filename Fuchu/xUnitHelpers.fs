@@ -88,9 +88,12 @@ module XunitHelpers =
                                         | :? TargetInvocationException as e -> 
                                             match tm.ExpectedException with
                                             | Some expectedExc ->
-                                                let innerExc = e.InnerException.GetType().AssemblyQualifiedName
-                                                if expectedExc <> innerExc
-                                                    then failtestf "Expected exception '%s', got '%s'" expectedExc innerExc
+                                                let actualExc = 
+                                                    if e.InnerException <> null
+                                                        then e.InnerException.GetType().AssemblyQualifiedName
+                                                        else e.GetType().AssemblyQualifiedName
+                                                if expectedExc <> actualExc
+                                                    then failtestf "Expected exception '%s', got '%s'" expectedExc actualExc
                                             | None ->
                                                 raise e.InnerException
                                     finally
