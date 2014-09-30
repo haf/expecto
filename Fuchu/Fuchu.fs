@@ -485,10 +485,21 @@ module Tests =
 
     /// Runs tests in this assembly with supplied command-line options. Returns 0 if all tests passed, otherwise 1
     [<CompiledNameAttribute("DefaultMainThisAssembly")>]
-    let defaultMainThisAssembly args = 
+    let defaultMainThisAssembly args =
         let tests =
             match testFromAssembly (Assembly.GetEntryAssembly()) with
             | Some t -> t
+            | None -> TestList []
+        defaultMain tests args
+
+    /// Runs tests in this assembly with supplied command-line options.
+    /// You may also pass a filter that selected a subset of tests to run.
+    /// Returns 0 if all tests passed, otherwise 1
+    [<CompiledNameAttribute("DefaultMainThisAssembly")>]
+    let defaultMainThisAssemblyFilter args filter =
+        let tests =
+            match testFromAssembly (Assembly.GetEntryAssembly()) with
+            | Some t -> filter t
             | None -> TestList []
         defaultMain tests args
 
