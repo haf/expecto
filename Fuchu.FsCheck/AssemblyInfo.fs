@@ -6,7 +6,7 @@ open System.Reflection
 [<assembly: AssemblyTitleAttribute("Fuchu.FsCheck")>]
 [<assembly: AssemblyProductAttribute("Fuchu.FsCheck")>]
 [<assembly: AssemblyDescriptionAttribute("Integrates Fuchu with FsCheck")>]
-[<assembly: AssemblyCopyrightAttribute("Copyright Mauricio Scheffer 2014")>]
+[<assembly: AssemblyCopyrightAttribute("Copyright Mauricio Scheffer 2015")>]
 do ()
 
 module internal AssemblyVersionInformation =

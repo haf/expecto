@@ -7,7 +7,7 @@ open System.Reflection
 [<assembly: AssemblyTitleAttribute("Fuchu.MbUnit")>]
 [<assembly: AssemblyProductAttribute("Fuchu.MbUnit")>]
 [<assembly: AssemblyDescriptionAttribute("Converts Fuchu tests to MbUnit tests")>]
-[<assembly: AssemblyCopyrightAttribute("Copyright Mauricio Scheffer 2014")>]
+[<assembly: AssemblyCopyrightAttribute("Copyright Mauricio Scheffer 2015")>]
 do ()
 
 module internal AssemblyVersionInformation =

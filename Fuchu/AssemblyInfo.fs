@@ -7,7 +7,7 @@ open System.Reflection
 [<assembly: AssemblyTitleAttribute("Fuchu")>]
 [<assembly: AssemblyProductAttribute("Fuchu")>]
 [<assembly: AssemblyDescriptionAttribute("Functional test library")>]
-[<assembly: AssemblyCopyrightAttribute("Copyright Mauricio Scheffer 2014")>]
+[<assembly: AssemblyCopyrightAttribute("Copyright Mauricio Scheffer 2015")>]
 do ()
 
 module internal AssemblyVersionInformation =
