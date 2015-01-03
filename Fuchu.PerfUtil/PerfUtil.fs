@@ -15,9 +15,10 @@ module FuchuPerfUtil =
     /// by PerfUtil as well as Fuchu's testPerfImplsWithConfig, testPerfImpls,
     /// testPerfHistoryWithConfig and testPerfHistory. You can give the values from this
     /// function to both Fuchu and PerfUtil.
-    let perfTest name testImpl =
+    let perfTest name testImpl repeat =
         { PerfTest.Id = name
-          Test        = testImpl }
+          Test        = testImpl 
+          Repeat      = repeat }
 
     type PerfImplsConf =
           /// <summary>
@@ -85,6 +86,8 @@ module FuchuPerfUtil =
           ThrowOnError  : bool
           /// Whether to overwrite previous tests. Defaults to true.
           Overwrite     : bool
+          /// Perform a warmup run before attempting benchmark. Defaults to false.
+          Warmup        : bool
           /// An optional function that is called when the perf tests have been completed
           /// allowing you to extrace the results and save them or display them. 
           /// It will be passed the path of the xml file with test results and
@@ -98,6 +101,7 @@ module FuchuPerfUtil =
               Verbose       = true
               ThrowOnError  = false
               Overwrite     = true
+              Warmup        = false
               HandleResults = fun _ -> () }
 
     /// <summary>
@@ -112,7 +116,7 @@ module FuchuPerfUtil =
     let testPerfHistoryWithConfig (conf : PerfHistoryConf) name subject (testRunId: string) tests =
         let tester =
             new PastImplementationComparer<_>(
-                subject, testRunId, conf.HistoryFile, conf.Comparer,
+                subject, testRunId, conf.HistoryFile, conf.Warmup, conf.Comparer,
                 conf.Verbose, conf.ThrowOnError, conf.Overwrite)
 
         testCase name <| fun _ ->
