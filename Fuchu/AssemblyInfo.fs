@@ -2,8 +2,8 @@
 open System.Reflection
 
 [<assembly: AssemblyKeyFileAttribute("../Fuchu.snk")>]
-[<assembly: AssemblyVersionAttribute("0.4.0.0")>]
-[<assembly: AssemblyFileVersionAttribute("0.4.0.0")>]
+[<assembly: AssemblyVersionAttribute("0.5.0.0")>]
+[<assembly: AssemblyFileVersionAttribute("0.5.0.0")>]
 [<assembly: AssemblyTitleAttribute("Fuchu")>]
 [<assembly: AssemblyProductAttribute("Fuchu")>]
 [<assembly: AssemblyDescriptionAttribute("Functional test library")>]
@@ -11,4 +11,4 @@ open System.Reflection
 do ()
 
 module internal AssemblyVersionInformation =
-    let [<Literal>] Version = "0.4.0.0"
+    let [<Literal>] Version = "0.5.0.0"
