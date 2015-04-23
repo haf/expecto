@@ -11,6 +11,11 @@ module FuchuFsCheck =
     open global.FsCheck
     open global.FsCheck.Runner
 
+    let internal (|Ignored|_|) (e: exn) =
+        match e with
+        | :? IgnoreException as e -> Some e
+        | _ -> None
+
     let internal runner = 
         { new IRunner with
             member x.OnStartFixture t = ()
@@ -19,7 +24,8 @@ module FuchuFsCheck =
             member x.OnFinished(name,testResult) = 
                 let msg = onFinishedToString name testResult
                 match testResult with
-                | TestResult.True _ -> ()
+                | FsCheck.TestResult.True _ -> ()
+                | FsCheck.TestResult.False (_,_,_, Outcome.Exception (Ignored e),_) -> raise e
                 | _ -> failtest msg
         }
 
