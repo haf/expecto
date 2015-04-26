@@ -504,16 +504,52 @@ module Tests =
         defaultMain tests args
 
 // Functions for C#/VB.NET :
-        
+
 [<Extension>]
-type Test with
+type TestExtensions =
     /// Pattern matching over a Test
     [<Extension>]
     static member Match(test, testCase: Func<_,_>, testList: Func<_,_>, testLabel: Func<_,_,_>) =
         match test with
-        | TestCase c -> testCase.Invoke c
+        | TestCase c -> testCase.Invoke (Action c)
         | TestList l -> testList.Invoke l
         | TestLabel (label, t) -> testLabel.Invoke(label,t)
+
+    /// Groups tests
+    [<Extension>]
+    static member List (tests, name) = 
+        testList name tests
+
+    /// Creates a group of tests
+    [<Extension>]
+    static member List tests = 
+        TestList tests
+
+    // Run a list of tests
+    [<Extension>]
+    static member Run tests = TestList tests |> run
+
+    /// Maps all TestCodes in a Test
+    [<Extension>]
+    static member Wrap (test, f: Func<Action,Action>) = 
+        test |> Test.wrap (fun t -> f.Invoke(Action t).Invoke)
+
+    /// Recursively replaces test bodies in a test
+    [<Extension>]
+    static member ReplaceTestCode(test, f: Func<string, Action, Test>) =
+        test |> Test.replaceTestCode (fun n t -> f.Invoke(n, Action t))
+
+    /// Applies a timeout to a test
+    [<Extension>]
+    static member Timeout(test: Action, timeout) = 
+        Action(Test.timeout timeout test.Invoke)
+
+    /// Filter tests by name
+    [<Extension>]
+    static member Where(test, pred: Func<_,_>) = 
+        Test.filter pred.Invoke test
+        
+type Test with
 
     /// Test unit
     static member Case (f: Action) = 
@@ -526,16 +562,6 @@ type Test with
     /// Parameterized test
     static member Case (label: string, f: Action<_>) = 
         label, f
-
-    /// Groups tests
-    [<Extension>]
-    static member List (tests, name) = 
-        testList name tests
-
-    /// Creates a group of tests
-    [<Extension>]
-    static member List tests = 
-        TestList tests
 
     /// Creates a group of tests
     static member List (name, [<ParamArray>] tests: Test[]) = 
@@ -550,10 +576,6 @@ type Test with
         let tests = tests |> Array.map (fun (name, test) -> Test.Case(name, setup.Invoke test))
         Test.List(name, tests)
 
-    // Run a list of tests
-    [<Extension>]
-    static member Run tests = TestList tests |> run
-
     /// Builds a setup/teardown function to apply to parameterized tests
     static member Fixture (setup: Func<_>, teardown: Action<_>) =
         if setup = null then nullArg "setup"
@@ -563,21 +585,6 @@ type Test with
             let r = Helpers.bracket setup.Invoke teardown.Invoke test.Invoke
             Action r
         Func<_,_> f
-
-    /// Maps all TestCodes in a Test
-    [<Extension>]
-    static member Wrap (test, f: Func<Action,Action>) = 
-        test |> Test.wrap (fun t -> f.Invoke(Action t).Invoke)
-
-    /// Applies a timeout to a test
-    [<Extension>]
-    static member Timeout(test: Action, timeout) = 
-        Action(Test.timeout timeout test.Invoke)
-
-    /// Filter tests by name
-    [<Extension>]
-    static member Where(test, pred: Func<_,_>) = 
-        Test.filter pred.Invoke test
 
     /// Skip this test
     static member Skip(reason: string, [<ParamArray>] args: obj[]) =
