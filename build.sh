@@ -1,6 +1,8 @@
+#!/bin/bash
+set -e
 NUGET=./.nuget/NuGet.exe
 if [ ! -f $NUGET ]; then
-  wget http://nuget.org/nuget.exe
+  curl -sSL http://nuget.org/nuget.exe -o nuget.exe
   mv nuget.exe $NUGET 
   chmod a+x $NUGET
 fi
@@ -9,4 +11,5 @@ if [ ! -f $FAKE ]; then
   echo Downloading FAKE...
   mono $NUGET install FAKE -OutputDirectory packages -ExcludeVersion -Prerelease
 fi
+mono $NUGET restore
 mono $FAKE build.fsx "$@"
