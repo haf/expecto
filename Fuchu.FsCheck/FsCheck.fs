@@ -1,7 +1,7 @@
 ﻿namespace Fuchu
 
 open System
-open global.FsCheck.Fluent
+open global.FsCheck
 
 [<AutoOpen; CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module FuchuFsCheck =
@@ -45,15 +45,6 @@ module FuchuFsCheck =
     let testProperty name = testPropertyWithConfig config name
 
 type FsCheck =
-    static member Property(name, property: SpecBuilder<_>) =
-        testProperty name (property.Build())
-
-    static member Property(name, property: SpecBuilder<_,_>) =
-        testProperty name (property.Build())
-
-    static member Property(name, property: SpecBuilder<_,_,_>) =
-        testProperty name (property.Build())
-
     static member Property(name, property: Func<_,bool>) =
         testProperty name property.Invoke
 
