@@ -2,8 +2,8 @@
 open System.Reflection
 
 [<assembly: AssemblyKeyFileAttribute("../Fuchu.snk")>]
-[<assembly: AssemblyVersionAttribute("0.6.0.0")>]
-[<assembly: AssemblyFileVersionAttribute("0.6.0.0")>]
+[<assembly: AssemblyVersionAttribute("1.0.0.0")>]
+[<assembly: AssemblyFileVersionAttribute("1.0.0.0")>]
 [<assembly: AssemblyTitleAttribute("Fuchu.MbUnit")>]
 [<assembly: AssemblyProductAttribute("Fuchu.MbUnit")>]
 [<assembly: AssemblyDescriptionAttribute("Converts Fuchu tests to MbUnit tests")>]
@@ -11,4 +11,4 @@ open System.Reflection
 do ()
 
 module internal AssemblyVersionInformation =
-    let [<Literal>] Version = "0.6.0.0"
+    let [<Literal>] Version = "1.0.0.0"

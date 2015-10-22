@@ -8,8 +8,8 @@ open Fake
 open Fake.ProcessHelper
 open Fake.AssemblyInfoFile
 
-let version = "0.6.0.0"
-let assemblyVersion = "0.6.0.0"
+let version = "1.0.0.0"
+let assemblyVersion = "1.0.0.0"
 
 type Package = {
     Name: string
@@ -62,7 +62,7 @@ let packages =
           Author = "Mauricio Scheffer"
           Description = "Functional test library"
           Sign = true
-          Dependencies = [] }
+          Dependencies = [("FSharp.Core", "3.1.2.1")] }
 
         { Package.Name = "Fuchu.MbUnit"
           Author = "Mauricio Scheffer"
