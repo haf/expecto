@@ -16,11 +16,11 @@ module FuchuFsCheck =
         | :? IgnoreException as e -> Some e
         | _ -> None
 
-    let internal runner = 
+    let internal wrapRunner (r : IRunner) =
         { new IRunner with
-            member x.OnStartFixture t = ()
-            member x.OnArguments (ntest,args, every) = ()
-            member x.OnShrink(args, everyShrink) = ()
+            member x.OnStartFixture t = r.OnStartFixture t
+            member x.OnArguments (ntest, args, every) = r.OnArguments (ntest, args, every)
+            member x.OnShrink(args, everyShrink) = r.OnShrink(args, everyShrink)
             member x.OnFinished(name,testResult) = 
                 let msg = onFinishedToString name testResult
                 match testResult with
@@ -31,12 +31,12 @@ module FuchuFsCheck =
 
     let internal config = 
         { Config.Default with
-            Runner = runner }
+            Runner = wrapRunner Config.Default.Runner }
 
     let testPropertyWithConfig (config: Config) name property = 
         let config =
             { config with
-                Runner = runner }
+                Runner = wrapRunner config.Runner }
         testCase name <|
             fun _ ->
                 ignore Runner.init.Value
