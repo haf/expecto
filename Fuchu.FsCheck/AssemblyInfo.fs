@@ -2,7 +2,7 @@
 open System.Reflection
 
 [<assembly: AssemblyVersionAttribute("1.0.0.0")>]
-[<assembly: AssemblyFileVersionAttribute("1.0.0.0")>]
+[<assembly: AssemblyFileVersionAttribute("1.0.1.0")>]
 [<assembly: AssemblyTitleAttribute("Fuchu.FsCheck")>]
 [<assembly: AssemblyProductAttribute("Fuchu.FsCheck")>]
 [<assembly: AssemblyDescriptionAttribute("Integrates Fuchu with FsCheck")>]

@@ -3,7 +3,7 @@ open System.Reflection
 
 [<assembly: AssemblyKeyFileAttribute("../Fuchu.snk")>]
 [<assembly: AssemblyVersionAttribute("1.0.0.0")>]
-[<assembly: AssemblyFileVersionAttribute("1.0.0.0")>]
+[<assembly: AssemblyFileVersionAttribute("1.0.1.0")>]
 [<assembly: AssemblyTitleAttribute("Fuchu")>]
 [<assembly: AssemblyProductAttribute("Fuchu")>]
 [<assembly: AssemblyDescriptionAttribute("Functional test library")>]
