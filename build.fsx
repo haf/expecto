@@ -8,7 +8,7 @@ open Fake
 open Fake.ProcessHelper
 open Fake.AssemblyInfoFile
 
-let version = "1.0.1.0"
+let version = "1.0.2.0"
 let assemblyVersion = "1.0.0.0"
 
 type Package = {
