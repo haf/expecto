@@ -2,11 +2,11 @@
 open System.Reflection
 
 [<assembly: AssemblyVersionAttribute("1.0.0.0")>]
-[<assembly: AssemblyFileVersionAttribute("1.0.2.0")>]
+[<assembly: AssemblyFileVersionAttribute("1.0.3.0")>]
 [<assembly: AssemblyTitleAttribute("Fuchu.FsCheck")>]
 [<assembly: AssemblyProductAttribute("Fuchu.FsCheck")>]
 [<assembly: AssemblyDescriptionAttribute("Integrates Fuchu with FsCheck")>]
-[<assembly: AssemblyCopyrightAttribute("Copyright Mauricio Scheffer 2015")>]
+[<assembly: AssemblyCopyrightAttribute("Copyright Mauricio Scheffer 2016")>]
 do ()
 
 module internal AssemblyVersionInformation =
