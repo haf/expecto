@@ -59,6 +59,9 @@ module MbUnit =
 
         let testCategory (m: MemberInfo) =
             m.GetCustomAttributes(categoryAttributeType.Value, true)
+#if DNXCORE50
+            |> Array.ofSeq
+#endif
             |> Array.map (fun a -> categoryAttributeNameProperty.Value.GetValue(a, null) :?> string)
             |> Enumerable.FirstOrDefault
 

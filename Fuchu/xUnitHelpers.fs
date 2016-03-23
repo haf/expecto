@@ -17,7 +17,11 @@ module XunitHelpers =
 
     let nonIgnoredMethods ignoreAttr (t: Type) =
         [t]
+#if DNXCORE50
+        |> Seq.filter (fun t -> not (t.GetTypeInfo().HasAttribute ignoreAttr))
+#else
         |> Seq.filter (fun t -> not (t.HasAttribute ignoreAttr))
+#endif
         |> Seq.collect (fun _ -> t.GetMethods())
 
     let propertyValue propertyName o =
@@ -59,7 +63,11 @@ module XunitHelpers =
                                Invoke = fun (o: obj) -> invoke o m })
 
     let TestToFuchu (attr: TestAttributes) (testCategory: Type -> string) (testType: Type) (testMethods: TestMethod seq) =
+#if DNXCORE50
+        if testType.GetTypeInfo().IsAbstract
+#else
         if testType.IsAbstract
+#endif
             then TestList []
             else
                 let methods = nonIgnoredMethods attr.Ignore testType
