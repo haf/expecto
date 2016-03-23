@@ -90,7 +90,11 @@ module MbUnit =
 
         let testMethods = Seq.append (getTestMethods testCategory mbUnitAttrs t) rowTests
 
+#if DNXCORE50
+        let test = TestToFuchu mbUnitAttrs (fun t -> t.GetTypeInfo() |> testCategory) t testMethods
+#else
         let test = TestToFuchu mbUnitAttrs testCategory t testMethods
+#endif
 
         let staticTests = 
             nonIgnoredMethods [MbUnitAttr "StaticTestFactory"]
@@ -101,5 +105,9 @@ module MbUnit =
         TestList (seq {
             yield test
             if staticTests.Length > 0 then
+#if DNXCORE50
+                yield testList (t.FullName + testCategory (t.GetTypeInfo())) staticTests
+#else
                 yield testList (t.FullName + testCategory t) staticTests
+#endif
         })
