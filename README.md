@@ -1,6 +1,6 @@
 # Fuchu #
 
-**Fuchu** is a test library for .NET, supporting C# and VB.NET but with a special focus on F#.
+**Fuchu** (pronounced "foo choo" with the accent on the last syllable) is a test library for .NET, supporting C# and VB.NET but with a special focus on F#.
 It draws heavily from Haskell's [test-framework](http://batterseapower.github.com/test-framework/) and [HUnit](http://hunit.sourceforge.net/).
 You can read about the rationale and underlying concepts in [this blog post](http://bugsquash.blogspot.com/2012/06/fuchu-functional-test-library-for-net.html),
 or TL;DR: tests should be first-class values so that you can move them around and execute
