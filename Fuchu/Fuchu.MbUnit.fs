@@ -59,7 +59,7 @@ module MbUnit =
 
         let testCategory (m: MemberInfo) =
             m.GetCustomAttributes(categoryAttributeType.Value, true)
-#if DNXCORE50
+#if NETCOREAPP1_0
             |> Array.ofSeq
 #endif
             |> Array.map (fun a -> categoryAttributeNameProperty.Value.GetValue(a, null) :?> string)
@@ -90,7 +90,7 @@ module MbUnit =
 
         let testMethods = Seq.append (getTestMethods testCategory mbUnitAttrs t) rowTests
 
-#if DNXCORE50
+#if NETCOREAPP1_0
         let test = TestToFuchu mbUnitAttrs (fun t -> t.GetTypeInfo() |> testCategory) t testMethods
 #else
         let test = TestToFuchu mbUnitAttrs testCategory t testMethods
@@ -105,7 +105,7 @@ module MbUnit =
         TestList (seq {
             yield test
             if staticTests.Length > 0 then
-#if DNXCORE50
+#if NETCOREAPP1_0
                 yield testList (t.FullName + testCategory (t.GetTypeInfo())) staticTests
 #else
                 yield testList (t.FullName + testCategory t) staticTests

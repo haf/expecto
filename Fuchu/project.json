@@ -2,14 +2,16 @@
     "version": "1.0.0-*",
     "buildOptions": {
         "compilerName": "fsc",
-        "compile": [
-            "AssemblyInfo.fs",
-            "Fuchu.fs",
-            "Assertions.fs",
-            "xUnitHelpers.fs",
-            "Fuchu.NUnit.fs",
-            "Fuchu.MbUnit.fs"
-        ]
+        "compile": {
+            "includeFiles": [
+                "AssemblyInfo.fs",
+                "Fuchu.fs",
+                "Assertions.fs",
+                "xUnitHelpers.fs",
+                "Fuchu.NUnit.fs",
+                "Fuchu.MbUnit.fs"
+            ]
+        }
     },
     "dependencies": {
         "Microsoft.FSharp.Core.netcore": "1.0.0-alpha-160831"
@@ -30,7 +32,8 @@
                 "Microsoft.NETCore.App": {
                     "type": "platform",
                     "version": "1.0.0"
-                }
+                },
+                "System.Diagnostics.TraceSource": "4.0.0-rc2-24027"
             },
             "imports": [
                 "portable-net45+win8",

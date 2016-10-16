@@ -17,7 +17,7 @@ module XunitHelpers =
 
     let nonIgnoredMethods ignoreAttr (t: Type) =
         [t]
-#if DNXCORE50
+#if NETCOREAPP1_0
         |> Seq.filter (fun t -> not (t.GetTypeInfo().HasAttribute ignoreAttr))
 #else
         |> Seq.filter (fun t -> not (t.HasAttribute ignoreAttr))
@@ -63,7 +63,7 @@ module XunitHelpers =
                                Invoke = fun (o: obj) -> invoke o m })
 
     let TestToFuchu (attr: TestAttributes) (testCategory: Type -> string) (testType: Type) (testMethods: TestMethod seq) =
-#if DNXCORE50
+#if NETCOREAPP1_0
         if testType.GetTypeInfo().IsAbstract
 #else
         if testType.IsAbstract

@@ -34,8 +34,8 @@ module Helpers =
             teardown v
 
     /// Print to Console and Trace
-    let tprintf fmt = 
-        Printf.kprintf (fun s -> 
+    let tprintf fmt =
+        Printf.kprintf (fun s ->
                             System.Diagnostics.Trace.Write s
                             Console.Write s) fmt
 
