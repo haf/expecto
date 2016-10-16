@@ -11,19 +11,31 @@
             "Fuchu.MbUnit.fs"
         ]
     },
+    "dependencies": {
+        "Microsoft.FSharp.Core.netcore": "1.0.0-alpha-160831"
+    },
+    "tools": {
+        "dotnet-compile-fsc": {
+            "version": "1.0.0-preview2-*",
+            "imports": [
+                "dnxcore50",
+                "portable-net45+win81",
+                "netstandard1.3"
+            ]
+        }
+    },
     "frameworks": {
-        "net46": {
+        "netcoreapp1.0": {
             "dependencies": {
-                "FSharp.Core": "4.0.0.1"
-            }
-        },
-        "dnxcore50": {
-            "dependencies": {
-                "Microsoft.FSharp.Core.netcore": "1.0.0-alpha-151221",
-                "System.Diagnostics.TraceSource": "4.0.0-rc2-23811",
-                "System.Linq.Parallel": "4.0.1-rc2-23811",
-                "NETStandard.Library": "1.0.0-rc2-23811"
-            }
+                "Microsoft.NETCore.App": {
+                    "type": "platform",
+                    "version": "1.0.0"
+                }
+            },
+            "imports": [
+                "portable-net45+win8",
+                "dnxcore50"
+            ]
         }
     }
 }
