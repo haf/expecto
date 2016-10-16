@@ -1,32 +1,29 @@
 {
     "version": "1.0.0-*",
-    "compilationOptions": {
+    "buildOptions": {
+        "compilerName": "fsc",
+        "compile": [
+            "AssemblyInfo.fs",
+            "Fuchu.fs",
+            "Assertions.fs",
+            "xUnitHelpers.fs",
+            "Fuchu.NUnit.fs",
+            "Fuchu.MbUnit.fs"
+        ]
     },
-
-    "compilerName": "fsc",
-    "compileFiles": [
-        "AssemblyInfo.fs",
-        "Fuchu.fs",
-        "Assertions.fs",
-        "xUnitHelpers.fs",
-        "Fuchu.NUnit.fs",
-        "Fuchu.MbUnit.fs"
-    ],
-
     "frameworks": {
-        "net46": { 
-             "dependencies": {
-                 "FSharp.Core": "4.0.0.1"
-             }
+        "net46": {
+            "dependencies": {
+                "FSharp.Core": "4.0.0.1"
+            }
         },
-
         "dnxcore50": {
-             "dependencies": {
-                 "Microsoft.FSharp.Core.netcore": "1.0.0-alpha-151221",
-                 "System.Diagnostics.TraceSource": "4.0.0-rc2-23811",
-                 "System.Linq.Parallel": "4.0.1-rc2-23811",
-                 "NETStandard.Library": "1.0.0-rc2-23811"
-             }
-         }
+            "dependencies": {
+                "Microsoft.FSharp.Core.netcore": "1.0.0-alpha-151221",
+                "System.Diagnostics.TraceSource": "4.0.0-rc2-23811",
+                "System.Linq.Parallel": "4.0.1-rc2-23811",
+                "NETStandard.Library": "1.0.0-rc2-23811"
+            }
+        }
     }
 }
