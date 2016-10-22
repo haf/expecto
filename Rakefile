@@ -42,7 +42,7 @@ task :restore_quick do
 end
 
 desc 'restore all nugets as per the packages.config files'
-task :restore => [:paket_bootstrap, :paket_files]
+task :restore => [:paket_bootstrap, :restore_quick, :paket_files]
 
 desc 'Perform full build'
 build :compile => [:versioning, :restore, :assembly_info] do |b|
