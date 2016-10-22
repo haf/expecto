@@ -13,12 +13,8 @@ In your paket.dependencies:
 nuget Expecto
 ```
 
-It draws heavily from Haskell's [test-framework](http://batterseapower.github.com/test-framework/) and [HUnit](http://hunit.sourceforge.net/).
-You can read about the rationale and underlying concepts in [this blog post](http://bugsquash.blogspot.com/2012/06/fuchu-functional-test-library-for-net.html),
-or TL;DR: tests should be first-class values so that you can move them around and execute
-them in any context that you want. Also, if they are first-class values, then you can take
-extra care with what the test methods return, making integrations with external libraries
-much cheaper.
+Tests should be first-class values so that you can move them around and execute
+them in any context that you want.
 
 ## Writing tests
 
@@ -35,7 +31,7 @@ let simpleTest =
 Tests can be grouped (with arbitrary nesting):
 
 ```fsharp
-let tests = 
+let tests =
   testList "A test group" [
     testCase "one test" <|
       fun _ -> Assert.Equal("2+2", 4, 2+2)
@@ -60,7 +56,7 @@ The test runner is the test assembly itself. It's recommended to compile your te
 
 ```fsharp
 runParallel simpleTest // or runParallel
-```    
+```
 
 which returns 1 if any tests failed, otherwise 0. Useful for returning to the operating system as error code. Or you can mark the top-level test in each test file with the `[<Tests>]` attribute, then define your main like this:
 
@@ -70,10 +66,10 @@ open Expecto
 [<EntryPoint>]
 let main args =
   defaultMainThisAssembly args
-```    
+```
 
 This `defaultMainThisAssembly` function admits a "/m" parameter passed through the command-line to run tests in parallel.
-    
+
 You can single out tests by filtering them by name. For example:
 
 ```fsharp
@@ -92,20 +88,20 @@ test properties:
 ```fsharp
 let config = { FsCheck.Config.Default with MaxTest = 10000 }
 
-let properties = 
+let properties =
   testList "FsCheck" [
     testProperty "Addition is commutative" <|
-      fun a b -> 
+      fun a b ->
         a + b = b + a
-    
+
     // you can also override the FsCheck config
     testPropertyWithConfig config "Product is distributive over addition" <|
-      fun a b c -> 
+      fun a b c ->
         a * (b + c) = a * b + a * c
   ]
 
 run properties
-```  
+```
 
 You can freely mix FsCheck properties with regular test cases and test lists.
 
