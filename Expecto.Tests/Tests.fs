@@ -37,23 +37,22 @@ let tests =
 
     testList "sumTestResults" [
       let sumTestResultsTests =
-        [
-            { TestRunResult.Name = ""; Result = Passed; Time = TimeSpan.FromMinutes 2. }
-            { TestRunResult.Name = ""; Result = TestResult.Error (ArgumentException()); Time = TimeSpan.FromMinutes 3. }
-            { TestRunResult.Name = ""; Result = Failed ""; Time = TimeSpan.FromMinutes 4. }
-            { TestRunResult.Name = ""; Result = Passed; Time = TimeSpan.FromMinutes 5. }
-            { TestRunResult.Name = ""; Result = Failed ""; Time = TimeSpan.FromMinutes 6. }
-            { TestRunResult.Name = ""; Result = Passed; Time = TimeSpan.FromMinutes 7. }
+        [ { TestRunResult.name = ""; result = Passed; time = TimeSpan.FromMinutes 2. }
+          { TestRunResult.name = ""; result = TestResult.Error (ArgumentException()); time = TimeSpan.FromMinutes 3. }
+          { TestRunResult.name = ""; result = Failed ""; time = TimeSpan.FromMinutes 4. }
+          { TestRunResult.name = ""; result = Passed; time = TimeSpan.FromMinutes 5. }
+          { TestRunResult.name = ""; result = Failed ""; time = TimeSpan.FromMinutes 6. }
+          { TestRunResult.name = ""; result = Passed; time = TimeSpan.FromMinutes 7. }
         ]
       let r = lazy sumTestResults sumTestResultsTests
-      yield testCase "Passed" <| fun _ ->
-          r.Value.Passed ==? 3
-      yield testCase "Failed" <| fun _ ->
-          r.Value.Failed ==? 2
-      yield testCase "Exception" <| fun _ ->
-          r.Value.Errored ==? 1
-      yield testCase "Time" <| fun _ ->
-          r.Value.Time ==? TimeSpan.FromMinutes 27.
+      yield testCase "passed" <| fun _ ->
+          r.Value.passed ==? 3
+      yield testCase "failed" <| fun _ ->
+          r.Value.failed ==? 2
+      yield testCase "exn" <| fun _ ->
+          r.Value.errored ==? 1
+      yield testCase "time" <| fun _ ->
+          r.Value.time ==? TimeSpan.FromMinutes 27.
     ]
 
     testList "TestResultCounts" [
@@ -65,18 +64,18 @@ let tests =
                       let r = a + b
                       f a b r)
         yield testResultCountsSum "Passed" <|
-          fun a b r -> r.Passed = a.Passed + b.Passed
+          fun a b r -> r.passed = a.passed + b.passed
         yield testResultCountsSum "Ignored" <|
-          fun a b r -> r.Ignored = a.Ignored + b.Ignored
+          fun a b r -> r.ignored = a.ignored + b.ignored
         yield testResultCountsSum "Failed" <|
-          fun a b r -> r.Failed = a.Failed + b.Failed
+          fun a b r -> r.failed = a.failed + b.failed
         yield testResultCountsSum "Errored" <|
-          fun a b r -> r.Errored = a.Errored + b.Errored
+          fun a b r -> r.errored = a.errored + b.errored
         yield testResultCountsSum "Time" <|
-          fun a b r -> r.Time = a.Time + b.Time
+          fun a b r -> r.time = a.time + b.time
       ]
       testCase "ToString" <| fun _ ->
-        let c1 = { Passed = 1; Ignored = 5; Failed = 2; Errored = 3; Time = TimeSpan.FromSeconds 20. }
+        let c1 = { passed = 1; ignored = 5; failed = 2; errored = 3; time = TimeSpan.FromSeconds 20. }
         c1.ToString() ==? "6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n"
     ]
 
@@ -85,7 +84,7 @@ let tests =
         let test () = skiptest "b"
         let test = TestCase test
         match evalSilent test with
-        | [{ Result = Ignored "b" }] -> ()
+        | [{ result = Ignored "b" }] -> ()
         | x -> failtestf "Expected result = Ignored, got\n %A" x
     ]
 
@@ -161,11 +160,11 @@ let timeouts =
       testCase "fail" <| fun _ ->
         let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100))
         let result = evalSilent test |> sumTestResults
-        result.Failed ==? 1
+        result.failed ==? 1
       testCase "pass" <| fun _ ->
         let test = TestCase(Test.timeout 1000 ignore)
         let result = evalSilent test |> sumTestResults
-        result.Passed ==? 1
+        result.passed ==? 1
     ]
 
     testList "Reflection" [
@@ -234,7 +233,7 @@ let timeouts =
 
         let results =
           evalSilent culturizedTests
-          |> Seq.map (fun r -> r.Name, r.Result)
+          |> Seq.map (fun r -> r.name, r.result)
           |> Map.ofSeq
 
         Expect.equal 3 results.Count "results count"
@@ -295,8 +294,8 @@ let timeouts =
         testCase (sprintf "compare comp.exp. and normal with value %d" c) <| fun _ ->
           let normal = evalSilent <| testNormal c
           let compexp = evalSilent <| testCompExp c
-          let normalTag = TestResult.tag normal.[0].Result
-          let compexpTag = TestResult.tag compexp.[0].Result
+          let normalTag = TestResult.tag normal.[0].result
+          let compexpTag = TestResult.tag compexp.[0].result
           Expect.equal normalTag compexpTag "result"
     ]
   ]

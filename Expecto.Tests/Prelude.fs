@@ -3,18 +3,18 @@
 open System
 open FSharpx
 
-module Seq = 
-    let (|Empty|Cons|) l = 
+module Seq =
+    let (|Empty|Cons|) l =
         if Seq.isEmpty l
             then Empty
             else Cons(Seq.head l, Seq.skip 1 l)
 
-    let (|One|_|) l = 
+    let (|One|_|) l =
         match Seq.toList l with
         | [x] -> Some x
         | _ -> None
 
-    let (|Two|_|) l = 
+    let (|Two|_|) l =
         match Seq.toList l with
         | [x;y] -> Some(x,y)
         | _ -> None
@@ -38,7 +38,7 @@ module String =
         nullOption2 (fun (s: string) -> s.Contains)
 
 [<AutoOpen>]
-module TestHelpers = 
+module TestHelpers =
     open Expecto
     open Expecto.Impl
 
@@ -47,18 +47,18 @@ module TestHelpers =
     let inline assertTestFails test =
         let test = TestCase test
         match evalSilent test with
-        | [{ TestRunResult.Result = TestResult.Failed _ }] -> ()
+        | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
         | x -> failtestf "Should have failed, but was %A" x
 
     open FsCheck
 
-    let genLimitedTimeSpan = 
+    let genLimitedTimeSpan =
         lazy (
-            Arb.generate<TimeSpan> 
+            Arb.generate<TimeSpan>
             |> Gen.suchThat (fun t -> t.Days = 0)
         )
 
-    let genTestResultCounts = 
+    let genTestResultCounts =
         lazy (
             gen {
                 let! passed = Arb.generate<int>
@@ -67,37 +67,37 @@ module TestHelpers =
                 let! errored = Arb.generate<int>
                 let! time = genLimitedTimeSpan.Value
                 return {
-                    TestResultCounts.Passed = passed
-                    Ignored = ignored
-                    Failed = failed
-                    Errored = errored
-                    Time = time
+                    TestResultCounts.passed = passed
+                    ignored = ignored
+                    failed = failed
+                    errored = errored
+                    time = time
                 }
             }
         )
 
-    let shrinkTestResultCounts (c: TestResultCounts) : TestResultCounts seq = 
+    let shrinkTestResultCounts (c: TestResultCounts) : TestResultCounts seq =
         seq {
-            for passed in Arb.shrink c.Passed do
-            for ignored in Arb.shrink c.Ignored do
-            for failed in Arb.shrink c.Failed do
-            for errored in Arb.shrink c.Errored do
-            for time in Arb.shrink c.Time ->
+            for passed in Arb.shrink c.passed do
+            for ignored in Arb.shrink c.ignored do
+            for failed in Arb.shrink c.failed do
+            for errored in Arb.shrink c.errored do
+            for time in Arb.shrink c.time ->
             {
-                TestResultCounts.Passed = passed
-                Ignored = ignored
-                Failed = failed
-                Errored = errored
-                Time = time
+                TestResultCounts.passed = passed
+                ignored = ignored
+                failed = failed
+                errored = errored
+                time = time
             }
         }
 
-    let arbTestResultCounts = 
+    let arbTestResultCounts =
         lazy (
             Arb.fromGenShrink(genTestResultCounts.Value, shrinkTestResultCounts)
         )
 
-    let twoTestResultCounts = 
+    let twoTestResultCounts =
         lazy (
             Gen.two arbTestResultCounts.Value.Generator |> Arb.fromGen
         )

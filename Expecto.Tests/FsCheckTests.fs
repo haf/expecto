@@ -21,15 +21,15 @@ let runFsCheckTests =
   testCase "run" <| fun _ ->
     let results = evalSilent properties
     Expect.equal results.Length 3 "results length"
-    Expect.equal results.[0].Result TestResult.Passed "passed count"
+    Expect.equal results.[0].result TestResult.Passed "passed count"
 
-    match results.[1].Result with
+    match results.[1].result with
     | TestResult.Failed _ ->
       ()
     | x ->
       failtestf "Expected Failed, actual %A" x
 
-    match results.[2].Result with
+    match results.[2].result with
     | TestResult.Ignored e ->
       Expect.equal "because reasons" e "ignore description"
     | x ->

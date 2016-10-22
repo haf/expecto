@@ -165,46 +165,46 @@ module Impl =
       | _ -> false
 
   [<StructuredFormatDisplay("{Description}")>]
-  type TestResultCounts = {
-      Passed: int
-      Ignored: int
-      Failed: int
-      Errored: int
-      Time: TimeSpan
-  } with
+  type TestResultCounts =
+    { passed: int
+      ignored: int
+      failed: int
+      errored: int
+      time: TimeSpan }
+
       override x.ToString() =
         sprintf "%d tests run: %d passed, %d ignored, %d failed, %d errored (%A)\n"
-                (x.Errored + x.Failed + x.Passed)
-                x.Passed x.Ignored x.Failed x.Errored x.Time
+                (x.errored + x.failed + x.passed)
+                x.passed x.ignored x.failed x.errored x.time
       member x.Description = x.ToString()
       static member (+) (c1: TestResultCounts, c2: TestResultCounts) =
-          { Passed = c1.Passed + c2.Passed
-            Ignored = c1.Ignored + c2.Ignored
-            Failed = c1.Failed + c2.Failed
-            Errored = c1.Errored + c2.Errored
-            Time = c1.Time + c2.Time }
+          { passed = c1.passed + c2.passed
+            ignored = c1.ignored + c2.ignored
+            failed = c1.failed + c2.failed
+            errored = c1.errored + c2.errored
+            time = c1.time + c2.time }
       static member errorCode (c: TestResultCounts) =
-          (if c.Failed > 0 then 1 else 0) ||| (if c.Errored > 0 then 2 else 0)
+          (if c.failed > 0 then 1 else 0) ||| (if c.errored > 0 then 2 else 0)
 
   [<StructuredFormatDisplay("{Description}")>]
   type TestRunResult = {
-      Name: string
-      Result: TestResult
-      Time: TimeSpan
+      name: string
+      result: TestResult
+      time: TimeSpan
   } with
     override x.ToString() =
-     sprintf "%s: %s (%A)" x.Name (x.Result.ToString()) x.Time
+     sprintf "%s: %s (%A)" x.name (x.result.ToString()) x.time
     member x.Description = x.ToString()
-    static member isPassed (r: TestRunResult) = TestResult.isPassed r.Result
-    static member isIgnored (r: TestRunResult) = TestResult.isIgnored r.Result
-    static member isFailed (r: TestRunResult) = TestResult.isFailed r.Result
-    static member isException (r: TestRunResult) = TestResult.isException r.Result
+    static member isPassed (r: TestRunResult) = TestResult.isPassed r.result
+    static member isIgnored (r: TestRunResult) = TestResult.isIgnored r.result
+    static member isFailed (r: TestRunResult) = TestResult.isFailed r.result
+    static member isException (r: TestRunResult) = TestResult.isException r.result
     static member isFailedOrException r = TestRunResult.isFailed r || TestRunResult.isException r
 
   let sumTestResults (results: #seq<TestRunResult>) =
     let counts =
         results
-        |> Seq.map (fun r -> r.Result)
+        |> Seq.map (fun r -> r.result)
         |> Seq.countBy TestResult.tag
         |> dict
     let get result =
@@ -212,26 +212,26 @@ module Impl =
         | true, v -> v
         | _ -> 0
 
-    { Passed = get TestResult.Passed
-      Ignored = get (TestResult.Ignored "")
-      Failed = get (TestResult.Failed "")
-      Errored = get (TestResult.Error null)
-      Time = results |> Seq.map (fun r -> r.Time) |> Seq.fold (+) TimeSpan.Zero }
+    { passed = get TestResult.Passed
+      ignored = get (TestResult.Ignored "")
+      failed = get (TestResult.Failed "")
+      errored = get (TestResult.Error null)
+      time = results |> Seq.map (fun r -> r.time) |> Seq.fold (+) TimeSpan.Zero }
 
   /// Hooks to print report through test run
   type TestPrinters =
-    { BeforeRun: string -> unit
-      Passed: string -> TimeSpan -> unit
-      Ignored: string -> string -> unit
-      Failed: string -> string -> TimeSpan -> unit
-      Exception: string -> exn -> TimeSpan -> unit }
+    { beforeRun: string -> unit
+      passed: string -> TimeSpan -> unit
+      ignored: string -> string -> unit
+      failed: string -> string -> TimeSpan -> unit
+      exn: string -> exn -> TimeSpan -> unit }
 
       static member Default = {
-          BeforeRun = ignore
-          Passed = ignore2
-          Ignored = ignore2
-          Failed = ignore3
-          Exception = ignore3
+          beforeRun = ignore
+          passed = ignore2
+          ignored = ignore2
+          failed = ignore3
+          exn = ignore3
       }
 
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
@@ -261,15 +261,15 @@ module Impl =
 
       fun (printers: TestPrinters) map ->
           let execOne (name: string, test) =
-              printers.BeforeRun name
+              printers.beforeRun name
               let w = System.Diagnostics.Stopwatch.StartNew()
               try
                   test()
                   w.Stop()
-                  printers.Passed name w.Elapsed
-                  { Name = name
-                    Result = Passed
-                    Time = w.Elapsed }
+                  printers.passed name w.Elapsed
+                  { name = name
+                    result = Passed
+                    time = w.Elapsed }
               with e ->
                   w.Stop()
                   match e with
@@ -280,20 +280,20 @@ module Impl =
                               |> Seq.filter (fun q -> q.Contains ",1): ")
                               |> Enumerable.FirstOrDefault
                           sprintf "\n%s\n%s\n" e.Message firstLine
-                      printers.Failed name msg w.Elapsed
-                      { Name = name
-                        Result = Failed msg
-                        Time = w.Elapsed }
+                      printers.failed name msg w.Elapsed
+                      { name = name
+                        result = Failed msg
+                        time = w.Elapsed }
                   | ExceptionInList ignoreExceptionTypes.Value ->
-                      printers.Ignored name e.Message
-                      { Name = name
-                        Result = Ignored e.Message
-                        Time = w.Elapsed }
+                      printers.ignored name e.Message
+                      { name = name
+                        result = Ignored e.Message
+                        time = w.Elapsed }
                   | _ ->
-                      printers.Exception name e w.Elapsed
-                      { Name = name
-                        Result = TestResult.Error e
-                        Time = w.Elapsed }
+                      printers.exn name e w.Elapsed
+                      { name = name
+                        result = TestResult.Error e
+                        time = w.Elapsed }
           map execOne
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
@@ -310,8 +310,8 @@ module Impl =
   let evalSeq =
       let printer =
           { TestPrinters.Default with
-              Failed = printFailed
-              Exception = printException }
+              failed = printFailed
+              exn = printException }
 
       eval printer Seq.map
 
@@ -327,8 +327,8 @@ module Impl =
       let printException = funLock3 printException
       let printer =
           { TestPrinters.Default with
-              Failed = printFailed
-              Exception = printException }
+              failed = printFailed
+              exn = printException }
       eval printer pmap
 
   /// Runs tests, returns error code
@@ -336,7 +336,7 @@ module Impl =
       let w = System.Diagnostics.Stopwatch.StartNew()
       let results = eval tests
       w.Stop()
-      let summary = { sumTestResults results with Time = w.Elapsed }
+      let summary = { sumTestResults results with time = w.Elapsed }
       tprintf "%s" (summary.ToString())
       TestResultCounts.errorCode summary
 
