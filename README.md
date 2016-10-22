@@ -100,10 +100,14 @@ integrationTests // from MyLib.Tests
 
 ## Expectations
 
-All expect-functions have the signature `actual -> expected -> msg -> _`,
-leaving out `expected` when obvious from the function.
+All expect-functions have the signature
+`actual -> expected -> PrintfStringFormat<,> -> _`, leaving out
+`expected` when obvious from the function; use the printf syntax to interpolate
+data into your strings to make your assertions more contextually relevant.
 
 ### `Expect` module
+
+This module is your main entry-point when asserting.
 
  - `throws`
  - `throwsC`
