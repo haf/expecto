@@ -33,6 +33,6 @@ let runFsCheckTests =
 
     match results.[2].result with
     | TestResult.Ignored e ->
-      Expect.equal "because reasons" e "ignore description"
+      Expect.equal "Because I feel like it." e "It should fail with the right message."
     | x ->
       failtestf "Expected Ignored, actual %A" x
