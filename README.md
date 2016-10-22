@@ -5,7 +5,7 @@
 Expecto is a unit testing library for F#. It's a fork of Fuchu aiming to be
 properly updated and pushed to nuget when PRs come in. It aims to be an
 opinionated testing framework with batteries included, while still being
-compositional (just like Suave and Logary are). Former README follows:
+compositional (just like Suave and Logary are).
 
 ![Sample output](docs/sample-output.png)
 
