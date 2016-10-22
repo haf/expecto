@@ -224,7 +224,7 @@ let timeouts =
         }
 
         let cultures =
-          ["ecause reason"; "es-AR"; "fr-FR"]
+          ["en-US"; "es-AR"; "fr-FR"]
           |> List.map CultureInfo.GetCultureInfo
 
         let culturizedTests = testWithCultures cultures atest
