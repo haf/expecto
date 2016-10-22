@@ -40,35 +40,52 @@ let tests =
   ]
 ```
 
-The first parameter in the assertions describes the assertion. This is usually an optional parameter in most test frameworks; in Expecto it's required to foster descriptive failures, so you'll get a failure like "3+3 Expected value 3, actual 6" instead of just "Expected value 3, actual 6".
+The first parameter in the assertions describes the assertion. This is usually
+an optional parameter in most test frameworks; in Expecto it's required to
+foster descriptive failures, so you'll get a failure like "3+3 Expected value 3,
+actual 6" instead of just "Expected value 3, actual 6".
 
-For more examples, including a few ways to do common things in other test frameworks like setup/teardown and parameterized tests, see the [F# tests](https://github.com/haf/expecto/blob/master/Expecto.Tests/Tests.fs).
+For more examples, including a few ways to do common things in other test
+frameworks like setup/teardown and parameterized tests, see the [F#
+tests](https://github.com/haf/expecto/blob/master/Expecto.Tests/Tests.fs).
 
-## Assertions
+## Expectations
 
 The base class is called `Expect`, containing F# functions you can use to assert
 with. A testing library without a good assertion library is like love without
 kisses.
 
-## Running tests
+## Hello world
 
-The test runner is the test assembly itself. It's recommended to compile your test assembly as a console application. You can run a test directly like this:
+The test runner is the test assembly itself. It's recommended to compile your
+test assembly as a console application. You can run a test directly like this:
 
 ```fsharp
-runParallel simpleTest // or runParallel
+// alt 1:
+runParallel simpleTest
+// alt 2:
+run simpleTest
 ```
 
-which returns 1 if any tests failed, otherwise 0. Useful for returning to the operating system as error code. Or you can mark the top-level test in each test file with the `[<Tests>]` attribute, then define your main like this:
+which returns 1 if any tests failed, otherwise 0. Useful for returning to the
+operating system as error code. Or you can mark the top-level test in each test
+file with the `[<Tests>]` attribute, then define your main like this:
 
 ```fsharp
 open Expecto
+
+[<Tests>]
+let tests =
+  testCase "yes" <| fun () ->
+    Expect.isTrue true "Should be true"
 
 [<EntryPoint>]
 let main args =
   defaultMainThisAssembly args
 ```
 
-This `defaultMainThisAssembly` function admits a "/m" parameter passed through the command-line to run tests in parallel.
+This `defaultMainThisAssembly` function admits a "/m" parameter passed through
+the command-line to run tests in parallel.
 
 You can single out tests by filtering them by name. For example:
 
@@ -80,7 +97,7 @@ tests
 
 You can use the F# REPL to run tests this way.
 
-## FsCheck integration
+## FsCheck usage
 
 Reference [FsCheck](https://github.com/fscheck/FsCheck) and Expecto.FsCheck to
 test properties:
@@ -90,9 +107,8 @@ let config = { FsCheck.Config.Default with MaxTest = 10000 }
 
 let properties =
   testList "FsCheck" [
-    testProperty "Addition is commutative" <|
-      fun a b ->
-        a + b = b + a
+    testProperty "Addition is commutative" <| fun a b ->
+      a + b = b + a
 
     // you can also override the FsCheck config
     testPropertyWithConfig config "Product is distributive over addition" <|
@@ -103,9 +119,9 @@ let properties =
 run properties
 ```
 
-You can freely mix FsCheck properties with regular test cases and test lists.
+You can freely mix testProperty with testCase and testList.
 
-## PerfUtil integration ##
+## PerfUtil usage
 
 The integration with Eirik's PerfUtil project.
 
@@ -113,65 +129,70 @@ The integration with Eirik's PerfUtil project.
 open global.PerfUtil
 
 module Types =
-    type Y = { a : string; b : int }
+  type Y = { a : string; b : int }
 
 type Serialiser =
-    inherit ITestable
-    abstract member Serialise<'a> : 'a -> unit
+  inherit ITestable
+  abstract member Serialise<'a> : 'a -> unit
 
 type MySlowSerialiser() =
-    interface ITestable with
-        member x.Name = "Slow Serialiser"
-    interface Serialiser with
-        member x.Serialise _ =
-            System.Threading.Thread.Sleep(30)
+  interface ITestable with
+    member x.Name = "Slow Serialiser"
+  interface Serialiser with
+    member x.Serialise _ =
+      System.Threading.Thread.Sleep(30)
 
 type FastSerialiser() =
-    interface ITestable with
-        member x.Name = "Fast Serialiser"
-    interface Serialiser with
-        member x.Serialise _ =
-            System.Threading.Thread.Sleep(10)
+  interface ITestable with
+    member x.Name = "Fast Serialiser"
+  interface Serialiser with
+    member x.Serialise _ =
+      System.Threading.Thread.Sleep(10)
 
 type FastSerialiserAlt() =
-    interface ITestable with
-        member x.Name = "Fast Serialiser Alt"
-    interface Serialiser with
-        member x.Serialise _ =
-            System.Threading.Thread.Sleep(20)
+  interface ITestable with
+    member x.Name = "Fast Serialiser Alt"
+  interface Serialiser with
+    member x.Serialise _ =
+     System.Threading.Thread.Sleep(20)
 
-let alts : Serialiser list = [ FastSerialiser(); FastSerialiserAlt() ]
-let subj = MySlowSerialiser() :> Serialiser
+let alts : Serialiser list =
+  [ FastSerialiser()
+    FastSerialiserAlt() ]
+let subj =
+  MySlowSerialiser() :> Serialiser
 
 open Types
 
-let normal_serlialisation : PerfTest<Serialiser> list = [
-    perfTest "serialising string" <| fun s ->
-        s.Serialise("wowowow")
+let normalSerialisation : PerfTest<Serialiser> list =
+  [ perfTest "serialising string" <| fun s ->
+      s.Serialise("wowowow")
     perfTest "serialising record" <| fun s ->
-        s.Serialise { a = "hello world"; b = 42 }
-    ]
+      s.Serialise { a = "hello world"; b = 42 }
+  ]
 
 [<Tests>]
 let tests =
-    testList "performance comparison tests" [
-        testPerfImpls "implementations of Serialiser" subj alts normal_serlialisation
-        testPerfHistory "historical MySlowSerialiser" subj "v1.2.3" normal_serlialisation
-    ]
+  testList "performance tests" [
+    testPerfImpls "implementations of Serialiser" subj alts normalSerialisation
+    testPerfHistory "historical MySlowSerialiser" subj "v1.2.3" normalSerialisation
+  ]
 ```
 
-This example shows both a comparison performance test between MySlowSerialiser, FastSerialiser and
-FastSerialiserAlt: `testPerfImpls` and a historical comparison of MySlowSerialiser alone
-which saves an xml file next to the dll on every run.
+This example shows both a comparison performance test between MySlowSerialiser,
+FastSerialiser and FastSerialiserAlt: `testPerfImpls` and a historical
+comparison of MySlowSerialiser alone which saves an xml file next to the dll on
+every run.
 
-You can find detailed docs in the source code of PerfUtil.fs on all parameters and data
-structures. All things that can be configured with PerfUtil can be configured with the
-`conf` parameter to `testPerfImplsWithConfig` and `testPerfHistoryWithConfig`.
+You can find detailed docs in the source code of PerfUtil.fs on all parameters
+and data structures. All things that can be configured with PerfUtil can be
+configured with the `conf` parameter to `testPerfImplsWithConfig` and
+`testPerfHistoryWithConfig`.
 
 The functions are discoverable by starting with `testPerf*`.
 
-Handle the results explicitly by giving a config with a value of `handleResults`. Use
-that if you want to export the data to e.g. CSV or TSV.
+Handle the results explicitly by giving a config with a value of
+`handleResults`. Use that if you want to export the data to e.g. CSV or TSV.
 
 ## You're not alone!
 
