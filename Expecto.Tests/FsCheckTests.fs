@@ -9,11 +9,13 @@ let properties =
       fun a b ->
         a + b = b + a
 
-    testProperty "Product is distributive over addition" <|
+    testProperty "Deliberately failing test" <|
       fun a b c ->
-        a * (b + c) = a * a + a * c // wrong on purpose to test failures
+        // wrong on purpose to test failures
+        a * (b + c) = a * a + a * c
 
-    testProperty "ignored" <| fun _ -> skiptest "because reasons"
+    testProperty "ignored" <| fun _ ->
+      skiptest "Because I feel like it."
   ]
 
 [<Tests>]

@@ -26,6 +26,7 @@ type IgnoreException(msg) = inherit ExpectoException(msg)
 type TestsAttribute() = inherit Attribute()
 
 module Helpers =
+
   let inline ignore2 _ = ignore
   let inline ignore3 _ = ignore2
 
@@ -35,12 +36,6 @@ module Helpers =
       f v
     finally
       teardown v
-
-  /// Print to Console and Trace
-  let tprintf fmt =
-    Printf.kprintf (fun s ->
-      System.Diagnostics.Trace.Write s
-      Console.Write s) fmt
 
   open System.Text.RegularExpressions
   let rx = lazy Regex(" at (.*) in (.*):line (\d+)", RegexOptions.Compiled ||| RegexOptions.Multiline)
@@ -128,7 +123,11 @@ module Test =
 
 
 module Impl =
+  open Expecto.Logging
+  open Expecto.Logging.Message
   open Helpers
+
+  let logger = Log.create "Fuchu"
 
   type TestResult =
     | Passed
@@ -164,37 +163,41 @@ module Impl =
       | Error _ -> true
       | _ -> false
 
-  [<StructuredFormatDisplay("{Description}")>]
+  [<StructuredFormatDisplay("{description}")>]
   type TestResultCounts =
-    { passed: int
-      ignored: int
-      failed: int
-      errored: int
-      time: TimeSpan }
+    { passed   : int
+      ignored  : int
+      failed   : int
+      errored  : int
+      duration : TimeSpan }
+
+      member x.total =
+        x.passed + x.ignored + x.failed
 
       override x.ToString() =
         sprintf "%d tests run: %d passed, %d ignored, %d failed, %d errored (%A)\n"
                 (x.errored + x.failed + x.passed)
-                x.passed x.ignored x.failed x.errored x.time
-      member x.Description = x.ToString()
+                x.passed x.ignored x.failed x.errored x.duration
+      member x.description =
+        x.ToString()
       static member (+) (c1: TestResultCounts, c2: TestResultCounts) =
-          { passed = c1.passed + c2.passed
-            ignored = c1.ignored + c2.ignored
-            failed = c1.failed + c2.failed
-            errored = c1.errored + c2.errored
-            time = c1.time + c2.time }
-      static member errorCode (c: TestResultCounts) =
-          (if c.failed > 0 then 1 else 0) ||| (if c.errored > 0 then 2 else 0)
+        { passed = c1.passed + c2.passed
+          ignored = c1.ignored + c2.ignored
+          failed = c1.failed + c2.failed
+          errored = c1.errored + c2.errored
+          duration = c1.duration + c2.duration }
 
-  [<StructuredFormatDisplay("{Description}")>]
-  type TestRunResult = {
-      name: string
-      result: TestResult
-      time: TimeSpan
-  } with
+      static member errorCode (c: TestResultCounts) =
+        (if c.failed > 0 then 1 else 0) ||| (if c.errored > 0 then 2 else 0)
+
+  [<StructuredFormatDisplay("{description}")>]
+  type TestRunResult =
+   { name     : string
+     result   : TestResult
+     duration : TimeSpan }
     override x.ToString() =
-     sprintf "%s: %s (%A)" x.name (x.result.ToString()) x.time
-    member x.Description = x.ToString()
+     sprintf "%s: %s (%A)" x.name (x.result.ToString()) x.duration
+    member x.description = x.ToString()
     static member isPassed (r: TestRunResult) = TestResult.isPassed r.result
     static member isIgnored (r: TestRunResult) = TestResult.isIgnored r.result
     static member isFailed (r: TestRunResult) = TestResult.isFailed r.result
@@ -203,97 +206,116 @@ module Impl =
 
   let sumTestResults (results: #seq<TestRunResult>) =
     let counts =
-        results
-        |> Seq.map (fun r -> r.result)
-        |> Seq.countBy TestResult.tag
-        |> dict
+      results
+      |> Seq.map (fun r -> r.result)
+      |> Seq.countBy TestResult.tag
+      |> dict
+
     let get result =
         match counts.TryGetValue (TestResult.tag result) with
         | true, v -> v
         | _ -> 0
 
-    { passed = get TestResult.Passed
-      ignored = get (TestResult.Ignored "")
-      failed = get (TestResult.Failed "")
-      errored = get (TestResult.Error null)
-      time = results |> Seq.map (fun r -> r.time) |> Seq.fold (+) TimeSpan.Zero }
+    { passed   = get TestResult.Passed
+      ignored  = get (TestResult.Ignored "")
+      failed   = get (TestResult.Failed "")
+      errored  = get (TestResult.Error null)
+      duration = results |> Seq.map (fun r -> r.duration) |> Seq.fold (+) TimeSpan.Zero }
 
   /// Hooks to print report through test run
   type TestPrinters =
     { beforeRun: string -> unit
+      /// test name -> time taken -> unit
       passed: string -> TimeSpan -> unit
+      /// test name -> ignore message -> unit
       ignored: string -> string -> unit
+      /// test name -> other message -> time taken -> unit
       failed: string -> string -> TimeSpan -> unit
+      /// test name -> exception -> time taken -> unit
       exn: string -> exn -> TimeSpan -> unit }
 
-      static member Default = {
-          beforeRun = ignore
-          passed = ignore2
-          ignored = ignore2
-          failed = ignore3
-          exn = ignore3
-      }
+    static member Default =
+      { beforeRun = fun n ->
+          logger.debug (
+            eventX "{testName} starting..."
+            >> setField "testName" n)
+        passed = fun n d ->
+          logger.debug (
+            eventX "{testName} passed in {duration}."
+            >> setField "testName" n
+            >> setField "duration" d)
+        ignored = fun n m ->
+          logger.warn (
+            eventX "{testName} was ignored. {reason}"
+            >> setField "testName" n
+            >> setField "reason" m)
+        failed = fun n m d ->
+          logger.error (
+            eventX "{testName} failed in {duration}. {message}"
+            >> setField "testName" n
+            >> setField "duration" d
+            >> setField "message" m)
+        exn = fun n e d ->
+          logger.error (
+            eventX "{testName} errored in {duration}"
+            >> setField "testName" n
+            >> setField "duration" d
+            >> addExn e) }
 
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
   let evalTestList =
       let failExceptions = [
-          typeof<AssertException>.AssemblyQualifiedName
-          "NUnit.Framework.AssertionException, NUnit.Framework"
-          "NUnit.Framework.AssertionException, nunit.framework"
-          "Gallio.Framework.Assertions.AssertionFailureException, Gallio"
-          "Gallio.Framework.Assertions.AssertionException, Gallio"
-          "Xunit.Sdk.AssertException, Xunit"
+        typeof<AssertException>.AssemblyQualifiedName
       ]
       let ignoreExceptions = [
-          "NUnit.Framework.IgnoreException, NUnit.Framework"
-          "NUnit.Framework.IgnoreException, nunit.framework"
-          typeof<IgnoreException>.AssemblyQualifiedName
+        typeof<IgnoreException>.AssemblyQualifiedName
       ]
       let failExceptionTypes = lazy List.choose Type.TryGetType failExceptions
       let ignoreExceptionTypes = lazy List.choose Type.TryGetType ignoreExceptions
 
       let (|ExceptionInList|_|) (l: Type list) (e: #exn) =
-          let et = e.GetType()
-          if l |> List.exists (fun x -> x.IsAssignableFrom et)
-              then Some()
-              else None
+        let et = e.GetType()
+        if l |> List.exists (fun x -> x.IsAssignableFrom et) then
+          Some()
+        else
+          None
 
       fun (printers: TestPrinters) map ->
           let execOne (name: string, test) =
               printers.beforeRun name
               let w = System.Diagnostics.Stopwatch.StartNew()
               try
-                  test()
-                  w.Stop()
-                  printers.passed name w.Elapsed
-                  { name = name
-                    result = Passed
-                    time = w.Elapsed }
+                test()
+                w.Stop()
+                printers.passed name w.Elapsed
+                { name     = name
+                  result   = Passed
+                  duration = w.Elapsed }
               with e ->
-                  w.Stop()
-                  match e with
-                  | ExceptionInList failExceptionTypes.Value ->
-                      let msg =
-                          let firstLine =
-                              (stackTraceToString e.StackTrace).Split('\n')
-                              |> Seq.filter (fun q -> q.Contains ",1): ")
-                              |> Enumerable.FirstOrDefault
-                          sprintf "\n%s\n%s\n" e.Message firstLine
-                      printers.failed name msg w.Elapsed
-                      { name = name
-                        result = Failed msg
-                        time = w.Elapsed }
-                  | ExceptionInList ignoreExceptionTypes.Value ->
-                      printers.ignored name e.Message
-                      { name = name
-                        result = Ignored e.Message
-                        time = w.Elapsed }
-                  | _ ->
-                      printers.exn name e w.Elapsed
-                      { name = name
-                        result = TestResult.Error e
-                        time = w.Elapsed }
+                w.Stop()
+                match e with
+                | ExceptionInList failExceptionTypes.Value ->
+                    let msg =
+                        let firstLine =
+                            (stackTraceToString e.StackTrace).Split('\n')
+                            |> Seq.filter (fun q -> q.Contains ",1): ")
+                            |> Enumerable.FirstOrDefault
+                        sprintf "\n%s\n%s\n" e.Message firstLine
+                    printers.failed name msg w.Elapsed
+                    { name     = name
+                      result   = Failed msg
+                      duration = w.Elapsed }
+                | ExceptionInList ignoreExceptionTypes.Value ->
+                    printers.ignored name e.Message
+                    { name     = name
+                      result   = Ignored e.Message
+                      duration = w.Elapsed }
+                | _ ->
+                    printers.exn name e w.Elapsed
+                    { name     = name
+                      result   = TestResult.Error e
+                      duration = w.Elapsed }
           map execOne
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
@@ -303,15 +325,10 @@ module Impl =
       |> evalTestList printer map
       |> Seq.toList
 
-  let printFailed = tprintf "%s: Failed: %s (%A)\n"
-  let printException name ex = tprintf "%s: Exception: %s (%A)\n" name (exnToString ex)
-
   /// Evaluates tests sequentially
   let evalSeq =
       let printer =
-          { TestPrinters.Default with
-              failed = printFailed
-              exn = printException }
+        TestPrinters.Default
 
       eval printer Seq.map
 
@@ -319,51 +336,51 @@ module Impl =
 
   /// Evaluates tests in parallel
   let evalPar =
-      let funLock =
-          let locker = obj()
-          lock locker
-      let inline funLock3 f a b c = funLock (fun () -> f a b c)
-      let printFailed = funLock3 printFailed
-      let printException = funLock3 printException
       let printer =
-          { TestPrinters.Default with
-              failed = printFailed
-              exn = printException }
+        TestPrinters.Default
       eval printer pmap
 
   /// Runs tests, returns error code
   let runEval eval (tests: Test) =
-      let w = System.Diagnostics.Stopwatch.StartNew()
-      let results = eval tests
-      w.Stop()
-      let summary = { sumTestResults results with time = w.Elapsed }
-      tprintf "%s" (summary.ToString())
-      TestResultCounts.errorCode summary
+    let w = System.Diagnostics.Stopwatch.StartNew()
+    let results = eval tests
+    w.Stop()
+    let summary = { sumTestResults results with duration = w.Elapsed }
+
+    logger.info (
+      eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored"
+      >> setField "total" summary.total
+      >> setField "duration" summary.duration
+      >> setField "passes" summary.passed
+      >> setField "ignores" summary.ignored
+      >> setField "failures" summary.failed
+      >> setField "errors" summary.errored)
+
+    TestResultCounts.errorCode summary
 
   let testFromMember (m: MemberInfo): Test option =
       [m]
       |> List.filter (fun m -> m.HasAttributeType typeof<TestsAttribute>)
-      |> List.choose (fun m ->
-                          match box m with
-                          | :? FieldInfo as m ->
-                              if m.FieldType = typeof<Test>
-                                  then Some(unbox (m.GetValue(null)))
-                                  else None
-                          | :? MethodInfo as m ->
-                              if m.ReturnType = typeof<Test>
-                                  then Some(unbox (m.Invoke(null, null)))
-                                  else None
-                          | :? PropertyInfo as m ->
-                              if m.PropertyType = typeof<Test>
-                                  then Some(unbox (m.GetValue(null, null)))
-                                  else None
-                          | _ -> None)
+      |> List.choose (box >> function
+        | :? FieldInfo as m ->
+          if m.FieldType = typeof<Test>
+          then Some(unbox (m.GetValue(null)))
+          else None
+        | :? MethodInfo as m ->
+          if m.ReturnType = typeof<Test>
+          then Some(unbox (m.Invoke(null, null)))
+          else None
+        | :? PropertyInfo as m ->
+          if m.PropertyType = typeof<Test>
+          then Some(unbox (m.GetValue(null, null)))
+          else None
+        | _ -> None)
       |> List.tryFind (fun _ -> true)
 
   let listToTestListOption =
-      function
-      | [] -> None
-      | x -> Some (TestList x)
+    function
+    | [] -> None
+    | x -> Some (TestList x)
 
   let testFromType =
       let asMembers x = Seq.map (fun m -> m :> MemberInfo) x

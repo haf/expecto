@@ -37,12 +37,12 @@ let tests =
 
     testList "sumTestResults" [
       let sumTestResultsTests =
-        [ { TestRunResult.name = ""; result = Passed; time = TimeSpan.FromMinutes 2. }
-          { TestRunResult.name = ""; result = TestResult.Error (ArgumentException()); time = TimeSpan.FromMinutes 3. }
-          { TestRunResult.name = ""; result = Failed ""; time = TimeSpan.FromMinutes 4. }
-          { TestRunResult.name = ""; result = Passed; time = TimeSpan.FromMinutes 5. }
-          { TestRunResult.name = ""; result = Failed ""; time = TimeSpan.FromMinutes 6. }
-          { TestRunResult.name = ""; result = Passed; time = TimeSpan.FromMinutes 7. }
+        [ { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 2. }
+          { TestRunResult.name = ""; result = TestResult.Error (ArgumentException()); duration = TimeSpan.FromMinutes 3. }
+          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 4. }
+          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 5. }
+          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 6. }
+          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 7. }
         ]
       let r = lazy sumTestResults sumTestResultsTests
       yield testCase "passed" <| fun _ ->
@@ -51,8 +51,8 @@ let tests =
           r.Value.failed ==? 2
       yield testCase "exn" <| fun _ ->
           r.Value.errored ==? 1
-      yield testCase "time" <| fun _ ->
-          r.Value.time ==? TimeSpan.FromMinutes 27.
+      yield testCase "duration" <| fun _ ->
+          r.Value.duration ==? TimeSpan.FromMinutes 27.
     ]
 
     testList "TestResultCounts" [
@@ -72,10 +72,10 @@ let tests =
         yield testResultCountsSum "Errored" <|
           fun a b r -> r.errored = a.errored + b.errored
         yield testResultCountsSum "Time" <|
-          fun a b r -> r.time = a.time + b.time
+          fun a b r -> r.duration = a.duration + b.duration
       ]
       testCase "ToString" <| fun _ ->
-        let c1 = { passed = 1; ignored = 5; failed = 2; errored = 3; time = TimeSpan.FromSeconds 20. }
+        let c1 = { passed = 1; ignored = 5; failed = 2; errored = 3; duration = TimeSpan.FromSeconds 20. }
         c1.ToString() ==? "6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n"
     ]
 

@@ -66,14 +66,13 @@ module TestHelpers =
                 let! ignored = Arb.generate<int>
                 let! failed = Arb.generate<int>
                 let! errored = Arb.generate<int>
-                let! time = genLimitedTimeSpan.Value
-                return {
-                    TestResultCounts.passed = passed
-                    ignored = ignored
-                    failed = failed
-                    errored = errored
-                    time = time
-                }
+                let! duration = genLimitedTimeSpan.Value
+                return
+                  { TestResultCounts.passed = passed
+                    ignored  = ignored
+                    failed   = failed
+                    errored  = errored
+                    duration = duration }
             }
         )
 
@@ -83,13 +82,13 @@ module TestHelpers =
             for ignored in Arb.shrink c.ignored do
             for failed in Arb.shrink c.failed do
             for errored in Arb.shrink c.errored do
-            for time in Arb.shrink c.time ->
+            for duration in Arb.shrink c.duration ->
             {
                 TestResultCounts.passed = passed
                 ignored = ignored
                 failed = failed
                 errored = errored
-                time = time
+                duration = duration
             }
         }
 
