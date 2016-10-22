@@ -18,15 +18,14 @@ module FuchuFsCheck =
 
     let internal wrapRunner (r : IRunner) =
         { new IRunner with
-            member x.OnStartFixture t = r.OnStartFixture t
-            member x.OnArguments (ntest, args, every) = r.OnArguments (ntest, args, every)
-            member x.OnShrink(args, everyShrink) = r.OnShrink(args, everyShrink)
-            member x.OnFinished(name,testResult) = 
-                let msg = onFinishedToString name testResult
+            member __.OnStartFixture t = r.OnStartFixture t
+            member __.OnArguments(ntest, args, every) = r.OnArguments(ntest, args, every)
+            member __.OnShrink(args, everyShrink) = r.OnShrink(args, everyShrink)
+            member __.OnFinished(name,testResult) =
                 match testResult with
-                | FsCheck.TestResult.True _ -> ()
+                | FsCheck.TestResult.True _ -> r.OnFinished(name, testResult)
                 | FsCheck.TestResult.False (_,_,_, Outcome.Exception (Ignored e),_) -> raise e
-                | _ -> failtest msg
+                | _ -> failtest (onFinishedToString name testResult)
         }
 
     let internal config = 
