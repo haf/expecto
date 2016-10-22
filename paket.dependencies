@@ -1,0 +1,6 @@
+source https://api.nuget.org/v3/index.json
+
+nuget FsCheck 2.2.4 framework: >= net45
+nuget FSharp.Core 3.1.2.5
+nuget FSharpx.Core 1.8.41 framework: >= net40
+nuget PerfUtil 0.1.8 framework: >= net40

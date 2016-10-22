@@ -1,3 +1,5 @@
+AssemblyVersionInfo.fs
+paket.exe
 *.suo
 *.swp
 *.user
