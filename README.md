@@ -7,6 +7,8 @@ properly updated and pushed to nuget when PRs come in. It aims to be an
 opinionated testing framework with batteries included, while still being
 compositional (just like Suave and Logary are). Former README follows:
 
+![Sample output](docs/sample-output.png)
+
 In your paket.dependencies:
 
 ```
