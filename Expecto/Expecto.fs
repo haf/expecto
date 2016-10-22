@@ -1,4 +1,5 @@
 ﻿namespace Expecto
+
 #nowarn "46"
 
 open System
@@ -232,7 +233,9 @@ module Impl =
       /// test name -> other message -> time taken -> unit
       failed: string -> string -> TimeSpan -> unit
       /// test name -> exception -> time taken -> unit
-      exn: string -> exn -> TimeSpan -> unit }
+      exn: string -> exn -> TimeSpan -> unit
+
+      summary : TestResultCounts -> unit }
 
     static member Default =
       { beforeRun = fun n ->
@@ -260,7 +263,16 @@ module Impl =
             eventX "{testName} errored in {duration}"
             >> setField "testName" n
             >> setField "duration" d
-            >> addExn e) }
+            >> addExn e)
+        summary = fun summary ->
+          logger.info (
+            eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored."
+            >> setField "total" summary.total
+            >> setField "duration" summary.duration
+            >> setField "passes" summary.passed
+            >> setField "ignores" summary.ignored
+            >> setField "failures" summary.failed
+            >> setField "errors" summary.errored)}
 
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
@@ -341,20 +353,12 @@ module Impl =
       eval printer pmap
 
   /// Runs tests, returns error code
-  let runEval eval (tests: Test) =
+  let runEval printer eval (tests: Test) =
     let w = System.Diagnostics.Stopwatch.StartNew()
     let results = eval tests
     w.Stop()
     let summary = { sumTestResults results with duration = w.Elapsed }
-
-    logger.info (
-      eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored"
-      >> setField "total" summary.total
-      >> setField "duration" summary.duration
-      >> setField "passes" summary.passed
-      >> setField "ignores" summary.ignored
-      >> setField "failures" summary.failed
-      >> setField "errors" summary.errored)
+    printer.summary summary
 
     TestResultCounts.errorCode summary
 
@@ -412,6 +416,7 @@ module Impl =
 module Tests =
   open Impl
   open Helpers
+  open Argu
 
   /// Fail this test
   let inline failtest msg = raise <| AssertException msg
@@ -467,47 +472,87 @@ module Tests =
     TestCaseBuilder name
 
   /// Runs the passed tests
-  let run tests =
-    runEval evalSeq tests
+  let run printer tests =
+    runEval printer evalSeq tests
 
   /// Runs tests in parallel
-  let runParallel tests = runEval evalPar tests
+  let runParallel printer tests = runEval printer evalPar tests
 
   // Runner options
-  type RunOptions = { parallel: bool }
+  type ExpectoConfig =
+    { /// Whether to run the tests in parallel. Defaults to
+      /// true, because your code should not mutate global
+      /// state by default.
+      parallel : bool
+      /// An optional filter function. Useful if you only would
+      /// like to run a subset of all the tests defined in your
+      /// assembly.
+      filter   : Test -> Test
+      /// Allows the test printer to be parametised to your
+      /// liking.
+      printer : TestPrinters }
 
-  /// Parses command-line arguments
-  let parseArgs =
-    let defaultOptions = { RunOptions.parallel = false }
-    let opts = [ "/m", fun o -> { o with RunOptions.parallel = true } ]
-    fun (args: string[]) ->
-      (defaultOptions, args)
-      ||> Seq.fold (fun opt arg ->
-            (opt, opts) ||> Seq.fold (fun o (a,f) -> if a = arg then f o else o))
+  /// The default configuration for Expecto.
+  let defaultConfig =
+    { parallel = true
+      filter   = id
+      printer  = TestPrinters.Default }
 
-  /// Runs tests with supplied options. Returns 0 if all tests passed, otherwise 1
-  let defaultMainWithOptions tests (options: RunOptions) =
-    let run = if options.parallel then runParallel else run
-    run tests
+  type CLIArguments =
+    | Sequenced
+    | Parallel
+    | Filter of hiera:string
+    | FilterTestList of substring:string
+    | FilterTestCase of substring:string
 
-  /// Runs tests with supplied command-line options. Returns 0 if all tests passed, otherwise 1
-  let defaultMain tests =
-    parseArgs >> defaultMainWithOptions tests
+    interface IArgParserTemplate with
+      member s.Usage =
+        match s with
+        | Sequenced -> "Don't run the tests in parallel."
+        | Parallel -> "Run all tests in parallel (default)."
+        | Filter _ -> "Filter the list of tests by a hierarchy that's slash (/) separated."
+        | FilterTestList _ -> "Filter the list of test lists by a substring."
+        | FilterTestCase _ -> "Filter the list of test cases by a substring."
+
+  [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
+  module ExpectoConfig =
+
+    /// Parses command-line arguments into a config. This allows you to
+    /// override the config from the command line, rather than having
+    /// to go into the compiled code to change how they are being run.
+    let fillFromArgs baseConfig =
+      let parser = ArgumentParser.Create<CLIArguments>()
+      let flip f a b = f b a
+
+      let reduceKnown : CLIArguments -> (_ -> ExpectoConfig) =
+        function
+        | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
+        | Parallel -> fun o -> { o with parallel = true }
+        | Filter _ -> fun o -> failwith "TODO: PRs much appreciated."
+        | FilterTestList _ -> fun o -> failwith "TODO: PRs much appreciated."
+        | FilterTestCase _ -> fun o -> failwith "TODO: PRs much appreciated."
+
+      fun (args: string[]) ->
+        let parsed =
+          parser.Parse(
+            args,
+            ignoreMissing = true,
+            ignoreUnrecognized = true,
+            raiseOnUsage = false)
+
+        (baseConfig, parsed.GetAllResults()) ||> Seq.fold (flip reduceKnown)
+
+  /// Runs tests with supplied options. Returns 0 if all tests passed, =
+  /// otherwise 1
+  let runTests config tests =
+    let run = if config.parallel then runParallel else run
+    run config.printer tests
 
   /// Runs tests in this assembly with supplied command-line options. Returns 0 if all tests passed, otherwise 1
-  let defaultMainThisAssembly args =
+  let runTestsInAssembly config args =
     let tests =
       match testFromAssembly (Assembly.GetEntryAssembly()) with
       | Some t -> t
       | None -> TestList []
-    defaultMain tests args
-
-  /// Runs tests in this assembly with supplied command-line options.
-  /// You may also pass a filter that selected a subset of tests to run.
-  /// Returns 0 if all tests passed, otherwise 1
-  let defaultMainThisAssemblyFilter args filter =
-    let tests =
-      match testFromAssembly (Assembly.GetEntryAssembly()) with
-      | Some t -> filter t
-      | None -> TestList []
-    defaultMain tests args
+    let config = args |> ExpectoConfig.fillFromArgs config
+    runTests config tests

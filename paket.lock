@@ -1,6 +1,6 @@
 NUGET
   remote: https://www.nuget.org/api/v2
-  specs:
+    Argu (3.2)
     FsCheck (2.6.2)
       FSharp.Core (>= 3.1.2.5)
     FSharp.Core (3.1.2.5)
@@ -9,5 +9,4 @@ NUGET
     PerfUtil (0.1.8)
 GITHUB
   remote: logary/logary
-  specs:
     src/Logary.Facade/Facade.fs (a131dce06cd491e75db74b7c2467d84814d81200)

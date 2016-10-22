@@ -3,5 +3,5 @@
 open Expecto
 
 [<EntryPoint>]
-let main args = 
-  defaultMainThisAssembly args
+let main args =
+  runTestsInAssembly defaultConfig args

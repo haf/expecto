@@ -1,5 +1,6 @@
 source https://nuget.org/api/v2
 
+nuget Argu
 nuget FsCheck
 nuget FSharp.Core ~> 3
 nuget FSharpx.Core

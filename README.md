@@ -35,17 +35,14 @@ let tests =
 
 [<EntryPoint>]
 let main args =
-  defaultMainThisAssembly args
+  runTestsInAssembly defaultConfig args
 ```
-
-This `defaultMainThisAssembly` function admits a "/m" parameter passed through
-the command-line to run tests in parallel.
 
 The base class is called `Expect`, containing functions you can use to assert
 with. A testing library without a good assertion library is like love without
 kisses.
 
-## Run with `run`
+## Running tests
 
 Here's the simplest test possible:
 
@@ -57,18 +54,27 @@ let simpleTest =
     Expect.equal  ("2+2", 4, 2+2)
 ```
 
-You can run it like this, e.g. in the interactive.
+Then run it like this, e.g. in the interactive or through a console app.
 
 ```fsharp
-open Expecto
 runParallel simpleTest
-// or:
+// alternatively:
 run simpleTest
 ```
 
 which returns 1 if any tests failed, otherwise 0. Useful for returning to the
 operating system as error code.
 
+### `runTests`
+
+Signature `ExpectoConfig -> Test -> int`. Runs the passed tests with the passed
+configuration record.
+
+### `runTestsInAssembly`
+
+Signature `ExpectoConfig -> string[] -> int`. Runs the tests in the current
+assembly and also overrides the passed `ExpectoConfig` with the command line
+parameters.
 
 ### `testList` for grouping
 
@@ -128,6 +134,10 @@ This module is your main entry-point when asserting.
  - `isTrue`
  - `sequenceEqual`
  - `stringContains`
+
+## `main argv` – how to run console apps
+
+
 
 ## FsCheck usage
 

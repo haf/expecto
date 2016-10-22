@@ -193,15 +193,13 @@ let timeouts =
     ]
 
     testList "parse args" [
-        testCase "default" <|
-            fun _ ->
-                let opts = parseArgs [||]
-                opts.parallel ==? false
+      testCase "default" <| fun _ ->
+        let opts = ExpectoConfig.fillFromArgs defaultConfig [||]
+        opts.parallel ==? true
 
-        testCase "parallel" <|
-            fun _ ->
-                let opts = parseArgs [|"/m"|]
-                opts.parallel ==? true
+      testCase "sequenced" <| fun _ ->
+        let opts = ExpectoConfig.fillFromArgs defaultConfig [|"--sequenced"|]
+        opts.parallel ==? false
     ]
 
     testList "transformations" [
@@ -226,7 +224,7 @@ let timeouts =
         }
 
         let cultures =
-          ["en-US"; "es-AR"; "fr-FR"]
+          ["ecause reason"; "es-AR"; "fr-FR"]
           |> List.map CultureInfo.GetCultureInfo
 
         let culturizedTests = testWithCultures cultures atest
