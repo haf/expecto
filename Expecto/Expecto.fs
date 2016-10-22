@@ -1,4 +1,5 @@
 ﻿namespace Expecto
+#nowarn "46"
 
 open System
 open System.Linq
@@ -8,11 +9,13 @@ open System.Reflection
 /// Actual test function
 type TestCode = unit -> unit
 
-/// Test tree
+/// Test tree – this is how you compose your tests as values. Since
+/// any of these can act as a test, you can pass any of these DU cases
+/// into a function that takes a Test.
 type Test =
-  | TestCase of TestCode
-  | TestList of Test seq
-  | TestLabel of string * Test
+  | TestCase of code:TestCode
+  | TestList of tests:Test seq
+  | TestLabel of label:string * test:Test
 
 type ExpectoException(msg) = inherit Exception(msg)
 type AssertException(msg) = inherit ExpectoException(msg)
@@ -81,11 +84,11 @@ module Test =
     let rec loop parentName testList =
       function
       | TestLabel (name, test) ->
-          let fullName =
-              if String.IsNullOrEmpty parentName
-                  then name
-                  else parentName + "/" + name
-          loop fullName testList test
+        let fullName =
+          if String.IsNullOrEmpty parentName
+            then name
+            else parentName + "/" + name
+        loop fullName testList test
       | TestCase test -> Seq.cons (parentName, test) testList
       | TestList tests -> Seq.collect (loop parentName testList) tests
     loop null Seq.empty
@@ -170,9 +173,9 @@ module Impl =
       Time: TimeSpan
   } with
       override x.ToString() =
-                      sprintf "%d tests run: %d passed, %d ignored, %d failed, %d errored (%A)\n"
-                          (x.Errored + x.Failed + x.Passed)
-                          x.Passed x.Ignored x.Failed x.Errored x.Time
+        sprintf "%d tests run: %d passed, %d ignored, %d failed, %d errored (%A)\n"
+                (x.Errored + x.Failed + x.Passed)
+                x.Passed x.Ignored x.Failed x.Errored x.Time
       member x.Description = x.ToString()
       static member (+) (c1: TestResultCounts, c2: TestResultCounts) =
           { Passed = c1.Passed + c2.Passed
@@ -443,33 +446,36 @@ module Tests =
       member x.Delay f = f
       member x.Run f = testCase name f
 
-  let inline test name = TestCaseBuilder name
+  let inline test name =
+    TestCaseBuilder name
 
-  /// Runs tests
-  let run tests = runEval evalSeq tests
+  /// Runs the passed tests
+  let run tests =
+    runEval evalSeq tests
 
   /// Runs tests in parallel
   let runParallel tests = runEval evalPar tests
 
   // Runner options
-  type RunOptions = { Parallel: bool }
+  type RunOptions = { parallel: bool }
 
   /// Parses command-line arguments
   let parseArgs =
-    let defaultOptions = { RunOptions.Parallel = false }
-    let opts = [ "/m", fun o -> { o with RunOptions.Parallel = true } ]
+    let defaultOptions = { RunOptions.parallel = false }
+    let opts = [ "/m", fun o -> { o with RunOptions.parallel = true } ]
     fun (args: string[]) ->
-        (defaultOptions, args)
-        ||> Seq.fold (fun opt arg ->
-                        (opt, opts) ||> Seq.fold (fun o (a,f) -> if a = arg then f o else o))
+      (defaultOptions, args)
+      ||> Seq.fold (fun opt arg ->
+            (opt, opts) ||> Seq.fold (fun o (a,f) -> if a = arg then f o else o))
 
   /// Runs tests with supplied options. Returns 0 if all tests passed, otherwise 1
   let defaultMainWithOptions tests (options: RunOptions) =
-    let run = if options.Parallel then runParallel else run
+    let run = if options.parallel then runParallel else run
     run tests
 
   /// Runs tests with supplied command-line options. Returns 0 if all tests passed, otherwise 1
-  let defaultMain tests = parseArgs >> defaultMainWithOptions tests
+  let defaultMain tests =
+    parseArgs >> defaultMainWithOptions tests
 
   /// Runs tests in this assembly with supplied command-line options. Returns 0 if all tests passed, otherwise 1
   let defaultMainThisAssembly args =

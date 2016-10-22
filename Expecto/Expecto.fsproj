@@ -50,7 +50,7 @@
   <ItemGroup>
     <Compile Include="AssemblyVersionInfo.fs" />
     <Compile Include="Expecto.fs" />
-    <Compile Include="Assertions.fs" />
+    <Compile Include="Expect.fs" />
     <Content Include="paket.references" />
   </ItemGroup>
   <ItemGroup>

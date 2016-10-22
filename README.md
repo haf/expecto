@@ -5,16 +5,18 @@ properly updated and pushed to nuget when PRs come in. It aims to be an
 opinionated testing framework with batteries included, while still being
 compositional (just like Suave and Logary are). Former README follows:
 
+In your paket.dependencies:
+
+```
+nuget Expecto
+```
+
 It draws heavily from Haskell's [test-framework](http://batterseapower.github.com/test-framework/) and [HUnit](http://hunit.sourceforge.net/).
 You can read about the rationale and underlying concepts in [this blog post](http://bugsquash.blogspot.com/2012/06/fuchu-functional-test-library-for-net.html),
 or TL;DR: tests should be first-class values so that you can move them around and execute
 them in any context that you want. Also, if they are first-class values, then you can take
 extra care with what the test methods return, making integrations with external libraries
 much cheaper.
-
-## Binaries
-
-Binaries are available on [NuGet](https://nuget.org/packages?q=expecto).
 
 ## Writing tests
 
@@ -23,9 +25,9 @@ Here's the simplest test possible:
 ```fsharp
 open Expecto
 
-let simpleTest = 
-  testCase "A simple test" <| 
-    fun _ -> Assert.Equal("2+2", 4, 2+2)
+let simpleTest =
+  testCase "A simple test" <| fun _ ->
+    Expect.equal  ("2+2", 4, 2+2)
 ```
 
 Tests can be grouped (with arbitrary nesting):
