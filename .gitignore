@@ -14,3 +14,4 @@ packages/*
 .nuget/*.exe
 *.sln.ide
 project.lock.json
+paket-files/

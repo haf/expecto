@@ -1,8 +1,11 @@
 NUGET
   remote: https://www.nuget.org/api/v2
-    FsCheck (2.2.4) - framework: >= net45
+    FsCheck (2.6.2)
       FSharp.Core (>= 3.1.2.5)
     FSharp.Core (3.1.2.5)
-    FSharpx.Core (1.8.41) - framework: >= net40
+    FSharpx.Core (1.8.32)
     NuGet.CommandLine (3.4.3)
-    PerfUtil (0.1.8) - framework: >= net40
+    PerfUtil (0.1.8)
+GITHUB
+  remote: logary/logary
+    src/Logary.Facade/Facade.fs (a131dce06cd491e75db74b7c2467d84814d81200)

@@ -30,13 +30,19 @@ build :quick_compile do |b|
 end
 
 task :paket_bootstrap do
-  system 'tools/paket.bootstrapper.exe', clr_command: true unless   File.exists? 'tools/paket.exe'
+  system 'tools/paket.bootstrapper.exe', clr_command: true unless File.exists? 'tools/paket.exe'
+end
+
+task :paket_files do
+  sh %{ruby -pi.bak -e "gsub(/namespace Logary.Facade/, 'namespace Expecto.Logging')" paket-files/logary/logary/src/Logary.Facade/Facade.fs}
+end
+
+task :restore_quick do
+  system 'tools/paket.exe', 'restore', clr_command: true
 end
 
 desc 'restore all nugets as per the packages.config files'
-task :restore => :paket_bootstrap do
-  system 'tools/paket.exe', 'restore', clr_command: true
-end
+task :restore => [:paket_bootstrap, :paket_files]
 
 desc 'Perform full build'
 build :compile => [:versioning, :restore, :assembly_info] do |b|
@@ -55,7 +61,7 @@ nugets_pack :create_nugets => ['build/pkg', :versioning, :compile] do |p|
   p.exe     = 'packages/NuGet.CommandLine/tools/NuGet.exe'
   p.with_metadata do |m|
     # m.id          = 'MyProj'
-    m.title       = 'Expecto'
+    m.title       = 'Expecto Expecto'
     m.description = 'Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.'
     m.authors     = 'Henrik Feldt, Logibit AB, formerly @mausch'
     m.project_url = 'https://github.com/haf/expecto'
