@@ -256,13 +256,18 @@ let timeouts =
       testList "raise" [
         testCase "pass" <| fun _ ->
           Expect.throwsT<ArgumentNullException> (fun _ -> nullArg "")
+                                                "Should throw null arg"
 
         testCase "fail with incorrect exception" <| fun _ ->
-          let test () = Expect.throwsT<ArgumentException> (fun _ -> nullArg "")
+          let test () =
+            Expect.throwsT<ArgumentException> (fun _ -> nullArg "")
+                                              "Expected argument exception."
+
           assertTestFails test
 
         testCase "fail with no exception" <| fun _ ->
-          let test () = Expect.throwsT<ArgumentNullException> ignore
+          let test () =
+            Expect.throwsT<ArgumentNullException> ignore "Ignore 'should' throw an exn, ;)"
           assertTestFails test
       ]
 
@@ -278,7 +283,7 @@ let timeouts =
 
     testList "computation expression" [
       let testNormal a =
-        testCase "" <| fun _ ->
+        testCase "failing inside testCase" <| fun _ ->
           if a < 0
               then failtest "negative"
           if a > 5

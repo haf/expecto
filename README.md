@@ -16,7 +16,34 @@ nuget Expecto
 Tests should be first-class values so that you can move them around and execute
 them in any context that you want.
 
-## Writing tests
+## Testing "Hello world"
+
+The test runner is the test assembly itself. It's recommended to compile your
+test assembly as a console application. You can run a test directly like this:
+
+```fsharp
+open Expecto
+
+[<Tests>]
+let tests =
+  testCase "yes" <| fun () ->
+    let subject = "Hello world"
+    Expect.equal subject "Hello World"
+                 "The strings should equal"
+
+[<EntryPoint>]
+let main args =
+  defaultMainThisAssembly args
+```
+
+This `defaultMainThisAssembly` function admits a "/m" parameter passed through
+the command-line to run tests in parallel.
+
+The base class is called `Expect`, containing functions you can use to assert
+with. A testing library without a good assertion library is like love without
+kisses.
+
+## Run with `run`
 
 Here's the simplest test possible:
 
@@ -28,74 +55,73 @@ let simpleTest =
     Expect.equal  ("2+2", 4, 2+2)
 ```
 
-Tests can be grouped (with arbitrary nesting):
+You can run it like this, e.g. in the interactive.
 
 ```fsharp
-let tests =
-  testList "A test group" [
-    testCase "one test" <|
-      fun _ -> Assert.Equal("2+2", 4, 2+2)
-    testCase "another test" <|
-      fun _ -> Assert.Equal("3+3", 3, 3+3)
-  ]
-```
-
-The first parameter in the assertions describes the assertion. This is usually
-an optional parameter in most test frameworks; in Expecto it's required to
-foster descriptive failures, so you'll get a failure like "3+3 Expected value 3,
-actual 6" instead of just "Expected value 3, actual 6".
-
-For more examples, including a few ways to do common things in other test
-frameworks like setup/teardown and parameterized tests, see the [F#
-tests](https://github.com/haf/expecto/blob/master/Expecto.Tests/Tests.fs).
-
-## Expectations
-
-The base class is called `Expect`, containing F# functions you can use to assert
-with. A testing library without a good assertion library is like love without
-kisses.
-
-## Hello world
-
-The test runner is the test assembly itself. It's recommended to compile your
-test assembly as a console application. You can run a test directly like this:
-
-```fsharp
-// alt 1:
+open Expecto
 runParallel simpleTest
-// alt 2:
+// or:
 run simpleTest
 ```
 
 which returns 1 if any tests failed, otherwise 0. Useful for returning to the
-operating system as error code. Or you can mark the top-level test in each test
-file with the `[<Tests>]` attribute, then define your main like this:
+operating system as error code.
+
+
+### `testList` for grouping
+
+Tests can be grouped (with arbitrary nesting):
+
+```fsharp
+[<Tests>]
+let tests =
+  testList "A test group" [
+    testCase "one test" <| fun _ ->
+      Expect.equal (2+2) 4 "2+2"
+    testCase "another test that fails" <| fun _ ->
+      Expect.equal (3+3) 5 "3+3"
+  ]
+```
+
+### Filtering with `filter`
+
+You can single out tests by filtering them by name (e.g. in the
+interactive/REPL). For example:
 
 ```fsharp
 open Expecto
-
-[<Tests>]
-let tests =
-  testCase "yes" <| fun () ->
-    Expect.isTrue true "Should be true"
-
-[<EntryPoint>]
-let main args =
-  defaultMainThisAssembly args
+open MyLib.Tests
+integrationTests // from MyLib.Tests
+|> Test.filter (fun s -> s.EndsWith "another test") // the filtering function
+|> run // from Expecto
 ```
 
-This `defaultMainThisAssembly` function admits a "/m" parameter passed through
-the command-line to run tests in parallel.
+## Expectations
 
-You can single out tests by filtering them by name. For example:
+All expect-functions have the signature `actual -> expected -> msg -> _`,
+leaving out `expected` when obvious from the function.
 
-```fsharp
-tests
-|> Test.filter (fun s -> s.EndsWith "another test")
-|> run
-```
+### `Expect` module
 
-You can use the F# REPL to run tests this way.
+ - `throws`
+ - `throwsC`
+ - `throwsT`
+ - `isNone`
+ - `isSome`
+ - `isChoice1Of2`
+ - `isChoice2Of2`
+ - `isNotNull`
+ - `isNull`
+ - `isLessThan`
+ - `isLessThanOrEqual`
+ - `isGreaterThan`
+ - `isGreaterThanOrEqual`
+ - `floatEqual`
+ - `notEqual`
+ - `isFalse`
+ - `isTrue`
+ - `sequenceEqual`
+ - `stringContains`
 
 ## FsCheck usage
 

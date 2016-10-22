@@ -2,138 +2,165 @@
 
 open System
 
-let throws f =
+let throws f format =
+  let msg = Printf.ksprintf (fun msg -> msg) format
   try
     f ()
-    Tests.failtest "Expected f to throw"
+    Tests.failtestf "%s. Expected f to throw." msg
   with e ->
     ()
 
-let throwsc f cont =
+let throwsC f cont =
   try
     f ()
-    Tests.failtest "Expected f to throw"
+    Tests.failtest "Expected f to throw."
   with e ->
     cont e
 
-let throwsT<'texn> f : unit =
+let throwsT<'texn> f format =
+  let msg = Printf.ksprintf (fun msg -> msg) format
   try
     f ()
-    Tests.failtest "Expected f to throw"
+    Tests.failtestf "%s. Expected f to throw." msg
   with
   | e when e.GetType() <> typeof<'texn> ->
-    Tests.failtestf "Expected f to throw of type %s" (typeof<'texn>.Name)
+    Tests.failtestf "%s. Expected f to throw an exn of type %s."
+                    msg
+                    (typeof<'texn>.Name)
   | e ->
     ()
 
 
-let isNone x msg =
+let isNone x format =
   match x with
   | None -> ()
-  | Some x -> Tests.failtestf "Expected None, was Some(%A). %s" x msg
+  | Some x ->
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Expected None, was Some(%A)."
+                    msg x
 
-let isNonef value format =
-  match value with
-  | None -> ()
-  | Some x -> Printf.kprintf Tests.failtest format x
-
-let isSome x msg =
+let isSome x format =
   match x with
-  | None -> Tests.failtestf "Expected Some _, was None. %s" msg
-  | Some _ -> ()
+  | None ->
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Expected Some _, was None." msg
+  | Some _ ->
+    ()
 
-let isChoice1Of2 = function
+let isChoice1Of2 x format =
+  match x with
   | Choice1Of2 _ -> ()
-  | Choice2Of2 x -> Tests.failtestf "Expected Choice1Of2, was Choice2Of2(%A)" x
+  | Choice2Of2 x ->
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Expected Choice1Of2, was Choice2Of2(%A)." msg x
 
-let isChoice1Of2f value format =
-  match value with
-  | Choice1Of2 _ -> ()
-  | Choice2Of2 x -> Printf.kprintf Tests.failtest format x
-
-let isChoice2Of2 = function
-  | Choice1Of2 x -> Tests.failtestf "Expected Choice2Of2 _, was Choice1Of2(%A)" x
-  | Choice2Of2 _ -> ()
-
-let isChoice2Of2f value format =
-  match value with
-  | Choice1Of2 x -> Printf.kprintf Tests.failtest format x
-  | Choice2Of2 _ -> ()
+let isChoice2Of2 x format =
+  match x with
+  | Choice1Of2 x ->
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Expected Choice2Of2 _, was Choice1Of2(%A)."
+                    msg x
+  | Choice2Of2 _ ->
+    ()
 
 let isNotNull x format =
   match x with
-  | null -> Tests.failtestf format
+  | null ->
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtest msg
   | x -> ()
 
-let isNull = function
+let isNull x format =
+  match x with
   | null -> ()
-  | x -> Tests.failtestf "Expected null, but was %A" x
+  | x ->
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Expected null, but was %A."
+                    msg x
 
-let isNullf value format =
-  match value with
-  | null -> ()
-  | x -> Printf.kprintf Tests.failtest format x
-
-let isLessThan a b msg =
+let isLessThan a b format =
   if a < b then ()
-  else Tests.failtestf "Expected a (%A) to be less than b (%A)" a b
+  else
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Expected a (%A) to be less than b (%A)."
+                    msg a b
 
-let isLessThanOrEqual a b msg =
+let isLessThanOrEqual a b format =
   if a <= b then ()
-  else Tests.failtestf "Expected a (%A) to be less than or equal to b (%A)" a b
+  else
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Expected a (%A) to be less than or equal to b (%A)."
+                    msg a b
 
-let isGreaterThan a b msg =
+let isGreaterThan a b format =
   if a > b then ()
-  else Tests.failtestf "Expected a (%A) to be greater than or equal to b (%A)" a b
+  else
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)."
+                    msg a b
 
-let isGreaterThanOrEqual a b msg =
+let isGreaterThanOrEqual a b format =
   if a >= b then ()
-  else Tests.failtestf "Expected a (%A) to be greater than or equal to b (%A)" a b
+  else
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)"
+                    msg a b
 
   /// specify two floats equal within a given error - epsilon.
-let floatEqual actual expected epsilon msg =
+let floatEqual actual expected epsilon format =
   let epsilon = defaultArg epsilon 0.001
   if expected <= actual + epsilon && expected >= actual - epsilon then
     ()
   else
-    Tests.failtestf "Actual value was %f but was expected to be %f within %f epsilon. %s"
-                    actual expected epsilon msg
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Actual value was %f but was expected to be %f within %f epsilon."
+                    msg actual expected epsilon
 
-let equal (actual : 'a) (expected : 'a) (msg : string) =
+let equal (actual : 'a) (expected : 'a) format =
   if expected = actual then ()
-  else Tests.failtestf "Actual value was %A but had expected it to be: %A. %s"
-                       actual expected msg
+  else
+    let msg = Printf.ksprintf id format
+    Tests.failtestf "%s. Actual value was %A but had expected it to be %A."
+                    msg actual expected msg
 
-let notEqual (actual : 'a) (expected : 'a) (msg : string) =
+let notEqual (actual : 'a) (expected : 'a) format =
   if expected <> actual then ()
-  else Tests.failtestf "Actual value was equal to %A but had expected it non-equal. %s"
-                       actual msg
+  else
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Actual value was equal to %A but had expected it non-equal."
+                    msg actual
 
-let isFalse actual msg =
+let isFalse actual format =
   if not actual then ()
-  else Tests.failtest msg
+  else
+    Printf.ksprintf Tests.failtest format
 
-let isTrue actual msg =
+let isTrue actual format =
   if actual then ()
-  else Tests.failtest msg
+  else
+    Printf.ksprintf Tests.failtest format
 
-let sequenceEqual (actual : _ seq) (expected : _ seq) msg =
+let sequenceEqual (actual : _ seq) (expected : _ seq) format =
   use ai = actual.GetEnumerator()
   use ei = expected.GetEnumerator()
   let mutable i = 0
   while ei.MoveNext() do
     if ai.MoveNext() then
       if ai.Current = ei.Current then ()
-      else Tests.failtestf "%s. Sequence do not match at position %i. Expected: %A, but got %A"
+      else
+        let msg = Printf.ksprintf (fun msg -> msg) format
+        Tests.failtestf "%s. Sequence do not match at position %i. Expected: %A, but got %A."
                            msg i (ei.Current) (ai.Current)
     else
-      Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A"
+      let msg = Printf.ksprintf (fun msg -> msg) format
+      Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A."
                       msg i (ei.Current)
     i <- i + 1
 
 /// Ensures that the subject string contains the given substring. Otherwise
 /// fails with the passed message.
-let stringContains (subject : string) (substring : string) (message : string) =
+let stringContains (subject : string) (substring : string) format =
   if not (subject.Contains(substring)) then
-    Tests.failtestf "Expected subject string '%s' to contain substring '%s'. %s"
-                    subject substring message
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Expected subject string '%s' to contain substring '%s'."
+                    msg subject substring

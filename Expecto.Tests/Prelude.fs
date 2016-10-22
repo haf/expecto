@@ -1,4 +1,5 @@
 ﻿namespace Expecto
+#nowarn "44"
 
 open System
 open FSharpx
