@@ -11,6 +11,8 @@ In your paket.dependencies:
 
 ```
 nuget Expecto
+nuget Expecto.PerfUtil
+nuget Expecto.FsCheck
 ```
 
 Tests should be first-class values so that you can move them around and execute
