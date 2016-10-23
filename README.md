@@ -142,6 +142,7 @@ This module is your main entry-point when asserting.
 
 Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in your code:
 
+ - `--debug`: Extra verbose output for your tests.
  - `--sequenced`: Run all tests in sequence.
  - `--parallel`: (default) Run all tests in parallel.
  - `--filter <hiera>`: Filter a specific hierarchy to run (**TBD**).
