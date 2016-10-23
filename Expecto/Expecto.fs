@@ -229,7 +229,10 @@ module Impl =
 
   /// Hooks to print report through test run
   type TestPrinters =
-    { beforeRun: string -> unit
+    { /// Called before a test run (e.g. at the top of your main function)
+      beforeRun: Test -> unit
+      /// Called before atomic test (TestCode) is executed.
+      beforeEach: string -> unit
       /// test name -> time taken -> unit
       passed: string -> TimeSpan -> unit
       /// test name -> ignore message -> unit
@@ -238,11 +241,14 @@ module Impl =
       failed: string -> string -> TimeSpan -> unit
       /// test name -> exception -> time taken -> unit
       exn: string -> exn -> TimeSpan -> unit
-
+      /// Prints a summary given the test result counts
       summary : TestResultCounts -> unit }
 
     static member Default =
-      { beforeRun = fun n ->
+      { beforeRun = fun tests ->
+          logger.info (eventX "EXPECTO? Running tests...")
+
+        beforeEach = fun n ->
           logger.debug (
             eventX "{testName} starting..."
             >> setField "testName" n)
@@ -299,7 +305,7 @@ module Impl =
 
       fun (printers: TestPrinters) map ->
           let execOne (name: string, test) =
-              printers.beforeRun name
+              printers.beforeEach name
               let w = System.Diagnostics.Stopwatch.StartNew()
               try
                 test()
@@ -358,6 +364,8 @@ module Impl =
 
   /// Runs tests, returns error code
   let runEval printer eval (tests: Test) =
+    printer.beforeRun tests
+
     let w = System.Diagnostics.Stopwatch.StartNew()
     let results = eval tests
     w.Stop()
@@ -418,6 +426,7 @@ module Impl =
 
 [<AutoOpen; Extension>]
 module Tests =
+  open Expecto.Logging
   open Impl
   open Helpers
   open Argu
@@ -450,23 +459,23 @@ module Tests =
 
   type TestCaseBuilder(name) =
       member x.TryFinally(f, compensation) =
-          try
-              f()
-          finally
-              compensation()
+        try
+          f()
+        finally
+          compensation()
       member x.TryWith(f, catchHandler) =
-          try
-              f()
-          with e -> catchHandler e
+        try
+          f()
+        with e -> catchHandler e
       member x.Using(disposable: #IDisposable, f) =
-          try
-              f disposable
-          finally
-              match disposable with
-              | null -> ()
-              | disp -> disp.Dispose()
+        try
+          f disposable
+        finally
+          match disposable with
+          | null -> ()
+          | disp -> disp.Dispose()
       member x.For(sequence, f) =
-          for i in sequence do f i
+        for i in sequence do f i
       member x.Combine(f1, f2) = f2(); f1
       member x.Zero() = ()
       member x.Delay f = f
@@ -489,22 +498,25 @@ module Tests =
       /// state by default.
       parallel : bool
       /// An optional filter function. Useful if you only would
-      /// like to run a subset of all the tests defined in your
-      /// assembly.
+      /// like to run a subset of all the tests defined in your assembly.
       filter   : Test -> Test
-      /// Allows the test printer to be parametised to your
-      /// liking.
-      printer : TestPrinters }
+      /// Allows the test printer to be parametised to your liking.
+      printer : TestPrinters
+      /// Verbosity level (default: Info)
+      verbosity : LogLevel
+    }
 
   /// The default configuration for Expecto.
   let defaultConfig =
-    { parallel = true
-      filter   = id
-      printer  = TestPrinters.Default }
+    { parallel  = true
+      filter    = id
+      printer   = TestPrinters.Default
+      verbosity = Logging.Info }
 
   type CLIArguments =
     | Sequenced
     | Parallel
+    | Debug
     | Filter of hiera:string
     | FilterTestList of substring:string
     | FilterTestCase of substring:string
@@ -514,6 +526,7 @@ module Tests =
         match s with
         | Sequenced -> "Don't run the tests in parallel."
         | Parallel -> "Run all tests in parallel (default)."
+        | Debug -> "Extra verbose printing. Useful to combine with --sequenced."
         | Filter _ -> "Filter the list of tests by a hierarchy that's slash (/) separated."
         | FilterTestList _ -> "Filter the list of test lists by a substring."
         | FilterTestCase _ -> "Filter the list of test cases by a substring."
@@ -532,6 +545,7 @@ module Tests =
         function
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
         | Parallel -> fun o -> { o with parallel = true }
+        | Debug -> fun o -> { o with verbosity = Logging.Debug }
         | Filter _ -> fun o -> failwith "TODO: PRs much appreciated."
         | FilterTestList _ -> fun o -> failwith "TODO: PRs much appreciated."
         | FilterTestCase _ -> fun o -> failwith "TODO: PRs much appreciated."
@@ -550,6 +564,9 @@ module Tests =
   /// otherwise 1
   let runTests config tests =
     let run = if config.parallel then runParallel else run
+    Global.initialiseIfDefault
+      { Global.DefaultConfig with
+          getLogger = fun name -> LiterateConsoleTarget config.verbosity :> Logger }
     run config.printer tests
 
   /// Runs tests in this assembly with supplied command-line options. Returns 0 if all tests passed, otherwise 1
