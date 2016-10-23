@@ -140,6 +140,13 @@ let isTrue actual format =
   else
     Printf.ksprintf Tests.failtest format
 
+let contains sequence element format =
+  match sequence |> Seq.tryFind ((=) element) with
+  | Some _ -> ()
+  | None ->
+    let msg = Printf.ksprintf (fun msg -> msg) format
+    Tests.failtestf "%s. Sequence did not contain %A." msg element
+
 let sequenceEqual (actual : _ seq) (expected : _ seq) format =
   use ai = actual.GetEnumerator()
   use ei = expected.GetEnumerator()
