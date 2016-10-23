@@ -44,6 +44,8 @@ The base class is called `Expect`, containing functions you can use to assert
 with. A testing library without a good assertion library is like love without
 kisses.
 
+Now compile and run! `xbuild Sample.fsproj && mono --debug bin/Debug/Sample.exe`
+
 ## Running tests
 
 Here's the simplest test possible:
