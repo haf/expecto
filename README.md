@@ -55,7 +55,8 @@ open Expecto
 
 let simpleTest =
   testCase "A simple test" <| fun _ ->
-    Expect.equal  ("2+2", 4, 2+2)
+    let expected = 4
+    Expect.equal expected (2+2) "2+2 = 4"
 ```
 
 Then run it like this, e.g. in the interactive or through a console app.
@@ -141,7 +142,33 @@ This module is your main entry-point when asserting.
 
 ## `main argv` – how to run console apps
 
+Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in your code:
 
+ - `--sequenced`: Run all tests in sequence.
+ - `--parallel`: (default) Run all tests in parallel.
+ - `--filter <hiera>`: Filter a specific hierarchy to run (**TBD**).
+ - `--filter-test-list <substring>`: Filter a specific test list to run
+   (**TBD**).
+ - `--filter-test-case <substring>`: Filter a specific test case to run
+   (**TBD**).
+
+### The config
+
+If you prefer using F# to configure the tests, you can set the properties of the
+ExpetoConfig record, that looks like:
+
+```fsharp
+{ /// Whether to run the tests in parallel. Defaults to true, because your
+  /// code should not mutate global state by default.
+  parallel : bool
+  /// An optional filter function. Useful if you only would like to run a
+  /// subset of all the tests defined in your assembly.
+  filter   : Test -> Test
+  /// Allows the test printer to be parametised to your liking.
+  printer : TestPrinters }
+```
+
+By doing a `let config = { defaultConfig with parallel = true }`, for example.
 
 ## FsCheck usage
 
