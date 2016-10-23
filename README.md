@@ -319,3 +319,33 @@ let main argv =
   // run all tests
   Tests.runTestsInAssembly defaultConfig args
 ```
+
+## About test parallelism
+
+Since the default is to run all of your tests in parallel, it's important that
+you don't use global variables, global singletons or mutating code. If you do,
+you'll have to slow down all of your tests by sequencing them (or use locks in
+your testing code).
+
+Furthermore, `printfn` and sibling functions aren't thread-safe, i.e. a given
+string may be logged in many passes and concurrent calls to printfn and
+Console.X-functions have their outputs interleaved. If you want to log from
+tests, you can use code like:
+
+```
+open Expecto.Logging
+open Expecto.Logging.Message
+
+let logger = Log.create "MyTests"
+
+// stuff here
+
+testCase "reading prop" <| fun _ ->
+  let subject = MyComponent()
+  // this will output to the right test context:
+  logger.info(
+    eventX "Has prop {property}"
+    >> setField "property" subject.property)
+  Expect.equal subject.property "Goodbye" "Should have goodbye as its property"
+```
+
