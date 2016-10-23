@@ -9,4 +9,4 @@ NUGET
     PerfUtil (0.1.8)
 GITHUB
   remote: logary/logary
-    src/Logary.Facade/Facade.fs (a131dce06cd491e75db74b7c2467d84814d81200)
+    src/Logary.Facade/Facade.fs (0744a14f83aff2e1d87741af1911a6ae1b0603d5) 4b21d888e83d72d1238ab0f36110e2a3946240e7

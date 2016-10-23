@@ -7,4 +7,4 @@ nuget FSharpx.Core
 nuget PerfUtil
 nuget NuGet.CommandLine
 
-github logary/logary src/Logary.Facade/Facade.fs
+github logary/logary src/Logary.Facade/Facade.fs 4b21d888e83d72d1238ab0f36110e2a3946240e7
