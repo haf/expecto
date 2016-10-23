@@ -20,6 +20,11 @@ nuget Expecto.FsCheck
 Tests should be first-class values so that you can move them around and execute
 them in any context that you want.
 
+Let's have look at what an extensive unit test suite looks like when running
+with Expecto:
+
+![Sample output from Logary](docs/sample-output-logary.png)
+
 ## Testing "Hello world"
 
 The test runner is the test assembly itself. It's recommended to compile your
@@ -45,6 +50,7 @@ with. A testing library without a good assertion library is like love without
 kisses.
 
 Now compile and run! `xbuild Sample.fsproj && mono --debug bin/Debug/Sample.exe`
+
 
 ## Running tests
 
