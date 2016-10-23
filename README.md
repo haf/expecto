@@ -288,26 +288,34 @@ open Logary
 open Logary.Configuration
 open Logary.Adapters.Facade
 open Logary.Targets
+open Hopac
 open Mailgun
 open System.Net.Mail
 
-let mgc =
-  MailgunLogaryConf.Create(
-    MailAddress("travis@example.com"),
-    [ MailAddress("Your.Mail.Here@example.com") ],
-    { apiKey = "deadbeef-2345678" },
-    "example.com", // sending domain of yours
-    Error) // cut-off level
+let main argv =
+  let mgc =
+    MailgunLogaryConf.Create(
+      MailAddress("travis@example.com"),
+      [ MailAddress("Your.Mail.Here@example.com") ],
+      { apiKey = "deadbeef-2345678" },
+      "example.com", // sending domain of yours
+      Error) // cut-off level
 
-use logary =
-  withLogary...
-// init-code (see link above)
-    withTarget (Mailgun.create mgc "mailgun")
-// more init-code (see link above)
+  use logary =
+    withLogaryManager "MyTests" (
+      withTargets [
+        LiterateConsole.create LiterateConsole.empty "stdout"
+        Mailgun.create mgc "mail"
+      ]
+      >> withRules [
+        Rule.createForTarget "stdout"
+        Rule.createForTarget "mail"
+      ])
+    |> run
 
-// initialise logary:
-LogaryFacadeAdapter.initialise<Expecto.Logging.Logger> logary
+  // initialise Logary Facade with Logary proper:
+  LogaryFacadeAdapter.initialise<Expecto.Logging.Logger> logary
 
-// run all tests
-Tests.runTestsInAssembly defaultConfig args
+  // run all tests
+  Tests.runTestsInAssembly defaultConfig args
 ```
