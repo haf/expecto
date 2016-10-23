@@ -273,3 +273,41 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
 
 * [Suave](https://github.com/SuaveIO/suave/tree/master/src/Suave.Tests)
 * [Logary](https://github.com/logary/logary)
+
+## Custom printers
+
+The printing mechanism in Expecto is based on the [Logary
+Facade](https://github.com/logary/logary#the-logary-facade-adapter), which
+grants some privileges, like being able to use **any** Logary target to print.
+Just follow the above link to learn how to initialise Logary. Then if you wanted
+to get notified over e-mail whenever one of your tests fail, configure Logary
+with `Logary.Targets.Mailgun`:
+
+```fsharp
+open Logary
+open Logary.Configuration
+open Logary.Adapters.Facade
+open Logary.Targets
+open Mailgun
+open System.Net.Mail
+
+let mgc =
+  MailgunLogaryConf.Create(
+    MailAddress("travis@example.com"),
+    [ MailAddress("Your.Mail.Here@example.com") ],
+    { apiKey = "deadbeef-2345678" },
+    "example.com", // sending domain of yours
+    Error) // cut-off level
+
+use logary =
+  withLogary...
+// init-code (see link above)
+    withTarget (Mailgun.create mgc "mailgun")
+// more init-code (see link above)
+
+// initialise logary:
+LogaryFacadeAdapter.initialise<Expecto.Logging.Logger> logary
+
+// run all tests
+Tests.runTestsInAssembly defaultConfig args
+```
