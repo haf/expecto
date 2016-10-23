@@ -6,4 +6,5 @@ nuget FSharp.Core ~> 3
 nuget FSharpx.Core
 nuget PerfUtil
 nuget NuGet.CommandLine
+
 github logary/logary src/Logary.Facade/Facade.fs
