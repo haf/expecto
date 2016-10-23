@@ -274,7 +274,7 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
 * [Suave](https://github.com/SuaveIO/suave/tree/master/src/Suave.Tests)
 * [Logary](https://github.com/logary/logary)
 
-## Custom printers
+## Sending e-mail on failure – custom printers
 
 The printing mechanism in Expecto is based on the [Logary
 Facade](https://github.com/logary/logary#the-logary-facade-adapter), which
