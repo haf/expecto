@@ -119,9 +119,10 @@ let floatEqual actual expected epsilon format =
 let equal (actual : 'a) (expected : 'a) format =
   if expected = actual then ()
   else
-    let msg = Printf.ksprintf id format
-    Tests.failtestf "%s. Actual value was %A but had expected it to be %A."
-                    msg actual expected msg
+    Printf.ksprintf (fun msg ->
+      Tests.failtestf "%s. Actual value was %A but had expected it to be %A."
+                      msg actual expected
+    ) format
 
 let notEqual (actual : 'a) (expected : 'a) format =
   if expected <> actual then ()

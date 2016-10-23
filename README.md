@@ -139,6 +139,7 @@ This module is your main entry-point when asserting.
  - `isTrue`
  - `sequenceEqual`
  - `stringContains`
+ - `contains : _ seq -> _ -> PSF<,> -> unit`
 
 ## `main argv` – how to run console apps
 
