@@ -111,10 +111,7 @@ integrationTests // from MyLib.Tests
 
 ## Expectations
 
-All expect-functions have the signature
-`actual -> expected -> PrintfStringFormat<,> -> _`, leaving out
-`expected` when obvious from the function; use the printf syntax to interpolate
-data into your strings to make your assertions more contextually relevant.
+All expect-functions have the signature `actual -> expected -> string -> unit`, leaving out `expected` when obvious from the function.
 
 ### `Expect` module
 
@@ -139,7 +136,7 @@ This module is your main entry-point when asserting.
  - `isTrue`
  - `sequenceEqual`
  - `stringContains`
- - `contains : _ seq -> _ -> PSF<,> -> unit`
+ - `contains : 'a seq -> 'a -> string -> unit`
 
 ## `main argv` – how to run console apps
 
