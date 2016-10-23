@@ -332,7 +332,7 @@ string may be logged in many passes and concurrent calls to printfn and
 Console.X-functions have their outputs interleaved. If you want to log from
 tests, you can use code like:
 
-```
+```fsharp
 open Expecto.Logging
 open Expecto.Logging.Message
 
