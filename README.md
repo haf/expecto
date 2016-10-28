@@ -141,7 +141,12 @@ This module is your main entry-point when asserting.
  - `isFalse`
  - `isTrue`
  - `sequenceEqual`
- - `stringContains`
+ - `stringContains` – Expect the string `subject` to contain `substring` as part
+   of itself.  If it does not, then fail with `format` and `subject` and
+   `substring` as part of the error message.
+ - `stringStarts` – Expect the string `subject` to start with `prefix` and if it
+   does not then fail with `format` as an error message together with a
+   description of `subject` and `prefix`.
  - `contains : 'a seq -> 'a -> string -> unit`
 
 ## `main argv` – how to run console apps

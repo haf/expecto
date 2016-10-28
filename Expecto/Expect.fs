@@ -144,9 +144,18 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
                       format i (ei.Current)
     i <- i + 1
 
-/// Ensures that the subject string contains the given substring. Otherwise
-/// fails with the passed message.
+/// Expect the string `subject` to contain `substring` as part of itself.
+/// If it does not, then fail with `format` and `subject` and `substring`
+/// as part of the error message.
 let stringContains (subject : string) (substring : string) format =
   if not (subject.Contains(substring)) then
     Tests.failtestf "%s. Expected subject string '%s' to contain substring '%s'."
                     format subject substring
+
+/// Expect the string `subject` to start with `prefix`. If it does not
+/// then fail with `format` as an error message together with a description
+/// of `subject` and `prefix`.
+let stringStarts (subject : string) (prefix : string) format =
+  if not (subject.StartsWith prefix) then
+    Tests.failtestf "%s. Expected subject string '%s' to start with '%s'."
+                    format subject prefix
