@@ -6,12 +6,10 @@ open Expecto
 open BenchmarkDotNet
 
 type Md5VsSha256() =
-  [<Literal>]
-  let N = 10000
-  let data : byte[] = Array.zeroCreate N
-  let sha256 = SHA256.Create()
-  let md5 = MD5.Create()
+  let data : byte[] = Array.zeroCreate 10000
   do Random(42).NextBytes data
+
+  let md5, sha256 = MD5.Create(), SHA256.Create()
 
   [<Benchmark>]
   member x.Sha256() = sha256.ComputeHash data
