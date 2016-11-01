@@ -15,3 +15,4 @@ packages/*
 *.sln.ide
 project.lock.json
 paket-files/
+BenchmarkDotNet.Artifacts/

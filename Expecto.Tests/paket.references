@@ -1,3 +1,4 @@
 FsCheck
 FSharp.Core
 FSharpx.Core
+BenchmarkDotNet
