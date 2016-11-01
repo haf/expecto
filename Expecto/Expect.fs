@@ -1,4 +1,6 @@
 ﻿module Expecto.Expect
+[<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Expecto.BenchmarkDotNet")>]
+()
 
 open System
 

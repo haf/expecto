@@ -43,9 +43,9 @@
       <Name>Expecto.fsproj</Name>
       <Project>{c0d55728-10a9-4a7a-9df9-d2f21f663ac2}</Project>
     </ProjectReference>
-    <ProjectReference Include="../Expecto.PerfUtil/Expecto.PerfUtil.fsproj">
-      <Name>Expecto.PerfUtil.fsproj</Name>
-      <Project>{ae969ed0-0a3b-44b3-8459-4f19e486434a}</Project>
+    <ProjectReference Include="../Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj">
+      <Name>Expecto.BenchmarkDotNet.fsproj</Name>
+      <Project>{0acabeaa-29bd-4f9f-89db-0d03b5afc952}</Project>
     </ProjectReference>
     <ProjectReference Include="../Expecto.FsCheck/Expecto.FsCheck.fsproj">
       <Name>Expecto.FsCheck.fsproj</Name>
