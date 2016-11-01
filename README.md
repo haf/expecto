@@ -204,12 +204,14 @@ run properties
 
 You can freely mix testProperty with testCase and testList.
 
-## PerfUtil usage
+## BenchmarkDotNet usage
 
-The integration with Eirik's PerfUtil project.
+The integration with
+[BenchmarkDotNet](https://perfdotnet.github.io/BenchmarkDotNet/index.htm).
 
 ```fsharp
-open global.PerfUtil
+open Expecto
+open BenchmarkDotNet
 
 module Types =
   type Y = { a : string; b : int }
@@ -239,43 +241,38 @@ type FastSerialiserAlt() =
     member x.Serialise _ =
      System.Threading.Thread.Sleep(20)
 
-let alts : Serialiser list =
-  [ FastSerialiser()
-    FastSerialiserAlt() ]
-let subj =
-  MySlowSerialiser() :> Serialiser
+type Serialisers() =
+  let fast, fastAlt, slow =
+    FastSerialiser() :> Serialiser,
+    FastSerialiserAlt() :> Serialiser,
+    MySlowSerialiser() :> Serialiser
+
+  [<Benchmark>]
+  member x.FastSerialiserAlt() = fastAlt.Serialise "Hello world"
+
+  [<Benchmark>]
+  member x.SlowSerialiser() = slow.Serialise "Hello world"
+
+  [<Benchmark(Baseline = true)>]
+  member x.FastSerialiser() = fast.Serialise "Hello world"
 
 open Types
-
-let normalSerialisation : PerfTest<Serialiser> list =
-  [ perfTest "serialising string" <| fun s ->
-      s.Serialise("wowowow")
-    perfTest "serialising record" <| fun s ->
-      s.Serialise { a = "hello world"; b = 42 }
-  ]
 
 [<Tests>]
 let tests =
   testList "performance tests" [
-    testPerfImpls "implementations of Serialiser" subj alts normalSerialisation
-    testPerfHistory "historical MySlowSerialiser" subj "v1.2.3" normalSerialisation
+    benchmark<Serialisers> "three serialisers" benchmarkConfig ignore
   ]
 ```
 
-This example shows both a comparison performance test between MySlowSerialiser,
-FastSerialiser and FastSerialiserAlt: `testPerfImpls` and a historical
-comparison of MySlowSerialiser alone which saves an xml file next to the dll on
-every run.
+In the current code-base I'm just printing the output to the console; and by
+default all tests are run in parallel; so you'll need to use `--sequenced` as
+input to your exe, or set parallel=false in the config to get valid results.
 
-You can find detailed docs in the source code of PerfUtil.fs on all parameters
-and data structures. All things that can be configured with PerfUtil can be
-configured with the `conf` parameter to `testPerfImplsWithConfig` and
-`testPerfHistoryWithConfig`.
+To read more about how to benchmark with BenchmarkDotNet, see its [Getting
+started](https://perfdotnet.github.io/BenchmarkDotNet/GettingStarted.htm) guide.
 
-The functions are discoverable by starting with `testPerf*`.
-
-Handle the results explicitly by giving a config with a value of
-`handleResults`. Use that if you want to export the data to e.g. CSV or TSV.
+Happy benchmarking!
 
 ## You're not alone!
 
