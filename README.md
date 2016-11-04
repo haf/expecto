@@ -130,8 +130,8 @@ This module is your main entry-point when asserting.
  - `isSome`
  - `isChoice1Of2`
  - `isChoice2Of2`
- - `isNotNull`
  - `isNull`
+ - `isNotNull`
  - `isLessThan`
  - `isLessThanOrEqual`
  - `isGreaterThan`

@@ -1,9 +1,12 @@
-﻿module Expecto.Expect
+/// A module for specifying what you expect from the values generated
+/// by your tests.
+module Expecto.Expect
 [<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Expecto.BenchmarkDotNet")>]
 ()
 
 open System
 
+/// Expects f to throw an exception.
 let throws f format =
   try
     f ()
@@ -11,6 +14,7 @@ let throws f format =
   with e ->
     ()
 
+/// Expects f to throw, and calls `cont` with its exception.
 let throwsC f cont =
   try
     f ()
@@ -18,6 +22,7 @@ let throwsC f cont =
   with e ->
     cont e
 
+/// Expects the passed function to throw `'texn`.
 let throwsT<'texn> f format =
   try
     f ()
@@ -31,6 +36,7 @@ let throwsT<'texn> f format =
     ()
 
 
+/// Expects the value to be a None value.
 let isNone x format =
   match x with
   | None ->
@@ -39,6 +45,7 @@ let isNone x format =
     Tests.failtestf "%s. Expected None, was Some(%A)."
                     format x
 
+/// Expects the value to be a Some _ value.
 let isSome x format =
   match x with
   | None ->
@@ -46,12 +53,14 @@ let isSome x format =
   | Some _ ->
     ()
 
+/// Expects the value to be a Choice1Of2 value.
 let isChoice1Of2 x format =
   match x with
   | Choice1Of2 _ -> ()
   | Choice2Of2 x ->
     Tests.failtestf "%s. Expected Choice1Of2, was Choice2Of2(%A)." format x
 
+/// Expects the value to be a Choice2Of2 value.
 let isChoice2Of2 x format =
   match x with
   | Choice1Of2 x ->
@@ -60,6 +69,7 @@ let isChoice2Of2 x format =
   | Choice2Of2 _ ->
     ()
 
+/// Expects the value not to be null.
 let isNotNull x format =
   match x with
   | null ->
@@ -67,6 +77,7 @@ let isNotNull x format =
   | x ->
     ()
 
+/// Expects the value to be null.
 let isNull x format =
   match x with
   | null -> ()
@@ -74,29 +85,34 @@ let isNull x format =
     Tests.failtestf "%s. Expected null, but was %A."
                     format x
 
+/// Expects `a` to be less than `b`.
 let isLessThan a b format =
   if a >= b then
     Tests.failtestf "%s. Expected a (%A) to be less than b (%A)."
                     format a b
 
+/// Expects `a` <= `b`.
 let isLessThanOrEqual a b format =
   if a > b then
     Tests.failtestf "%s. Expected a (%A) to be less than or equal to b (%A)."
                     format a b
 
+/// Expects `a` > `b`.
 let isGreaterThan a b format =
   if a > b then ()
   else
     Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)."
                     format a b
 
+/// Expects `a` >= `b`.
 let isGreaterThanOrEqual a b format =
   if a >= b then ()
   else
     Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)"
                     format a b
 
-  /// specify two floats equal within a given error - epsilon.
+/// Expects `actual` and `expected` (that are both floats) to equal within a
+/// given `epsilon`.
 let floatEqual actual expected epsilon format =
   let epsilon = defaultArg epsilon 0.001
   if expected <= actual + epsilon && expected >= actual - epsilon then
@@ -105,32 +121,38 @@ let floatEqual actual expected epsilon format =
     Tests.failtestf "%s. Actual value was %f but was expected to be %f within %f epsilon."
                     format actual expected epsilon
 
+/// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) format =
   if expected <> actual then
     Tests.failtestf "%s. Actual value was %A but had expected it to be %A."
                     format actual expected
 
+/// Expects the two values not to equal each other.
 let notEqual (actual : 'a) (expected : 'a) format =
   if expected = actual then
     Tests.failtestf "%s. Actual value was equal to %A but had expected it non-equal."
                     format actual
 
+/// Expects the value to be false.
 let isFalse actual format =
   if not actual then ()
   else
     Tests.failtest format
 
+/// Expects the value to be true.
 let isTrue actual format =
   if actual then ()
   else
     Tests.failtest format
 
+/// Expects the `sequence` to contain the `element`.
 let contains sequence element format =
   match sequence |> Seq.tryFind ((=) element) with
   | Some _ -> ()
   | None ->
     Tests.failtestf "%s. Sequence did not contain %A." format element
 
+/// Expects the `actual` sequence to equal the `expected` one.
 let sequenceEqual (actual : _ seq) (expected : _ seq) format =
   use ai = actual.GetEnumerator()
   use ei = expected.GetEnumerator()
