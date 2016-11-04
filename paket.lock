@@ -415,4 +415,4 @@ NUGET
       System.Xml.XPath (>= 4.0.1) - framework: >= net46, >= netstandard13
 GITHUB
   remote: logary/logary
-    src/Logary.Facade/Facade.fs (89b51091038edf74951cfce10ae022d41177bd3f) 4b21d888e83d72d1238ab0f36110e2a3946240e7
+    src/Logary.Facade/Facade.fs (dcc261ca9ef26a3c5f15f6be7995eea4119df920) 4b21d888e83d72d1238ab0f36110e2a3946240e7
