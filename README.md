@@ -147,7 +147,8 @@ This module is your main entry-point when asserting.
  - `stringStarts` – Expect the string `subject` to start with `prefix` and if it
    does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
- - `contains : 'a seq -> 'a -> string -> unit`
+ - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain the item.
+ - `streamsEqual` – Expect the streams to be byte-wise identical.
 
 ## `main argv` – how to run console apps
 

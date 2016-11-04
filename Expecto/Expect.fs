@@ -161,3 +161,19 @@ let stringStarts (subject : string) (prefix : string) format =
   if not (subject.StartsWith prefix) then
     Tests.failtestf "%s. Expected subject string '%s' to start with '%s'."
                     format subject prefix
+
+
+/// Expect the streams to byte-wise equal.
+let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) format =
+    let buf = Array.zeroCreate<byte> 2
+    let rec compare pos =
+      match s1.Read(buf, 0, 1), s2.Read(buf, 1, 1) with
+      | x, y when x <> y ->
+        Tests.failtestf "%s. Not equal at pos %d" format pos
+      | 0, _ ->
+        ()
+      | _ when buf.[0] <> buf.[1] ->
+        Tests.failtestf "%s. Not equal at pos %d" format pos
+      | _ ->
+        compare (pos + 1)
+    compare 0
