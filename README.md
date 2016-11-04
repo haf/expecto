@@ -218,26 +218,19 @@ module Types =
   type Y = { a : string; b : int }
 
 type Serialiser =
-  inherit ITestable
   abstract member Serialise<'a> : 'a -> unit
 
 type MySlowSerialiser() =
-  interface ITestable with
-    member x.Name = "Slow Serialiser"
   interface Serialiser with
     member x.Serialise _ =
       System.Threading.Thread.Sleep(30)
 
 type FastSerialiser() =
-  interface ITestable with
-    member x.Name = "Fast Serialiser"
   interface Serialiser with
     member x.Serialise _ =
       System.Threading.Thread.Sleep(10)
 
 type FastSerialiserAlt() =
-  interface ITestable with
-    member x.Name = "Fast Serialiser Alt"
   interface Serialiser with
     member x.Serialise _ =
      System.Threading.Thread.Sleep(20)
