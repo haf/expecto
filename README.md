@@ -356,3 +356,7 @@ testCase "reading prop" <| fun _ ->
   Expect.equal subject.property "Goodbye" "Should have goodbye as its property"
 ```
 
+## About upgrading from Fuchu
+
+In VsCode, search files for: `Assert.Equal\s*\(\s*(.+?)\s*,\s*(.*?),\s*(.*?)\)`
+and replace with `Expect.equal $3 $2 $1`.
