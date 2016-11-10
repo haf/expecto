@@ -352,5 +352,5 @@ testCase "reading prop" <| fun _ ->
 
 ## About upgrading from Fuchu
 
-In VsCode, search files for: `Assert.Equal\s*\(\s*(.+?)\s*,\s*(.*?),\s*(.*?)\)`
-and replace with `Expect.equal $3 $2 $1`.
+In VsCode, search files for: `Assert.Equal\s*\(\s*((;|.)+?)\s*,\s*(.*?),\s*(.*?)\)`
+and replace with `Expect.equal $4 $3 $1`.
