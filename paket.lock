@@ -416,3 +416,7 @@ NUGET
 GITHUB
   remote: logary/logary
     src/Logary.Facade/Facade.fs (dcc261ca9ef26a3c5f15f6be7995eea4119df920) 4b21d888e83d72d1238ab0f36110e2a3946240e7
+GROUP Build
+NUGET
+  remote: https://www.nuget.org/api/v2
+    FAKE (4.45.3)
