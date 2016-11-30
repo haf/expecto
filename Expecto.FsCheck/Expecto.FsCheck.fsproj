@@ -51,7 +51,6 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
   <ItemGroup>
-    <Compile Include="AssemblyVersionInfo.fs" />
     <Compile Include="FsCheck.fs" />
     <Content Include="paket.references" />
   </ItemGroup>

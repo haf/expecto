@@ -52,7 +52,6 @@
       <Paket>True</Paket>
       <Link>paket-files/Facade.fs</Link>
     </Compile>
-    <Compile Include="AssemblyVersionInfo.fs" />
     <Compile Include="Expecto.fs" />
     <Compile Include="Expect.fs" />
     <Content Include="paket.references" />

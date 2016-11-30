@@ -128,11 +128,13 @@ module Test =
 
 
 module Impl =
-  open Expecto.Logging
-  open Expecto.Logging.Message
+//  open Expecto.Logging
+//  open Expecto.Logging.Message
   open Helpers
+  open Logary.Facade
+  open Logary.Facade.Message
 
-  let logger = Log.create "Fuchu"
+  let logger = Log.create "Expecto"
 
   type TestResult =
     | Passed
@@ -245,10 +247,12 @@ module Impl =
       summary : TestResultCounts -> unit }
 
     static member Default =
-      { beforeRun = fun tests ->
-          logger.info (eventX "EXPECTO? Running tests...")
+      { beforeRun = fun _tests ->
+          logger.info (
+            eventX "EXPECTO? Running tests...")
 
         beforeEach = fun n ->
+
           logger.debug (
             eventX "{testName} starting..."
             >> setField "testName" n)
@@ -426,10 +430,11 @@ module Impl =
 
 [<AutoOpen; Extension>]
 module Tests =
-  open Expecto.Logging
+//  open Expecto.Logging
   open Impl
   open Helpers
   open Argu
+  open Logary.Facade
 
   /// Fail this test
   let inline failtest msg = raise <| AssertException msg
@@ -511,7 +516,7 @@ module Tests =
     { parallel  = true
       filter    = id
       printer   = TestPrinters.Default
-      verbosity = Logging.Info }
+      verbosity = LogLevel.Info }
 
   type CLIArguments =
     | Sequenced
@@ -545,7 +550,7 @@ module Tests =
         function
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
         | Parallel -> fun o -> { o with parallel = true }
-        | Debug -> fun o -> { o with verbosity = Logging.Debug }
+        | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
         | Filter _ -> fun o -> failwith "TODO: PRs much appreciated."
         | FilterTestList _ -> fun o -> failwith "TODO: PRs much appreciated."
         | FilterTestCase _ -> fun o -> failwith "TODO: PRs much appreciated."
