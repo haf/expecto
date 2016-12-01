@@ -46,6 +46,7 @@ let netcoreDir = "Expecto.netcore"
 let dotnet args dir = run "dotnet" args dir
 
 Target "DotnetBuild" (fun _ ->
+  dotnet "--info"  ""
   dotnet "restore" netcoreDir
   dotnet "build"   netcoreDir
 )
