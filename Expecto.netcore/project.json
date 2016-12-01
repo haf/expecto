@@ -1,0 +1,33 @@
+{
+    "version": "1.0.0",
+    "buildOptions": {
+        // "compilerName": "fsc",
+        "debugType": "portable",
+        "compile": {
+            "includeFiles": [
+                "../paket-files/logary/logary/src/Logary.Facade/Facade.fs",
+                "../Expecto/Expecto.fs",
+                "../Expecto/Expect.fs"
+            ]
+        }
+        
+    },
+    "dependencies": {
+        "FSharp.Core": "4.0.1.7-alpha"
+    },
+    "tools": {
+        "dotnet-compile-fsc": {
+            "version": "1.0.0-preview2-020000"
+        }
+    },
+    "frameworks": {
+        "netstandard1.6":{
+            "dependencies": {
+                "NETStandard.Library": "1.6.1",                
+                "FSharp.NET.Sdk": "1.0.0-alpha-000009",
+                "System.Diagnostics.TraceSource":"4.3.0",
+                "Microsoft.NET.Sdk":"1.0.0-alpha-20161104-2"
+            }
+        }
+    }
+}
