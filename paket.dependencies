@@ -5,21 +5,12 @@ source https://www.myget.org/F/netcorecli-fsc-preview3
 
 github logary/logary src/Logary.Facade/Facade.fs 4b21d888e83d72d1238ab0f36110e2a3946240e7
 
-nuget Argu
+nuget Argu 
 nuget FsCheck
 nuget FSharp.Core ~> 3
 nuget FSharpx.Core
 nuget BenchmarkDotNet
 nuget NuGet.CommandLine
-nuget Microsoft.NET.Sdk alpha 
-nuget FSharp.NET.Sdk 1.0.0-alpha-000007 alpha framework: netstandard1.6
-nuget NETStandard.Library 1.6.1 framework: netstandard1.6
-nuget System.Diagnostics.TraceSource
-
-    source https://www.nuget.org/api/v2
-framework netstandard16
-    
-#    nuget FSharp.Core 4.0.1.7-alpha alpha
 
 group build
     source https://www.nuget.org/api/v2
@@ -27,6 +18,12 @@ group build
     nuget FAKE
 
 group netcore
-source https://www.nuget.org/api/v2
-
-nuget FSharp.Core 4.0.1.7-alpha alpha
+    source https://www.nuget.org/api/v2
+    nuget Microsoft.NET.Sdk 1.0.0-alpha-20161104-2 alpha
+    nuget FSharp.NET.Sdk 1.0.0-alpha-000009 alpha
+    nuget NETStandard.Library 1.6.1
+    nuget System.Diagnostics.TraceSource 4.3.0
+    nuget System.Linq.Parallel 4.3.0
+    
+    nuget Argu 3.3.0
+    nuget FSharp.Core 4.0.1.7-alpha alpha

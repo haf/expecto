@@ -1,0 +1,11 @@
+
+
+group netcore
+
+Argu
+System.Linq.Parallel
+NETStandard.Library
+FSharp.NET.Sdk
+System.Diagnostics.TraceSource
+Microsoft.NET.Sdk
+FSharp.Core
