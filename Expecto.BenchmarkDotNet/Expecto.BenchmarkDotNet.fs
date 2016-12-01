@@ -12,9 +12,8 @@ open BenchmarkDotNet.Loggers
 open BenchmarkDotNet.Order
 open BenchmarkDotNet.Validators
 open Expecto
-//open Expecto.Logging
-//open Expecto.Logging.Message
-open Logary.Facade
+open Expecto.Logging
+open Expecto.Logging.Message
 
 [<AutoOpen; CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module BenchmarkDotNet =

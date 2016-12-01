@@ -56,7 +56,7 @@ desc 'package nugets - finds all projects and package them'
 nugets_pack :create_nugets => ['build/pkg', :versioning, :compile] do |p|
   p.configuration = Configuration
   p.files   = FileList['*/*.{csproj,fsproj,nuspec}'].
-    exclude(/Tests|Sample/)
+    exclude(/Tests|Sample|netcore/)
   p.out     = 'build/pkg'
   p.exe     = 'packages/NuGet.CommandLine/tools/NuGet.exe'
   p.with_metadata do |m|

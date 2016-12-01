@@ -15,6 +15,21 @@ let run cmd args dir =
   ) System.TimeSpan.MaxValue = false then
       failwithf "Error while running '%s' with args: %s" cmd args
 
+// --------------------------------------------------------------------------------------
+// Rename Logary Facades for Expecto
+//  (why this is necessary - https://github.com/logary/logary/#using-logary-in-a-library)
+
+Target "ExpectoChangeo" (fun _ ->
+    ReplaceInFiles [
+        "namespace Logary.Facade", "namespace Expecto.Logging"
+        "namespace Logary.Facade.Messages", "namespace Expecto.Logging.Messages"
+        "open Logary.Facade", "open Expecto.Logging"
+        "open Logary.Facade.Messages", "open Expecto.Logging.Messages"
+    ][
+        "paket-files/logary/logary/src/Logary.Facade/Facade.fs"
+    ]
+)
+
 
 // --------------------------------------------------------------------------------------
 // Clean Build Detritus
@@ -57,7 +72,8 @@ Target "DotnetBuild" (fun _ ->
 
 Target "All" DoNothing
 
-"Clean"
+"ExpectoChangeo"
+  ==> "Clean"
   ==> "Build"
   <=> "DotnetBuild"
 

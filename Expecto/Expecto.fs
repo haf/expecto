@@ -128,11 +128,9 @@ module Test =
 
 
 module Impl =
-//  open Expecto.Logging
-//  open Expecto.Logging.Message
+  open Expecto.Logging
+  open Expecto.Logging.Message
   open Helpers
-  open Logary.Facade
-  open Logary.Facade.Message
 
   let logger = Log.create "Expecto"
 
@@ -430,11 +428,10 @@ module Impl =
 
 [<AutoOpen; Extension>]
 module Tests =
-//  open Expecto.Logging
   open Impl
   open Helpers
   open Argu
-  open Logary.Facade
+  open Expecto.Logging
 
   /// Fail this test
   let inline failtest msg = raise <| AssertException msg
