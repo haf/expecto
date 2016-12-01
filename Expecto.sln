@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{3786E131-11FB-4606-AFE0-5E6CDA744DD0}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+	EndProjectSection
+EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto", "Expecto\Expecto.fsproj", "{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.BenchmarkDotNet", "Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj", "{0ACABEAA-29BD-4F9F-89DB-0D03B5AFC952}"
