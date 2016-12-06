@@ -13,10 +13,10 @@ module Dummy =
   open Expecto
 
   [<Tests>]
-  let testA = TestLabel ("test A", TestList [])
+  let testA = TestLabel ("test A", TestList ([], Normal), Normal)
 
   [<Tests>]
-  let testB() = TestLabel ("test B", TestList [])
+  let testB() = TestLabel ("test B", TestList ([], Normal), Normal)
 
   let thisModuleType = lazy Type.GetType "Expecto.Tests+Dummy, Expecto.Tests"
 
@@ -82,7 +82,7 @@ let tests =
     testList "Exception handling" [
       testCase "Expecto ignore" <| fun _ ->
         let test () = skiptest "b"
-        let test = TestCase test
+        let test = TestCase (test, Normal)
         match evalSilent test with
         | [{ result = Ignored "b" }] -> ()
         | x -> failtestf "Expected result = Ignored, got\n %A" x
@@ -134,14 +134,14 @@ let timeouts =
 
     testList "Test filter" [
       let tests =
-        TestList [
-          testCase "a" ignore
-          testCase "b" ignore
-          testList "c" [
-            testCase "d" ignore
-            testCase "e" ignore
-          ]
-        ]
+        TestList ([
+                    testCase "a" ignore
+                    testCase "b" ignore
+                    testList "c" [
+                      testCase "d" ignore
+                      testCase "e" ignore
+                    ]
+                  ], Normal)
       yield testCase "with one testcase" <| fun _ ->
         let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1 // same as assertEqual "" 1 t.Length
@@ -158,11 +158,11 @@ let timeouts =
 
     testList "Timeout" [
       testCase "fail" <| fun _ ->
-        let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100))
+        let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
         let result = evalSilent test |> sumTestResults
         result.failed ==? 1
       testCase "pass" <| fun _ ->
-        let test = TestCase(Test.timeout 1000 ignore)
+        let test = TestCase(Test.timeout 1000 ignore, Normal)
         let result = evalSilent test |> sumTestResults
         result.passed ==? 1
     ]
@@ -174,7 +174,7 @@ let timeouts =
       let getTest =
           getMember
           >> Option.bind testFromMember
-          >> Option.bind (function TestLabel(name, _) -> Some name | _ -> None)
+          >> Option.bind (function TestLabel(name, _, Normal) -> Some name | _ -> None)
 
       yield testCase "from member" <| fun _ ->
           getTest "testA" ==? Some "test A"
@@ -184,8 +184,8 @@ let timeouts =
           match testFromType Dummy.thisModuleType.Value with
           | Some (TestList (
                       Seq.Two (
-                          TestLabel("test B", TestList _),
-                          TestLabel("test A", TestList _)))) -> ()
+                          TestLabel("test B", TestList (_, Normal), Normal),
+                          TestLabel("test A", TestList (_, Normal), Normal)), Normal)) -> ()
           | x -> failtestf "TestList expected, found %A" x
       yield testCase "from empty type" <| fun _ ->
           let test = testFromType EmptyModule.thisModuleType.Value
@@ -248,7 +248,7 @@ let timeouts =
 
         testCase "fail" <| fun _ ->
           let test () = Expect.notEqual "" "" "should fail"
-          assertTestFails test
+          assertTestFails (test, Normal)
       ]
 
       testList "raise" [
@@ -261,12 +261,12 @@ let timeouts =
             Expect.throwsT<ArgumentException> (fun _ -> nullArg "")
                                               "Expected argument exception."
 
-          assertTestFails test
+          assertTestFails (test, Normal)
 
         testCase "fail with no exception" <| fun _ ->
           let test () =
             Expect.throwsT<ArgumentNullException> ignore "Ignore 'should' throw an exn, ;)"
-          assertTestFails test
+          assertTestFails (test, Normal)
       ]
 
       testList "string contain" [
@@ -275,7 +275,7 @@ let timeouts =
 
         testCase "fail" <| fun _ ->
           let test () = Expect.stringContains "hello world" "a" "Deliberately failing"
-          assertTestFails test
+          assertTestFails (test, Normal)
       ]
     ]
 

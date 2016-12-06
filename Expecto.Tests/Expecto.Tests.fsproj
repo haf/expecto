@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="Prelude.fs" />
     <Compile Include="Tests.fs" />
+    <Compile Include="FocusedTests.fs" />
     <Compile Include="FsCheckTests.fs" />
     <Compile Include="BenchmarkDotNet.fs" />
     <Compile Include="Main.fs" />
