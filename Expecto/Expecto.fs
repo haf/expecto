@@ -10,27 +10,63 @@ open System.Reflection
 /// Actual test function
 type TestCode = unit -> unit
 
+/// The parent state (watching the tests as a tree structure) will influence
+/// the child tests state. By following rules, if parent test state is:
+///     - Focused will elevate all Normal child tests to Focused.
+///              Focused and Pending child tests will not change state(behavior)
+///     - Normal will not influence the child tests states(behavior).
+///     - Pending will elevate all Normal and Focused child tests to Pending.
+///              Pending child test will not change state(behavior)
+type FocusState =
+  /// The default state of a test that will be evaluated
+  | Normal
+  /// The state of a test that will be ignored by Expecto
+  | Pending
+  /// The state of a test that will be evaluated
+  /// All other test marked with Normal or Pending will be ignored
+  | Focused
+
+  with static member isFocused = function | Focused -> true | _ -> false
+
 /// Test tree – this is how you compose your tests as values. Since
 /// any of these can act as a test, you can pass any of these DU cases
 /// into a function that takes a Test.
 type Test =
   /// A test case is a function from unit to unit, that can be executed
   /// by Expecto to run the test code.
-  | TestCase of code:TestCode
+  | TestCase of code:TestCode * state:FocusState
   /// A collection/list of tests.
-  | TestList of tests:Test seq
+  | TestList of tests:Test seq * state:FocusState
   /// A labelling of a Test (list or test code).
-  | TestLabel of label:string * test:Test
+  | TestLabel of label:string * test:Test * state:FocusState
 
 type ExpectoException(msg) = inherit Exception(msg)
 type AssertException(msg) = inherit ExpectoException(msg)
 type IgnoreException(msg) = inherit ExpectoException(msg)
 
 /// Marks a top-level test for scanning
+/// The test will run even if PTest is also present.
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
 type TestsAttribute() = inherit Attribute()
 
+/// Allows to mark a test as Pending (will be skipped/ignored if no other TestAttribute is present)
+/// Is a fast way to exclude some tests from running.
+/// If FTest or Test is also present then this attribute will be ignored.
+[<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
+type PTestsAttribute() = inherit Attribute()
+
+/// Allows to mark a test as FocusState.Focused (will be runned and will change the behavior for
+/// all other tests marked as FocusState.Normal to be ignored)
+/// Is a fast way to exclude some tests from running.
+/// The test will run even if PTest is also present. Have priority over TestAttribute.
+[<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
+type FTestsAttribute() = inherit Attribute()
+
 module Helpers =
+
+  let fst3 (a,_,_) = a
+  let snd3 (_,b,_) = b
+  let trd3 (_,_,c) = c
 
   let inline ignore2 _ = ignore
   let inline ignore3 _ = ignore2
@@ -57,6 +93,16 @@ module Helpers =
       with _ ->
         None
 
+  let matchFocusAttributes = function
+    | "Expecto.FTestsAttribute" -> Some  (1, Focused)
+    | "Expecto.TestsAttribute" -> Some (2, Normal)
+    | "Expecto.PTestsAttribute" -> Some (3, Pending)
+    | _ -> None
+
+  let allTestAttributes = Set.ofList [  (typeof<FTestsAttribute>).FullName
+                                        (typeof<TestsAttribute>).FullName
+                                        (typeof<PTestsAttribute>).FullName]
+
   type MemberInfo with
     member m.HasAttributePred (pred: Type -> bool) =
       m.GetCustomAttributes true
@@ -74,46 +120,91 @@ module Helpers =
       |> Seq.filter (fun a -> a.GetType().FullName = attr)
       |> Seq.cast
 
+    member m.MatchTestsAttributes () =
+      m.GetCustomAttributes true
+      |> Array.map (fun t -> t.GetType().FullName)
+      |> Set.ofArray
+      |> Set.intersect allTestAttributes
+      |> Set.toList
+      |> List.choose matchFocusAttributes
+      |> List.sortBy fst
+      |> List.map snd
+      |> List.tryFind (fun _ -> true)
 
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
   open Helpers
+  /// Compute the child test state based on parent test state
+  let computeChildFocusState parentState childState =
+    match parentState, childState with
+    | Focused, Pending -> Pending
+    | Pending, _ -> Pending
+    | Focused, _ -> Focused
+    | Normal, _ -> childState
 
   /// Flattens a tree of tests
   let toTestCodeList =
-    let rec loop parentName testList =
+    let rec loop parentName testList parentState =
       function
-      | TestLabel (name, test) ->
+      | TestLabel (name, test, state) ->
         let fullName =
           if String.IsNullOrEmpty parentName
             then name
             else parentName + "/" + name
-        loop fullName testList test
-      | TestCase test -> Seq.cons (parentName, test) testList
-      | TestList tests -> Seq.collect (loop parentName testList) tests
-    loop null Seq.empty
+        loop fullName testList (computeChildFocusState parentState state) test
+      | TestCase (test, state) -> Seq.cons (parentName, test, (computeChildFocusState parentState state)) testList
+      | TestList (tests, state) -> Seq.collect (loop parentName testList (computeChildFocusState parentState state)) tests
+    loop null Seq.empty Normal
 
   /// Recursively maps all TestCodes in a Test
   let rec wrap f =
     function
-    | TestCase test -> TestCase (f test)
-    | TestList testList -> TestList (Seq.map (wrap f) testList)
-    | TestLabel (label, test) -> TestLabel (label, wrap f test)
+    | TestCase (test, state) -> TestCase ((f test), state)
+    | TestList (testList, state) -> TestList ((Seq.map (wrap f) testList), state)
+    | TestLabel (label, test, state) -> TestLabel (label, wrap f test, state)
+
+  /// Enforce a FocusState on a test by replacing the current state
+  /// Is not used (against YAGNI), but is here to make it clear for intellisense discovery
+  /// that the translateFocusState is not intended as replacement
+  let replaceFocusState newFocusState =
+    function
+    | TestCase (test, _) -> TestCase(test, newFocusState)
+    | TestList (testList, _) -> TestList(testList, newFocusState)
+    | TestLabel (label, test, _) -> TestLabel(label, test, newFocusState)
+
+  /// Change the FocusState by appling the old state to a new state
+  /// Note: this is not state replacement!!!
+  /// Used in replaceTestCode and the order is intended for scenario:
+  ///  1. User wants to automate some tests and his intent is not to change
+  ///      the test state (use Normal), so this way the current state will be preserved
+  /// Don't see the use case: the user wants to automate some tests and wishes
+  /// to change the test states
+  let translateFocusState newFocusState =
+    function
+    | TestCase (test, oldFocusState) -> TestCase(test, computeChildFocusState oldFocusState newFocusState)
+    | TestList (testList, oldFocusState) -> TestList(testList, computeChildFocusState oldFocusState newFocusState)
+    | TestLabel (label, test, oldFocusState) -> TestLabel(label, test, computeChildFocusState oldFocusState newFocusState)
+
 
   /// Recursively replaces TestCodes in a Test
-  let rec replaceTestCode f =
+  /// Check translateFocusState for focus state behavior description
+  let rec replaceTestCode (f:string -> TestCode -> Test) =
     function
-    | TestLabel (label, TestCase test) -> f label test
-    | TestCase test -> f null test
-    | TestList testList -> TestList (Seq.map (replaceTestCode f) testList)
-    | TestLabel (label, test) -> TestLabel (label, replaceTestCode f test)
+    | TestLabel (label, TestCase (test, childState), parentState) ->
+          f label test
+          |> translateFocusState (computeChildFocusState parentState childState)
+    | TestCase (test, state) ->
+          f null test
+          |> translateFocusState state
+    | TestList (testList, state) -> TestList (Seq.map (replaceTestCode f) testList, state)
+    | TestLabel (label, test, state) -> TestLabel (label, replaceTestCode f test, state)
 
   /// Filter tests by name
   let filter pred =
     toTestCodeList
-    >> Seq.filter (fst >> pred)
-    >> Seq.map (fun (name, test) -> TestLabel (name, TestCase test))
-    >> TestList
+    >> Seq.filter (fst3 >> pred)
+    >> Seq.map (fun (name, test, state) -> TestLabel (name, TestCase (test, state), state))
+    >> (fun x -> TestList (x,Normal))
 
   /// Applies a timeout to a test
   let timeout timeout (test: TestCode) : TestCode =
@@ -284,6 +375,30 @@ module Impl =
             >> setField "failures" summary.failed
             >> setField "errors" summary.errored)}
 
+    type WrappedFocusedState =
+      | Enabled of state:FocusState
+      | UnFocused of state:FocusState
+
+      with
+        /// Used to check if a test should be run and to generate a proper status messsage
+        member x.ShouldSkipEvaluation =
+          match x with
+          | UnFocused Focused -> failwith "Should never reach this state - this is a bug in Expecto - please let us know"
+          | UnFocused Pending
+          | Enabled Pending -> Some "The test or one of his parents is marked as Pending"
+          | UnFocused _ -> Some "The test is skiped because other tests are Focused"
+          | Enabled _-> None
+
+        /// tests: seq<string * TestCode * FocusState>) -> seq<string * TestCode * WrappedFocusedState>
+        static member WrapStates tests =
+          let applyFocusedWrapping = function
+            | Focused -> Enabled Focused
+            | a -> UnFocused a
+          let testsList = tests |> Seq.toList
+          let existsFocusedTests = testsList |> Seq.exists (trd3 >> (FocusState.isFocused))
+          let wrappingMethod = if existsFocusedTests then applyFocusedWrapping else Enabled
+          testsList |> Seq.map (fun (n, t, s) -> (n, t, wrappingMethod s))
+
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
   let evalTestList =
@@ -304,41 +419,49 @@ module Impl =
           None
 
       fun (printers: TestPrinters) map ->
-          let execOne (name: string, test) =
+          let execOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
               printers.beforeEach name
-              let w = System.Diagnostics.Stopwatch.StartNew()
-              try
-                test()
-                w.Stop()
-                printers.passed name w.Elapsed
-                { name     = name
-                  result   = Passed
-                  duration = w.Elapsed }
-              with e ->
-                w.Stop()
-                match e with
-                | ExceptionInList failExceptionTypes.Value ->
-                    let msg =
-                        let firstLine =
-                            (stackTraceToString e.StackTrace).Split('\n')
-                            |> Seq.filter (fun q -> q.Contains ",1): ")
-                            |> Enumerable.FirstOrDefault
-                        sprintf "\n%s\n%s\n" e.Message firstLine
-                    printers.failed name msg w.Elapsed
+              match wrappedFocusedState.ShouldSkipEvaluation with
+              | Some ignoredMessage ->
+                  printers.ignored name ignoredMessage
+                  { name     = name
+                    result   = Ignored ignoredMessage
+                    duration = TimeSpan.Zero }
+              | _ ->
+                  let w = System.Diagnostics.Stopwatch.StartNew()
+                  try
+                    test()
+                    w.Stop()
+                    printers.passed name w.Elapsed
                     { name     = name
-                      result   = Failed msg
+                      result   = Passed
                       duration = w.Elapsed }
-                | ExceptionInList ignoreExceptionTypes.Value ->
-                    printers.ignored name e.Message
-                    { name     = name
-                      result   = Ignored e.Message
-                      duration = w.Elapsed }
-                | _ ->
-                    printers.exn name e w.Elapsed
-                    { name     = name
-                      result   = TestResult.Error e
-                      duration = w.Elapsed }
-          map execOne
+                  with e ->
+                    w.Stop()
+                    match e with
+                    | ExceptionInList failExceptionTypes.Value ->
+                        let msg =
+                            let firstLine =
+                                (stackTraceToString e.StackTrace).Split('\n')
+                                |> Seq.filter (fun q -> q.Contains ",1): ")
+                                |> Enumerable.FirstOrDefault
+                            sprintf "\n%s\n%s\n" e.Message firstLine
+                        printers.failed name msg w.Elapsed
+                        { name     = name
+                          result   = Failed msg
+                          duration = w.Elapsed }
+                    | ExceptionInList ignoreExceptionTypes.Value ->
+                        printers.ignored name e.Message
+                        { name     = name
+                          result   = Ignored e.Message
+                          duration = w.Elapsed }
+                    | _ ->
+                        printers.exn name e w.Elapsed
+                        { name     = name
+                          result   = TestResult.Error e
+                          duration = w.Elapsed }
+
+          WrappedFocusedState.WrapStates >> (map execOne)
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
@@ -374,29 +497,33 @@ module Impl =
 
     TestResultCounts.errorCode summary
 
-  let testFromMember (m: MemberInfo): Test option =
-      [m]
-      |> List.filter (fun m -> m.HasAttributeType typeof<TestsAttribute>)
-      |> List.choose (box >> function
-        | :? FieldInfo as m ->
+  let testFromMember (mi: MemberInfo): Test option  =
+    let getTestFromMemberInfo focusedState =
+      match box mi with
+      | :? FieldInfo as m ->
           if m.FieldType = typeof<Test>
-          then Some(unbox (m.GetValue(null)))
+          then Some(focusedState, unbox (m.GetValue(null)))
           else None
-        | :? MethodInfo as m ->
+      | :? MethodInfo as m ->
           if m.ReturnType = typeof<Test>
-          then Some(unbox (m.Invoke(null, null)))
+          then Some(focusedState, unbox (m.Invoke(null, null)))
           else None
-        | :? PropertyInfo as m ->
+      | :? PropertyInfo as m ->
           if m.PropertyType = typeof<Test>
-          then Some(unbox (m.GetValue(null, null)))
+          then Some(focusedState, unbox (m.GetValue(null, null)))
           else None
-        | _ -> None)
-      |> List.tryFind (fun _ -> true)
+      | _ -> None
+    mi.MatchTestsAttributes ()
+    |> Option.map getTestFromMemberInfo
+    |> function
+         | Some (Some (focusedState, test)) -> Some (Test.translateFocusState focusedState test)
+         | _ -> None
+
 
   let listToTestListOption =
     function
     | [] -> None
-    | x -> Some (TestList x)
+    | x -> Some (TestList (x, Normal))
 
   let testFromType =
       let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
@@ -441,11 +568,19 @@ module Tests =
   /// Skip this test
   let inline skiptestf fmt = Printf.ksprintf (fun msg -> raise <| IgnoreException msg) fmt
 
-  /// Builds a list/group of tests
-  let inline testList name tests = TestLabel(name, TestList tests)
+  /// Builds a list/group of tests that will be ignored by Expecto if exists focused tests and none of the parents is focused
+  let inline testList name tests = TestLabel(name, TestList (tests, Normal), Normal)
+  /// Builds a list/group of tests that will make Expecto to ignore other unfocused tests
+  let inline ftestList name tests = TestLabel(name, TestList (tests, Focused), Focused)
+  /// Builds a list/group of tests that will be ignored by Expecto
+  let inline ptestList name tests = TestLabel(name, TestList (tests, Pending), Pending)
 
-  /// Builds a test case
-  let inline testCase name test = TestLabel(name, TestCase test)
+  /// Builds a test case that will be ignored by Expecto if exists focused tests and none of the parents is focused
+  let inline testCase name test = TestLabel(name, TestCase (test,Normal), Normal)
+  /// Builds a test case that will make Expecto to ignore other unfocused tests
+  let inline ftestCase name test = TestLabel(name, TestCase (test, Focused), Focused)
+  /// Builds a test case that will be ignored by Expecto
+  let inline ptestCase name test = TestLabel(name, TestCase (test, Pending), Pending)
 
   /// Applies a function to a list of values to build test cases
   let inline testFixture setup =
@@ -457,7 +592,7 @@ module Tests =
         Seq.map (fun (name, partialTest) ->
                       testCase name (partialTest param))
 
-  type TestCaseBuilder(name) =
+  type TestCaseBuilder(name, focusState) =
       member x.TryFinally(f, compensation) =
         try
           f()
@@ -479,10 +614,18 @@ module Tests =
       member x.Combine(f1, f2) = f2(); f1
       member x.Zero() = ()
       member x.Delay f = f
-      member x.Run f = testCase name f
+      member x.Run f =
+        match focusState with
+        | Normal -> testCase name f
+        | Focused -> ftestCase name f
+        | Pending -> ptestCase name f
 
   let inline test name =
-    TestCaseBuilder name
+    TestCaseBuilder (name, Normal)
+  let inline ftest name =
+    TestCaseBuilder (name, Focused)
+  let inline ptest name =
+    TestCaseBuilder (name, Pending)
 
   /// Runs the passed tests
   let run printer tests =
@@ -574,6 +717,6 @@ module Tests =
     let tests =
       match testFromAssembly (Assembly.GetEntryAssembly()) with
       | Some t -> t
-      | None -> TestList []
+      | None -> TestList ([], Normal)
     let config = args |> ExpectoConfig.fillFromArgs config
     runTests config tests
