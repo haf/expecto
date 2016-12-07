@@ -592,7 +592,7 @@ module Tests =
         Seq.map (fun (name, partialTest) ->
                       testCase name (partialTest param))
 
-  type TestCaseBuilder(name) =
+  type TestCaseBuilder(name, focusState) =
       member x.TryFinally(f, compensation) =
         try
           f()
@@ -614,10 +614,18 @@ module Tests =
       member x.Combine(f1, f2) = f2(); f1
       member x.Zero() = ()
       member x.Delay f = f
-      member x.Run f = testCase name f
+      member x.Run f =
+        match focusState with
+        | Normal -> testCase name f
+        | Focused -> ftestCase name f
+        | Pending -> ptestCase name f
 
   let inline test name =
-    TestCaseBuilder name
+    TestCaseBuilder (name, Normal)
+  let inline ftest name =
+    TestCaseBuilder (name, Focused)
+  let inline ptest name =
+    TestCaseBuilder (name, Pending)
 
   /// Runs the passed tests
   let run printer tests =

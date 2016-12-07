@@ -115,7 +115,7 @@ integrationTests // from MyLib.Tests
 |> run // from Expecto
 ```
 
-### Focusing Tests
+### Focusing tests
 
 It is often convenient, when developing to be able to run a subset of specs. 
 Expecto allows you to focus specific test cases or tests list by putting `f` before *testCase* or *testList* or `F` before attribute *Tests*(when reflection tests discovery is used).
@@ -125,6 +125,14 @@ open Expecto
 
 [<FTests>]
 let someFocusedTest = testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+[<Tests>]
+let someUnfocusedTest = test "skipped" { Expect.equal (2+2) 1 "2+2?" } 
+```
+
+or
+
+```fsharp
+open Expecto
 
 [<Tests>]
 let focusedTests = 
@@ -132,16 +140,19 @@ let focusedTests =
     ftestList "focused list" [
       testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
       ftestCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+      test "will run" { Expect.equal (2+2) 4 "2+2" }
     ]
     testList "unfocused list" [
-      testCase "skipped" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+      testCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
       ftestCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+      test "skipped" { Expect.equal (2+2) 1 "2+2?" }
+      ftest "will run" { Expect.equal (2+2) 4 "2+2" }
     ]
-    testCase "skipped" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+    testCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
   ]
 ``` 
 
-### Pending Tests
+### Pending tests
 
 You can mark an individual spec or container as Pending. This will prevent the spec (or specs within the list) from running.
 You do this by adding a `p` before *testCase* or *testList* or `P` before *Tests* attribute(when reflection tests discovery is used).
@@ -156,14 +167,15 @@ let skippedTestFromReflectionDiscovery = testCase "skipped" <| fun _ -> Expect.e
 let myTests =
   testList "normal" [
     testList "unfocused list" [
-      ptestCase "skipped" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+      ptestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
       testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+      ptest "skipped" { Expect.equal (2+2) 1 "2+2?" }
     ]
     testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
-    ptestCase "skipped" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+    ptestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
     ptestList "skipped list" [
-      testCase "skipped" <| fun _ -> Expect.equal (2+2) 4 "2+2"
-      ftestCase "skipped" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+      testCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
+      ftestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
     ]
   ]
 ```  
