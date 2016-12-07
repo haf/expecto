@@ -161,7 +161,8 @@ You do this by adding a `p` before *testCase* or *testList* or `P` before *Tests
 open Expecto
 
 [<PTests>]
-let skippedTestFromReflectionDiscovery = testCase "skipped" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+let skippedTestFromReflectionDiscovery = testCase "skipped" <| fun _ -> 
+    Expect.equal (2+2) 4 "2+2"
 
 [<Tests>]
 let myTests =
