@@ -51,6 +51,14 @@ module TestHelpers =
         | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
         | x -> failtestf "Should have failed, but was %A" x
 
+    let inline assertTestFailsWithMsg (msg : string) test =
+        let test = TestCase test
+        match evalSilent test with
+        | [{ TestRunResult.result = TestResult.Failed x }] when String.Equals(x.Replace("\n", ""),msg.Replace("\n", "")) -> ()
+        | [{ TestRunResult.result = TestResult.Failed x }] -> failtestf "Shold have failed with message: \"%s\" but failed with \"%s\"" msg x
+        | x -> failtestf "Should have failed, but was %A" x
+
+
     open FsCheck
 
     let genLimitedTimeSpan =
