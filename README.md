@@ -68,9 +68,7 @@ let simpleTest =
 Then run it like this, e.g. in the interactive or through a console app.
 
 ```fsharp
-runParallel simpleTest
-// alternatively:
-run simpleTest
+runTests defaultConfig simpleTest
 ```
 
 which returns 1 if any tests failed, otherwise 0. Useful for returning to the
