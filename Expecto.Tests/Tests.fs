@@ -44,14 +44,14 @@ let tests =
         let format = "Failing - string with different length"
         let test () = Expect.equal "Test" "Test2" format
         let msg = sprintf "%s. String actual shorter than expected, at pos %i for expected '%A'." format 4 '2'
-        assertTestFailsWithMsg msg test
+        assertTestFailsWithMsg msg (test, Normal)
       }
 
       test "fail - different content" {
         let format = "Failing - string with different content"
         let msg = sprintf "%s. String do not match at position %i. Expected: '%A', but got '%A'." format 3 't' '2'
         let test () = Expect.equal "Tes2" "Test" format
-        assertTestFailsWithMsg msg test
+        assertTestFailsWithMsg msg (test, Normal)
       }
     ]
 
