@@ -123,9 +123,26 @@ let floatEqual actual expected epsilon format =
 
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) format =
-  if expected <> actual then
-    Tests.failtestf "%s. Actual value was %A but had expected it to be %A."
-                    format actual expected
+  match box actual, box expected with
+  | (:? string as a), (:? string as e) ->
+    use ai = a.GetEnumerator()
+    use ei = e.GetEnumerator()
+    let mutable i = 0
+    while ei.MoveNext() do
+      if ai.MoveNext() then
+        if ai.Current = ei.Current then ()
+        else
+          Tests.failtestf "%s. String do not match at position %i. Expected: '%A', but got '%A'."
+                            format i (ei.Current) (ai.Current)
+      else
+        Tests.failtestf "%s. String actual shorter than expected, at pos %i for expected '%A'."
+                        format i (ei.Current)
+      i <- i + 1
+  | _, _ ->
+    if actual <> expected then
+      Tests.failtestf "%s. Actual value was %A but had expected it to be %A." format actual expected
+
+
 
 /// Expects the two values not to equal each other.
 let notEqual (actual : 'a) (expected : 'a) format =
