@@ -214,12 +214,18 @@ let timeouts =
 
     testList "parse args" [
       testCase "default" <| fun _ ->
-        let opts = ExpectoConfig.fillFromArgs defaultConfig [||]
+        let opts, isList = ExpectoConfig.fillFromArgs defaultConfig [||]
         opts.parallel ==? true
+        isList ==? false
 
       testCase "sequenced" <| fun _ ->
-        let opts = ExpectoConfig.fillFromArgs defaultConfig [|"--sequenced"|]
+        let opts, isList = ExpectoConfig.fillFromArgs defaultConfig [|"--sequenced"|]
         opts.parallel ==? false
+        isList ==? false
+
+      testCase "list" <| fun _ ->
+        let _, isList = ExpectoConfig.fillFromArgs defaultConfig [|"--list-tests"|]
+        isList ==? true
     ]
 
     testList "transformations" [

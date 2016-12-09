@@ -663,8 +663,9 @@ module Tests =
     | Parallel
     | Debug
     | Filter of hiera:string
-    | FilterTestList of substring:string
-    | FilterTestCase of substring:string
+    | Filter_Test_List of substring:string
+    | Filter_Test_Case of substring:string
+    | List_Tests
 
     interface IArgParserTemplate with
       member s.Usage =
@@ -673,8 +674,9 @@ module Tests =
         | Parallel -> "Run all tests in parallel (default)."
         | Debug -> "Extra verbose printing. Useful to combine with --sequenced."
         | Filter _ -> "Filter the list of tests by a hierarchy that's slash (/) separated."
-        | FilterTestList _ -> "Filter the list of test lists by a substring."
-        | FilterTestCase _ -> "Filter the list of test cases by a substring."
+        | Filter_Test_List _ -> "Filter the list of test lists by a substring."
+        | Filter_Test_Case _ -> "Filter the list of test cases by a substring."
+        | List_Tests -> "Doesn't run tests, print out list of tests instead"
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
@@ -682,6 +684,7 @@ module Tests =
     /// Parses command-line arguments into a config. This allows you to
     /// override the config from the command line, rather than having
     /// to go into the compiled code to change how they are being run.
+    /// Also checks if tests should be run or only listed
     let fillFromArgs baseConfig =
       let parser = ArgumentParser.Create<CLIArguments>()
       let flip f a b = f b a
@@ -692,8 +695,11 @@ module Tests =
         | Parallel -> fun o -> { o with parallel = true }
         | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
         | Filter _ -> fun o -> failwith "TODO: PRs much appreciated."
-        | FilterTestList _ -> fun o -> failwith "TODO: PRs much appreciated."
-        | FilterTestCase _ -> fun o -> failwith "TODO: PRs much appreciated."
+        | Filter_Test_List _ -> fun o -> failwith "TODO: PRs much appreciated."
+        | Filter_Test_Case _ -> fun o -> failwith "TODO: PRs much appreciated."
+        | List_Tests -> id
+
+
 
       fun (args: string[]) ->
         let parsed =
@@ -702,8 +708,14 @@ module Tests =
             ignoreMissing = true,
             ignoreUnrecognized = true,
             raiseOnUsage = false)
+        let isList = parsed.Contains <@ List_Tests @>
+        (baseConfig, parsed.GetAllResults()) ||> Seq.fold (flip reduceKnown), isList
 
-        (baseConfig, parsed.GetAllResults()) ||> Seq.fold (flip reduceKnown)
+  /// Prints out names of all tests for given test suite.
+  let listTests test =
+    test
+    |> Test.toTestCodeList
+    |> Seq.iter (fst3 >> printfn "%s")
 
   /// Runs tests with supplied options. Returns 0 if all tests passed, =
   /// otherwise 1
@@ -720,5 +732,5 @@ module Tests =
       match testFromAssembly (Assembly.GetEntryAssembly()) with
       | Some t -> t
       | None -> TestList ([], Normal)
-    let config = args |> ExpectoConfig.fillFromArgs config
-    runTests config tests
+    let config, isList = args |> ExpectoConfig.fillFromArgs config
+    if isList then listTests tests; 0 else runTests config tests

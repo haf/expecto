@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Tests",
+            "type": "mono",
+            "request": "launch",
+            "program": "${workspaceRoot}/Expecto.Tests/bin/Release/Expecto.Tests.exe",
+            "args": ["--list-tests"],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": "compile",
+            "runtimeExecutable": null,
+            "env": {},
+            "externalConsole": false
+        }
+    ]
+}
