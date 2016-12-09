@@ -689,14 +689,29 @@ module Tests =
       let parser = ArgumentParser.Create<CLIArguments>()
       let flip f a b = f b a
 
+      let getTestList (s : string) =
+        let all = s.Split ('/')
+        match all with
+        | [||] -> [||]
+        | [|x|] -> [||]
+        | xs -> xs.[0 .. all.Length - 2]
+
+      let getTastCase (s : string) =
+        let all = s.Split ('/')
+        match all with
+        | [||] -> ""
+        | xs -> xs.Last()
+
+
+
       let reduceKnown : CLIArguments -> (_ -> ExpectoConfig) =
         function
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
         | Parallel -> fun o -> { o with parallel = true }
         | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
-        | Filter _ -> fun o -> failwith "TODO: PRs much appreciated."
-        | Filter_Test_List _ -> fun o -> failwith "TODO: PRs much appreciated."
-        | Filter_Test_Case _ -> fun o -> failwith "TODO: PRs much appreciated."
+        | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
+        | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
+        | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}
         | List_Tests -> id
 
 
@@ -733,4 +748,5 @@ module Tests =
       | Some t -> t
       | None -> TestList ([], Normal)
     let config, isList = args |> ExpectoConfig.fillFromArgs config
+    let tests = tests |> config.filter
     if isList then listTests tests; 0 else runTests config tests
