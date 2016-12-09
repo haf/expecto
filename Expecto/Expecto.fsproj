@@ -52,7 +52,6 @@
       <Paket>True</Paket>
       <Link>paket-files/Facade.fs</Link>
     </Compile>
-    <Compile Include="AssemblyVersionInfo.fs" />
     <Compile Include="Expecto.fs" />
     <Compile Include="Expect.fs" />
     <Content Include="paket.references" />
@@ -63,6 +62,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
   </ItemGroup>
+  <Import Project="..\.paket\paket.targets" />
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v3.5'">
       <ItemGroup>

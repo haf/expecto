@@ -24,27 +24,27 @@ module BenchmarkDotNet =
   type SetupAttribute = BenchmarkDotNet.Attributes.SetupAttribute
 
   type BenchmarkConfig =
-    { columns : IColumn list
+    { columns : IColumnProvider list
       exporters : IExporter list
       loggers : ILogger list
       diagnosers : IDiagnoser list
       analysers : IAnalyser list
-      jobs : IJob list
+      jobs : Job list
       validators : IValidator list
       orderProvider : IOrderProvider
       unionRule : ConfigUnionRule
       keepFiles : bool }
 
     interface IConfig with
-      member x.GetColumns() : IColumn seq = upcast x.columns
-      member x.GetExporters() : seq<IExporter> = upcast x.exporters
-      member x.GetLoggers() : seq<ILogger> = upcast x.loggers
-      member x.GetDiagnosers() : seq<IDiagnoser> = upcast x.diagnosers
-      member x.GetAnalysers() : seq<IAnalyser> = upcast x.analysers
-      member x.GetJobs() : seq<IJob> = upcast x.jobs
-      member x.GetValidators() : seq<IValidator> = upcast x.validators
-      member x.GetOrderProvider() : IOrderProvider  = x.orderProvider
-      member x.UnionRule : ConfigUnionRule = x.unionRule
+      member x.GetColumnProviders() = x.columns    :> IColumnProvider seq
+      member x.GetExporters()       = x.exporters  :> seq<IExporter>
+      member x.GetLoggers()         = x.loggers    :> seq<ILogger>
+      member x.GetDiagnosers()      = x.diagnosers :> seq<IDiagnoser>
+      member x.GetAnalysers()       = x.analysers  :> seq<IAnalyser>
+      member x.GetJobs()            = x.jobs       :> seq<Job>
+      member x.GetValidators()      = x.validators :> seq<IValidator>
+      member x.GetOrderProvider()   = x.orderProvider : IOrderProvider
+      member x.UnionRule            = x.unionRule : ConfigUnionRule
       /// Determines if all auto-generated files should be kept or removed after running benchmarks
       member x.KeepBenchmarkFiles = x.keepFiles
 
@@ -61,7 +61,7 @@ module BenchmarkDotNet =
 
   let benchmarkConfig =
     let def = DefaultConfig.Instance
-    { columns = def.GetColumns() |> List.ofSeq
+    { columns = def.GetColumnProviders() |> List.ofSeq
       exporters = def.GetExporters() |> List.ofSeq
       loggers = [ synchronisedLogger ]
       diagnosers = def.GetDiagnosers() |> List.ofSeq

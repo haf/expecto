@@ -1,0 +1,76 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{3786E131-11FB-4606-AFE0-5E6CDA744DD0}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+	EndProjectSection
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto", "Expecto\Expecto.fsproj", "{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.BenchmarkDotNet", "Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj", "{0ACABEAA-29BD-4F9F-89DB-0D03B5AFC952}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.FsCheck", "Expecto.FsCheck\Expecto.FsCheck.fsproj", "{58507646-335A-460E-B283-77A2BAF0D3A8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{1870B8C4-3943-41D3-AEA3-F8A69AB9E9FE}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		.travis.yml = .travis.yml
+		appveyor.yml = appveyor.yml
+		build.cmd = build.cmd
+		build.fsx = build.fsx
+		build.sh = build.sh
+		docker-build.sh = docker-build.sh
+		Gemfile = Gemfile
+		globals.json = globals.json
+		paket.dependencies = paket.dependencies
+		Rakefile = Rakefile
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{5B9D0E5F-378A-4310-B9F3-4ECF67AA5A23}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{191A316D-EA59-4BA9-9A70-D2AC46ECC6ED}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.Tests", "Expecto.Tests\Expecto.Tests.fsproj", "{4182E778-F6C2-4BA4-BFC7-19DB54890E18}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.Sample", "Expecto.Sample\Expecto.Sample.fsproj", "{9996E3A7-F97F-4A6A-AD5F-C6C70858E220}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0ACABEAA-29BD-4F9F-89DB-0D03B5AFC952}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0ACABEAA-29BD-4F9F-89DB-0D03B5AFC952}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0ACABEAA-29BD-4F9F-89DB-0D03B5AFC952}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0ACABEAA-29BD-4F9F-89DB-0D03B5AFC952}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58507646-335A-460E-B283-77A2BAF0D3A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4182E778-F6C2-4BA4-BFC7-19DB54890E18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4182E778-F6C2-4BA4-BFC7-19DB54890E18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4182E778-F6C2-4BA4-BFC7-19DB54890E18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4182E778-F6C2-4BA4-BFC7-19DB54890E18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9996E3A7-F97F-4A6A-AD5F-C6C70858E220}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9996E3A7-F97F-4A6A-AD5F-C6C70858E220}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9996E3A7-F97F-4A6A-AD5F-C6C70858E220}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9996E3A7-F97F-4A6A-AD5F-C6C70858E220}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4182E778-F6C2-4BA4-BFC7-19DB54890E18} = {5B9D0E5F-378A-4310-B9F3-4ECF67AA5A23}
+		{9996E3A7-F97F-4A6A-AD5F-C6C70858E220} = {191A316D-EA59-4BA9-9A70-D2AC46ECC6ED}
+	EndGlobalSection
+EndGlobal
