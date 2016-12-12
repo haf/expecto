@@ -40,10 +40,17 @@ let tests =
         Expect.equal "Test string" "Test string" "Test string"
       }
 
-      test "fail - different length" {
+      test "fail - different length, shorter" {
         let format = "Failing - string with different length"
         let test () = Expect.equal "Test" "Test2" format
         let msg = sprintf "%s. String actual shorter than expected, at pos %i for expected '%A'." format 4 '2'
+        assertTestFailsWithMsg msg (test, Normal)
+      }
+
+      test "fail - different length, longer" {
+        let format = "Failing - string with different length"
+        let test () = Expect.equal "Test2" "Test" format
+        let msg = sprintf "%s. String actual longer than expected, at pos %i found '%A'." format 4 '2'
         assertTestFailsWithMsg msg (test, Normal)
       }
 
@@ -366,6 +373,78 @@ let timeouts =
           let test () = Expect.stringContains "hello world" "a" "Deliberately failing"
           assertTestFails (test, Normal)
       ]
+
+      testList "string starts" [
+        testCase "pass" <| fun _ ->
+          Expect.stringStarts "hello world" "hello" "String actually starts"
+
+        testCase "fail" <| fun _ ->
+          let test () = Expect.stringStarts "hello world" "a" "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
+      testList "string ends" [
+        testCase "pass" <| fun _ ->
+          Expect.stringEnds "hello world" "world" "String actually ends"
+
+        testCase "fail" <| fun _ ->
+          let test () = Expect.stringEnds "hello world" "a" "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
+      testList "string has length" [
+        testCase "pass" <| fun _ ->
+          Expect.stringHasLength "hello" 5 "String actually has length"
+
+        testCase "fail" <| fun _ ->
+          let test () = Expect.stringHasLength "hello world" 5 "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
+      testList "sequence equal" [
+        testCase "pass" <| fun _ ->
+          Expect.sequenceEqual [1;2;3] [1;2;3] "Sequences actually equal"
+
+        testCase "fail - longer" <| fun _ ->
+          let test () = Expect.sequenceEqual [1;2;3] [1] "Deliberately failing"
+          assertTestFails (test, Normal)
+
+        testCase "fail - shorter" <| fun _ ->
+          let test () = Expect.sequenceEqual [1] [1;2;3] "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
+      testList "sequence starts" [
+        testCase "pass" <| fun _ ->
+          Expect.sequenceStarts [1;2;3] [1;2] "Sequences actually starts"
+
+        testCase "fail - different" <| fun _ ->
+          let test () = Expect.sequenceStarts [1;2;3] [2] "Deliberately failing"
+          assertTestFails (test, Normal)
+
+        testCase "fail - subject shorter" <| fun _ ->
+          let test () = Expect.sequenceStarts [1] [1;2;3] "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
+      testList "sequence ascending" [
+        testCase "pass" <| fun _ ->
+          Expect.isAscending [1;2;3] "Sequences actually ascending"
+
+        testCase "fail " <| fun _ ->
+          let test () = Expect.isAscending [1;3;2] "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
+      testList "sequence descending" [
+        testCase "pass" <| fun _ ->
+          Expect.isDescending [3;2;1] "Sequences actually descending"
+
+        testCase "fail " <| fun _ ->
+          let test () = Expect.isDescending [3;1;2] "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
     ]
 
     testList "computation expression" [

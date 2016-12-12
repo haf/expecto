@@ -115,7 +115,7 @@ integrationTests // from MyLib.Tests
 
 ### Focusing tests
 
-It is often convenient, when developing to be able to run a subset of specs. 
+It is often convenient, when developing to be able to run a subset of specs.
 Expecto allows you to focus specific test cases or tests list by putting `f` before *testCase* or *testList* or `F` before attribute *Tests*(when reflection tests discovery is used).
 
 ```fsharp
@@ -124,7 +124,7 @@ open Expecto
 [<FTests>]
 let someFocusedTest = testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
 [<Tests>]
-let someUnfocusedTest = test "skipped" { Expect.equal (2+2) 1 "2+2?" } 
+let someUnfocusedTest = test "skipped" { Expect.equal (2+2) 1 "2+2?" }
 ```
 
 or
@@ -133,7 +133,7 @@ or
 open Expecto
 
 [<Tests>]
-let focusedTests = 
+let focusedTests =
   testList "unfocused list" [
     ftestList "focused list" [
       testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
@@ -148,7 +148,7 @@ let focusedTests =
     ]
     testCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
   ]
-``` 
+```
 
 ### Pending tests
 
@@ -159,7 +159,7 @@ You do this by adding a `p` before *testCase* or *testList* or `P` before *Tests
 open Expecto
 
 [<PTests>]
-let skippedTestFromReflectionDiscovery = testCase "skipped" <| fun _ -> 
+let skippedTestFromReflectionDiscovery = testCase "skipped" <| fun _ ->
     Expect.equal (2+2) 4 "2+2"
 
 [<Tests>]
@@ -177,7 +177,7 @@ let myTests =
       ftestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
     ]
   ]
-```  
+```
 
 ## Expectations
 
@@ -205,12 +205,25 @@ This module is your main entry-point when asserting.
  - `isFalse`
  - `isTrue`
  - `sequenceEqual`
+ - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If it does not
+   then fail with `format` as an error message together with a description
+   of `subject` and `prefix`.
+ - `isAscending` - Expect the sequence `subject` to be ascending. If it does not
+   then fail with `format` as an error message.
+ - `isDescending` - Expect the sequence `subject` to be descending. If it does not
+   then fail with `format` as an error message.
  - `stringContains` – Expect the string `subject` to contain `substring` as part
    of itself.  If it does not, then fail with `format` and `subject` and
    `substring` as part of the error message.
  - `stringStarts` – Expect the string `subject` to start with `prefix` and if it
    does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
+ - `stringEnds` - Expect the string `subject` to end with `suffix`. If it does not
+   then fail with `format` as an error message together with a description
+   of `subject` and `suffix`.
+ - `stringHasLength` - Expect the string `subject` to have length equals `length`. If it does not
+   then fail with `format` as an error message together with a description
+   of `subject` and `length`.
  - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain the item.
  - `streamsEqual` – Expect the streams to be byte-wise identical.
 
@@ -221,11 +234,11 @@ Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in
  - `--debug`: Extra verbose output for your tests.
  - `--sequenced`: Run all tests in sequence.
  - `--parallel`: (default) Run all tests in parallel.
- - `--filter <hiera>`: Filter a specific hierarchy to run (**TBD**).
- - `--filter-test-list <substring>`: Filter a specific test list to run
-   (**TBD**).
- - `--filter-test-case <substring>`: Filter a specific test case to run
-   (**TBD**).
+ - `--filter <hiera>`: Filter a specific hierarchy to run.
+ - `--filter-test-list <substring>`: Filter a specific test list to run.
+ - `--filter-test-case <substring>`: Filter a specific test case to run.
+ - `--run [<tests1> <test2> ...]`: Run only provided tests.
+ - `--list-tests`: Doesn't run tests, print out list of tests instead.
 
 ### The config
 

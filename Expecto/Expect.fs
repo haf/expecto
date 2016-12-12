@@ -138,6 +138,9 @@ let inline equal (actual : 'a) (expected : 'a) format =
         Tests.failtestf "%s. String actual shorter than expected, at pos %i for expected '%A'."
                         format i (ei.Current)
       i <- i + 1
+    if ai.MoveNext() then
+      Tests.failtestf "%s. String actual longer than expected, at pos %i found '%A'."
+                      format i (ai.Current)
   | _, _ ->
     if actual <> expected then
       Tests.failtestf "%s. Actual value was %A but had expected it to be %A." format actual expected
@@ -184,6 +187,39 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
       Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A."
                       format i (ei.Current)
     i <- i + 1
+  if ai.MoveNext() then
+    Tests.failtestf "%s. Sequence actual longer than expected, at pos %i found item %A."
+                      format i (ai.Current)
+
+/// Expect the sequence `subject` to start with `prefix`. If it does not
+/// then fail with `format` as an error message together with a description
+/// of `subject` and `prefix`.
+let sequenceStarts (subject : _ seq) (prefix : _ seq) format =
+  use si = subject.GetEnumerator()
+  use pi = prefix.GetEnumerator()
+  let mutable i = 0
+  while pi.MoveNext() do
+    if si.MoveNext() then
+      if si.Current = pi.Current then ()
+      else
+        Tests.failtestf "%s. Sequence do not match at position %i. Expected: %A, but got %A."
+                           format i (pi.Current) (si.Current)
+    else
+      Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A."
+                      format i (pi.Current)
+    i <- i + 1
+
+/// Expect the sequence `subject` to be ascending. If it does not
+/// then fail with `format` as an error message.
+let isAscending (subject : _ seq) format =
+  if not (subject |> Seq.windowed 2 |> Seq.forall (fun s -> s.[1] >= s.[0])) then
+    Tests.failtestf "%s. Sequence is not ascending" format
+
+/// Expect the sequence `subject` to be descending. If it does not
+/// then fail with `format` as an error message.
+let isDescending  (subject : _ seq) format =
+  if not (subject |> Seq.windowed 2 |> Seq.forall (fun s -> s.[1] <= s.[0])) then
+    Tests.failtestf "%s. Sequence is not descending" format
 
 /// Expect the string `subject` to contain `substring` as part of itself.
 /// If it does not, then fail with `format` and `subject` and `substring`
@@ -200,6 +236,22 @@ let stringStarts (subject : string) (prefix : string) format =
   if not (subject.StartsWith prefix) then
     Tests.failtestf "%s. Expected subject string '%s' to start with '%s'."
                     format subject prefix
+
+/// Expect the string `subject` to end with `suffix`. If it does not
+/// then fail with `format` as an error message together with a description
+/// of `subject` and `suffix`.
+let stringEnds (subject : string) (suffix : string) format =
+  if not (subject.EndsWith suffix) then
+    Tests.failtestf "%s. Expected subject string '%s' to end with '%s'."
+                    format subject suffix
+
+/// Expect the string `subject` to have length equals `length`. If it does not
+/// then fail with `format` as an error message together with a description
+/// of `subject` and `length`.
+let stringHasLength (subject : string) (length : int) format =
+  if subject.Length <> length then
+    Tests.failtestf "%s. Expected subject string '%s' to have length '%d'."
+                    format subject length
 
 
 /// Expect the streams to byte-wise equal.
