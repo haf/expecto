@@ -427,6 +427,24 @@ let timeouts =
           assertTestFails (test, Normal)
       ]
 
+      testList "sequence ascending" [
+        testCase "pass" <| fun _ ->
+          Expect.isAscending [1;2;3] "Sequences actually ascending"
+
+        testCase "fail " <| fun _ ->
+          let test () = Expect.isAscending [1;3;2] "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
+      testList "sequence descending" [
+        testCase "pass" <| fun _ ->
+          Expect.isDescending [3;2;1] "Sequences actually descending"
+
+        testCase "fail " <| fun _ ->
+          let test () = Expect.isDescending [3;1;2] "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
     ]
 
     testList "computation expression" [
