@@ -191,6 +191,24 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
     Tests.failtestf "%s. Sequence actual longer than expected, at pos %i found item %A."
                       format i (ai.Current)
 
+/// Expect the string `subject` to start with `prefix`. If it does not
+/// then fail with `format` as an error message together with a description
+/// of `subject` and `prefix`.
+let sequenceStarts (subject : _ seq) (prefix : _ seq) format =
+  use si = subject.GetEnumerator()
+  use pi = prefix.GetEnumerator()
+  let mutable i = 0
+  while pi.MoveNext() do
+    if si.MoveNext() then
+      if si.Current = pi.Current then ()
+      else
+        Tests.failtestf "%s. Sequence do not match at position %i. Expected: %A, but got %A."
+                           format i (pi.Current) (si.Current)
+    else
+      Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A."
+                      format i (pi.Current)
+    i <- i + 1
+
 
 /// Expect the string `subject` to contain `substring` as part of itself.
 /// If it does not, then fail with `format` and `subject` and `substring`
