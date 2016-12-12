@@ -230,25 +230,24 @@ let timeouts =
       testList "filtering" [
         let dummy =
           TestList ([
-                      testCase "a" ignore
-                      testCase "a_x" ignore
-                      testCase "b" ignore
-                      testList "c" [
-                        testCase "d" ignore
-                        testCase "e" ignore
-                        testList "f" [
-                          testCase "g" ignore
-                          testCase "h" ignore
-                        ]
+                    testCase "a" ignore
+                    testCase "a_x" ignore
+                    testCase "b" ignore
+                    testList "c" [
+                      testCase "d" ignore
+                      testCase "e" ignore
+                      testList "f" [
+                        testCase "g" ignore
+                        testCase "h" ignore
                       ]
-                    ], Normal)
+                    ]
+                  ], Normal)
 
 
         yield testCase "filter" <| fun _ ->
           let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter c"|]
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList |> Seq.toList
-          printfn "%A" filtered
-          filtered.Length ==? 4
+          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          filtered |> Seq.length ==? 4
 
         yield testCase "filter deep" <| fun _ ->
           let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter c/f"|]
