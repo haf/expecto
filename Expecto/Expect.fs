@@ -191,7 +191,7 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
     Tests.failtestf "%s. Sequence actual longer than expected, at pos %i found item %A."
                       format i (ai.Current)
 
-/// Expect the string `subject` to start with `prefix`. If it does not
+/// Expect the sequence `subject` to start with `prefix`. If it does not
 /// then fail with `format` as an error message together with a description
 /// of `subject` and `prefix`.
 let sequenceStarts (subject : _ seq) (prefix : _ seq) format =
@@ -209,6 +209,17 @@ let sequenceStarts (subject : _ seq) (prefix : _ seq) format =
                       format i (pi.Current)
     i <- i + 1
 
+/// Expect the sequence `subject` to be ascending. If it does not
+/// then fail with `format` as an error message.
+let isAscending (subject : _ seq) format =
+  if not (subject |> Seq.windowed 2 |> Seq.forall (fun s -> s.[1] >= s.[0])) then
+    Tests.failtestf "%s. Sequence is not ascending" format
+
+/// Expect the sequence `subject` to be descending. If it does not
+/// then fail with `format` as an error message.
+let isDescending  (subject : _ seq) format =
+  if not (subject |> Seq.windowed 2 |> Seq.forall (fun s -> s.[1] <= s.[0])) then
+    Tests.failtestf "%s. Sequence is not descending" format
 
 /// Expect the string `subject` to contain `substring` as part of itself.
 /// If it does not, then fail with `format` and `subject` and `substring`
