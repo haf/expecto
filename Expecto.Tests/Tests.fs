@@ -393,6 +393,16 @@ let timeouts =
           let test () = Expect.stringHasLength "hello world" 5 "Deliberately failing"
           assertTestFails (test, Normal)
       ]
+
+      testList "sequence equal" [
+        testCase "pass" <| fun _ ->
+          Expect.sequenceEqual [1;2;3] [1;2;3] "Sequences actually equal"
+
+        testCase "fail" <| fun _ ->
+          let test () = Expect.sequenceEqual [1;2;3] [1] "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
     ]
 
     testList "computation expression" [
