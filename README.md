@@ -239,6 +239,7 @@ Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in
  - `--filter-test-case <substring>`: Filter a specific test case to run.
  - `--run [<tests1> <test2> ...]`: Run only provided tests.
  - `--list-tests`: Doesn't run tests, print out list of tests instead.
+ - `--summary`: Prints out summary after all tests are finished
 
 ### The config
 
