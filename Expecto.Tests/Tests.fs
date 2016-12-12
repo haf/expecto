@@ -414,6 +414,19 @@ let timeouts =
           assertTestFails (test, Normal)
       ]
 
+      testList "sequence starts" [
+        testCase "pass" <| fun _ ->
+          Expect.sequenceStarts [1;2;3] [1;2] "Sequences actually starts"
+
+        testCase "fail - different" <| fun _ ->
+          let test () = Expect.sequenceStarts [1;2;3] [2] "Deliberately failing"
+          assertTestFails (test, Normal)
+
+        testCase "fail - subject shorter" <| fun _ ->
+          let test () = Expect.sequenceStarts [1] [1;2;3] "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
+
     ]
 
     testList "computation expression" [
