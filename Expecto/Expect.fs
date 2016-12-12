@@ -201,6 +201,14 @@ let stringStarts (subject : string) (prefix : string) format =
     Tests.failtestf "%s. Expected subject string '%s' to start with '%s'."
                     format subject prefix
 
+/// Expect the string `subject` to start with `suffix`. If it does not
+/// then fail with `format` as an error message together with a description
+/// of `subject` and `suffix`.
+let stringEnds (subject : string) (suffix : string) format =
+  if not (subject.EndsWith suffix) then
+    Tests.failtestf "%s. Expected subject string '%s' to end with '%s'."
+                    format subject suffix
+
 
 /// Expect the streams to byte-wise equal.
 let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) format =
