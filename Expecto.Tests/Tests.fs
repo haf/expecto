@@ -154,14 +154,15 @@ let timeouts =
 
     testList "Test filter" [
       let tests =
-        TestList ([
-                    testCase "a" ignore
-                    testCase "b" ignore
-                    testList "c" [
-                      testCase "d" ignore
-                      testCase "e" ignore
-                    ]
-                  ], Normal)
+        TestList (
+          [
+            testCase "a" ignore
+            testCase "b" ignore
+            testList "c" [
+              testCase "d" ignore
+              testCase "e" ignore
+            ]
+          ], Normal)
       yield testCase "with one testcase" <| fun _ ->
         let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1 // same as assertEqual "" 1 t.Length
@@ -229,19 +230,20 @@ let timeouts =
 
       testList "filtering" [
         let dummy =
-          TestList ([
-                    testCase "a" ignore
-                    testCase "a_x" ignore
-                    testCase "b" ignore
-                    testList "c" [
-                      testCase "d" ignore
-                      testCase "e" ignore
-                      testList "f" [
-                        testCase "g" ignore
-                        testCase "h" ignore
-                      ]
-                    ]
-                  ], Normal)
+          TestList (
+            [
+              testCase "a" ignore
+              testCase "a_x" ignore
+              testCase "b" ignore
+              testList "c" [
+                testCase "d" ignore
+                testCase "e" ignore
+                testList "f" [
+                  testCase "g" ignore
+                  testCase "h" ignore
+                ]
+              ]
+            ], Normal)
 
 
         yield testCase "filter" <| fun _ ->
