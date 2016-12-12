@@ -234,11 +234,11 @@ Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in
  - `--debug`: Extra verbose output for your tests.
  - `--sequenced`: Run all tests in sequence.
  - `--parallel`: (default) Run all tests in parallel.
- - `--filter <hiera>`: Filter a specific hierarchy to run (**TBD**).
- - `--filter-test-list <substring>`: Filter a specific test list to run
-   (**TBD**).
- - `--filter-test-case <substring>`: Filter a specific test case to run
-   (**TBD**).
+ - `--filter <hiera>`: Filter a specific hierarchy to run.
+ - `--filter-test-list <substring>`: Filter a specific test list to run.
+ - `--filter-test-case <substring>`: Filter a specific test case to run.
+ - `--run [<tests1> <test2> ...]`: Run only provided tests.
+ - `--list-tests`: Doesn't run tests, print out list of tests instead.
 
 ### The config
 
