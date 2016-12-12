@@ -10,7 +10,7 @@ GEM
     mini_portile2 (2.1.0)
     nokogiri (1.6.8.1)
       mini_portile2 (~> 2.1.0)
-    rake (12.0.0)
+    rake (10.5.0)
     semver2 (3.4.2)
 
 PLATFORMS
