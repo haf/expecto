@@ -237,7 +237,7 @@ let stringStarts (subject : string) (prefix : string) format =
     Tests.failtestf "%s. Expected subject string '%s' to start with '%s'."
                     format subject prefix
 
-/// Expect the string `subject` to start with `suffix`. If it does not
+/// Expect the string `subject` to end with `suffix`. If it does not
 /// then fail with `format` as an error message together with a description
 /// of `subject` and `suffix`.
 let stringEnds (subject : string) (suffix : string) format =
