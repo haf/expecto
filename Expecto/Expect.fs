@@ -185,6 +185,8 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
                       format i (ei.Current)
     i <- i + 1
 
+
+
 /// Expect the string `subject` to contain `substring` as part of itself.
 /// If it does not, then fail with `format` and `subject` and `substring`
 /// as part of the error message.
@@ -208,6 +210,14 @@ let stringEnds (subject : string) (suffix : string) format =
   if not (subject.EndsWith suffix) then
     Tests.failtestf "%s. Expected subject string '%s' to end with '%s'."
                     format subject suffix
+
+/// Expect the string `subject` to have length equals `length`. If it does not
+/// then fail with `format` as an error message together with a description
+/// of `subject` and `length`.
+let stringHasLength (subject : string) (length : int) format =
+  if subject.Length <> length then
+    Tests.failtestf "%s. Expected subject string '%s' to have length '%d'."
+                    format subject length
 
 
 /// Expect the streams to byte-wise equal.
