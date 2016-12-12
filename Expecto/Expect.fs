@@ -138,6 +138,9 @@ let inline equal (actual : 'a) (expected : 'a) format =
         Tests.failtestf "%s. String actual shorter than expected, at pos %i for expected '%A'."
                         format i (ei.Current)
       i <- i + 1
+    if ai.MoveNext() then
+      Tests.failtestf "%s. String actual longer than expected, at pos %i found '%A'."
+                      format i (ai.Current)
   | _, _ ->
     if actual <> expected then
       Tests.failtestf "%s. Actual value was %A but had expected it to be %A." format actual expected
@@ -184,7 +187,9 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
       Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A."
                       format i (ei.Current)
     i <- i + 1
-
+  if ai.MoveNext() then
+    Tests.failtestf "%s. Sequence actual longer than expected, at pos %i found item %A."
+                      format i (ai.Current)
 
 
 /// Expect the string `subject` to contain `substring` as part of itself.

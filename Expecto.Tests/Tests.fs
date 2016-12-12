@@ -40,10 +40,17 @@ let tests =
         Expect.equal "Test string" "Test string" "Test string"
       }
 
-      test "fail - different length" {
+      test "fail - different length, shorter" {
         let format = "Failing - string with different length"
         let test () = Expect.equal "Test" "Test2" format
         let msg = sprintf "%s. String actual shorter than expected, at pos %i for expected '%A'." format 4 '2'
+        assertTestFailsWithMsg msg (test, Normal)
+      }
+
+      test "fail - different length, longer" {
+        let format = "Failing - string with different length"
+        let test () = Expect.equal "Test2" "Test" format
+        let msg = sprintf "%s. String actual longer than expected, at pos %i found '%A'." format 4 '2'
         assertTestFailsWithMsg msg (test, Normal)
       }
 
@@ -398,8 +405,12 @@ let timeouts =
         testCase "pass" <| fun _ ->
           Expect.sequenceEqual [1;2;3] [1;2;3] "Sequences actually equal"
 
-        testCase "fail" <| fun _ ->
+        testCase "fail - longer" <| fun _ ->
           let test () = Expect.sequenceEqual [1;2;3] [1] "Deliberately failing"
+          assertTestFails (test, Normal)
+
+        testCase "fail - shorter" <| fun _ ->
+          let test () = Expect.sequenceEqual [1] [1;2;3] "Deliberately failing"
           assertTestFails (test, Normal)
       ]
 
