@@ -665,6 +665,7 @@ module Tests =
     | Filter of hiera:string
     | Filter_Test_List of substring:string
     | Filter_Test_Case of substring:string
+    | Run of tests:string list
     | List_Tests
 
     interface IArgParserTemplate with
@@ -676,6 +677,7 @@ module Tests =
         | Filter _ -> "Filter the list of tests by a hierarchy that's slash (/) separated."
         | Filter_Test_List _ -> "Filter the list of test lists by a substring."
         | Filter_Test_Case _ -> "Filter the list of test cases by a substring."
+        | Run _ -> "Run only provided tests"
         | List_Tests -> "Doesn't run tests, print out list of tests instead"
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
@@ -712,6 +714,7 @@ module Tests =
         | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
         | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
         | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}
+        | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
         | List_Tests -> id
 
 
