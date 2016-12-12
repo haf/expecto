@@ -154,14 +154,15 @@ let timeouts =
 
     testList "Test filter" [
       let tests =
-        TestList ([
-                    testCase "a" ignore
-                    testCase "b" ignore
-                    testList "c" [
-                      testCase "d" ignore
-                      testCase "e" ignore
-                    ]
-                  ], Normal)
+        TestList (
+          [
+            testCase "a" ignore
+            testCase "b" ignore
+            testList "c" [
+              testCase "d" ignore
+              testCase "e" ignore
+            ]
+          ], Normal)
       yield testCase "with one testcase" <| fun _ ->
         let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1 // same as assertEqual "" 1 t.Length
@@ -226,6 +227,68 @@ let timeouts =
       testCase "list" <| fun _ ->
         let _, isList = ExpectoConfig.fillFromArgs defaultConfig [|"--list-tests"|]
         isList ==? true
+
+      testList "filtering" [
+        let dummy =
+          TestList (
+            [
+              testCase "a" ignore
+              testCase "a_x" ignore
+              testCase "b" ignore
+              testList "c" [
+                testCase "d" ignore
+                testCase "e" ignore
+                testList "f" [
+                  testCase "g" ignore
+                  testCase "h" ignore
+                ]
+              ]
+            ], Normal)
+
+
+        yield testCase "filter" <| fun _ ->
+          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c"|]
+          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          filtered |> Seq.length ==? 4
+
+        yield testCase "filter deep" <| fun _ ->
+          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c/f"|]
+          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          filtered |> Seq.length ==? 2
+
+        yield testCase "filter wrong" <| fun _ ->
+          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "f"|]
+          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          filtered |> Seq.length ==? 0
+
+        yield testCase "filter test list" <| fun _ ->
+          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-list"; "f"|]
+          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          filtered |> Seq.length ==? 2
+
+        yield testCase "filter test list wrong" <| fun _ ->
+          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-list"; "x"|]
+          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          filtered |> Seq.length ==? 0
+
+        yield testCase "filter test case" <| fun _ ->
+          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-case"; "a"|]
+          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          filtered |> Seq.length ==? 2
+
+        yield testCase "filter test case wrong" <| fun _ ->
+          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-case"; "y"|]
+          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          filtered |> Seq.length ==? 0
+
+        yield testCase "run" <| fun _ ->
+          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--run"; "a"; "c/d"; "c/f/h"|]
+          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          filtered |> Seq.length ==? 3
+
+
+      ]
+
     ]
 
     testList "transformations" [
