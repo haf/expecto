@@ -73,11 +73,11 @@ let tests =
         ]
       let r = lazy sumTestResults sumTestResultsTests
       yield testCase "passed" <| fun _ ->
-          r.Value.passed ==? 3
+          r.Value.passed.Length ==? 3
       yield testCase "failed" <| fun _ ->
-          r.Value.failed ==? 2
+          r.Value.failed.Length ==? 2
       yield testCase "exn" <| fun _ ->
-          r.Value.errored ==? 1
+          r.Value.errored.Length ==? 1
       yield testCase "duration" <| fun _ ->
           r.Value.duration ==? TimeSpan.FromMinutes 27.
     ]
@@ -91,18 +91,18 @@ let tests =
                       let r = a + b
                       f a b r)
         yield testResultCountsSum "Passed" <|
-          fun a b r -> r.passed = a.passed + b.passed
+          fun a b r -> r.passed = a.passed @ b.passed
         yield testResultCountsSum "Ignored" <|
-          fun a b r -> r.ignored = a.ignored + b.ignored
+          fun a b r -> r.ignored = a.ignored @ b.ignored
         yield testResultCountsSum "Failed" <|
-          fun a b r -> r.failed = a.failed + b.failed
+          fun a b r -> r.failed = a.failed @ b.failed
         yield testResultCountsSum "Errored" <|
-          fun a b r -> r.errored = a.errored + b.errored
+          fun a b r -> r.errored = a.errored @ b.errored
         yield testResultCountsSum "Time" <|
           fun a b r -> r.duration = a.duration + b.duration
       ]
       testCase "ToString" <| fun _ ->
-        let c1 = { passed = 1; ignored = 5; failed = 2; errored = 3; duration = TimeSpan.FromSeconds 20. }
+        let c1 = { passed = [""]; ignored = [""; ""; ""; ""; ""]; failed = [""; ""]; errored = [""; ""; ""]; duration = TimeSpan.FromSeconds 20. }
         c1.ToString() ==? "6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n"
     ]
 
@@ -188,11 +188,11 @@ let timeouts =
       testCase "fail" <| fun _ ->
         let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
         let result = evalSilent test |> sumTestResults
-        result.failed ==? 1
+        result.failed.Length ==? 1
       testCase "pass" <| fun _ ->
         let test = TestCase(Test.timeout 1000 ignore, Normal)
         let result = evalSilent test |> sumTestResults
-        result.passed ==? 1
+        result.passed.Length ==? 1
     ]
 
     testList "Reflection" [

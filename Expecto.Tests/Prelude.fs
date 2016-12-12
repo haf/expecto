@@ -70,13 +70,13 @@ module TestHelpers =
     let genTestResultCounts =
         lazy (
             gen {
-                let! passed = Arb.generate<int>
-                let! ignored = Arb.generate<int>
-                let! failed = Arb.generate<int>
-                let! errored = Arb.generate<int>
+                let! passed = Arb.generate<string list>
+                let! ignored = Arb.generate<string list>
+                let! failed = Arb.generate<string list>
+                let! errored = Arb.generate<string list>
                 let! duration = genLimitedTimeSpan.Value
                 return
-                  { TestResultCounts.passed = passed
+                  { TestResultSummary.passed = passed
                     ignored  = ignored
                     failed   = failed
                     errored  = errored
@@ -84,7 +84,7 @@ module TestHelpers =
             }
         )
 
-    let shrinkTestResultCounts (c: TestResultCounts) : TestResultCounts seq =
+    let shrinkTestResultCounts (c: TestResultSummary) : TestResultSummary seq =
         seq {
             for passed in Arb.shrink c.passed do
             for ignored in Arb.shrink c.ignored do
@@ -92,7 +92,7 @@ module TestHelpers =
             for errored in Arb.shrink c.errored do
             for duration in Arb.shrink c.duration ->
             {
-                TestResultCounts.passed = passed
+                TestResultSummary.passed = passed
                 ignored = ignored
                 failed = failed
                 errored = errored
