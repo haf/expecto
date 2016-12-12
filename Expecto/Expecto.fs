@@ -260,31 +260,31 @@ module Impl =
       | _ -> false
 
   [<StructuredFormatDisplay("{description}")>]
-  type TestResultCounts =
-    { passed   : int
-      ignored  : int
-      failed   : int
-      errored  : int
+  type TestResultSummary =
+    { passed   : string list
+      ignored  : string list
+      failed   : string list
+      errored  : string list
       duration : TimeSpan }
 
       member x.total =
-        x.passed + x.ignored + x.failed
+        x.passed.Length + x.ignored.Length + x.failed.Length
 
       override x.ToString() =
         sprintf "%d tests run: %d passed, %d ignored, %d failed, %d errored (%A)\n"
-                (x.errored + x.failed + x.passed)
-                x.passed x.ignored x.failed x.errored x.duration
+                (x.errored.Length + x.failed.Length + x.passed.Length)
+                x.passed.Length x.ignored.Length x.failed.Length x.errored.Length x.duration
       member x.description =
         x.ToString()
-      static member (+) (c1: TestResultCounts, c2: TestResultCounts) =
-        { passed = c1.passed + c2.passed
-          ignored = c1.ignored + c2.ignored
-          failed = c1.failed + c2.failed
-          errored = c1.errored + c2.errored
+      static member (+) (c1: TestResultSummary, c2: TestResultSummary) =
+        { passed = c1.passed @ c2.passed
+          ignored = c1.ignored @ c2.ignored
+          failed = c1.failed @ c2.failed
+          errored = c1.errored @ c2.errored
           duration = c1.duration + c2.duration }
 
-      static member errorCode (c: TestResultCounts) =
-        (if c.failed > 0 then 1 else 0) ||| (if c.errored > 0 then 2 else 0)
+      static member errorCode (c: TestResultSummary) =
+        (if c.failed.Length > 0 then 1 else 0) ||| (if c.errored.Length > 0 then 2 else 0)
 
   [<StructuredFormatDisplay("{description}")>]
   type TestRunResult =
@@ -303,20 +303,22 @@ module Impl =
   let sumTestResults (results: #seq<TestRunResult>) =
     let counts =
       results
-      |> Seq.map (fun r -> r.result)
-      |> Seq.countBy TestResult.tag
+      |> Seq.groupBy (fun r -> r.result )
       |> dict
 
     let get result =
-        match counts.TryGetValue (TestResult.tag result) with
-        | true, v -> v
-        | _ -> 0
+        match counts.TryGetValue result with
+        | true, v -> v |> Seq.map (fun r -> r.name) |> Seq.toList
+        | _ -> List.empty
 
     { passed   = get TestResult.Passed
       ignored  = get (TestResult.Ignored "")
       failed   = get (TestResult.Failed "")
       errored  = get (TestResult.Error null)
       duration = results |> Seq.map (fun r -> r.duration) |> Seq.fold (+) TimeSpan.Zero }
+
+  let printList (category : string) (names : string list) = ()
+
 
   /// Hooks to print report through test run
   type TestPrinters =
@@ -333,7 +335,7 @@ module Impl =
       /// test name -> exception -> time taken -> unit
       exn: string -> exn -> TimeSpan -> unit
       /// Prints a summary given the test result counts
-      summary : TestResultCounts -> unit }
+      summary : TestResultSummary -> unit }
 
     static member Default =
       { beforeRun = fun _tests ->
@@ -376,6 +378,14 @@ module Impl =
             >> setField "ignores" summary.ignored
             >> setField "failures" summary.failed
             >> setField "errors" summary.errored)}
+    static member Summary =
+      { TestPrinters.Default with
+          summary = fun summary ->
+            TestPrinters.Default.summary summary
+            printList "Passed" summary.passed
+            printList "Ignored" summary.ignored
+            printList "Failed" summary.failed
+            printList "Errored" summary.errored }
 
     type WrappedFocusedState =
       | Enabled of state:FocusState
@@ -497,7 +507,7 @@ module Impl =
     let summary = { sumTestResults results with duration = w.Elapsed }
     printer.summary summary
 
-    TestResultCounts.errorCode summary
+    TestResultSummary.errorCode summary
 
   let testFromMember (mi: MemberInfo): Test option  =
     let getTestFromMemberInfo focusedState =
