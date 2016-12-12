@@ -317,7 +317,19 @@ module Impl =
       errored  = get (TestResult.Error null)
       duration = results |> Seq.map (fun r -> r.duration) |> Seq.fold (+) TimeSpan.Zero }
 
-  let printList (category : string) (names : string list) = ()
+  let logSummary (summary : TestResultSummary) =
+    let passed = (summary.passed |> String.concat "\n\t")
+    let ignored = (summary.ignored |> String.concat "\n\t")
+    let failed = (summary.failed |> String.concat "\n\t")
+    let errored = (summary.errored |> String.concat "\n\t")
+
+    logger.info (
+      eventX "EXPECTO?! Summary...\nPassed:\n\t{passed}\nIgnored:\n\t{ignored}\nFailed:\n\t{failed}\nErrored:\n\t{errored} "
+      >> setField "passed" passed
+      >> setField "ignored" ignored
+      >> setField "failed" failed
+      >> setField "errored" errored)
+
 
 
   /// Hooks to print report through test run
@@ -374,18 +386,15 @@ module Impl =
             eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored."
             >> setField "total" summary.total
             >> setField "duration" summary.duration
-            >> setField "passes" summary.passed
-            >> setField "ignores" summary.ignored
-            >> setField "failures" summary.failed
-            >> setField "errors" summary.errored)}
+            >> setField "passes" summary.passed.Length
+            >> setField "ignores" summary.ignored.Length
+            >> setField "failures" summary.failed.Length
+            >> setField "errors" summary.errored.Length)}
     static member Summary =
       { TestPrinters.Default with
           summary = fun summary ->
             TestPrinters.Default.summary summary
-            printList "Passed" summary.passed
-            printList "Ignored" summary.ignored
-            printList "Failed" summary.failed
-            printList "Errored" summary.errored }
+            logSummary summary }
 
     type WrappedFocusedState =
       | Enabled of state:FocusState
@@ -677,6 +686,7 @@ module Tests =
     | Filter_Test_Case of substring:string
     | Run of tests:string list
     | List_Tests
+    | Summary
 
     interface IArgParserTemplate with
       member s.Usage =
@@ -689,6 +699,7 @@ module Tests =
         | Filter_Test_Case _ -> "Filter the list of test cases by a substring."
         | Run _ -> "Run only provided tests"
         | List_Tests -> "Doesn't run tests, print out list of tests instead"
+        | Summary -> "Prints out summary after all tests are finished"
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
@@ -726,6 +737,7 @@ module Tests =
         | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}
         | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
         | List_Tests -> id
+        | Summary -> fun o -> {o with printer = TestPrinters.Summary}
 
 
 
