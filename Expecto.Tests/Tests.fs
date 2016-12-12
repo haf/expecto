@@ -384,6 +384,15 @@ let timeouts =
           let test () = Expect.stringEnds "hello world" "a" "Deliberately failing"
           assertTestFails (test, Normal)
       ]
+
+      testList "string has length" [
+        testCase "pass" <| fun _ ->
+          Expect.stringHasLength "hello" 5 "String actually has length"
+
+        testCase "fail" <| fun _ ->
+          let test () = Expect.stringHasLength "hello world" 5 "Deliberately failing"
+          assertTestFails (test, Normal)
+      ]
     ]
 
     testList "computation expression" [
