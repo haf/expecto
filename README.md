@@ -110,7 +110,7 @@ open Expecto
 open MyLib.Tests
 integrationTests // from MyLib.Tests
 |> Test.filter (fun s -> s.EndsWith "another test") // the filtering function
-|> run // from Expecto
+|> runTests defaultConfig
 ```
 
 ### Focusing tests
