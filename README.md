@@ -342,7 +342,7 @@ default all tests are run in parallel; so you'll need to use `--sequenced` as
 input to your exe, or set parallel=false in the config to get valid results.
 
 To read more about how to benchmark with BenchmarkDotNet, see its [Getting
-started](https://perfdotnet.github.io/BenchmarkDotNet/GettingStarted.htm) guide.
+started](http://benchmarkdotnet.org/GettingStarted.htm) guide.
 
 Happy benchmarking!
 
