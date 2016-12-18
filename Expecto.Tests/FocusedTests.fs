@@ -66,12 +66,12 @@ let all =
   testList "all focused tests" [
     testCase "pending" <| fun _ ->
         let result = evalSilent pendingTests |> synth
-        result.passed ==? 2
-        result.ignored ==? 5
+        result.passed.Length ==? 2
+        result.ignored.Length ==? 5
     testCase "focused" <| fun _ ->
         let result = evalSilent focusedTests |> synth
-        result.passed ==? 11
-        result.ignored ==? 19
+        result.passed.Length ==? 11
+        result.ignored.Length ==? 19
 ]
 
 [<PTests>]
