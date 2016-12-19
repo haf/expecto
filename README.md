@@ -9,6 +9,29 @@ compositional (just like Suave and Logary are).
 
 ![Sample output](docs/sample-output-2.png)
 
+  * [expecto](#expecto)
+    * [Installing](#installing)
+    * [Testing "Hello world"](#testing-hello-world)
+    * [Running tests](#running-tests)
+      * [runTests](#runtests)
+      * [runTestsInAssembly](#runtestsinassembly)
+      * [testList for grouping](#testlist-for-grouping)
+      * [Filtering with filter](#filtering-with-filter)
+      * [Focusing tests](#focusing-tests)
+      * [Pending tests](#pending-tests)
+    * [Expectations](#expectations)
+      * [Expect module](#expect-module)
+    * [main argv – how to run console apps](#main-argv--how-to-run-console-apps)
+      * [The config](#the-config)
+    * [FsCheck usage](#fscheck-usage)
+    * [BenchmarkDotNet usage](#benchmarkdotnet-usage)
+    * [You're not alone\!](#youre-not-alone)
+    * [Sending e\-mail on failure – custom printers](#sending-e-mail-on-failure--custom-printers)
+    * [About test parallelism](#about-test-parallelism)
+    * [About upgrading from Fuchu](#about-upgrading-from-fuchu)
+
+## Installing
+
 In your paket.dependencies:
 
 ```
@@ -352,6 +375,7 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
 
 * [Suave](https://github.com/SuaveIO/suave/tree/master/src/Suave.Tests)
 * [Logary](https://github.com/logary/logary)
+* [Visual Studio Plugin for Expecto](https://www.nuget.org/packages/Expecto.VisualStudio.TestAdapter/) – just add the nuget `Expecto.VisualStudio.TestAdapter` and you're off to the races!
 
 ## Sending e-mail on failure – custom printers
 
