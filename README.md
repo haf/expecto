@@ -383,6 +383,8 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
   just add the `nuget Expecto.VisualStudio.TestAdapter version_in_path: true` to
   your paket file and you're off to the races!
 
+![Expecto VS Test Plugin](./docs/expecto-vs-addon.jpeg "Easy to get started even for Enterprise Developers").
+
 ## Sending e-mail on failure – custom printers
 
 The printing mechanism in Expecto is based on the [Logary
