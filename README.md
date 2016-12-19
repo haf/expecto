@@ -175,8 +175,10 @@ let focusedTests =
 
 ### Pending tests
 
-You can mark an individual spec or container as Pending. This will prevent the spec (or specs within the list) from running.
-You do this by adding a `p` before *testCase* or *testList* or `P` before *Tests* attribute(when reflection tests discovery is used).
+You can mark an individual spec or container as Pending. This will prevent the
+spec (or specs within the list) from running.  You do this by adding a `p`
+before *testCase* or *testList* or `P` before *Tests* attribute (when reflection
+tests discovery is used).
 
 ```fsharp
 open Expecto
@@ -204,7 +206,8 @@ let myTests =
 
 ## Expectations
 
-All expect-functions have the signature `actual -> expected -> string -> unit`, leaving out `expected` when obvious from the function.
+All expect-functions have the signature `actual -> expected -> string -> unit`,
+leaving out `expected` when obvious from the function.
 
 ### `Expect` module
 
@@ -375,7 +378,10 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
 
 * [Suave](https://github.com/SuaveIO/suave/tree/master/src/Suave.Tests)
 * [Logary](https://github.com/logary/logary)
-* [Visual Studio Plugin for Expecto](https://www.nuget.org/packages/Expecto.VisualStudio.TestAdapter/) – just add the nuget `Expecto.VisualStudio.TestAdapter` and you're off to the races!
+* [Visual Studio Plugin for
+  Expecto](https://www.nuget.org/packages/Expecto.VisualStudio.TestAdapter/) –
+  just add the `nuget Expecto.VisualStudio.TestAdapter version_in_path: true` to
+  your paket file and you're off to the races!
 
 ## Sending e-mail on failure – custom printers
 
