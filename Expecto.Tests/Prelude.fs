@@ -2,6 +2,7 @@
 #nowarn "44"
 
 open System
+open System.Text.RegularExpressions
 open FSharpx
 
 module Seq =
@@ -52,9 +53,11 @@ module TestHelpers =
         | x -> failtestf "Should have failed, but was %A" x
 
     let inline assertTestFailsWithMsg (msg : string) test =
+        let normalize str = Regex.Replace(msg, @"\s", "")
+
         let test = TestCase test
         match evalSilent test with
-        | [{ TestRunResult.result = TestResult.Failed x }] when String.Equals(x.Replace("\n", ""),msg.Replace("\n", "")) -> ()
+        | [{ TestRunResult.result = TestResult.Failed x }] when String.Equals(normalize x, normalize msg) -> ()
         | [{ TestRunResult.result = TestResult.Failed x }] -> failtestf "Shold have failed with message: \"%s\" but failed with \"%s\"" msg x
         | x -> failtestf "Should have failed, but was %A" x
 
