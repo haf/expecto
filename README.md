@@ -465,4 +465,4 @@ and replace with `Expect.equal $4 $3 $1`.
 
 ### Why the strange name?
 
-![Expecto expecto](./docs/expecto-patronus-2000x1126.png "This is actually because nuget won't let me publish them with the name 'Expecto', plain an simple.")
+![Expecto expecto](./docs/expecto-patronus-2000x1126.png "This is actually because nuget won't let me publish them with the name 'Expecto', plain and simple.")
