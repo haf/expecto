@@ -462,3 +462,7 @@ testCase "reading prop" <| fun _ ->
 
 In VsCode, search files for: `Assert.Equal\s*\(\s*((;|.)+?)\s*,\s*(.*?),\s*(.*?)\)`
 and replace with `Expect.equal $4 $3 $1`.
+
+### Why the strange name?
+
+![Expecto expecto](./docs/expecto-patronum-2000x1126.png "This is actually because nuget won't let me publish them with the name 'Expecto', plain an simple.")
