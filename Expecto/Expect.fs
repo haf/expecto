@@ -132,7 +132,7 @@ let inline equal (actual : 'a) (expected : 'a) format =
       if ai.MoveNext() then
         if ai.Current = ei.Current then ()
         else
-          Tests.failtestf "%s. String do not match at position %i. Expected: '%A', but got '%A'."
+          Tests.failtestf "%s. String does not match at position %i. Expected: '%A', but got '%A'."
                             format i (ei.Current) (ai.Current)
       else
         Tests.failtestf "%s. String actual shorter than expected, at pos %i for expected '%A'."
@@ -181,7 +181,7 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
     if ai.MoveNext() then
       if ai.Current = ei.Current then ()
       else
-        Tests.failtestf "%s. Sequence do not match at position %i. Expected: %A, but got %A."
+        Tests.failtestf "%s. Sequence does not match at position %i. Expected: %A, but got %A."
                            format i (ei.Current) (ai.Current)
     else
       Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A."
@@ -202,7 +202,7 @@ let sequenceStarts (subject : _ seq) (prefix : _ seq) format =
     if si.MoveNext() then
       if si.Current = pi.Current then ()
       else
-        Tests.failtestf "%s. Sequence do not match at position %i. Expected: %A, but got %A."
+        Tests.failtestf "%s. Sequence does not match at position %i. Expected: %A, but got %A."
                            format i (pi.Current) (si.Current)
     else
       Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A."
