@@ -378,6 +378,7 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
 
 * [Suave](https://github.com/SuaveIO/suave/tree/master/src/Suave.Tests)
 * [Logary](https://github.com/logary/logary)
+* [Unquote has built-in support](https://github.com/SwensenSoftware/unquote/pull/128)
 * [Visual Studio Plugin for
   Expecto](https://www.nuget.org/packages/Expecto.VisualStudio.TestAdapter/) –
   just add the `nuget Expecto.VisualStudio.TestAdapter version_in_path: true` to
