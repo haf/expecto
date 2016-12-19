@@ -303,13 +303,13 @@ module Impl =
   let sumTestResults (results: #seq<TestRunResult>) =
     let counts =
       results
-      |> Seq.groupBy (fun r -> r.result )
+      |> Seq.groupBy (fun r -> TestResult.tag r.result )
       |> dict
 
     let get result =
-        match counts.TryGetValue result with
-        | true, v -> v |> Seq.map (fun r -> r.name) |> Seq.toList
-        | _ -> List.empty
+      match counts.TryGetValue (TestResult.tag result) with
+      | true, v -> v |> Seq.map (fun r -> r.name) |> Seq.toList
+      | _ -> List.empty
 
     { passed   = get TestResult.Passed
       ignored  = get (TestResult.Ignored "")

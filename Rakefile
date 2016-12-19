@@ -72,8 +72,7 @@ end
 
 namespace :tests do
   task :unit do
-    system "Expecto.Tests/bin/#{Configuration}/Expecto.Tests.exe",
-      clr_command: true
+    system "Expecto.Tests/bin/#{Configuration}/Expecto.Tests.exe", '--summary', clr_command: true
   end
 end
 
