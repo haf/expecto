@@ -42,22 +42,43 @@ let tests =
 
       test "fail - different length, shorter" {
         let format = "Failing - string with different length"
-        let test () = Expect.equal "Test" "Test2" format
-        let msg = sprintf "%s. String actual shorter than expected, at pos %i for expected '%A'." format 4 '2'
+        let fstText = "Test"
+        let sndText = "Tes2"
+        let test () = Expect.equal fstText sndText format
+        let msg = sprintf "%s.
+            Expected value was
+            %A
+            Actual value was
+            %A
+            String actual shorter than expected, at pos %i for expected '%A'." format fstText sndText 4 '2'
         assertTestFailsWithMsg msg (test, Normal)
       }
 
       test "fail - different length, longer" {
         let format = "Failing - string with different length"
-        let test () = Expect.equal "Test2" "Test" format
-        let msg = sprintf "%s. String actual longer than expected, at pos %i found '%A'." format 4 '2'
+        let fstText = "Test"
+        let sndText = "Tes2"
+        let test () = Expect.equal sndText fstText format
+        let msg = sprintf "%s.
+            Expected value was
+            %A
+            Actual value was
+            %A
+            String actual longer than expected, at pos %i found '%A'." format fstText sndText 4 '2'
         assertTestFailsWithMsg msg (test, Normal)
       }
 
       test "fail - different content" {
         let format = "Failing - string with different content"
-        let msg = sprintf "%s. String do not match at position %i. Expected: '%A', but got '%A'." format 3 't' '2'
-        let test () = Expect.equal "Tes2" "Test" format
+        let fstText = "Test"
+        let sndText = "Tes2"
+        let msg = sprintf "%s.
+            Expected value was
+            %A
+            Actual value was
+            %A
+            String does not match at position %i. Expected: '%A', but got '%A'." format sndText fstText 3 't' '2'
+        let test () = Expect.equal sndText fstText format
         assertTestFailsWithMsg msg (test, Normal)
       }
     ]
