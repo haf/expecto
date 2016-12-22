@@ -176,31 +176,29 @@ let contains sequence element format =
 let sequenceEqual (actual : _ seq) (expected : _ seq) format =
   use ai = actual.GetEnumerator()
   use ei = expected.GetEnumerator()
-  let baseMsg = sprintf "[Expected value was]
+  let baseMsg = sprintf "%s.
+        [Expected value was]
         %A
         [Actual value was]
         %A"
-                  expected actual
+                  format expected actual
   let mutable i = 0
   while ei.MoveNext() do
     if ai.MoveNext() then
       if ai.Current = ei.Current then ()
       else
-        Tests.failtestf "%s.
-        %s
+        Tests.failtestf "%s
         Sequence does not match at position %i. Expected char: %A, but got %A."
-                           format baseMsg i (ei.Current) (ai.Current)
+                           baseMsg i (ei.Current) (ai.Current)
     else
-      Tests.failtestf "%s.
-      %s
+      Tests.failtestf "%s
       Sequence actual shorter than expected, at pos %i for expected item %A."
-                      format baseMsg i (ei.Current)
+                      baseMsg i (ei.Current)
     i <- i + 1
   if ai.MoveNext() then
-    Tests.failtestf "%s.
-    %s
+    Tests.failtestf "%s
     Sequence actual longer than expected, at pos %i found item %A."
-                      format baseMsg i (ai.Current)
+                      baseMsg i (ai.Current)
 
 /// Expect the sequence `subject` to start with `prefix`. If it does not
 /// then fail with `format` as an error message together with a description
