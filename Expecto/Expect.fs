@@ -177,9 +177,9 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
   use ai = actual.GetEnumerator()
   use ei = expected.GetEnumerator()
   let baseMsg = sprintf "%s.
-        [Expected value was]
+        Expected value was
         %A
-        [Actual value was]
+        Actual value was
         %A"
                   format expected actual
   let mutable i = 0
