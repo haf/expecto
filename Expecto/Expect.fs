@@ -180,7 +180,7 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
         %A
         [Actual value was]
         %A"
-                  actual expected
+                  expected actual
   let mutable i = 0
   while ei.MoveNext() do
     if ai.MoveNext() then
