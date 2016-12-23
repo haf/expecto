@@ -44,13 +44,16 @@ let tests =
         let format = "Failing - string with different length"
         let fstText = "Test"
         let sndText = "Tes2"
+        let diffString = "   ↑"
         let test () = Expect.equal fstText sndText format
         let msg = sprintf "%s.
-            Expected value was
+            Expected string to equal
             %A
-            Actual value was
+            %s
+            The string differ at index %d.
             %A
-            String actual shorter than expected, at pos %i for expected '%A'." format fstText sndText 4 '2'
+            %s
+            Sequence actual shorter than expected, at pos %i for expected item %A." format fstText diffString 4 sndText diffString 4 '2'
         assertTestFailsWithMsg msg (test, Normal)
       }
 
@@ -58,13 +61,16 @@ let tests =
         let format = "Failing - string with different length"
         let fstText = "Test"
         let sndText = "Tes2"
+        let diffString = "   ↑"
         let test () = Expect.equal sndText fstText format
         let msg = sprintf "%s.
-            Expected value was
+            Expected string to equal
             %A
-            Actual value was
+            %s
+            The string differ at index %d.
             %A
-            String actual longer than expected, at pos %i found '%A'." format fstText sndText 4 '2'
+            %s
+            Sequence actual longer than expected, at pos %i found item %A." format fstText diffString 4 sndText diffString 4 '2'
         assertTestFailsWithMsg msg (test, Normal)
       }
 
@@ -72,12 +78,15 @@ let tests =
         let format = "Failing - string with different content"
         let fstText = "Test"
         let sndText = "Tes2"
+        let diffString = "   ↑"
         let msg = sprintf "%s.
-            Expected value was
+            Expected string to equal
             %A
-            Actual value was
+            %s
+            The string differ at index %d.
             %A
-            String does not match at position %i. Expected: '%A', but got '%A'." format sndText fstText 3 't' '2'
+            %s
+            Sequence does not match at position %i. Expected char: %A, but got %A." format fstText diffString 4 sndText diffString 3 't' '2'
         let test () = Expect.equal sndText fstText format
         assertTestFailsWithMsg msg (test, Normal)
       }
