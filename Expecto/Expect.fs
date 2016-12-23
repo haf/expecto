@@ -128,19 +128,32 @@ let inline equal (actual : 'a) (expected : 'a) format =
     use ai = a.GetEnumerator()
     use ei = e.GetEnumerator()
     let mutable i = 0
+    let baseMsg errorIndex = 
+      let diffString = new String(' ', errorIndex + 1) + "↑"
+      sprintf "%s.
+          Expected string to equal:
+          %A
+          %s
+          The string differ at index %d.
+          %A
+          %s"
+                    format expected diffString errorIndex actual diffString
     while ei.MoveNext() do
       if ai.MoveNext() then
         if ai.Current = ei.Current then ()
         else
-          Tests.failtestf "%s. String does not match at position %i. Expected: '%A', but got '%A'."
-                            format i (ei.Current) (ai.Current)
+          Tests.failtestf "%s
+          String does not match at position %i. Expected char: %A, but got %A."
+                           (i |> baseMsg) i (ei.Current) (ai.Current)
       else
-        Tests.failtestf "%s. String actual shorter than expected, at pos %i for expected '%A'."
-                        format i (ei.Current)
+        Tests.failtestf "%s
+        String actual shorter than expected, at pos %i for expected item %A."
+                      (i |> baseMsg) i (ei.Current)
       i <- i + 1
     if ai.MoveNext() then
-      Tests.failtestf "%s. String actual longer than expected, at pos %i found '%A'."
-                      format i (ai.Current)
+      Tests.failtestf "%s
+      String actual longer than expected, at pos %i found item %A."
+                      (i |> baseMsg) i (ai.Current)
   | _, _ ->
     if actual <> expected then
       Tests.failtestf "%s. Actual value was %A but had expected it to be %A." format actual expected
@@ -176,20 +189,30 @@ let contains sequence element format =
 let sequenceEqual (actual : _ seq) (expected : _ seq) format =
   use ai = actual.GetEnumerator()
   use ei = expected.GetEnumerator()
+  let baseMsg = 
+    sprintf "%s.
+        Expected value was:
+        %A
+        Actual value was:
+        %A"
+                  format expected actual
   let mutable i = 0
   while ei.MoveNext() do
     if ai.MoveNext() then
       if ai.Current = ei.Current then ()
       else
-        Tests.failtestf "%s. Sequence does not match at position %i. Expected: %A, but got %A."
-                           format i (ei.Current) (ai.Current)
+        Tests.failtestf "%s
+        Sequence does not match at position %i. Expected char: %A, but got %A."
+                           baseMsg i (ei.Current) (ai.Current)
     else
-      Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A."
-                      format i (ei.Current)
+      Tests.failtestf "%s
+      Sequence actual shorter than expected, at pos %i for expected item %A."
+                      baseMsg i (ei.Current)
     i <- i + 1
   if ai.MoveNext() then
-    Tests.failtestf "%s. Sequence actual longer than expected, at pos %i found item %A."
-                      format i (ai.Current)
+    Tests.failtestf "%s
+    Sequence actual longer than expected, at pos %i found item %A."
+                      baseMsg i (ai.Current)
 
 /// Expect the sequence `subject` to start with `prefix`. If it does not
 /// then fail with `format` as an error message together with a description
