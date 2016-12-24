@@ -12,12 +12,35 @@ type Md5VsSha256() =
   let md5, sha256 = MD5.Create(), SHA256.Create()
 
   [<Benchmark>]
-  member x.Sha256() = sha256.ComputeHash data
+  member __.Sha256() = sha256.ComputeHash data
   [<Benchmark>]
-  member x.Md5() = md5.ComputeHash(data)
+  member __.Md5() = md5.ComputeHash data
 
 [<Tests>]
 let benchmarks =
   testList "some different benchmarks" [
     benchmark<Md5VsSha256> "md5 versus sha256" benchmarkConfig ignore
+  ]
+
+[<Tests>]
+let performance =
+  testList "performance cryptography tests" [
+
+    testCase "md5 equals sha256" <| fun _ ->
+      let a = Md5VsSha256()
+      let test() =
+        Expect.isFasterThan a.Md5 a.Sha256 "MD5 equals SHA256 should fail"
+      assertTestFailsWithMsgContaining "same" (test, Normal)
+
+    testCase "sha256 versus md5" <| fun _ ->
+      let a = Md5VsSha256()
+
+      let test() =
+        Expect.isFasterThan (a.Sha256 >> ignore) (a.Md5 >> ignore) "SHA256 is faster than MD5 should fail"
+      assertTestFailsWithMsgContaining "slower" (test, Normal)
+
+    testCase "md5 versus sha256" <| fun _ ->
+      let a = Md5VsSha256()
+      Expect.isFasterThan (a.Md5 >> ignore) (a.Sha256 >> ignore) "MD5 is faster than SHA256"
+
   ]

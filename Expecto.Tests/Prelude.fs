@@ -1,4 +1,4 @@
-﻿namespace Expecto
+namespace Expecto
 #nowarn "44"
 
 open System
@@ -61,6 +61,14 @@ module TestHelpers =
     | x ->
       failtestf "Should have failed, but was %A" x
 
+  let inline assertTestFailsWithMsgContaining (msg : string) test =
+    let test = TestCase test
+    match evalSilent test with
+    | [{ TestRunResult.result = TestResult.Failed x }] when x.Contains msg -> ()
+    | [{ TestRunResult.result = TestResult.Failed x }] ->
+      failtestf "Should have failed with message containing: \"%s\" but failed with \"%s\"" msg x
+    | x -> failtestf "Should have failed, but was %A" x
+
   open FsCheck
 
   let genLimitedTimeSpan =
@@ -111,3 +119,21 @@ module TestHelpers =
       lazy (
           Gen.two arbTestResultCounts.Value.Generator |> Arb.fromGen
       )
+
+  let inline repeat10 f a =
+    let mutable v = f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v
+  let inline repeat100 f a = repeat10 (repeat10 f) a
+  let inline repeat1000 f a = repeat10 (repeat100 f) a
+  let inline repeat10000 f a = repeat10 (repeat1000 f) a
+  let inline repeat100000 f a = repeat10 (repeat10000 f) a
+  let inline repeat1000000 f a = repeat10 (repeat100000 f) a
