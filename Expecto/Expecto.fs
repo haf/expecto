@@ -523,9 +523,13 @@ module Impl =
         trr
 
       let pipeline =
-        beforeOne
-        >> execFocused (maybeSequence execOne)
-        >> printOne
+        execFocused (
+          maybeSequence (
+            beforeOne
+            >> execOne
+            >> printOne
+          )
+        )
 
       WrappedFocusedState.WrapStates
       >> (map pipeline)
