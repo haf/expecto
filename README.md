@@ -252,6 +252,7 @@ This module is your main entry-point when asserting.
    then fail with `format` as an error message together with a description
    of `subject` and `length`.
  - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain the item.
+ - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence contains all elements from second sequence (not taking into account an order of elements)
  - `streamsEqual` – Expect the streams to be byte-wise identical.
 
 ## `main argv` – how to run console apps

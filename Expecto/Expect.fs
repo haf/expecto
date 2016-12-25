@@ -185,6 +185,34 @@ let contains sequence element format =
   | None ->
     Tests.failtestf "%s. Sequence did not contain %A." format element
 
+/// Expects the `actual` sequence to contain all elements from `expected` sequence (not taking into account an order of elements).
+let containsAll (actual: _ seq) (expected: _ seq) format =
+  let except seqFirst seqSecond =
+        seqFirst
+        |> Seq.filter(fun x -> not(seqSecond |> Seq.exists(fun y -> y = x)))
+        |> Seq.toList
+  let shouldContains = except actual expected
+  let shouldNotContains = except expected actual
+  let additionalInfo = 
+    if not(shouldNotContains |> Seq.isEmpty) then 
+      sprintf "Should not contains these values but contains:
+        %A" 
+                  shouldNotContains
+    else ""
+  let msg = sprintf "Sequence does not contains all elements.
+        Should contains:
+        %A
+        But contains:
+        %A
+        Missing values:
+        %A
+        %s" 
+              actual expected shouldContains additionalInfo
+  let isNotCorrect = not (shouldContains |> Seq.isEmpty) || not (shouldNotContains |> Seq.isEmpty)
+  if isNotCorrect then  
+    Tests.failtestf "%s.
+      %s" format msg
+
 /// Expects the `actual` sequence to equal the `expected` one.
 let sequenceEqual (actual : _ seq) (expected : _ seq) format =
   use ai = actual.GetEnumerator()

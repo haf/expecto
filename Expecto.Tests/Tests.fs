@@ -431,6 +431,52 @@ let timeouts =
           assertTestFails (test, Normal)
       ]
 
+      testList "contains all comparison" [
+        test "sequence contains all" {
+          Expect.containsAll [|21;37|] [|21;37|] "test sequence"
+        }
+
+        test "sequence contains all in different order" {
+          Expect.containsAll [|21;37|] [|37;21|] "test sequence"
+        }
+
+        test "fail - actual sequence contains more elements" {
+          let format = "Failing - sequence does not contain proper elements"
+          let fstSeq = [|2;1;3|]
+          let sndSeq = [|1;3|]
+          let test () = Expect.containsAll fstSeq sndSeq format
+          let msg = sprintf "%s.
+              Sequence does not contains all elements
+              Should contains:
+              %A
+              But contains:
+              %A
+              Missing values:
+              %A" 
+                      format fstSeq sndSeq ([|2|] |> Seq.toList)
+          assertTestFailsWithMsg msg (test, Normal)
+        }
+
+        test "fail - expected sequence contains more elements" {
+          let format = "Failing - sequence does not contain proper elements"
+          let fstSeq = [|2;1;3|]
+          let sndSeq = [|1;3;2;7|]
+          let test () = Expect.containsAll fstSeq sndSeq format
+          let msg = sprintf "%s.
+              Sequence does not contains all elements
+              Should contains:
+              %A
+              But contains:
+              %A
+              Missing values:
+              %A
+              Should not contains these values but contains:
+              %A" 
+                      format fstSeq sndSeq ([||] |> Seq.toList) ([|7|] |> Seq.toList)
+          assertTestFailsWithMsg msg (test, Normal)
+        }
+      ]
+
       testList "sequence equal" [
         testCase "pass" <| fun _ ->
           Expect.sequenceEqual [1;2;3] [1;2;3] "Sequences actually equal"
