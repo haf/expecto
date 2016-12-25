@@ -420,6 +420,25 @@ module Impl =
           let wrappingMethod = if existsFocusedTests then applyFocusedWrapping else Enabled
           testsList |> Seq.map (fun (n, t, s) -> (n, t, wrappingMethod s))
 
+  // here Anthony:
+  //  For 'normal tests';
+  //  readerWriterSlim.EnterRead() (perhaps?)
+  //  For 'perf tests';
+  // readerWriterSlim.EnterWrite()
+  let enterLock _ _ = ()
+  // need to create lease module, implement these functions.
+  // The first parameter is the state (the Map<Name*Test, RWLS> perhaps?)
+  // the second is the key to enter a lock for. Should allow for multiple
+  // 'normal' and untagged tests (that can run parallel = readers) and then
+  // some 'sequential' tests like the performance tests, benchmark tests or
+  // the Expect.isFasterThan usage inside a given test.
+
+  (*
+    Equivalent and opposite of above ...
+    readerWriterSlim.Exit(...)
+  *)
+  let exitLock _ _ = ()
+
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
   let evalTestList =
@@ -439,7 +458,7 @@ module Impl =
       else
         None
 
-    fun (printers: TestPrinters) map ->
+    fun (printers: TestPrinters) (* locks : Locks *) map ->
 
       let beforeOne (name: string, test, wrappedFocusedState) =
         printers.beforeEach name
@@ -453,6 +472,17 @@ module Impl =
             duration = TimeSpan.Zero }
         | _ ->
           next (name, test, wrappedFocusedState)
+
+      /// Used to constrain parallelism for tests that cannot be run parallel
+      /// with correct results, such as Expect.isFasterThan or `benchmark<..>`
+      /// based tests. Note; this does not give an ordering guarantee.
+      let maybeSequence next (name, test, wrappedFocusedState) =
+        try
+          // here Anthony
+          enterLock () (*locks*) (name, test)
+          next (name, test, wrappedFocusedState)
+        finally
+          exitLock () (*locks*) (name, test)
 
       let execOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
         let w = System.Diagnostics.Stopwatch.StartNew()
@@ -494,7 +524,7 @@ module Impl =
 
       let pipeline =
         beforeOne
-        >> execFocused execOne
+        >> execFocused (maybeSequence execOne)
         >> printOne
 
       WrappedFocusedState.WrapStates
