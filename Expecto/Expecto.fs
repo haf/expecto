@@ -441,45 +441,48 @@ module Impl =
 
     fun (printers: TestPrinters) map ->
 
-      let beforeOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
+      let beforeOne (name: string, test, wrappedFocusedState) =
         printers.beforeEach name
         name, test, wrappedFocusedState
 
-      let execOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
+      let execFocused next (name, test, wrappedFocusedState : WrappedFocusedState) =
         match wrappedFocusedState.ShouldSkipEvaluation with
         | Some ignoredMessage ->
           { name     = name
             result   = Ignored ignoredMessage
             duration = TimeSpan.Zero }
         | _ ->
-          let w = System.Diagnostics.Stopwatch.StartNew()
-          try
-            test ()
-            w.Stop()
+          next (name, test, wrappedFocusedState)
+
+      let execOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
+        let w = System.Diagnostics.Stopwatch.StartNew()
+        try
+          test ()
+          w.Stop()
+          { name     = name
+            result   = Passed
+            duration = w.Elapsed }
+        with e ->
+          w.Stop()
+          match e with
+          | ExceptionInList failExceptionTypes.Value ->
+            let msg =
+              let firstLine =
+                (stackTraceToString e.StackTrace).Split('\n')
+                |> Seq.filter (fun q -> q.Contains ",1): ")
+                |> Enumerable.FirstOrDefault
+              sprintf "\n%s\n%s\n" e.Message firstLine
             { name     = name
-              result   = Passed
+              result   = Failed msg
               duration = w.Elapsed }
-          with e ->
-            w.Stop()
-            match e with
-            | ExceptionInList failExceptionTypes.Value ->
-              let msg =
-                let firstLine =
-                  (stackTraceToString e.StackTrace).Split('\n')
-                  |> Seq.filter (fun q -> q.Contains ",1): ")
-                  |> Enumerable.FirstOrDefault
-                sprintf "\n%s\n%s\n" e.Message firstLine
-              { name     = name
-                result   = Failed msg
-                duration = w.Elapsed }
-            | ExceptionInList ignoreExceptionTypes.Value ->
-              { name     = name
-                result   = Ignored e.Message
-                duration = w.Elapsed }
-            | _ ->
-              { name     = name
-                result   = TestResult.Error e
-                duration = w.Elapsed }
+          | ExceptionInList ignoreExceptionTypes.Value ->
+            { name     = name
+              result   = Ignored e.Message
+              duration = w.Elapsed }
+          | _ ->
+            { name     = name
+              result   = TestResult.Error e
+              duration = w.Elapsed }
 
       let printOne (trr : TestRunResult) =
         match trr.result with
@@ -489,8 +492,13 @@ module Impl =
         | Error e -> printers.exn trr.name e trr.duration
         trr
 
+      let pipeline =
+        beforeOne
+        >> execFocused execOne
+        >> printOne
+
       WrappedFocusedState.WrapStates
-      >> (map (beforeOne >> execOne >> printOne))
+      >> (map pipeline)
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
