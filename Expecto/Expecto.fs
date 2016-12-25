@@ -349,47 +349,74 @@ module Impl =
       /// Prints a summary given the test result counts
       summary : TestResultSummary -> unit }
 
+    static member silent =
+      { beforeRun = fun _ -> ()
+        beforeEach = fun _ -> ()
+        passed = fun _ _ -> ()
+        ignored = fun _ _ -> ()
+        failed = fun _ _ _ -> ()
+        exn = fun _ _ _ -> ()
+        summary = fun _ -> () }
+
     static member Default =
       { beforeRun = fun _tests ->
-          logger.info (
+          logger.logWithAck Info (
             eventX "EXPECTO? Running tests...")
+          |> Async.RunSynchronously
 
         beforeEach = fun n ->
-
-          logger.debug (
+          logger.logWithAck Debug (
             eventX "{testName} starting..."
             >> setField "testName" n)
+          |> Async.RunSynchronously
+
         passed = fun n d ->
-          logger.debug (
+          logger.logWithAck Debug (
             eventX "{testName} passed in {duration}."
             >> setField "testName" n
             >> setField "duration" d)
+          |> Async.RunSynchronously
+
         ignored = fun n m ->
-          logger.warn (
+          logger.logWithAck Debug (
             eventX "{testName} was ignored. {reason}"
             >> setField "testName" n
             >> setField "reason" m)
+          |> Async.RunSynchronously
+
         failed = fun n m d ->
-          logger.error (
+          logger.logWithAck LogLevel.Error (
             eventX "{testName} failed in {duration}. {message}"
             >> setField "testName" n
             >> setField "duration" d
             >> setField "message" m)
+          |> Async.RunSynchronously
+
         exn = fun n e d ->
-          logger.error (
+          logger.logWithAck LogLevel.Error (
             eventX "{testName} errored in {duration}"
             >> setField "testName" n
             >> setField "duration" d
             >> addExn e)
+          |> Async.RunSynchronously
+
         summary = fun summary ->
-          logger.info (
-            eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored."
+          let spirit =
+            if summary.errored.Length + summary.failed.Length = 0 then
+              "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
+            else
+              "( ರ Ĺ̯ ರೃ )"
+          logger.logWithAck Info (
+            eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
             >> setField "total" summary.total
             >> setField "duration" summary.duration
             >> setField "passes" summary.passed.Length
             >> setField "ignores" summary.ignored.Length
             >> setField "failures" summary.failed.Length
-            >> setField "errors" summary.errored.Length)}
+            >> setField "errors" summary.errored.Length
+            >> setField "spirit" spirit)
+          |> Async.RunSynchronously }
+
     static member Summary =
       { TestPrinters.Default with
           summary = fun summary ->
@@ -460,7 +487,8 @@ module Impl =
 
     fun (printers: TestPrinters) (* locks : Locks *) map ->
 
-      let beforeOne (name: string, test, wrappedFocusedState) =
+      let beforeEach (name: string, test, wrappedFocusedState) =
+        //printfn "--> beforeEach"
         printers.beforeEach name
         name, test, wrappedFocusedState
 
@@ -471,6 +499,7 @@ module Impl =
             result   = Ignored ignoredMessage
             duration = TimeSpan.Zero }
         | _ ->
+          //printfn "--> execFocused"
           next (name, test, wrappedFocusedState)
 
       /// Used to constrain parallelism for tests that cannot be run parallel
@@ -480,6 +509,7 @@ module Impl =
         try
           // here Anthony
           enterLock () (*locks*) (name, test)
+          //printfn "--> maybeSequence"
           next (name, test, wrappedFocusedState)
         finally
           exitLock () (*locks*) (name, test)
@@ -487,6 +517,7 @@ module Impl =
       let execOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
         let w = System.Diagnostics.Stopwatch.StartNew()
         try
+          //printfn "--> execOne"
           test ()
           w.Stop()
           { name     = name
@@ -515,6 +546,7 @@ module Impl =
               duration = w.Elapsed }
 
       let printOne (trr : TestRunResult) =
+        //printfn " --> printOne"
         match trr.result with
         | Passed -> printers.passed trr.name trr.duration
         | Failed message -> printers.failed trr.name message trr.duration
@@ -525,7 +557,7 @@ module Impl =
       let pipeline =
         execFocused (
           maybeSequence (
-            beforeOne
+            beforeEach
             >> execOne
             >> printOne
           )

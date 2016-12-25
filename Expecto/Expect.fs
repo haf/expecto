@@ -5,6 +5,7 @@ module Expecto.Expect
 ()
 
 open System
+type HSet<'a> = System.Collections.Generic.HashSet<'a>
 
 /// Expects f to throw an exception.
 let throws f format =
@@ -128,13 +129,13 @@ let inline equal (actual : 'a) (expected : 'a) format =
     use ai = a.GetEnumerator()
     use ei = e.GetEnumerator()
     let mutable i = 0
-    let baseMsg errorIndex = 
+    let baseMsg errorIndex =
       let diffString = new String(' ', errorIndex + 1) + "↑"
       sprintf "%s.
           Expected string to equal:
           %A
           %s
-          The string differ at index %d.
+          The string differs at index %d.
           %A
           %s"
                     format expected diffString errorIndex actual diffString
@@ -144,16 +145,16 @@ let inline equal (actual : 'a) (expected : 'a) format =
         else
           Tests.failtestf "%s
           String does not match at position %i. Expected char: %A, but got %A."
-                           (i |> baseMsg) i (ei.Current) (ai.Current)
+            (baseMsg i) i ei.Current ai.Current
       else
         Tests.failtestf "%s
-        String actual shorter than expected, at pos %i for expected item %A."
-                      (i |> baseMsg) i (ei.Current)
+          String `actual` was shorter than expected, at pos %i for expected item %A."
+          (baseMsg i) i ei.Current
       i <- i + 1
     if ai.MoveNext() then
       Tests.failtestf "%s
-      String actual longer than expected, at pos %i found item %A."
-                      (i |> baseMsg) i (ai.Current)
+          String `actual` was longer than expected, at pos %i found item %A."
+                      (baseMsg i) i (ai.Current)
   | _, _ ->
     if actual <> expected then
       Tests.failtestf "%s. Actual value was %A but had expected it to be %A." format actual expected
@@ -185,39 +186,56 @@ let contains sequence element format =
   | None ->
     Tests.failtestf "%s. Sequence did not contain %A." format element
 
-/// Expects the `actual` sequence to contain all elements from `expected` sequence (not taking into account an order of elements).
-let containsAll (actual: _ seq) (expected: _ seq) format =
-  let except seqFirst seqSecond =
-        seqFirst
-        |> Seq.filter(fun x -> not(seqSecond |> Seq.exists(fun y -> y = x)))
-        |> Seq.toList
-  let shouldContains = except actual expected
-  let shouldNotContains = except expected actual
-  let additionalInfo = 
-    if not(shouldNotContains |> Seq.isEmpty) then 
-      sprintf "Should not contains these values but contains:
-        %A" 
-                  shouldNotContains
-    else ""
-  let msg = sprintf "Sequence does not contains all elements.
-        Should contains:
-        %A
-        But contains:
-        %A
-        Missing values:
-        %A
-        %s" 
-              actual expected shouldContains additionalInfo
-  let isNotCorrect = not (shouldContains |> Seq.isEmpty) || not (shouldNotContains |> Seq.isEmpty)
-  if isNotCorrect then  
-    Tests.failtestf "%s.
-      %s" format msg
+let inline private formatSet<'a> (ss : 'a seq) : string =
+  if Seq.isEmpty ss then
+    "{}"
+  else
+    (match box (Seq.nth 0 ss) with
+    | :? IComparable ->
+      ss
+      |> Seq.cast<IComparable>
+      |> Seq.sort
+      |> Seq.cast<'a>
+      |> Seq.map (fun (a : 'a) -> a.ToString())
+    | otherwise ->
+      ss
+      |> Seq.map (fun a -> a.ToString())
+      |> Seq.sort)
+    |> String.concat ", "
+    |> sprintf "{%s}"
+
+/// Expects the `actual` sequence to contain all elements from `expected`
+/// sequence (not taking into account an order of elements). Calling this
+/// function will enumerate both sequences; they have to be finite.
+let containsAll (actual : _ seq)
+                (expected : _ seq)
+                format =
+  let axs, exs = List.ofSeq actual, List.ofSeq expected
+  let extra, missing =
+    let ixs = axs |> List.filter (fun a -> exs |> List.exists ((=) a))
+    axs |> List.filter (fun a -> not (ixs |> List.exists ((=) a))),
+    exs |> List.filter (fun e -> not (ixs |> List.exists ((=) e)))
+
+  if List.isEmpty missing then () else
+
+  sprintf "%s.
+    Sequence `actual` does not contain all `expected` elements.
+        All elements in `actual`:
+        %s
+        All elements in `expected`:
+        %s
+        Missing elements from `actual`:
+        %s
+        Extra elements in `actual`:
+        %s"
+              format (formatSet axs) (formatSet exs) (formatSet missing) (formatSet extra)
+  |> Tests.failtest
 
 /// Expects the `actual` sequence to equal the `expected` one.
 let sequenceEqual (actual : _ seq) (expected : _ seq) format =
   use ai = actual.GetEnumerator()
   use ei = expected.GetEnumerator()
-  let baseMsg = 
+  let baseMsg =
     sprintf "%s.
         Expected value was:
         %A

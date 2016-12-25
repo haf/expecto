@@ -41,74 +41,73 @@ module String =
 
 [<AutoOpen>]
 module TestHelpers =
-    open Expecto
-    open Expecto.Impl
+  open Expecto
+  open Expecto.Impl
 
-    let evalSilent = eval TestPrinters.Default Seq.map
+  let evalSilent = eval TestPrinters.silent Seq.map
 
-    let inline assertTestFails test =
-        let test = TestCase test
-        match evalSilent test with
-        | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
-        | x -> failtestf "Should have failed, but was %A" x
+  let inline assertTestFails test =
+    let test = TestCase test
+    match evalSilent test with
+    | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
+    | x -> failtestf "Should have failed, but was %A" x
 
-    let inline assertTestFailsWithMsg (msg : string) test =
-        let normalize str = Regex.Replace(msg, @"\s", "")
+  let inline assertTestFailsWithMsg (msg : string) test =
+    let test = TestCase test
+    match evalSilent test with
+    | [{ TestRunResult.result = TestResult.Failed x }] ->
+      let trimmed = x.Trim('\n')
+      Expect.equal trimmed msg "Test failure strings should equal"
+    | x ->
+      failtestf "Should have failed, but was %A" x
 
-        let test = TestCase test
-        match evalSilent test with
-        | [{ TestRunResult.result = TestResult.Failed x }] when String.Equals(normalize x, normalize msg) -> ()
-        | [{ TestRunResult.result = TestResult.Failed x }] -> failtestf "Shold have failed with message: \"%s\" but failed with \"%s\"" msg x
-        | x -> failtestf "Should have failed, but was %A" x
+  open FsCheck
 
+  let genLimitedTimeSpan =
+      lazy (
+          Arb.generate<TimeSpan>
+          |> Gen.suchThat (fun t -> t.Days = 0)
+      )
 
-    open FsCheck
+  let genTestResultCounts =
+      lazy (
+          gen {
+              let! passed = Arb.generate<string list>
+              let! ignored = Arb.generate<string list>
+              let! failed = Arb.generate<string list>
+              let! errored = Arb.generate<string list>
+              let! duration = genLimitedTimeSpan.Value
+              return
+                { TestResultSummary.passed = passed
+                  ignored  = ignored
+                  failed   = failed
+                  errored  = errored
+                  duration = duration }
+          }
+      )
 
-    let genLimitedTimeSpan =
-        lazy (
-            Arb.generate<TimeSpan>
-            |> Gen.suchThat (fun t -> t.Days = 0)
-        )
+  let shrinkTestResultCounts (c: TestResultSummary) : TestResultSummary seq =
+      seq {
+          for passed in Arb.shrink c.passed do
+          for ignored in Arb.shrink c.ignored do
+          for failed in Arb.shrink c.failed do
+          for errored in Arb.shrink c.errored do
+          for duration in Arb.shrink c.duration ->
+          {
+              TestResultSummary.passed = passed
+              ignored = ignored
+              failed = failed
+              errored = errored
+              duration = duration
+          }
+      }
 
-    let genTestResultCounts =
-        lazy (
-            gen {
-                let! passed = Arb.generate<string list>
-                let! ignored = Arb.generate<string list>
-                let! failed = Arb.generate<string list>
-                let! errored = Arb.generate<string list>
-                let! duration = genLimitedTimeSpan.Value
-                return
-                  { TestResultSummary.passed = passed
-                    ignored  = ignored
-                    failed   = failed
-                    errored  = errored
-                    duration = duration }
-            }
-        )
+  let arbTestResultCounts =
+      lazy (
+          Arb.fromGenShrink(genTestResultCounts.Value, shrinkTestResultCounts)
+      )
 
-    let shrinkTestResultCounts (c: TestResultSummary) : TestResultSummary seq =
-        seq {
-            for passed in Arb.shrink c.passed do
-            for ignored in Arb.shrink c.ignored do
-            for failed in Arb.shrink c.failed do
-            for errored in Arb.shrink c.errored do
-            for duration in Arb.shrink c.duration ->
-            {
-                TestResultSummary.passed = passed
-                ignored = ignored
-                failed = failed
-                errored = errored
-                duration = duration
-            }
-        }
-
-    let arbTestResultCounts =
-        lazy (
-            Arb.fromGenShrink(genTestResultCounts.Value, shrinkTestResultCounts)
-        )
-
-    let twoTestResultCounts =
-        lazy (
-            Gen.two arbTestResultCounts.Value.Generator |> Arb.fromGen
-        )
+  let twoTestResultCounts =
+      lazy (
+          Gen.two arbTestResultCounts.Value.Generator |> Arb.fromGen
+      )

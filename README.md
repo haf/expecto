@@ -30,6 +30,8 @@ compositional (just like Suave and Logary are).
     * [Sending e\-mail on failure – custom printers](#sending-e-mail-on-failure--custom-printers)
     * [About test parallelism](#about-test-parallelism)
     * [About upgrading from Fuchu](#about-upgrading-from-fuchu)
+      * [Why the strange name?](#why-the-strange-name)
+      * [What does 'expected to have type TestCode' mean?](#what-does-expected-to-have-type-testcode-mean)
 
 ## Installing
 
@@ -471,3 +473,15 @@ and replace with `Expect.equal $4 $3 $1`.
 ### Why the strange name?
 
 ![Expecto expecto](./docs/expecto-patronus-2000x1126.png "This is actually because nuget won't let me publish them with the name 'Expecto', plain and simple.")
+
+### What does 'expected to have type TestCode' mean?
+
+If you get an error message like this:
+
+```
+This expression was expected to have type    'TestCode'    but here has type    'unit'
+```
+
+It means that you have code like `testCase "abc" <| Expect.equal ...`. Instead
+you should create a function like so: `testCase "abc" <| fun _ -> Expect.equal
+...`.

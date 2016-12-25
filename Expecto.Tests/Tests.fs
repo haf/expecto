@@ -40,54 +40,55 @@ let tests =
         Expect.equal "Test string" "Test string" "Test string"
       }
 
-      test "fail - different length, shorter" {
+      test "different length, actual is shorter" {
         let format = "Failing - string with different length"
-        let fstText = "Test"
-        let sndText = "Tes2"
-        let diffString = "   ↑"
-        let test () = Expect.equal fstText sndText format
-        let msg = sprintf "%s.
-            Expected string to equal
-            %A
-            %s
-            The string differ at index %d.
-            %A
-            %s
-            Sequence actual shorter than expected, at pos %i for expected item %A." format fstText diffString 4 sndText diffString 4 '2'
+        let actual = "Test"
+        let expected = "Test2"
+        let diffString = "     ↑"
+        let test () = Expect.equal actual expected format
+        let msg =
+          sprintf "%s.
+          Expected string to equal:
+          %A
+          %s
+          The string differs at index %d.
+          %A
+          %s
+          String `actual` was shorter than expected, at pos %i for expected item %A."
+            format expected diffString 4 actual diffString 4 '2'
         assertTestFailsWithMsg msg (test, Normal)
       }
 
-      test "fail - different length, longer" {
+      test "different length, actual is longer" {
         let format = "Failing - string with different length"
-        let fstText = "Test"
-        let sndText = "Tes2"
-        let diffString = "   ↑"
-        let test () = Expect.equal sndText fstText format
-        let msg = sprintf "%s.
-            Expected string to equal
-            %A
-            %s
-            The string differ at index %d.
-            %A
-            %s
-            Sequence actual longer than expected, at pos %i found item %A." format fstText diffString 4 sndText diffString 4 '2'
+        let test () = Expect.equal "Test2" "Test" format
+        let msg =
+          sprintf """%s.
+          Expected string to equal:
+          "Test"
+               ↑
+          The string differs at index 4.
+          "Test2"
+               ↑
+          String `actual` was longer than expected, at pos 4 found item '2'."""
+            format
         assertTestFailsWithMsg msg (test, Normal)
       }
 
       test "fail - different content" {
         let format = "Failing - string with different content"
-        let fstText = "Test"
-        let sndText = "Tes2"
+        let test () = Expect.equal "Test" "Tes2" format
         let diffString = "   ↑"
-        let msg = sprintf "%s.
-            Expected string to equal
-            %A
-            %s
-            The string differ at index %d.
-            %A
-            %s
-            Sequence does not match at position %i. Expected char: %A, but got %A." format fstText diffString 4 sndText diffString 3 't' '2'
-        let test () = Expect.equal sndText fstText format
+        let msg =
+          sprintf """%s.
+          Expected string to equal:
+          "Tes2"
+              ↑
+          The string differs at index 3.
+          "Test"
+              ↑
+          String does not match at position 3. Expected char: '2', but got 't'."""
+            format
         assertTestFailsWithMsg msg (test, Normal)
       }
     ]
@@ -158,8 +159,8 @@ let tests =
   ]
 
 [<Tests>]
-let timeouts =
-  testList "timeout" [
+let expecto =
+  testList "expecto" [
     testList "Setup & teardown 2" [
       // just demoing how you can use a higher-order function as setup/teardown
       let tests = [
@@ -431,50 +432,31 @@ let timeouts =
           assertTestFails (test, Normal)
       ]
 
-      testList "contains all comparison" [
-        test "sequence contains all" {
-          Expect.containsAll [|21;37|] [|21;37|] "test sequence"
-        }
+      testList "#containsAll" [
+        testCase "identical sequence" <| fun _ ->
+          Expect.containsAll [|21;37|] [|21;37|] "Identical"
 
-        test "sequence contains all in different order" {
-          Expect.containsAll [|21;37|] [|37;21|] "test sequence"
-        }
+        testCase "sequence contains all in different order" <| fun _ ->
+          Expect.containsAll [|21;37|] [|37;21|]
+                             "Same elements in different order"
 
-        test "fail - actual sequence contains more elements" {
-          let format = "Failing - sequence does not contain proper elements"
-          let fstSeq = [|2;1;3|]
-          let sndSeq = [|1;3|]
-          let test () = Expect.containsAll fstSeq sndSeq format
-          let msg = sprintf "%s.
-              Sequence does not contains all elements
-              Should contains:
-              %A
-              But contains:
-              %A
-              Missing values:
-              %A" 
-                      format fstSeq sndSeq ([|2|] |> Seq.toList)
+        testCase "sequence contains everything expected" <| fun _ ->
+          let format = "Sequence should contain one and five"
+          let test () =
+            Expect.containsAll [|2; 1; 3|] [| 1; 5 |] format
+          let msg =
+            sprintf "%s.
+    Sequence `actual` does not contain all `expected` elements.
+        All elements in `actual`:
+        {1, 2, 3}
+        All elements in `expected`:
+        {1, 5}
+        Missing elements from `actual`:
+        {5}
+        Extra elements in `actual`:
+        {2, 3}"
+              format
           assertTestFailsWithMsg msg (test, Normal)
-        }
-
-        test "fail - expected sequence contains more elements" {
-          let format = "Failing - sequence does not contain proper elements"
-          let fstSeq = [|2;1;3|]
-          let sndSeq = [|1;3;2;7|]
-          let test () = Expect.containsAll fstSeq sndSeq format
-          let msg = sprintf "%s.
-              Sequence does not contains all elements
-              Should contains:
-              %A
-              But contains:
-              %A
-              Missing values:
-              %A
-              Should not contains these values but contains:
-              %A" 
-                      format fstSeq sndSeq ([||] |> Seq.toList) ([|7|] |> Seq.toList)
-          assertTestFailsWithMsg msg (test, Normal)
-        }
       ]
 
       testList "sequence equal" [
