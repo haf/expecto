@@ -185,6 +185,7 @@ let contains sequence element format =
   | None ->
     Tests.failtestf "%s. Sequence did not contain %A." format element
 
+/// Expects the `actual` sequence to contain all elements from `expected` sequence (not taking into account an order of elements).
 let containsAll (actual: _ seq) (expected: _ seq) format =
   let except seqFirst seqSecond =
         seqFirst
