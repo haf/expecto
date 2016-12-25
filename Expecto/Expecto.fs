@@ -441,8 +441,11 @@ module Impl =
 
     fun (printers: TestPrinters) map ->
 
-      let execOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
+      let beforeOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
         printers.beforeEach name
+        name, test, wrappedFocusedState
+
+      let execOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
         match wrappedFocusedState.ShouldSkipEvaluation with
         | Some ignoredMessage ->
           { name     = name
@@ -487,7 +490,7 @@ module Impl =
         trr
 
       WrappedFocusedState.WrapStates
-      >> (map (execOne >> printOne))
+      >> (map (beforeOne >> execOne >> printOne))
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
