@@ -207,7 +207,8 @@ let containsAll (actual: _ seq) (expected: _ seq) format =
         %A
         %s" 
               actual expected shouldContain additionalInfo
-  if not (shouldContain |> Seq.isEmpty) then  
+  let isNotCorrect = not (shouldContain |> Seq.isEmpty) || not (shouldNotContain |> Seq.isEmpty)
+  if isNotCorrect then  
     Tests.failtestf "%s.
       %s" format msg
 
