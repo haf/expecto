@@ -423,88 +423,90 @@ module Impl =
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
   let evalTestList =
-      let failExceptions = [
-        typeof<AssertException>.AssemblyQualifiedName
-      ]
-      let ignoreExceptions = [
-        typeof<IgnoreException>.AssemblyQualifiedName
-      ]
-      let failExceptionTypes = lazy List.choose Type.TryGetType failExceptions
-      let ignoreExceptionTypes = lazy List.choose Type.TryGetType ignoreExceptions
+    let failExceptions = [
+      typeof<AssertException>.AssemblyQualifiedName
+    ]
+    let ignoreExceptions = [
+      typeof<IgnoreException>.AssemblyQualifiedName
+    ]
+    let failExceptionTypes = lazy List.choose Type.TryGetType failExceptions
+    let ignoreExceptionTypes = lazy List.choose Type.TryGetType ignoreExceptions
 
-      let (|ExceptionInList|_|) (l: Type list) (e: #exn) =
-        let et = e.GetType()
-        if l |> List.exists (fun x -> x.IsAssignableFrom et) then
-          Some()
-        else
-          None
+    let (|ExceptionInList|_|) (l: Type list) (e: #exn) =
+      let et = e.GetType()
+      if l |> List.exists (fun x -> x.IsAssignableFrom et) then
+        Some()
+      else
+        None
 
-      fun (printers: TestPrinters) map ->
-          let execOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
-              printers.beforeEach name
-              match wrappedFocusedState.ShouldSkipEvaluation with
-              | Some ignoredMessage ->
-                  printers.ignored name ignoredMessage
-                  { name     = name
-                    result   = Ignored ignoredMessage
-                    duration = TimeSpan.Zero }
-              | _ ->
-                  let w = System.Diagnostics.Stopwatch.StartNew()
-                  try
-                    test()
-                    w.Stop()
-                    printers.passed name w.Elapsed
-                    { name     = name
-                      result   = Passed
-                      duration = w.Elapsed }
-                  with e ->
-                    w.Stop()
-                    match e with
-                    | ExceptionInList failExceptionTypes.Value ->
-                        let msg =
-                            let firstLine =
-                                (stackTraceToString e.StackTrace).Split('\n')
-                                |> Seq.filter (fun q -> q.Contains ",1): ")
-                                |> Enumerable.FirstOrDefault
-                            sprintf "\n%s\n%s\n" e.Message firstLine
-                        printers.failed name msg w.Elapsed
-                        { name     = name
-                          result   = Failed msg
-                          duration = w.Elapsed }
-                    | ExceptionInList ignoreExceptionTypes.Value ->
-                        printers.ignored name e.Message
-                        { name     = name
-                          result   = Ignored e.Message
-                          duration = w.Elapsed }
-                    | _ ->
-                        printers.exn name e w.Elapsed
-                        { name     = name
-                          result   = TestResult.Error e
-                          duration = w.Elapsed }
+    fun (printers: TestPrinters) map ->
 
-          WrappedFocusedState.WrapStates >> (map execOne)
+      let execOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
+        printers.beforeEach name
+        match wrappedFocusedState.ShouldSkipEvaluation with
+        | Some ignoredMessage ->
+          printers.ignored name ignoredMessage
+          { name     = name
+            result   = Ignored ignoredMessage
+            duration = TimeSpan.Zero }
+        | _ ->
+          let w = System.Diagnostics.Stopwatch.StartNew()
+          try
+            test()
+            w.Stop()
+            printers.passed name w.Elapsed
+            { name     = name
+              result   = Passed
+              duration = w.Elapsed }
+          with e ->
+            w.Stop()
+            match e with
+            | ExceptionInList failExceptionTypes.Value ->
+              let msg =
+                  let firstLine =
+                      (stackTraceToString e.StackTrace).Split('\n')
+                      |> Seq.filter (fun q -> q.Contains ",1): ")
+                      |> Enumerable.FirstOrDefault
+                  sprintf "\n%s\n%s\n" e.Message firstLine
+              printers.failed name msg w.Elapsed
+              { name     = name
+                result   = Failed msg
+                duration = w.Elapsed }
+            | ExceptionInList ignoreExceptionTypes.Value ->
+              printers.ignored name e.Message
+              { name     = name
+                result   = Ignored e.Message
+                duration = w.Elapsed }
+            | _ ->
+              printers.exn name e w.Elapsed
+              { name     = name
+                result   = TestResult.Error e
+                duration = w.Elapsed }
+
+      WrappedFocusedState.WrapStates >> (map execOne)
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
   let eval (printer: TestPrinters) map tests =
-      Test.toTestCodeList tests
-      |> evalTestList printer map
-      |> Seq.toList
+    Test.toTestCodeList tests
+    |> evalTestList printer map
+    |> Seq.toList
 
   /// Evaluates tests sequentially
   let evalSeq =
-      let printer =
-        TestPrinters.Default
+    let printer =
+      TestPrinters.Default
 
-      eval printer Seq.map
+    eval printer Seq.map
 
   let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select(f) :> _ seq
 
   /// Evaluates tests in parallel
   let evalPar =
-      let printer =
-        TestPrinters.Default
-      eval printer pmap
+    let printer =
+      TestPrinters.Default
+
+    eval printer pmap
 
   /// Runs tests, returns error code
   let runEval printer eval (tests: Test) =
@@ -522,24 +524,23 @@ module Impl =
     let getTestFromMemberInfo focusedState =
       match box mi with
       | :? FieldInfo as m ->
-          if m.FieldType = typeof<Test>
-          then Some(focusedState, unbox (m.GetValue(null)))
-          else None
+        if m.FieldType = typeof<Test>
+        then Some(focusedState, unbox (m.GetValue(null)))
+        else None
       | :? MethodInfo as m ->
-          if m.ReturnType = typeof<Test>
-          then Some(focusedState, unbox (m.Invoke(null, null)))
-          else None
+        if m.ReturnType = typeof<Test>
+        then Some(focusedState, unbox (m.Invoke(null, null)))
+        else None
       | :? PropertyInfo as m ->
-          if m.PropertyType = typeof<Test>
-          then Some(focusedState, unbox (m.GetValue(null, null)))
-          else None
+        if m.PropertyType = typeof<Test>
+        then Some(focusedState, unbox (m.GetValue(null, null)))
+        else None
       | _ -> None
     mi.MatchTestsAttributes ()
     |> Option.map getTestFromMemberInfo
     |> function
-         | Some (Some (focusedState, test)) -> Some (Test.translateFocusState focusedState test)
-         | _ -> None
-
+    | Some (Some (focusedState, test)) -> Some (Test.translateFocusState focusedState test)
+    | _ -> None
 
   let listToTestListOption =
     function
@@ -605,41 +606,41 @@ module Tests =
 
   /// Applies a function to a list of values to build test cases
   let inline testFixture setup =
-        Seq.map (fun (name, partialTest) ->
-                      testCase name (setup partialTest))
+    Seq.map (fun (name, partialTest) ->
+      testCase name (setup partialTest))
 
   /// Applies a value to a list of partial tests
   let inline testParam param =
-        Seq.map (fun (name, partialTest) ->
-                      testCase name (partialTest param))
+    Seq.map (fun (name, partialTest) ->
+      testCase name (partialTest param))
 
   type TestCaseBuilder(name, focusState) =
-      member x.TryFinally(f, compensation) =
-        try
-          f()
-        finally
-          compensation()
-      member x.TryWith(f, catchHandler) =
-        try
-          f()
-        with e -> catchHandler e
-      member x.Using(disposable: #IDisposable, f) =
-        try
-          f disposable
-        finally
-          match disposable with
-          | null -> ()
-          | disp -> disp.Dispose()
-      member x.For(sequence, f) =
-        for i in sequence do f i
-      member x.Combine(f1, f2) = f2(); f1
-      member x.Zero() = ()
-      member x.Delay f = f
-      member x.Run f =
-        match focusState with
-        | Normal -> testCase name f
-        | Focused -> ftestCase name f
-        | Pending -> ptestCase name f
+    member x.TryFinally(f, compensation) =
+      try
+        f()
+      finally
+        compensation()
+    member x.TryWith(f, catchHandler) =
+      try
+        f()
+      with e -> catchHandler e
+    member x.Using(disposable: #IDisposable, f) =
+      try
+        f disposable
+      finally
+        match disposable with
+        | null -> ()
+        | disp -> disp.Dispose()
+    member x.For(sequence, f) =
+      for i in sequence do f i
+    member x.Combine(f1, f2) = f2(); f1
+    member x.Zero() = ()
+    member x.Delay f = f
+    member x.Run f =
+      match focusState with
+      | Normal -> testCase name f
+      | Focused -> ftestCase name f
+      | Pending -> ptestCase name f
 
   let inline test name =
     TestCaseBuilder (name, Normal)
@@ -653,7 +654,8 @@ module Tests =
     runEval printer evalSeq tests
 
   /// Runs tests in parallel
-  let runParallel printer tests = runEval printer evalPar tests
+  let runParallel printer tests =
+    runEval printer evalPar tests
 
   // Runner options
   type ExpectoConfig =
@@ -762,8 +764,8 @@ module Tests =
   let runTests config tests =
     let run = if config.parallel then runParallel else run
     Global.initialiseIfDefault
-      { Global.DefaultConfig with
-          getLogger = fun name -> LiterateConsoleTarget config.verbosity :> Logger }
+      { Global.defaultConfig with
+          getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity) :> Logger }
     run config.printer tests
 
   /// Runs tests in this assembly with supplied command-line options. Returns 0 if all tests passed, otherwise 1
