@@ -190,13 +190,13 @@ let containsAll (actual: _ seq) (expected: _ seq) format =
         seqFirst
         |> Seq.filter(fun x -> not(seqSecond |> Seq.exists(fun y -> y = x)))
         |> Seq.toList
-  let shouldContain = except actual expected
-  let shouldNotContain = except expected actual
+  let shouldContains = except actual expected
+  let shouldNotContains = except expected actual
   let additionalInfo = 
-    if not(shouldNotContain |> Seq.isEmpty) then 
+    if not(shouldNotContains |> Seq.isEmpty) then 
       sprintf "Should not contains these values but contains:
         %A" 
-                  shouldNotContain
+                  shouldNotContains
     else ""
   let msg = sprintf "Sequence does not contains all elements.
         Should contains:
@@ -206,8 +206,8 @@ let containsAll (actual: _ seq) (expected: _ seq) format =
         Missing values:
         %A
         %s" 
-              actual expected shouldContain additionalInfo
-  let isNotCorrect = not (shouldContain |> Seq.isEmpty) || not (shouldNotContain |> Seq.isEmpty)
+              actual expected shouldContains additionalInfo
+  let isNotCorrect = not (shouldContains |> Seq.isEmpty) || not (shouldNotContains |> Seq.isEmpty)
   if isNotCorrect then  
     Tests.failtestf "%s.
       %s" format msg
