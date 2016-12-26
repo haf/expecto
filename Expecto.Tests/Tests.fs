@@ -468,7 +468,7 @@ let expecto =
                              "Same elements in different order"
 
         testCase "sequence doesn't contain repeats in expected" <| fun _ ->
-          let format = "Sequence should contain one and five"
+          let format = "Sequence should contain one, two and four"
           let test () =
             Expect.distributed [|2; 2|] [| 2; 1; 4 |] format
           let msg =
@@ -486,7 +486,7 @@ let expecto =
           assertTestFailsWithMsg msg (test, Normal)
 
         testCase "sequence does contain repeats in expected but should not" <| fun _ ->
-          let format = "Sequence should contain one and five"
+          let format = "Sequence should contain two, two and four"
           let test () =
             Expect.distributed [|2; 2|] [| 2; 2; 4 |] format
           let msg =
@@ -504,7 +504,7 @@ let expecto =
           assertTestFailsWithMsg msg (test, Normal)
 
         testCase "sequence contains everything expected" <| fun _ ->
-          let format = "Sequence should contain one and five"
+          let format = "Sequence should contain two and two"
           let test () =
             Expect.distributed [|2; 2; 4|] [| 2; 4 |] format
           let msg =
