@@ -204,7 +204,7 @@ let inline private formatSet<'a> (ss : 'a seq) : string =
     |> String.concat ", "
     |> sprintf "{%s}"
 
-let inline private except(sequence: 'a seq, exceptSeq: 'a seq): 'a list =
+let inline private except(baseSeq: 'a seq, exceptSeq: 'a seq): 'a list =
   let groupByOccurances sequence =
     sequence
     |> Seq.groupBy id
@@ -223,7 +223,7 @@ let inline private except(sequence: 'a seq, exceptSeq: 'a seq): 'a list =
       differNrOfElement element
     else Array.create (snd element) (fst element) |> Array.toList
   
-  sequence
+  baseSeq
   |> groupByOccurances
   |> Seq.map elementsWhichDiffer
   |> List.concat
@@ -235,10 +235,10 @@ let containsAll (actual : _ seq)
                 (expected : _ seq)
                 format =
   let extra, missing =
-    except(expected, actual),
-    except(actual, expected)
-
-  if List.isEmpty missing then () else
+    except(actual, expected),
+    except(expected, actual)
+  let isCorrect = List.isEmpty missing && List.isEmpty extra
+  if isCorrect then () else
 
   sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
