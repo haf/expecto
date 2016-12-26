@@ -452,9 +452,9 @@ let expecto =
         All elements in `expected`:
         {1, 5}
         Missing elements from `actual`:
-        {5}
+        {1, 2}
         Extra elements in `actual`:
-        {1, 2}"
+        {5}"
               format
           assertTestFailsWithMsg msg (test, Normal)
       ]
