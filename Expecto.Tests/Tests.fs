@@ -479,7 +479,7 @@ let expecto =
         All elements in `expected`:
         {1, 2, 4}
         Missing elements from `actual`:
-        {1; 4}
+        {1, 4}
         Extra elements in `actual`:
         {2}"
               format
@@ -513,7 +513,7 @@ let expecto =
         All elements in `actual`:
         {2, 2, 4}
         All elements in `expected`:
-        {2, 2}
+        {2, 4}
         Missing elements from `actual`:
         {}
         Extra elements in `actual`:
