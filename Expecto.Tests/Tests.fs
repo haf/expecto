@@ -443,18 +443,18 @@ let expecto =
         testCase "sequence contains everything expected" <| fun _ ->
           let format = "Sequence should contain one and five"
           let test () =
-            Expect.containsAll [|2; 1; 3|] [| 1; 5 |] format
+            Expect.containsAll [|2; 1; 1|] [| 1; 5 |] format
           let msg =
             sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
-        {1, 2, 3}
+        {1, 1, 2}
         All elements in `expected`:
         {1, 5}
         Missing elements from `actual`:
         {5}
         Extra elements in `actual`:
-        {2, 3}"
+        {1, 2}"
               format
           assertTestFailsWithMsg msg (test, Normal)
       ]

@@ -204,17 +204,39 @@ let inline private formatSet<'a> (ss : 'a seq) : string =
     |> String.concat ", "
     |> sprintf "{%s}"
 
+let inline private except(sequence: 'a seq, exceptSeq: 'a seq): 'a list =
+  let groupByOccurances sequence =
+    sequence
+    |> Seq.groupBy id
+    |> Seq.map (fun (letter, occurances) -> (letter, occurances |> Seq.length))
+  let groupedSndSeq = groupByOccurances exceptSeq
+  
+  let differNrOfElement element =
+    let nrOfElements = (snd element) - (groupedSndSeq |> Seq.find(fun y -> fst y = fst element) |> snd)
+    if nrOfElements > 0 then Array.create nrOfElements (fst element) |> Array.toList
+    else []
+  
+  let elementsWhichDiffer element= 
+    if groupedSndSeq |> Seq.exists ((=) element) then
+      []
+    elif groupedSndSeq |> Seq.exists (fun y -> fst y = fst element) then
+      differNrOfElement element
+    else Array.create (snd element) (fst element) |> Array.toList
+  
+  sequence
+  |> groupByOccurances
+  |> Seq.map elementsWhichDiffer
+  |> List.concat
+
 /// Expects the `actual` sequence to contain all elements from `expected`
 /// sequence (not taking into account an order of elements). Calling this
 /// function will enumerate both sequences; they have to be finite.
 let containsAll (actual : _ seq)
                 (expected : _ seq)
                 format =
-  let axs, exs = List.ofSeq actual, List.ofSeq expected
   let extra, missing =
-    let ixs = axs |> List.filter (fun a -> exs |> List.exists ((=) a))
-    axs |> List.filter (fun a -> not (ixs |> List.exists ((=) a))),
-    exs |> List.filter (fun e -> not (ixs |> List.exists ((=) e)))
+    except(expected, actual),
+    except(actual, expected)
 
   if List.isEmpty missing then () else
 
@@ -228,7 +250,7 @@ let containsAll (actual : _ seq)
         %s
         Extra elements in `actual`:
         %s"
-              format (formatSet axs) (formatSet exs) (formatSet missing) (formatSet extra)
+              format (formatSet actual) (formatSet expected) (formatSet missing) (formatSet extra)
   |> Tests.failtest
 
 /// Expects the `actual` sequence to equal the `expected` one.
