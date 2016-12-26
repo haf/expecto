@@ -36,9 +36,11 @@ type Test =
   /// by Expecto to run the test code.
   | TestCase of code:TestCode * state:FocusState
   /// A collection/list of tests.
-  | TestList of tests:Test seq * state:FocusState
+  | TestList of tests:Test list * state:FocusState
   /// A labelling of a Test (list or test code).
   | TestLabel of label:string * test:Test * state:FocusState
+  /// Require sequenced for a Test (list or test code).
+  | Sequenced of Test
 
 type ExpectoException(msg) = inherit Exception(msg)
 type AssertException(msg) = inherit ExpectoException(msg)
@@ -131,9 +133,10 @@ module Helpers =
       |> List.map snd
       |> List.tryFind (fun _ -> true)
 
+type FlatTest = {Name:string; Test:TestCode; State: FocusState; Sequenced:bool}
+
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
-  open Helpers
   /// Compute the child test state based on parent test state
   let computeChildFocusState parentState childState =
     match parentState, childState with
@@ -144,33 +147,36 @@ module Test =
 
   /// Flattens a tree of tests
   let toTestCodeList =
-    let rec loop parentName testList parentState =
+    let rec loop parentName testList parentState sequenced =
       function
       | TestLabel (name, test, state) ->
         let fullName =
           if String.IsNullOrEmpty parentName
             then name
             else parentName + "/" + name
-        loop fullName testList (computeChildFocusState parentState state) test
-      | TestCase (test, state) -> Seq.cons (parentName, test, (computeChildFocusState parentState state)) testList
-      | TestList (tests, state) -> Seq.collect (loop parentName testList (computeChildFocusState parentState state)) tests
-    loop null Seq.empty Normal
+        loop fullName testList (computeChildFocusState parentState state) sequenced test
+      | TestCase (test, state) -> {Name=parentName; Test=test; State=computeChildFocusState parentState state; Sequenced=sequenced} :: testList
+      | TestList (tests, state) -> List.collect (loop parentName testList (computeChildFocusState parentState state) sequenced) tests
+      | Sequenced test -> loop parentName testList parentState true test
+    loop null [] Normal false
 
   /// Recursively maps all TestCodes in a Test
   let rec wrap f =
     function
     | TestCase (test, state) -> TestCase ((f test), state)
-    | TestList (testList, state) -> TestList ((Seq.map (wrap f) testList), state)
+    | TestList (testList, state) -> TestList (List.map (wrap f) testList, state)
     | TestLabel (label, test, state) -> TestLabel (label, wrap f test, state)
+    | Sequenced test -> Sequenced (wrap f test)
 
   /// Enforce a FocusState on a test by replacing the current state
   /// Is not used (against YAGNI), but is here to make it clear for intellisense discovery
   /// that the translateFocusState is not intended as replacement
-  let replaceFocusState newFocusState =
+  let rec replaceFocusState newFocusState =
     function
     | TestCase (test, _) -> TestCase(test, newFocusState)
     | TestList (testList, _) -> TestList(testList, newFocusState)
     | TestLabel (label, test, _) -> TestLabel(label, test, newFocusState)
+    | Sequenced test -> Sequenced (replaceFocusState newFocusState test)
 
   /// Change the FocusState by appling the old state to a new state
   /// Note: this is not state replacement!!!
@@ -179,12 +185,12 @@ module Test =
   ///      the test state (use Normal), so this way the current state will be preserved
   /// Don't see the use case: the user wants to automate some tests and wishes
   /// to change the test states
-  let translateFocusState newFocusState =
+  let rec translateFocusState newFocusState =
     function
     | TestCase (test, oldFocusState) -> TestCase(test, computeChildFocusState oldFocusState newFocusState)
     | TestList (testList, oldFocusState) -> TestList(testList, computeChildFocusState oldFocusState newFocusState)
     | TestLabel (label, test, oldFocusState) -> TestLabel(label, test, computeChildFocusState oldFocusState newFocusState)
-
+    | Sequenced test -> Sequenced (translateFocusState newFocusState test)
 
   /// Recursively replaces TestCodes in a Test
   /// Check translateFocusState for focus state behavior description
@@ -196,14 +202,17 @@ module Test =
     | TestCase (test, state) ->
           f null test
           |> translateFocusState state
-    | TestList (testList, state) -> TestList (Seq.map (replaceTestCode f) testList, state)
+    | TestList (testList, state) -> TestList (List.map (replaceTestCode f) testList, state)
     | TestLabel (label, test, state) -> TestLabel (label, replaceTestCode f test, state)
+    | Sequenced test -> Sequenced (replaceTestCode f test)
 
   /// Filter tests by name
   let filter pred =
     toTestCodeList
-    >> Seq.filter (fst3 >> pred)
-    >> Seq.map (fun (name, test, state) -> TestLabel (name, TestCase (test, state), state))
+    >> List.filter (fun t -> pred t.Name)
+    >> List.map (fun t ->
+        let test = TestLabel (t.Name, TestCase (t.Test, t.State), t.State)
+        if t.Sequenced then Sequenced test else test)
     >> (fun x -> TestList (x,Normal))
 
   /// Applies a timeout to a test
@@ -338,6 +347,8 @@ module Impl =
       beforeRun: Test -> unit
       /// Called before atomic test (TestCode) is executed.
       beforeEach: string -> unit
+      /// info
+      info: string -> unit
       /// test name -> time taken -> unit
       passed: string -> TimeSpan -> unit
       /// test name -> ignore message -> unit
@@ -349,56 +360,44 @@ module Impl =
       /// Prints a summary given the test result counts
       summary : TestResultSummary -> unit }
 
-    static member silent =
-      { beforeRun = fun _ -> ()
-        beforeEach = fun _ -> ()
-        passed = fun _ _ -> ()
-        ignored = fun _ _ -> ()
-        failed = fun _ _ _ -> ()
-        exn = fun _ _ _ -> ()
-        summary = fun _ -> () }
-
-    static member Default =
+    static member private Logger log =
       { beforeRun = fun _tests ->
-          logger.logWithAck Info (
+          log Info (
             eventX "EXPECTO? Running tests...")
-          |> Async.RunSynchronously
 
         beforeEach = fun n ->
-          logger.logWithAck Debug (
+          log Debug (
             eventX "{testName} starting..."
             >> setField "testName" n)
-          |> Async.RunSynchronously
+
+        info = fun s ->
+          log Info (eventX s)
 
         passed = fun n d ->
-          logger.logWithAck Debug (
+          log Debug (
             eventX "{testName} passed in {duration}."
             >> setField "testName" n
             >> setField "duration" d)
-          |> Async.RunSynchronously
 
         ignored = fun n m ->
-          logger.logWithAck Debug (
+          log Debug (
             eventX "{testName} was ignored. {reason}"
             >> setField "testName" n
             >> setField "reason" m)
-          |> Async.RunSynchronously
 
         failed = fun n m d ->
-          logger.logWithAck LogLevel.Error (
+          log LogLevel.Error (
             eventX "{testName} failed in {duration}. {message}"
             >> setField "testName" n
             >> setField "duration" d
             >> setField "message" m)
-          |> Async.RunSynchronously
 
         exn = fun n e d ->
-          logger.logWithAck LogLevel.Error (
+          log LogLevel.Error (
             eventX "{testName} errored in {duration}"
             >> setField "testName" n
             >> setField "duration" d
             >> addExn e)
-          |> Async.RunSynchronously
 
         summary = fun summary ->
           let spirit =
@@ -412,8 +411,7 @@ module Impl =
                 "( ರ Ĺ̯ ರೃ )"
               else
                 ""
-
-          logger.logWithAck Info (
+          log Info (
             eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
             >> setField "total" summary.total
             >> setField "duration" summary.duration
@@ -422,7 +420,28 @@ module Impl =
             >> setField "failures" summary.failed.Length
             >> setField "errors" summary.errored.Length
             >> setField "spirit" spirit)
-          |> Async.RunSynchronously }
+          }
+
+    static member silent =
+      { beforeRun = fun _ -> ()
+        beforeEach = fun _ -> ()
+        info = fun _ -> ()
+        passed = fun _ _ -> ()
+        ignored = fun _ _ -> ()
+        failed = fun _ _ _ -> ()
+        exn = fun _ _ _ -> ()
+        summary = fun _ -> () }
+
+    static member Default =
+      TestPrinters.Logger (fun l m -> logger.logWithAck l m |> Async.RunSynchronously)
+
+    static member Async =
+      TestPrinters.Logger (fun l m -> logger.log l m |> Async.Start)
+
+    static member Combined (async:bool ref) =
+      TestPrinters.Logger (fun l m ->
+        if !async then logger.log l m |> Async.Start
+        else logger.logWithAck l m |> Async.RunSynchronously)
 
     static member Summary =
       { TestPrinters.Default with
@@ -444,34 +463,17 @@ module Impl =
           | UnFocused _ -> Some "The test is skiped because other tests are Focused"
           | Enabled _-> None
 
-        /// tests: seq<string * TestCode * FocusState>) -> seq<string * TestCode * WrappedFocusedState>
-        static member WrapStates tests =
+        /// tests: FlatTest list -> WrappedFlatTest list
+        static member WrapStates (tests:FlatTest list) =
           let applyFocusedWrapping = function
             | Focused -> Enabled Focused
             | a -> UnFocused a
-          let testsList = tests |> Seq.toList
-          let existsFocusedTests = testsList |> Seq.exists (trd3 >> (FocusState.isFocused))
+          let existsFocusedTests = tests |> List.exists (fun t -> FocusState.isFocused t.State)
           let wrappingMethod = if existsFocusedTests then applyFocusedWrapping else Enabled
-          testsList |> Seq.map (fun (n, t, s) -> (n, t, wrappingMethod s))
+          tests |> List.map (fun t -> {Name=t.Name; Test=t.Test; State=wrappingMethod t.State; Sequenced=t.Sequenced})
 
-  // here Anthony:
-  //  For 'normal tests';
-  //  readerWriterSlim.EnterRead() (perhaps?)
-  //  For 'perf tests';
-  // readerWriterSlim.EnterWrite()
-  let enterLock _ _ = ()
-  // need to create lease module, implement these functions.
-  // The first parameter is the state (the Map<Name*Test, RWLS> perhaps?)
-  // the second is the key to enter a lock for. Should allow for multiple
-  // 'normal' and untagged tests (that can run parallel = readers) and then
-  // some 'sequential' tests like the performance tests, benchmark tests or
-  // the Expect.isFasterThan usage inside a given test.
+    and WrappedFlatTest = {Name:string; Test:TestCode; State: WrappedFocusedState; Sequenced:bool}
 
-  (*
-    Equivalent and opposite of above ...
-    readerWriterSlim.Exit(...)
-  *)
-  let exitLock _ _ = ()
 
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
@@ -492,42 +494,27 @@ module Impl =
       else
         None
 
-    fun (printers: TestPrinters) (* locks : Locks *) map ->
+    fun (printers: TestPrinters) map ->
 
-      let beforeEach (name: string, test, wrappedFocusedState) =
-        //printfn "--> beforeEach"
-        printers.beforeEach name
-        name, test, wrappedFocusedState
+      let beforeEach test =
+        printers.beforeEach test.Name
+        test
 
-      let execFocused next (name, test, wrappedFocusedState : WrappedFocusedState) =
-        match wrappedFocusedState.ShouldSkipEvaluation with
+      let execFocused next test =
+        match test.State.ShouldSkipEvaluation with
         | Some ignoredMessage ->
-          { name     = name
+          { name     = test.Name
             result   = Ignored ignoredMessage
             duration = TimeSpan.Zero }
         | _ ->
-          //printfn "--> execFocused"
-          next (name, test, wrappedFocusedState)
+          next test
 
-      /// Used to constrain parallelism for tests that cannot be run parallel
-      /// with correct results, such as Expect.isFasterThan or `benchmark<..>`
-      /// based tests. Note; this does not give an ordering guarantee.
-      let maybeSequence next (name, test, wrappedFocusedState) =
-        try
-          // here Anthony
-          enterLock () (*locks*) (name, test)
-          //printfn "--> maybeSequence"
-          next (name, test, wrappedFocusedState)
-        finally
-          exitLock () (*locks*) (name, test)
-
-      let execOne (name: string, test: TestCode, wrappedFocusedState: WrappedFocusedState) =
+      let execOne test =
         let w = System.Diagnostics.Stopwatch.StartNew()
         try
-          //printfn "--> execOne"
-          test ()
+          test.Test ()
           w.Stop()
-          { name     = name
+          { name     = test.Name
             result   = Passed
             duration = w.Elapsed }
         with e ->
@@ -540,20 +527,19 @@ module Impl =
                 |> Seq.filter (fun q -> q.Contains ",1): ")
                 |> Enumerable.FirstOrDefault
               sprintf "\n%s\n%s\n" e.Message firstLine
-            { name     = name
+            { name     = test.Name
               result   = Failed msg
               duration = w.Elapsed }
           | ExceptionInList ignoreExceptionTypes.Value ->
-            { name     = name
+            { name     = test.Name
               result   = Ignored e.Message
               duration = w.Elapsed }
           | _ ->
-            { name     = name
+            { name     = test.Name
               result   = TestResult.Error e
               duration = w.Elapsed }
 
       let printOne (trr : TestRunResult) =
-        //printfn " --> printOne"
         match trr.result with
         | Passed -> printers.passed trr.name trr.duration
         | Failed message -> printers.failed trr.name message trr.duration
@@ -563,11 +549,9 @@ module Impl =
 
       let pipeline =
         execFocused (
-          maybeSequence (
-            beforeEach
-            >> execOne
-            >> printOne
-          )
+          beforeEach
+          >> execOne
+          >> printOne
         )
 
       WrappedFocusedState.WrapStates
@@ -578,21 +562,41 @@ module Impl =
   let eval (printer: TestPrinters) map tests =
     Test.toTestCodeList tests
     |> evalTestList printer map
-    |> Seq.toList
 
   /// Evaluates tests sequentially
   let evalSeq =
-    let printer =
-      TestPrinters.Default
-
-    eval printer Seq.map
-
-  let pmap (f: _ -> _) (s: _ seq) = s.AsParallel().Select(f) :> _ seq
+    eval TestPrinters.Default List.map
 
   /// Evaluates tests in parallel
   let evalPar =
-    let printer =
-      TestPrinters.Default
+    let printAsync = ref true
+    let printer = TestPrinters.Combined printAsync
+
+    let pmap f l =
+      let sequenced, parallel =
+        List.mapi (fun i t -> i,t) l
+        |> List.partition (fun (i,t) -> t.Sequenced)
+
+      let parallelResults =
+        List.map (fun (i,t) ->
+          async {
+            let r = f t
+            return i,r
+          }) parallel
+        |> Async.Parallel
+        |> Async.RunSynchronously
+        |> Array.toList
+
+      if List.isEmpty sequenced |> not then
+        printAsync := false
+        printer.info "Staring sequenced tests..."
+
+      let sequencedResults =
+        List.map (fun (i,t) -> i, f t) sequenced
+
+      List.append sequencedResults parallelResults
+      |> List.sortBy fst
+      |> List.map snd
 
     eval printer pmap
 
@@ -664,7 +668,6 @@ module Impl =
 [<AutoOpen; Extension>]
 module Tests =
   open Impl
-  open Helpers
   open Argu
   open Expecto.Logging
 
@@ -680,6 +683,7 @@ module Tests =
 
   /// Builds a list/group of tests that will be ignored by Expecto if exists focused tests and none of the parents is focused
   let inline testList name tests = TestLabel(name, TestList (tests, Normal), Normal)
+
   /// Builds a list/group of tests that will make Expecto to ignore other unfocused tests
   let inline ftestList name tests = TestLabel(name, TestList (tests, Focused), Focused)
   /// Builds a list/group of tests that will be ignored by Expecto
@@ -691,6 +695,8 @@ module Tests =
   let inline ftestCase name test = TestLabel(name, TestCase (test, Focused), Focused)
   /// Builds a test case that will be ignored by Expecto
   let inline ptestCase name test = TestLabel(name, TestCase (test, Pending), Pending)
+  /// Test case or list needs to run sequenced
+  let inline testSequenced test = Sequenced test
 
   /// Applies a function to a list of values to build test cases
   let inline testFixture setup =
@@ -845,7 +851,7 @@ module Tests =
   let listTests test =
     test
     |> Test.toTestCodeList
-    |> Seq.iter (fst3 >> printfn "%s")
+    |> Seq.iter (fun t -> printfn "%s" t.Name)
 
   /// Runs tests with supplied options. Returns 0 if all tests passed, =
   /// otherwise 1

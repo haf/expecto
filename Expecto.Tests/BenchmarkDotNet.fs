@@ -18,13 +18,13 @@ type Md5VsSha256() =
 
 [<Tests>]
 let benchmarks =
-  testList "some different benchmarks" [
+  testSequenced <| testList "some different benchmarks" [
     benchmark<Md5VsSha256> "md5 versus sha256" benchmarkConfig ignore
   ]
 
 [<Tests>]
 let performance =
-  testList "performance cryptography tests" [
+  testSequenced <| testList "performance cryptography tests" [
 
     testCase "md5 equals sha256" <| fun _ ->
       let a = Md5VsSha256()
@@ -43,4 +43,4 @@ let performance =
       let a = Md5VsSha256()
       Expect.isFasterThan (a.Md5 >> ignore) (a.Sha256 >> ignore) "MD5 is faster than SHA256"
 
-  ]
+    ]

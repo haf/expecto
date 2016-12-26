@@ -2,7 +2,6 @@ namespace Expecto
 #nowarn "44"
 
 open System
-open System.Text.RegularExpressions
 open FSharpx
 
 module Seq =
@@ -23,7 +22,7 @@ module Seq =
 
 module String =
     let internal nullBool2 f a b =
-        if a = null && a = null then
+        if a = null && a = null then // TODO: Looks like a bug here, module seems unused
             true
         elif a = null || b = null then
             false
@@ -44,7 +43,7 @@ module TestHelpers =
   open Expecto
   open Expecto.Impl
 
-  let evalSilent = eval TestPrinters.silent Seq.map
+  let evalSilent = eval TestPrinters.silent List.map
 
   let inline assertTestFails test =
     let test = TestCase test

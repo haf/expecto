@@ -541,8 +541,14 @@ let inline popCount16 i =
     ((v + (v >>> 4) &&& 0xF0Fus) * 0x101us) >>> 8
 
 [<Tests>]
-let performance =
+let popcountTest =
   testList "performance" [
+    testProperty "popcount same" (fun i -> (popCount i |> int) = (popCount16 i |> int))
+  ]
+
+[<Tests>]
+let performance =
+  testSequenced <| testList "performance" [
 
     testCase "1 <> 2" <| fun _ ->
       let test() = Expect.isFasterThan (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
@@ -582,8 +588,6 @@ let performance =
               t <- t + a.[i,j] * b.[j,k]
             c.[i,k] <- t
       Expect.isFasterThanSub (fun measurer -> reset(); measurer mulIKJ ()) (fun measurer -> reset(); measurer mulIJK ()) "ikj faster than ijk"
-
-    testProperty "popcount same" (fun i -> (popCount i |> int) = (popCount16 i |> int))
 
     testCase "popcount" <| fun _ ->
       let test() = Expect.isFasterThan (fun () -> repeat10000 (popCount16 >> int) 987us) (fun () -> repeat10000 (popCount >> int) 987us) "popcount 16 faster than 32 fails"
