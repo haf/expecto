@@ -443,18 +443,81 @@ let expecto =
         testCase "sequence contains everything expected" <| fun _ ->
           let format = "Sequence should contain one and five"
           let test () =
-            Expect.containsAll [|2; 1; 1|] [| 1; 5 |] format
+            Expect.containsAll [|2; 1; 3|] [| 1; 5 |] format
           let msg =
             sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
-        {1, 1, 2}
+        {1, 2, 3}
         All elements in `expected`:
         {1, 5}
         Missing elements from `actual`:
         {5}
         Extra elements in `actual`:
-        {1, 2}"
+        {2, 3}"
+              format
+          assertTestFailsWithMsg msg (test, Normal)
+      ]
+
+      testList "#distributed" [
+        testCase "identical sequence" <| fun _ ->
+          Expect.distributed [|21;37|] [|21;37|] "Identical"
+
+        testCase "sequence contains all in different order" <| fun _ ->
+          Expect.distributed [|21;37|] [|37;21|]
+                             "Same elements in different order"
+
+        testCase "sequence doesn't contain repeats in expected" <| fun _ ->
+          let format = "Sequence should contain one and five"
+          let test () =
+            Expect.distributed [|2; 2|] [| 2; 1; 4 |] format
+          let msg =
+            sprintf "%s.
+    Sequence `actual` does not contain all `expected` elements.
+        All elements in `actual`:
+        {2, 2}
+        All elements in `expected`:
+        {1, 2, 4}
+        Missing elements from `actual`:
+        {1; 4}
+        Extra elements in `actual`:
+        {2}"
+              format
+          assertTestFailsWithMsg msg (test, Normal)
+
+        testCase "sequence does contain repeats in expected but should not" <| fun _ ->
+          let format = "Sequence should contain one and five"
+          let test () =
+            Expect.distributed [|2; 2|] [| 2; 2; 4 |] format
+          let msg =
+            sprintf "%s.
+    Sequence `actual` does not contain all `expected` elements.
+        All elements in `actual`:
+        {2, 2}
+        All elements in `expected`:
+        {2, 2, 4}
+        Missing elements from `actual`:
+        {4}
+        Extra elements in `actual`:
+        {}"
+              format
+          assertTestFailsWithMsg msg (test, Normal)
+
+        testCase "sequence contains everything expected" <| fun _ ->
+          let format = "Sequence should contain one and five"
+          let test () =
+            Expect.distributed [|2; 2; 4|] [| 2; 4 |] format
+          let msg =
+            sprintf "%s.
+    Sequence `actual` does not contain all `expected` elements.
+        All elements in `actual`:
+        {2, 2, 4}
+        All elements in `expected`:
+        {2, 2}
+        Missing elements from `actual`:
+        {}
+        Extra elements in `actual`:
+        {2}"
               format
           assertTestFailsWithMsg msg (test, Normal)
       ]

@@ -204,6 +204,34 @@ let inline private formatSet<'a> (ss : 'a seq) : string =
     |> String.concat ", "
     |> sprintf "{%s}"
 
+/// Expects the `actual` sequence to contain all elements from `expected`
+/// it doesn't take into account number of occurances of characters
+/// sequence (not taking into account an order of elements). Calling this
+/// function will enumerate both sequences; they have to be finite.
+let containsAll (actual : _ seq)
+                (expected : _ seq)
+                format =
+  let axs, exs = List.ofSeq actual, List.ofSeq expected
+  let extra, missing =
+    let ixs = axs |> List.filter (fun a -> exs |> List.exists ((=) a))
+    axs |> List.filter (fun a -> not (ixs |> List.exists ((=) a))),
+    exs |> List.filter (fun e -> not (ixs |> List.exists ((=) e)))
+
+  if List.isEmpty missing then () else
+
+  sprintf "%s.
+    Sequence `actual` does not contain all `expected` elements.
+        All elements in `actual`:
+        %s
+        All elements in `expected`:
+        %s
+        Missing elements from `actual`:
+        %s
+        Extra elements in `actual`:
+        %s"
+              format (formatSet axs) (formatSet exs) (formatSet missing) (formatSet extra)
+  |> Tests.failtest
+
 let inline private except(baseSeq: 'a seq, exceptSeq: 'a seq): 'a list =
   let groupByOccurances sequence =
     sequence
@@ -228,10 +256,11 @@ let inline private except(baseSeq: 'a seq, exceptSeq: 'a seq): 'a list =
   |> Seq.map elementsWhichDiffer
   |> List.concat
 
-/// Expects the `actual` sequence to contain all elements from `expected`
+/// Expects the `actual` sequence to contain all elements from `expected`,
+/// it takes into account number of occurances any of the character
 /// sequence (not taking into account an order of elements). Calling this
 /// function will enumerate both sequences; they have to be finite.
-let containsAll (actual : _ seq)
+let distributed (actual : _ seq)
                 (expected : _ seq)
                 format =
   let extra, missing =
