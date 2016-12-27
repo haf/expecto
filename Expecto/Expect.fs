@@ -232,40 +232,43 @@ let containsAll (actual : _ seq)
               format (formatSet axs) (formatSet exs) (formatSet missing) (formatSet extra)
   |> Tests.failtest
 
-let inline private except(baseSeq: 'a seq, exceptSeq: 'a seq): 'a list =
-  let groupByOccurances sequence =
-    sequence
-    |> Seq.groupBy id
-    |> Seq.map (fun (letter, occurances) -> (letter, occurances |> Seq.length))
-  let groupedSndSeq = groupByOccurances exceptSeq
+let inline private except(baseMap: Map<_,int>, exceptMap: Map<_,int>) =
+  let getMapValue (map: Map<_, int>) (element: _) = 
+    map.TryFind element |> fun x -> x.Value
   
-  let differNrOfElement element =
-    let nrOfElements = (snd element) - (groupedSndSeq |> Seq.find(fun y -> fst y = fst element) |> snd)
-    if nrOfElements > 0 then Array.create nrOfElements (fst element) |> Array.toList
-    else []
+  let differNrOfElement element value =
+    let nrOfElements = value - (getMapValue exceptMap element)
+    if nrOfElements > 0 then nrOfElements
+    else 0
   
-  let elementsWhichDiffer element= 
-    if groupedSndSeq |> Seq.exists ((=) element) then
-      []
-    elif groupedSndSeq |> Seq.exists (fun y -> fst y = fst element) then
-      differNrOfElement element
-    else Array.create (snd element) (fst element) |> Array.toList
+  let elementsWhichDiffer element value = 
+    if exceptMap.ContainsKey(element) then
+      differNrOfElement element value
+    else value
   
-  baseSeq
-  |> groupByOccurances
-  |> Seq.map elementsWhichDiffer
-  |> List.concat
+  baseMap
+  |> Map.map elementsWhichDiffer
+  |> Map.filter(fun key value -> value > 0)
+  |> Map.toList
 
 /// Expects the `actual` sequence to contain all elements from `expected`,
 /// it takes into account number of occurances any of the character
 /// sequence (not taking into account an order of elements). Calling this
 /// function will enumerate both sequences; they have to be finite.
 let distributed (actual : _ seq)
-                (expected : _ seq)
+                (expected : Map<_,int>)
                 format =
+  let groupByOccurances sequence =
+    sequence
+    |> Seq.groupBy id
+    |> Seq.map (fun (item, occurances) -> (item, occurances |> Seq.length))
+    |> Map.ofSeq
+  let groupedActual = groupByOccurances actual
+
   let extra, missing =
-    except(actual, expected),
-    except(expected, actual)
+    except(groupedActual, expected),
+    except(expected, groupedActual)
+  
   let isCorrect = List.isEmpty missing && List.isEmpty extra
   if isCorrect then () else
 
@@ -273,11 +276,11 @@ let distributed (actual : _ seq)
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
         %s
-        All elements in `expected`:
+        All elements in `expected` ['item', 'number of expected occurances']:
         %s
-        Missing elements from `actual`:
+        Missing elements from `actual` ('item', 'number of missing occurances'):
         %s
-        Extra elements in `actual`:
+        Extra elements in `actual` ('item', 'number of extra occurances'):
         %s"
               format (formatSet actual) (formatSet expected) (formatSet missing) (formatSet extra)
   |> Tests.failtest

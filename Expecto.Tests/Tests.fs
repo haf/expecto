@@ -461,63 +461,79 @@ let expecto =
 
       testList "#distributed" [
         testCase "identical sequence" <| fun _ ->
-          Expect.distributed [|21;37|] [|21;37|] "Identical"
+          Expect.distributed [|21;37|] <| Map [
+              (21, 1)
+              (37, 1)
+            ] <| "Identical"
 
         testCase "sequence contains all in different order" <| fun _ ->
-          Expect.distributed [|21;37|] [|37;21|]
-                             "Same elements in different order"
+          Expect.distributed [|21;37|] <| Map[
+              (37, 1)
+              (21, 1)
+            ]
+                             <| "Same elements in different order"
 
         testCase "sequence doesn't contain repeats in expected" <| fun _ ->
           let format = "Sequence should contain one, two and four"
           let test () =
-            Expect.distributed [|2; 2|] [| 2; 1; 4 |] format
+            Expect.distributed [|2; 2|]  <| Map [
+                  (2, 1)
+                  (1, 1)
+                  (4, 1)
+                ] <| format
           let msg =
             sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
         {2, 2}
-        All elements in `expected`:
+        All elements in `expected` ['item', 'number of expected occurances']:
         {1, 2, 4}
-        Missing elements from `actual`:
-        {1, 4}
-        Extra elements in `actual`:
-        {2}"
+        Missing elements from `actual` ('item', 'number of missing occurances'):
+        {(1, 1), (4, 1)}
+        Extra elements in `actual` ('item', 'number of extra occurances'):
+        {(2, 1)}"
               format
           assertTestFailsWithMsg msg (test, Normal)
 
         testCase "sequence does contain repeats in expected but should not" <| fun _ ->
           let format = "Sequence should contain two, two and four"
           let test () =
-            Expect.distributed [|2; 2|] [| 2; 2; 4 |] format
+            Expect.distributed [|2; 2|] <| Map[
+                (2, 2)
+                (4, 1)
+            ] <| format
           let msg =
             sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
         {2, 2}
-        All elements in `expected`:
+        All elements in `expected` ['item', 'number of expected occurances']:
         {2, 2, 4}
-        Missing elements from `actual`:
-        {4}
-        Extra elements in `actual`:
+        Missing elements from `actual` ('item', 'number of missing occurances'):
+        {(4, 1)}
+        Extra elements in `actual` ('item', 'number of extra occurances'):
         {}"
               format
           assertTestFailsWithMsg msg (test, Normal)
 
-        testCase "sequence contains everything expected" <| fun _ ->
+        testCase "sequence does not contains everything expected" <| fun _ ->
           let format = "Sequence should contain two and two"
           let test () =
-            Expect.distributed [|2; 2; 4|] [| 2; 4 |] format
+            Expect.distributed [|2; 2; 4|] <| Map[
+              (2, 1)
+              (4, 1)
+            ] <| format
           let msg =
             sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
         {2, 2, 4}
-        All elements in `expected`:
+        All elements in `expected` ['item', 'number of expected occurances']:
         {2, 4}
-        Missing elements from `actual`:
+        Missing elements from `actual` ('item', 'number of missing occurances'):
         {}
-        Extra elements in `actual`:
-        {2}"
+        Extra elements in `actual` ('item', 'number of extra occurances'):
+        {(2, 1)}"
               format
           assertTestFailsWithMsg msg (test, Normal)
       ]
