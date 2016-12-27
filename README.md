@@ -255,7 +255,7 @@ This module is your main entry-point when asserting.
    of `subject` and `length`.
  - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain the item.
  - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence contains all elements from second sequence (not taking into account an order of elements and number of occurances of elements)
- - `distributed: 'a seq -> 'a seq -> string -> unit` - Expect the sequence contains all elements from second sequence (not taking into account an order of elements)
+ - `distributed: 'a seq -> Map<'a, int> -> string -> unit` - Expect the sequence contains all elements from map (first element in tuple is an item expected to be in sequence, second one is a number of it's occurances in sequence). Sequence is not taking into account an order of elements.
  - `streamsEqual` – Expect the streams to be byte-wise identical.
 
 ## `main argv` – how to run console apps

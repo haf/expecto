@@ -251,10 +251,11 @@ let inline private except(baseMap: Map<_,int>, exceptMap: Map<_,int>) =
   |> Map.filter(fun key value -> value > 0)
   |> Map.toList
 
-/// Expects the `actual` sequence to contain all elements from `expected`,
-/// it takes into account number of occurances any of the character
-/// sequence (not taking into account an order of elements). Calling this
-/// function will enumerate both sequences; they have to be finite.
+/// Expects the `actual` sequence to contain all elements from `expected` map,
+/// first element in every tuple from `expected` map means item which should be
+/// presented in `actual` sequence, the second one means an expected number of occurances
+/// of this item sequence (not taking into account an order of elements). 
+/// Calling this function will enumerate both sequences; they have to be finite.
 let distributed (actual : _ seq)
                 (expected : Map<_,int>)
                 format =
