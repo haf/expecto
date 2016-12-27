@@ -215,7 +215,7 @@ let expecto =
         t.Length ==? 0
     ]
 
-    testList "Timeout" [
+    testSequenced <| testList "Timeout" [
       testCase "fail" <| fun _ ->
         let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
         let result = evalSilent test |> sumTestResults
