@@ -487,7 +487,7 @@ let expecto =
         All elements in `actual`:
         {2, 2}
         All elements in `expected` ['item', 'number of expected occurances']:
-        {1, 2, 4}
+        {[1, 1], [2, 1], [4, 1]}
         Missing elements from `actual` ('item', 'number of missing occurances'):
         {(1, 1), (4, 1)}
         Extra elements in `actual` ('item', 'number of extra occurances'):
@@ -508,7 +508,7 @@ let expecto =
         All elements in `actual`:
         {2, 2}
         All elements in `expected` ['item', 'number of expected occurances']:
-        {2, 2, 4}
+        {[2, 2], [4, 1]}
         Missing elements from `actual` ('item', 'number of missing occurances'):
         {(4, 1)}
         Extra elements in `actual` ('item', 'number of extra occurances'):
@@ -529,7 +529,7 @@ let expecto =
         All elements in `actual`:
         {2, 2, 4}
         All elements in `expected` ['item', 'number of expected occurances']:
-        {2, 4}
+        {[2, 1], [4, 1]}
         Missing elements from `actual` ('item', 'number of missing occurances'):
         {}
         Extra elements in `actual` ('item', 'number of extra occurances'):
