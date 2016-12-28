@@ -41,6 +41,11 @@ let tests =
 
     testCase "You know exns" <| fun _ ->
       failwith "unhandled exception from test code"
+
+    ptestCase "I'm pending" <| fun _ -> ()
+
+    // uncomment me:
+    //ftestCase "I'm focused, I will cause all other tests to be skipped" <| fun () -> ()
   ]
 
 [<EntryPoint>]
