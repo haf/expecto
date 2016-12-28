@@ -403,9 +403,16 @@ module Impl =
         summary = fun summary ->
           let spirit =
             if summary.errored.Length + summary.failed.Length = 0 then
-              "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
+              if Console.OutputEncoding.BodyName = "utf-8" then
+                "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
+              else
+                "Success!"
             else
-              "( ರ Ĺ̯ ರೃ )"
+              if Console.OutputEncoding.BodyName = "utf-8" then
+                "( ರ Ĺ̯ ರೃ )"
+              else
+                ""
+
           logger.logWithAck Info (
             eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
             >> setField "total" summary.total
