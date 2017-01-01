@@ -485,13 +485,14 @@ let expecto =
             sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
-        {2, 2}
+        {2, 2, 4}
         All elements in `expected` ['item', 'number of expected occurances']:
-        {[1, 1], [2, 1], [4, 1]}
+        {[1, 1], [2, 1], [4, 2]}
         Missing elements from `actual` ('item', 'number of missing occurances'):
-        {(1, 1), (4, 1)}
+        * for 1 found 0 of expected 1
+        * for 4 found 1 of expected 2
         Extra elements in `actual` ('item', 'number of extra occurances'):
-        {(2, 1)}"
+        * for 2 found 2 of expected 1"
               format
           assertTestFailsWithMsg msg (test, Normal)
 
@@ -510,9 +511,9 @@ let expecto =
         All elements in `expected` ['item', 'number of expected occurances']:
         {[2, 2], [4, 1]}
         Missing elements from `actual` ('item', 'number of missing occurances'):
-        {(4, 1)}
+        * for 4 found 0 of expected 1
         Extra elements in `actual` ('item', 'number of extra occurances'):
-        {}"
+        "
               format
           assertTestFailsWithMsg msg (test, Normal)
 
@@ -531,9 +532,9 @@ let expecto =
         All elements in `expected` ['item', 'number of expected occurances']:
         {[2, 1], [4, 1]}
         Missing elements from `actual` ('item', 'number of missing occurances'):
-        {}
+        
         Extra elements in `actual` ('item', 'number of extra occurances'):
-        {(2, 1)}"
+        * for 2 found 2 of expected 1"
               format
           assertTestFailsWithMsg msg (test, Normal)
       ]

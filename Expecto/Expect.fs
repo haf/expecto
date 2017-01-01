@@ -186,7 +186,7 @@ let contains sequence element format =
   | None ->
     Tests.failtestf "%s. Sequence did not contain %A." format element
 
-let inline private formatSet<'a> (ss : 'a seq) : string =
+let inline private formatSet<'a> (concatBy) (formatResult) (ss : 'a seq) : string =
   if Seq.isEmpty ss then
     "{}"
   else
@@ -201,8 +201,8 @@ let inline private formatSet<'a> (ss : 'a seq) : string =
       ss
       |> Seq.map (fun a -> a.ToString())
       |> Seq.sort)
-    |> String.concat ", "
-    |> sprintf "{%s}"
+    |> String.concat concatBy
+    |> sprintf formatResult
 
 /// Expects the `actual` sequence to contain all elements from `expected`
 /// it doesn't take into account number of occurances of characters
@@ -218,7 +218,7 @@ let containsAll (actual : _ seq)
     exs |> List.filter (fun e -> not (ixs |> List.exists ((=) e)))
 
   if List.isEmpty missing then () else
-
+  let formatResult = formatSet ", " "{%s}"
   sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
@@ -229,27 +229,32 @@ let containsAll (actual : _ seq)
         %s
         Extra elements in `actual`:
         %s"
-              format (formatSet axs) (formatSet exs) (formatSet missing) (formatSet extra)
+              format (formatResult axs) (formatResult exs) (formatResult missing) (formatResult extra)
   |> Tests.failtest
 
-let inline private except(baseMap: Map<_,int>, exceptMap: Map<_,int>) =
+let inline private except(baseMap: Map<_,int>, exceptMap: Map<_,int>, isExcept: bool) =
   let getMapValue (map: Map<_, int>) (element: _) = 
     map.TryFind element |> fun x -> x.Value
-  
+  let getResult found expected = 
+    match isExcept with
+    | true -> sprintf "%d of expected %d" found expected
+    | _ -> sprintf "%d of expected %d" expected found
   let differNrOfElement element value =
-    let nrOfElements = value - (getMapValue exceptMap element)
-    if nrOfElements > 0 then nrOfElements
-    else 0
+    let foundElements = (getMapValue exceptMap element)
+    let missingElements = value - foundElements
+    if missingElements > 0 then getResult foundElements value
+    else ""
   
   let elementsWhichDiffer element value = 
     if exceptMap.ContainsKey(element) then
       differNrOfElement element value
-    else value
+    else getResult 0 value
   
   baseMap
   |> Map.map elementsWhichDiffer
-  |> Map.filter(fun key value -> value > 0)
+  |> Map.filter(fun key value -> not(String.IsNullOrEmpty value))
   |> Map.toList
+  |> List.map(fun elem -> sprintf "* for %A found %s" (fst elem) (snd elem))
 
 /// Expects the `actual` sequence to contain all elements from `expected` map,
 /// first element in every tuple from `expected` map means item which should be
@@ -267,23 +272,24 @@ let distributed (actual : _ seq)
   let groupedActual = groupByOccurances actual
 
   let extra, missing =
-    except(groupedActual, expected),
-    except(expected, groupedActual)
+    except(groupedActual, expected, false),
+    except(expected, groupedActual, true)
   
   let isCorrect = List.isEmpty missing && List.isEmpty extra
   if isCorrect then () else
-
+  let formatInput(data) = formatSet ", " "{%s}" data
+  let formatResult = formatSet "\n\t" "%s"
   sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
         %s
         All elements in `expected` ['item', 'number of expected occurances']:
         %s
-        Missing elements from `actual` ('item', 'number of missing occurances'):
+        Missing elements from `actual`:
         %s
-        Extra elements in `actual` ('item', 'number of extra occurances'):
+        Extra elements in `actual`:
         %s"
-              format (formatSet actual) (formatSet expected) (formatSet missing) (formatSet extra)
+              format (formatInput(actual)) (formatInput(expected)) (formatResult missing) (formatResult extra)
   |> Tests.failtest
 
 /// Expects the `actual` sequence to equal the `expected` one.
