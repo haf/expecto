@@ -476,10 +476,10 @@ let expecto =
         testCase "sequence doesn't contain repeats in expected" <| fun _ ->
           let format = "Sequence should contain one, two and four"
           let test () =
-            Expect.distributed [|2; 2|]  <| Map [
+            Expect.distributed [|2; 2; 4|]  <| Map [
                   (2, 1)
                   (1, 1)
-                  (4, 1)
+                  (4, 2)
                 ] <| format
           let msg =
             sprintf "%s.
@@ -489,8 +489,7 @@ let expecto =
         All elements in `expected` ['item', 'number of expected occurances']:
         {[1, 1], [2, 1], [4, 2]}
         Missing elements from `actual` ('item', 'number of missing occurances'):
-        * for 1 found 0 of expected 1
-        * for 4 found 1 of expected 2
+        * for 1 found 0 of expected 1\n\t* for 4 found 1 of expected 2
         Extra elements in `actual` ('item', 'number of extra occurances'):
         * for 2 found 2 of expected 1"
               format
@@ -513,7 +512,7 @@ let expecto =
         Missing elements from `actual` ('item', 'number of missing occurances'):
         * for 4 found 0 of expected 1
         Extra elements in `actual` ('item', 'number of extra occurances'):
-        "
+        {}"
               format
           assertTestFailsWithMsg msg (test, Normal)
 
@@ -532,7 +531,7 @@ let expecto =
         All elements in `expected` ['item', 'number of expected occurances']:
         {[2, 1], [4, 1]}
         Missing elements from `actual` ('item', 'number of missing occurances'):
-        
+        {}
         Extra elements in `actual` ('item', 'number of extra occurances'):
         * for 2 found 2 of expected 1"
               format
