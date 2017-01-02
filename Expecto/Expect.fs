@@ -186,9 +186,9 @@ let contains sequence element format =
   | None ->
     Tests.failtestf "%s. Sequence did not contain %A." format element
 
-let inline private formatSet<'a> (concatBy) (formatResult) (ss : 'a seq) : string =
+let inline private formatSet<'a> (concatBy) (formatResult) (whenEmpty) (ss : 'a seq) : string =
   if Seq.isEmpty ss then
-    "{}"
+    whenEmpty
   else
     (match box (Seq.nth 0 ss) with
     | :? IComparable ->
@@ -218,7 +218,7 @@ let containsAll (actual : _ seq)
     exs |> List.filter (fun e -> not (ixs |> List.exists ((=) e)))
 
   if List.isEmpty missing then () else
-  let formatResult = formatSet ", " "{%s}"
+  let formatResult = formatSet ", " "{%s}" "{}"
   sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
@@ -237,24 +237,34 @@ let inline private except(baseMap: Map<_,int>, exceptMap: Map<_,int>, isExcept: 
     map.TryFind element |> fun x -> x.Value
   let getResult found expected = 
     match isExcept with
-    | true -> sprintf "%d of expected %d" found expected
-    | _ -> sprintf "%d of expected %d" expected found
+    | true -> (found, expected)
+    | _ -> (expected, found)
+  
   let differNrOfElement element value =
     let foundElements = (getMapValue exceptMap element)
     let missingElements = value - foundElements
     if missingElements > 0 then getResult foundElements value
-    else ""
+    else (0,0)
   
   let elementsWhichDiffer element value = 
     if exceptMap.ContainsKey(element) then
       differNrOfElement element value
     else getResult 0 value
   
+  let printResult tuple =
+    let baseInfo = 
+      sprintf "(%d/%d)" (fst tuple) (snd tuple)
+    let printWhole found notFound moreThanExpected =
+      sprintf "%s\t| %s%s%s" baseInfo (new String('#', found)) (new String('-', notFound)) (new String('/', moreThanExpected))
+    match fst tuple > snd tuple with
+    | true -> printWhole (snd tuple) 0 (fst tuple - snd tuple)
+    | _ -> printWhole (fst tuple) (snd tuple - fst tuple) 0
+
   baseMap
   |> Map.map elementsWhichDiffer
-  |> Map.filter(fun key value -> not(String.IsNullOrEmpty value))
+  |> Map.filter(fun key value -> snd value <> 0)
   |> Map.toList
-  |> List.map(fun elem -> sprintf "* for %A found %s" (fst elem) (snd elem))
+  |> List.map(fun elem -> sprintf "'%A' %s" (fst elem) (snd elem |> printResult))
 
 /// Expects the `actual` sequence to contain all elements from `expected` map,
 /// first element in every tuple from `expected` map means item which should be
@@ -277,8 +287,8 @@ let distributed (actual : _ seq)
   
   let isCorrect = List.isEmpty missing && List.isEmpty extra
   if isCorrect then () else
-  let formatInput(data) = formatSet ", " "{%s}" data
-  let formatResult = formatSet "\n\t" "%s"
+  let formatInput(data) = formatSet ", " "{%s}" "" data
+  let formatResult(data) = formatSet "\n\t" "%s" "" data
   sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
@@ -289,7 +299,7 @@ let distributed (actual : _ seq)
         %s
         Extra elements in `actual`:
         %s"
-              format (formatInput(actual)) (formatInput(expected)) (formatResult missing) (formatResult extra)
+              format (formatInput actual) (formatInput expected) (formatResult missing) (formatResult extra)
   |> Tests.failtest
 
 /// Expects the `actual` sequence to equal the `expected` one.
