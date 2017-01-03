@@ -276,6 +276,8 @@ Expecto supports testing that an implementation is faster than another. Use it
 by calling wrapping your `Test` in `testSequenced` and then using
 `Expect.isFasterThan`.
 
+![Sample output](./docs/half-is-faster.png)
+
 The assertion will run a fixpoint function that accumulates enough samples to
 say that with 99.99% certainty, one function is faster than the other. If this
 can't be stated, the assertion will fail after a while.
