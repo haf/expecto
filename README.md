@@ -22,8 +22,11 @@ compositional (just like Suave and Logary are).
       * [Pending tests](#pending-tests)
     * [Expectations](#expectations)
       * [Expect module](#expect-module)
+      * [Performance module](#performance-module)
+        * [Example](#example)
     * [main argv – how to run console apps](#main-argv--how-to-run-console-apps)
       * [The config](#the-config)
+    * [Contributing](#contributing)
     * [FsCheck usage](#fscheck-usage)
     * [BenchmarkDotNet usage](#benchmarkdotnet-usage)
     * [You're not alone\!](#youre-not-alone)
@@ -233,28 +236,116 @@ This module is your main entry-point when asserting.
  - `isFalse`
  - `isTrue`
  - `sequenceEqual`
- - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If it does not
-   then fail with `format` as an error message together with a description
-   of `subject` and `prefix`.
+ - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If
+   it does not then fail with `format` as an error message together with a
+   description of `subject` and `prefix`.
  - `isAscending` - Expect the sequence `subject` to be ascending. If it does not
    then fail with `format` as an error message.
- - `isDescending` - Expect the sequence `subject` to be descending. If it does not
-   then fail with `format` as an error message.
+ - `isDescending` - Expect the sequence `subject` to be descending. If it does
+   not then fail with `format` as an error message.
  - `stringContains` – Expect the string `subject` to contain `substring` as part
    of itself.  If it does not, then fail with `format` and `subject` and
    `substring` as part of the error message.
  - `stringStarts` – Expect the string `subject` to start with `prefix` and if it
    does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
- - `stringEnds` - Expect the string `subject` to end with `suffix`. If it does not
-   then fail with `format` as an error message together with a description
+ - `stringEnds` - Expect the string `subject` to end with `suffix`. If it does
+   not then fail with `format` as an error message together with a description
    of `subject` and `suffix`.
- - `stringHasLength` - Expect the string `subject` to have length equals `length`. If it does not
-   then fail with `format` as an error message together with a description
-   of `subject` and `length`.
- - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain the item.
- - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence contains all elements from second sequence (not taking into account an order of elements)
+ - `stringHasLength` - Expect the string `subject` to have length equals
+   `length`. If it does not then fail with `format` as an error message together
+   with a description of `subject` and `length`.
+ - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain
+   the item.
+ - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
+   contains all elements from second sequence (not taking into account an order
+   of elements)
  - `streamsEqual` – Expect the streams to be byte-wise identical.
+ - `isFasterThan : (unit -> 'a) -> (unit -> 'a) -> string -> unit` – Expect the
+    first function to be faster than the second function with the passed string
+    message, printed on failure. See the next section on Performance for example
+    usage.
+ - `isFasterThanSub` – Like the above but with passed function signature of
+   `Performance.Measurer<unit,'a> -> 'a`, allowing you to do setup and teardown
+   of your subject under test (the function) before calling the Measurer. See
+   the next section on Performance for example usage.
+
+### `Performance` module
+
+Expecto supports testing that an implementation is faster than another. Use it
+by calling wrapping your `Test` in `testSequenced` and then using
+`Expect.isFasterThan`.
+
+#### Example
+
+All of the below tests pass.
+
+```fsharp
+[<Tests>]
+let performance =
+  testSequenced <| testList "performance" [
+
+    testCase "1 <> 2" <| fun _ ->
+      let test () =
+        Expect.isFasterThan (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
+      assertTestFailsWithMsgContaining "same" (test, Normal)
+
+    testCase "half is faster" <| fun _ ->
+      Expect.isFasterThan (fun () -> repeat10000 log 76.0)
+                          (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
+                          "half is faster"
+
+    testCase "double is faster should fail" <| fun _ ->
+      let test () =
+        Expect.isFasterThan (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
+                            (fun () -> repeat10000 log 76.0)
+                            "double is faster should fail"
+      assertTestFailsWithMsgContaining "slower" (test, Normal)
+
+    ptestCase "same function is faster should fail" <| fun _ ->
+      let test () =
+        Expect.isFasterThan (fun () -> repeat100000 log 76.0)
+                            (fun () -> repeat100000 log 76.0)
+                            "same function is faster should fail"
+      assertTestFailsWithMsgContaining "equal" (test, Normal)
+
+    testCase "matrix" <| fun _ ->
+      let n = 100
+      let rand = Random 123
+      let a = Array2D.init n n (fun _ _ -> rand.NextDouble())
+      let b = Array2D.init n n (fun _ _ -> rand.NextDouble())
+      let c = Array2D.zeroCreate n n
+
+      let reset() =
+        for i = 0 to n-1 do
+            for j = 0 to n-1 do
+              c.[i,j] <- 0.0
+
+      let mulIJK() =
+        for i = 0 to n-1 do
+          for j = 0 to n-1 do
+            for k = 0 to n-1 do
+              c.[i,k] <- c.[i,k] + a.[i,j] * b.[j,k]
+
+      let mulIKJ() =
+        for i = 0 to n-1 do
+          for k = 0 to n-1 do
+            let mutable t = 0.0
+            for j = 0 to n-1 do
+              t <- t + a.[i,j] * b.[j,k]
+            c.[i,k] <- t
+      Expect.isFasterThanSub (fun measurer -> reset(); measurer mulIKJ ())
+                             (fun measurer -> reset(); measurer mulIJK ())
+                             "ikj faster than ijk"
+
+    testCase "popcount" <| fun _ ->
+      let test () =
+        Expect.isFasterThan (fun () -> repeat10000 (popCount16 >> int) 987us)
+                            (fun () -> repeat10000 (popCount >> int) 987us)
+                            "popcount 16 faster than 32 fails"
+      assertTestFailsWithMsgContaining "slower" (test, Normal)
+  ]
+```
 
 ## `main argv` – how to run console apps
 

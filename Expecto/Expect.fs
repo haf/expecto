@@ -5,6 +5,8 @@ module Expecto.Expect
 ()
 
 open System
+open Expecto.Logging
+open Expecto.Logging.Message
 type HSet<'a> = System.Collections.Generic.HashSet<'a>
 
 /// Expects f to throw an exception.
@@ -325,35 +327,50 @@ let stringHasLength (subject : string) (length : int) format =
 
 /// Expect the streams to byte-wise equal.
 let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) format =
-    let buf = Array.zeroCreate<byte> 2
-    let rec compare pos =
-      match s1.Read(buf, 0, 1), s2.Read(buf, 1, 1) with
-      | x, y when x <> y ->
-        Tests.failtestf "%s. Not equal at pos %d" format pos
-      | 0, _ ->
-        ()
-      | _ when buf.[0] <> buf.[1] ->
-        Tests.failtestf "%s. Not equal at pos %d" format pos
-      | _ ->
-        compare (pos + 1)
-    compare 0
+  let buf = Array.zeroCreate<byte> 2
+  let rec compare pos =
+    match s1.Read(buf, 0, 1), s2.Read(buf, 1, 1) with
+    | x, y when x <> y ->
+      Tests.failtestf "%s. Not equal at pos %d" format pos
+    | 0, _ ->
+      ()
+    | _ when buf.[0] <> buf.[1] ->
+      Tests.failtestf "%s. Not equal at pos %d" format pos
+    | _ ->
+      compare (pos + 1)
+  compare 0
 
-/// Expects function `f1` is faster than `f2`. Measurer used to measure only a subset of the functions.
-/// Statistical test to 99.99% confidence level.
+/// Expects function `f1` is faster than `f2`. Measurer used to measure only a
+/// subset of the functions. Statistical test to 99.99% confidence level.
 let isFasterThanSub (f1:Performance.Measurer<_,_>->'a) (f2:Performance.Measurer<_,_>->'a) format =
-  let toString (s:Performance.SampleStatistics) = sprintf "%.4f \u00B1 %.4f ms" s.Mean s.MeanStandardError
-  match Performance.timeCompare f1 f2 with
-  | Performance.ResultNotTheSame (r1,r2)-> Tests.failtestf "%s. Expected function results to be the same (%A vs %A)." format r1 r2
-  | Performance.MetricTooShort (s,p) ->
-    Tests.failtestf "%s. Expected metric (%s) to be much longer than the machine resolution (%s)." format (toString s) (toString p)
-  | Performance.MetricEqual (s1,s2) ->
-    Tests.failtestf "%s. Expected f1 (%s) to be faster than f2 (%s) but are equal." format (toString s1) (toString s2)
-  | Performance.MetricMoreThan (s1,s2) ->
-    Tests.failtestf "%s. Expected f1 (%s) to be faster than f2 (%s) but is ~%.0f%% slower." format (toString s1) (toString s2) ((s1.Mean/s2.Mean-1.0)*100.0)
-  | Performance.MetricLessThan (s1,s2) ->
-    printfn "%s. f1 (%s) is ~%.0f%% faster than f2 (%s)." format (toString s1) ((1.0-s1.Mean/s2.Mean)*100.0) (toString s2)
+  let toString (s:Performance.SampleStatistics) =
+    sprintf "%.4f \u00B1 %.4f ms" s.mean s.meanStandardError
 
-/// Expects function `f1` is faster than `f2`.
-/// Statistical test to 99.99% confidence level.
+  match Performance.timeCompare f1 f2 with
+  | Performance.ResultNotTheSame (r1, r2)->
+    Tests.failtestf "%s. Expected function results to be the same (%A vs %A)."
+                    format r1 r2
+  | Performance.MetricTooShort (s,p) ->
+    Tests.failtestf "%s. Expected metric (%s) to be much longer than the machine resolution (%s)."
+                    format (toString s) (toString p)
+  | Performance.MetricEqual (s1,s2) ->
+    Tests.failtestf "%s. Expected f1 (%s) to be faster than f2 (%s) but are equal."
+                    format (toString s1) (toString s2)
+  | Performance.MetricMoreThan (s1,s2) ->
+    Tests.failtestf "%s. Expected f1 (%s) to be faster than f2 (%s) but is ~%.0f%% slower."
+                    format (toString s1) (toString s2) ((s1.mean/s2.mean-1.0)*100.0)
+  | Performance.MetricLessThan (s1,s2) ->
+    Impl.logger.info (
+      eventX "{message}. f1 ({sample1}) is {percent} faster than f2 ({sample2})."
+      >> setField "message" format
+      >> setField "sample1" (toString s1)
+      >> setField "percent" (sprintf "~%.0f%%" ((1.0-s1.mean/s2.mean)*100.0))
+      >> setField "sample2" (toString s2))
+    //printfn "%s. f1 (%s) is ~%.0f%% faster than f2 (%s)." format (toString s1) ((1.0-s1.mean/s2.mean)*100.0) (toString s2)
+
+/// Expects function `f1` is faster than `f2`. Statistical test to 99.99%
+/// confidence level.
 let isFasterThan (f1:unit->'a) (f2:unit->'a) format =
-  isFasterThanSub (fun measurer -> measurer f1 ()) (fun measurer -> measurer f2 ()) format
+  isFasterThanSub (fun measurer -> measurer f1 ())
+                  (fun measurer -> measurer f2 ())
+                  format

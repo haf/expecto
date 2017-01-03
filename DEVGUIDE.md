@@ -14,6 +14,17 @@
    - Make your test for your change
    - Make your change
    - If appropriate, write docs in README.md.
+ 1. For variables: prefer `test` over `t`. Prefer `test` over
+    `sequencedTestCode`.
+ 1. Try to stick to max 80 chars wide lines, unless it improves readability to
+    let the line be longer. `set tw=80` can be used in vim.
+ 1. If you have a function that takes a list of tests, `let run` then it's
+    better to name the list/seq `ts` than `l` for three reasons:
+      1. You may be using a sequence an not a list in the future, so `l` is not
+         necessarily forwards-compatible.
+      2. When iterating `ts`, it becomes natural to read and understand each
+         element as `t`: `Seq.mapi (fun i t -> ...)`
+      3. `l` is easily confused with `I` and `1`, depending on typeface.
 
 ## Code style
 

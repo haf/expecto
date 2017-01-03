@@ -133,7 +133,11 @@ module Helpers =
       |> List.map snd
       |> List.tryFind (fun _ -> true)
 
-type FlatTest = {Name:string; Test:TestCode; State: FocusState; Sequenced:bool}
+type FlatTest =
+  { name      : string
+    test      : TestCode
+    state     : FocusState
+    sequenced : bool }
 
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
@@ -155,7 +159,7 @@ module Test =
             then name
             else parentName + "/" + name
         loop fullName testList (computeChildFocusState parentState state) sequenced test
-      | TestCase (test, state) -> {Name=parentName; Test=test; State=computeChildFocusState parentState state; Sequenced=sequenced} :: testList
+      | TestCase (test, state) -> {name=parentName; test=test; state=computeChildFocusState parentState state; sequenced=sequenced} :: testList
       | TestList (tests, state) -> List.collect (loop parentName testList (computeChildFocusState parentState state) sequenced) tests
       | Sequenced test -> loop parentName testList parentState true test
     loop null [] Normal false
@@ -209,10 +213,10 @@ module Test =
   /// Filter tests by name
   let filter pred =
     toTestCodeList
-    >> List.filter (fun t -> pred t.Name)
+    >> List.filter (fun t -> pred t.name)
     >> List.map (fun t ->
-        let test = TestLabel (t.Name, TestCase (t.Test, t.State), t.State)
-        if t.Sequenced then Sequenced test else test)
+        let test = TestLabel (t.name, TestCase (t.test, t.state), t.state)
+        if t.sequenced then Sequenced test else test)
     >> (fun x -> TestList (x,Normal))
 
   /// Applies a timeout to a test
@@ -360,7 +364,7 @@ module Impl =
       /// Prints a summary given the test result counts
       summary : TestResultSummary -> unit }
 
-    static member private Logger log =
+    static member private logger log =
       { beforeRun = fun _tests ->
           log Info (
             eventX "EXPECTO? Running tests...")
@@ -433,13 +437,13 @@ module Impl =
         summary = fun _ -> () }
 
     static member Default =
-      TestPrinters.Logger (fun l m -> logger.logWithAck l m |> Async.RunSynchronously)
+      TestPrinters.logger (fun l m -> logger.logWithAck l m |> Async.RunSynchronously)
 
     static member Async =
-      TestPrinters.Logger (fun l m -> logger.log l m |> Async.Start)
+      TestPrinters.logger (fun l m -> logger.log l m |> Async.Start)
 
-    static member Combined (async:bool ref) =
-      TestPrinters.Logger (fun l m ->
+    static member combined (async:bool ref) =
+      TestPrinters.logger (fun l m ->
         if !async then logger.log l m |> Async.Start
         else logger.logWithAck l m |> Async.RunSynchronously)
 
@@ -468,12 +472,15 @@ module Impl =
           let applyFocusedWrapping = function
             | Focused -> Enabled Focused
             | a -> UnFocused a
-          let existsFocusedTests = tests |> List.exists (fun t -> FocusState.isFocused t.State)
+          let existsFocusedTests = tests |> List.exists (fun t -> FocusState.isFocused t.state)
           let wrappingMethod = if existsFocusedTests then applyFocusedWrapping else Enabled
-          tests |> List.map (fun t -> {Name=t.Name; Test=t.Test; State=wrappingMethod t.State; Sequenced=t.Sequenced})
+          tests |> List.map (fun t -> {name=t.name; test=t.test; state=wrappingMethod t.state; sequenced=t.sequenced})
 
-    and WrappedFlatTest = {Name:string; Test:TestCode; State: WrappedFocusedState; Sequenced:bool}
-
+    and WrappedFlatTest =
+      { name      : string
+        test      : TestCode
+        state     : WrappedFocusedState
+        sequenced : bool }
 
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
@@ -497,13 +504,13 @@ module Impl =
     fun (printers: TestPrinters) map ->
 
       let beforeEach test =
-        printers.beforeEach test.Name
+        printers.beforeEach test.name
         test
 
       let execFocused next test =
-        match test.State.ShouldSkipEvaluation with
+        match test.state.ShouldSkipEvaluation with
         | Some ignoredMessage ->
-          { name     = test.Name
+          { name     = test.name
             result   = Ignored ignoredMessage
             duration = TimeSpan.Zero }
         | _ ->
@@ -512,9 +519,9 @@ module Impl =
       let execOne test =
         let w = System.Diagnostics.Stopwatch.StartNew()
         try
-          test.Test ()
+          test.test ()
           w.Stop()
-          { name     = test.Name
+          { name     = test.name
             result   = Passed
             duration = w.Elapsed }
         with e ->
@@ -527,15 +534,15 @@ module Impl =
                 |> Seq.filter (fun q -> q.Contains ",1): ")
                 |> Enumerable.FirstOrDefault
               sprintf "\n%s\n%s\n" e.Message firstLine
-            { name     = test.Name
+            { name     = test.name
               result   = Failed msg
               duration = w.Elapsed }
           | ExceptionInList ignoreExceptionTypes.Value ->
-            { name     = test.Name
+            { name     = test.name
               result   = Ignored e.Message
               duration = w.Elapsed }
           | _ ->
-            { name     = test.Name
+            { name     = test.name
               result   = TestResult.Error e
               duration = w.Elapsed }
 
@@ -570,29 +577,29 @@ module Impl =
   /// Evaluates tests in parallel
   let evalPar =
     let printAsync = ref true
-    let printer = TestPrinters.Combined printAsync
+    let printer = TestPrinters.combined printAsync
 
-    let pmap f l =
+    let pmap fn ts =
       let sequenced, parallel =
-        List.mapi (fun i t -> i,t) l
-        |> List.partition (fun (i,t) -> t.Sequenced)
+        List.mapi (fun i t -> i, t) ts
+        |> List.partition (fun (i, t) -> t.sequenced)
 
       let parallelResults =
-        List.map (fun (i,t) ->
+        List.map (fun (index, test) ->
           async {
-            let r = f t
-            return i,r
+            let r = fn test
+            return index, r
           }) parallel
         |> Async.Parallel
         |> Async.RunSynchronously
         |> Array.toList
 
-      if List.isEmpty sequenced |> not then
+      if not (List.isEmpty sequenced) then
         printAsync := false
         printer.info "Staring sequenced tests..."
 
       let sequencedResults =
-        List.map (fun (i,t) -> i, f t) sequenced
+        List.map (fun (index, test) -> index, fn test) sequenced
 
       List.append sequencedResults parallelResults
       |> List.sortBy fst
@@ -640,24 +647,24 @@ module Impl =
     | x -> Some (TestList (x, Normal))
 
   let testFromType =
-      let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
-      let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
-      fun (t: Type) ->
-          [ t.GetMethods bindingFlags |> asMembers
-            t.GetProperties bindingFlags |> asMembers
-            t.GetFields bindingFlags |> asMembers ]
-          |> Seq.collect id
-          |> Seq.choose testFromMember
-          |> Seq.toList
-          |> listToTestListOption
+    let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
+    let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
+    fun (t: Type) ->
+      [ t.GetMethods bindingFlags |> asMembers
+        t.GetProperties bindingFlags |> asMembers
+        t.GetFields bindingFlags |> asMembers ]
+      |> Seq.collect id
+      |> Seq.choose testFromMember
+      |> Seq.toList
+      |> listToTestListOption
 
   /// Scan filtered tests marked with TestsAttribute from an assembly
   let testFromAssemblyWithFilter typeFilter (a: Assembly) =
-      a.GetExportedTypes()
-      |> Seq.filter typeFilter
-      |> Seq.choose testFromType
-      |> Seq.toList
-      |> listToTestListOption
+    a.GetExportedTypes()
+    |> Seq.filter typeFilter
+    |> Seq.choose testFromType
+    |> Seq.toList
+    |> listToTestListOption
 
   /// Scan tests marked with TestsAttribute from an assembly
   let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
@@ -695,7 +702,8 @@ module Tests =
   let inline ftestCase name test = TestLabel(name, TestCase (test, Focused), Focused)
   /// Builds a test case that will be ignored by Expecto
   let inline ptestCase name test = TestLabel(name, TestCase (test, Pending), Pending)
-  /// Test case or list needs to run sequenced
+  /// Test case or list needs to run sequenced. Use for any benchmark code or
+  /// for tests using `Expect.fastThan`
   let inline testSequenced test = Sequenced test
 
   /// Applies a function to a list of values to build test cases
@@ -851,7 +859,7 @@ module Tests =
   let listTests test =
     test
     |> Test.toTestCodeList
-    |> Seq.iter (fun t -> printfn "%s" t.Name)
+    |> Seq.iter (fun t -> printfn "%s" t.name)
 
   /// Runs tests with supplied options. Returns 0 if all tests passed, =
   /// otherwise 1

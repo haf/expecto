@@ -5,13 +5,11 @@ open System
 module Performance =
 
   type SampleStatistics =
-    {
-        N:int
-        Mean:float
-        Variance:float
-    }
-    member s.StandardDeviation = sqrt s.Variance
-    member s.MeanStandardError = sqrt(s.Variance/float s.N)
+    { N:int
+      mean:float
+      variance:float }
+    member s.standardDeviation = sqrt s.variance
+    member s.meanStandardError = sqrt(s.variance/float s.N)
 
   module private Statistics =
 
@@ -23,10 +21,10 @@ module Performance =
         let m'=m+(x-m)/float(n+1)
         n+1,m',s+(x-m)*(x-m')
       Seq.map float s |> Seq.scan calc (0,0.0,0.0) |> Seq.skip 3
-      |> Seq.map (fun (n,m,s) -> {N=n;Mean=m;Variance=s/float(n-1)})
+      |> Seq.map (fun (n,m,s) -> {N=n;mean=m;variance=s/float(n-1)})
 
     /// Scale the statistics for the given underlying random variable change of scale.
-    let scale f s = {s with Mean=s.Mean*f;Variance=s.Variance*sqr f}
+    let scale f s = {s with mean=s.mean*f;variance=s.variance*sqr f}
 
     /// Student's t-distribution inverse for the 00.01% probability by degrees of freedom.
     let private tInv01 = [|6366.198;99.992;28.000;15.544;11.178;9.082;7.885;7.120;6.594;6.211;5.921;5.694;5.513;5.363;5.239;5.134;5.044;4.966;4.897;4.837;4.784;4.736;4.693;4.654;4.619;4.587;4.558;4.530;4.506;4.482;4.461;4.441;4.422;4.405;4.389;4.374;4.359;4.346;4.333;4.321;4.309;4.298;4.288;4.278;4.269;4.260;4.252;4.243;4.236;4.228;4.221;4.214;4.208;4.202;4.196;4.190;4.184;4.179;4.174;4.169;4.164;4.159;4.155;4.150;4.146;4.142;4.138;4.134;4.130;4.127;4.123;4.120;4.117;4.113;4.110;4.107;4.104;4.101;4.099;4.096;4.093;4.091;4.088;4.086;4.083;4.081;4.079;4.076;4.074;4.072;4.070;4.068;4.066;4.064;4.062;4.060;4.059;4.057;4.055;4.053|]
@@ -37,10 +35,9 @@ module Performance =
 
     /// Welch's t-test statistic for two given sample statistics.
     let welchStatistic s1 s2 =
-      let f1 = s1.Variance/float s1.N
-      let f2 = s2.Variance/float s2.N
-      {
-        T = (s1.Mean-s2.Mean)/sqrt(f1+f2)
+      let f1 = s1.variance/float s1.N
+      let f2 = s2.variance/float s2.N
+      { T = (s1.mean-s2.mean)/sqrt(f1+f2)
         DF= if f1=0.0 && f2=0.0 then 1
             else sqr(f1+f2)/(sqr f1/float(s1.N-1)+sqr f2/float(s2.N-1)) |> int
       }
@@ -57,7 +54,7 @@ module Performance =
 
   let inline private measureStatistics metric relativeError f =
     Seq.initInfinite (fun _ -> metric f) |> sampleStatistics
-    |> Seq.find (fun s -> s.MeanStandardError<=relativeError*s.Mean)
+    |> Seq.find (fun s -> s.meanStandardError<=relativeError*s.mean)
 
   type 'a CompareResult =
     | ResultNotTheSame of result1:'a * result2:'a
@@ -69,7 +66,7 @@ module Performance =
   let inline private measureCompare metric f1 f2 =
     let r1 = f1 id
     let r2 = f2 id
-    if r1<>r2 then ResultNotTheSame (r1,r2)
+    if r1 <> r2 then ResultNotTheSame (r1,r2)
     else
       let stats f = Seq.initInfinite (fun _ -> metric f) |> sampleStatistics
 
@@ -78,16 +75,16 @@ module Performance =
         Seq.nth 2 seq |> ignore
         Seq.nth 5 seq
 
-      if max s1.Mean s2.Mean < precision.Mean * 10.0 then
-        MetricTooShort ((if s1.Mean<s2.Mean then s2 else s1),precision)
+      if max s1.mean s2.mean < precision.mean * 10.0 then
+        MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision)
       else
         Seq.zip (stats f1) (stats f2)
         |> Seq.pick (fun (s1,s2) ->
 
           let inline areCloseEnough() =
-            let s1,s2 = if s1.Mean>s2.Mean then s1,s2 else s2,s1
+            let s1,s2 = if s1.mean>s2.mean then s1,s2 else s2,s1
             let numberOfSD = 2.325 // Equivalent to 99.99% confidence level
-            s1.Mean + numberOfSD * s1.MeanStandardError - (s2.Mean - numberOfSD * s2.MeanStandardError) < (s1.Mean + s2.Mean) * 0.5 * 0.005
+            s1.mean + numberOfSD * s1.meanStandardError - (s2.mean - numberOfSD * s2.meanStandardError) < (s1.mean + s2.mean) * 0.5 * 0.005
 
           if areCloseEnough() then MetricEqual (s1,s2) |> Some
           else welchStatistic s1 s2 |> welchTest
@@ -98,7 +95,7 @@ module Performance =
                  )
             )
 
-  type Measurer<'a,'b> = ('a->'b)->('a->'b)
+  type Measurer<'a,'b> = ('a->'b) -> ('a->'b)
 
   let inline private measureMetric startMetric endMetric (f:Measurer<_,_>->_) =
     GC.Collect()
