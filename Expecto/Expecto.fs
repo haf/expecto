@@ -57,7 +57,7 @@ type TestsAttribute() = inherit Attribute()
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
 type PTestsAttribute() = inherit Attribute()
 
-/// Allows to mark a test as FocusState.Focused (will be runned and will change the behavior for
+/// Allows to mark a test as FocusState.Focused (will be run and will change the behavior for
 /// all other tests marked as FocusState.Normal to be ignored)
 /// Is a fast way to exclude some tests from running.
 /// The test will run even if PTest is also present. Have priority over TestAttribute.
@@ -96,7 +96,7 @@ module Helpers =
         None
 
   let matchFocusAttributes = function
-    | "Expecto.FTestsAttribute" -> Some  (1, Focused)
+    | "Expecto.FTestsAttribute" -> Some (1, Focused)
     | "Expecto.TestsAttribute" -> Some (2, Normal)
     | "Expecto.PTestsAttribute" -> Some (3, Pending)
     | _ -> None
@@ -765,6 +765,9 @@ module Tests =
       /// true, because your code should not mutate global
       /// state by default.
       parallel : bool
+      /// Whether to make the test runner fail if focused tests exist.
+      /// This can be used from CI servers to ensure no focused tests are commited and therefor all tests are run.
+      fail_on_focused_tests : bool
       /// An optional filter function. Useful if you only would
       /// like to run a subset of all the tests defined in your assembly.
       filter   : Test -> Test
@@ -778,12 +781,14 @@ module Tests =
   let defaultConfig =
     { parallel  = true
       filter    = id
+      fail_on_focused_tests = false
       printer   = TestPrinters.Default
       verbosity = LogLevel.Info }
 
   type CLIArguments =
     | Sequenced
     | Parallel
+    | Fail_On_Focused_Tests
     | Debug
     | Filter of hiera:string
     | Filter_Test_List of substring:string
@@ -797,6 +802,7 @@ module Tests =
         match s with
         | Sequenced -> "Don't run the tests in parallel."
         | Parallel -> "Run all tests in parallel (default)."
+        | Fail_On_Focused_Tests -> "This will make the test runner fail if focused tests exist."
         | Debug -> "Extra verbose printing. Useful to combine with --sequenced."
         | Filter _ -> "Filter the list of tests by a hierarchy that's slash (/) separated."
         | Filter_Test_List _ -> "Filter the list of test lists by a substring."
@@ -835,6 +841,7 @@ module Tests =
         function
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
         | Parallel -> fun o -> { o with parallel = true }
+        | Fail_On_Focused_Tests -> fun o -> { o with fail_on_focused_tests = true }
         | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
         | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
         | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
@@ -842,8 +849,6 @@ module Tests =
         | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
         | List_Tests -> id
         | Summary -> fun o -> {o with printer = TestPrinters.Summary}
-
-
 
       fun (args: string[]) ->
         let parsed =
@@ -861,14 +866,33 @@ module Tests =
     |> Test.toTestCodeList
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
+  
+  
+
   /// Runs tests with supplied options. Returns 0 if all tests passed, =
   /// otherwise 1
-  let runTests config tests =
+  let runTests config (tests:Test) =
+    let focusTestCheck config tests =
+      if not config.fail_on_focused_tests then 0 else
+      let tests = Test.toTestCodeList tests
+      let count =
+        tests
+        |> List.filter (fun t -> match t.state with Focused -> true | _ -> false)
+        |> List.length
+
+      if count > 0 then
+        config.printer.info "It was requested that no focused tests exists, but yet there are %d focused tests."
+        1
+      else
+        0
+
     let run = if config.parallel then runParallel else run
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity) :> Logger }
-    run config.printer tests
+    match focusTestCheck config tests with
+    | 0 -> run config.printer tests
+    | result -> result
 
   /// Runs tests in this assembly with supplied command-line options. Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
