@@ -209,6 +209,27 @@ let myTests =
   ]
 ```
 
+### Sequenced tests
+
+You can mark an individual spec or container as Sequenced.
+This will make sure these tests are run sequentially.
+This can be useful for timeout and performance testing.
+
+```fsharp
+[<Tests>]
+let timeout =
+    testSequenced <| testList "Timeout" [
+      testCase "fail" <| fun _ ->
+        let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
+        let result = evalSilent test |> sumTestResults
+        result.failed.Length ==? 1
+      testCase "pass" <| fun _ ->
+        let test = TestCase(Test.timeout 1000 ignore, Normal)
+        let result = evalSilent test |> sumTestResults
+        result.passed.Length ==? 1
+    ]
+```
+
 ## Expectations
 
 All expect-functions have the signature `actual -> expected -> string -> unit`,
@@ -273,14 +294,20 @@ This module is your main entry-point when asserting.
 ### `Performance` module
 
 Expecto supports testing that an implementation is faster than another. Use it
-by calling wrapping your `Test` in `testSequenced` and then using
-`Expect.isFasterThan`.
+by calling `Expect.isFasterThan` wrapping your `Test` in `testSequenced`.
 
 ![Sample output](./docs/half-is-faster.png)
 
-The assertion will run a fixpoint function that accumulates enough samples to
-say that with 99.99% certainty, one function is faster than the other. If this
-can't be stated, the assertion will fail after a while.
+This function makes use of a statistical test called [Welch's t-test](https://en.wikipedia.org/wiki/Welch's_t-test).
+It starts with the null hypothesis that the functions mean execution times are the same.
+The functions are run alternately increasing the sample size to test this hypothesis.
+
+Once a confidence level of 99.99% is reached that this hypothesis is incorrect it stops and reports the results.
+If the performance is very close the test will declare them equal when there is 99.99% confidence they differ by less than 0.5%.
+99.99% is chosen such that if a test set has 100 performance tests a false test failure would be reported once in many more than 100 runs.
+
+This results in a performance test that is very quick to run (the greater the difference the quicker it will run).
+Also, because it is a relative test it can normally be run across all configurations as part of unit testing.
 
 The functions must return the same result for same input. Note that since
 Expecto also has a FsCheck integration, your outer (sequenced) test could be
@@ -377,8 +404,8 @@ let performance =
 A failure would look like this:
 
 ```
-[13:23:19 ERR] samples/fn1 faster than fn2 failed in 00:00:00.0981990.
-half is faster. Expected f1 (0.3067 ± 0.0123 ms) to be faster than f2 (0.1513 ± 0.0019 ms) but is ~103% slower.
+[13:23:19 ERR] performance/double is faster failed in 00:00:00.0981990.
+double is faster. Expected f1 (0.3067 ± 0.0123 ms) to be faster than f2 (0.1513 ± 0.0019 ms) but is ~103% slower.
 ```
 
 ## `main argv` – how to run console apps
