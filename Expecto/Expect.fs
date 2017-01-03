@@ -232,74 +232,73 @@ let containsAll (actual : _ seq)
               format (formatResult axs) (formatResult exs) (formatResult missing) (formatResult extra)
   |> Tests.failtest
 
-let inline private except(baseMap: Map<_,int>, exceptMap: Map<_,int>, isExcept: bool) =
-  let getMapValue (map: Map<_, int>) (element: _) = 
-    map.TryFind element |> fun x -> x.Value
+let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: Map<_,uint32>) (isExcept: bool) =
+  let getMapValue (map: Map<_, uint32>) (element) = 
+    map |> Map.find element
   let getResult found expected = 
     match isExcept with
-    | true -> (found, expected)
-    | _ -> (expected, found)
+    | true -> found, expected
+    | _ -> expected, found
   
-  let differNrOfElement element value =
-    let foundElements = (getMapValue exceptMap element)
+  let noOfFoundElements element value =
+    let foundElements = (getMapValue elementsToContain element)
     let missingElements = value - foundElements
-    if missingElements > 0 then getResult foundElements value
-    else (0,0)
+    if missingElements > 0ul then getResult foundElements value
+    else 0ul,0ul
   
   let elementsWhichDiffer element value = 
-    if exceptMap.ContainsKey(element) then
-      differNrOfElement element value
-    else getResult 0 value
+    match elementsToContain |> Map.containsKey(element) with
+    | true -> noOfFoundElements element value
+    | _ -> getResult 0ul value
   
-  let printResult tuple =
-    let baseInfo = 
-      sprintf "(%d/%d)" (fst tuple) (snd tuple)
-    let printWhole found notFound moreThanExpected =
-      sprintf "%s\t| %s%s%s" baseInfo (new String('#', found)) (new String('-', notFound)) (new String('/', moreThanExpected))
-    match fst tuple > snd tuple with
-    | true -> printWhole (snd tuple) 0 (fst tuple - snd tuple)
-    | _ -> printWhole (fst tuple) (snd tuple - fst tuple) 0
+  let printResult found =
+    sprintf "(%d/%d)" (fst found) (snd found)
 
-  baseMap
+  elementsToCheck
   |> Map.map elementsWhichDiffer
-  |> Map.filter(fun key value -> snd value <> 0)
+  |> Map.filter (fun key found -> snd found <> 0ul)
   |> Map.toList
-  |> List.map(fun elem -> sprintf "'%A' %s" (fst elem) (snd elem |> printResult))
+  |> List.map (fun elem -> sprintf "'%A' %s" (fst elem) (snd elem |> printResult))
 
 /// Expects the `actual` sequence to contain all elements from `expected` map,
 /// first element in every tuple from `expected` map means item which should be
-/// presented in `actual` sequence, the second one means an expected number of occurances
-/// of this item sequence (not taking into account an order of elements). 
+/// presented in `actual` sequence, the second element means an expected number of occurrences
+/// of this item in sequence.
+/// Function is not taking into account an order of elements. 
 /// Calling this function will enumerate both sequences; they have to be finite.
-let distributed (actual : _ seq)
-                (expected : Map<_,int>)
+let distribution (actual : _ seq)
+                (expected : Map<_,uint32>)
                 format =
   let groupByOccurances sequence =
     sequence
     |> Seq.groupBy id
-    |> Seq.map (fun (item, occurances) -> (item, occurances |> Seq.length))
+    |> Seq.map (fun (item, occurances) -> (item, occurances |> Seq.length |> uint32))
     |> Map.ofSeq
   let groupedActual = groupByOccurances actual
 
   let extra, missing =
-    except(groupedActual, expected, false),
-    except(expected, groupedActual, true)
+    except groupedActual expected false,
+    except expected groupedActual true
   
   let isCorrect = List.isEmpty missing && List.isEmpty extra
   if isCorrect then () else
   let formatInput(data) = formatSet ", " "{%s}" "" data
   let formatResult(data) = formatSet "\n\t" "%s" "" data
+  let formatedExpected =
+    expected
+    |> Map.toList
+    |> List.map (fun element -> sprintf "%A: %d" (fst element) (snd element))
   sprintf "%s.
-    Sequence `actual` does not contain all `expected` elements.
+    Sequence `actual` does not contain every `expected` elements.
         All elements in `actual`:
         %s
-        All elements in `expected` ['item', 'number of expected occurances']:
+        All elements in `expected` ['item', 'number of expected occurrences']:
         %s
         Missing elements from `actual`:
         %s
         Extra elements in `actual`:
         %s"
-              format (formatInput actual) (formatInput expected) (formatResult missing) (formatResult extra)
+              format (formatInput actual) (formatInput formatedExpected) (formatResult missing) (formatResult extra)
   |> Tests.failtest
 
 /// Expects the `actual` sequence to equal the `expected` one.
