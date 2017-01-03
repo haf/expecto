@@ -1,11 +1,20 @@
 ﻿module Main
 
 open Expecto
+open Expecto.Tests
+open Expecto.Impl
 
 [<EntryPoint>]
 let main args =
+  let localList = 
+    testList "local" [
+      ftestList "focused" [
+        testCase "test" (fun () -> ())
+      ]
+    ]
+
   // check if we can fail on focused tests
-  if runTestsInAssembly { defaultConfig with fail_on_focused_tests = true } args <> 1 then
+  if runTests { defaultConfig with fail_on_focused_tests = true } localList <> 1 then
     failwith "focused test check didn't fail"
 
   runTestsInAssembly defaultConfig args

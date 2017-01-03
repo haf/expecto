@@ -836,7 +836,6 @@ module Tests =
         | xs -> xs.Last()
 
 
-
       let reduceKnown : CLIArguments -> (_ -> ExpectoConfig) =
         function
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
@@ -877,7 +876,10 @@ module Tests =
       let tests = Test.toTestCodeList tests
       let count =
         tests
-        |> List.filter (fun t -> match t.state with Focused -> true | _ -> false)
+        |> List.filter (fun t -> 
+            match t.state with 
+            | Focused -> true 
+            | _ -> false)
         |> List.length
 
       if count > 0 then
