@@ -215,7 +215,7 @@ let expecto =
         t.Length ==? 0
     ]
 
-    testList "Timeout" [
+    testSequenced <| testList "Timeout" [
       testCase "fail" <| fun _ ->
         let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
         let result = evalSilent test |> sumTestResults
@@ -527,4 +527,69 @@ let expecto =
           let compexpTag = TestResult.tag compexp.[0].result
           Expect.equal normalTag compexpTag "result"
     ]
+  ]
+
+let inline popCount (i:uint16) =
+    let mutable v = uint32 i
+    v <- v - ((v >>> 1) &&& 0x55555555u)
+    v <- (v &&& 0x33333333u) + ((v >>> 2) &&& 0x33333333u)
+    ((v + (v >>> 4) &&& 0xF0F0F0Fu) * 0x1010101u) >>> 24
+
+let inline popCount16 i =
+    let mutable v = i - ((i >>> 1) &&& 0x5555us)
+    v <- (v &&& 0x3333us) + ((v >>> 2) &&& 0x3333us)
+    ((v + (v >>> 4) &&& 0xF0Fus) * 0x101us) >>> 8
+
+[<Tests>]
+let popcountTest =
+  testList "performance" [
+    testProperty "popcount same" (fun i -> (popCount i |> int) = (popCount16 i |> int))
+  ]
+
+[<Tests>]
+let performance =
+  testSequenced <| testList "performance" [
+
+    testCase "1 <> 2" <| fun _ ->
+      let test() = Expect.isFasterThan (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
+      assertTestFailsWithMsgContaining "same" (test,Normal)
+
+    testCase "half is faster" <| fun _ ->
+      Expect.isFasterThan (fun () -> repeat10000 log 76.0) (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0) "half is faster"
+
+    testCase "double is faster should fail" <| fun _ ->
+      let test() = Expect.isFasterThan (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0) (fun () -> repeat10000 log 76.0) "double is faster should fail"
+      assertTestFailsWithMsgContaining "slower" (test, Normal)
+
+    ptestCase "same function is faster should fail" <| fun _ ->
+      let test() = Expect.isFasterThan (fun () -> repeat100000 log 76.0) (fun () -> repeat100000 log 76.0) "same function is faster should fail"
+      assertTestFailsWithMsgContaining "equal" (test, Normal)
+
+    testCase "matrix" <| fun _ ->
+      let n = 100
+      let rand = Random 123
+      let a = Array2D.init n n (fun _ _ -> rand.NextDouble())
+      let b = Array2D.init n n (fun _ _ -> rand.NextDouble())
+      let c = Array2D.zeroCreate n n
+      let reset() =
+        for i = 0 to n-1 do
+            for j = 0 to n-1 do
+              c.[i,j] <- 0.0
+      let mulIJK() =
+        for i = 0 to n-1 do
+          for j = 0 to n-1 do
+            for k = 0 to n-1 do
+              c.[i,k] <- c.[i,k] + a.[i,j] * b.[j,k]
+      let mulIKJ() =
+        for i = 0 to n-1 do
+          for k = 0 to n-1 do
+            let mutable t = 0.0
+            for j = 0 to n-1 do
+              t <- t + a.[i,j] * b.[j,k]
+            c.[i,k] <- t
+      Expect.isFasterThanSub (fun measurer -> reset(); measurer mulIKJ ()) (fun measurer -> reset(); measurer mulIJK ()) "ikj faster than ijk"
+
+    testCase "popcount" <| fun _ ->
+      let test() = Expect.isFasterThan (fun () -> repeat10000 (popCount16 >> int) 987us) (fun () -> repeat10000 (popCount >> int) 987us) "popcount 16 faster than 32 fails"
+      assertTestFailsWithMsgContaining "slower" (test,Normal)
   ]
