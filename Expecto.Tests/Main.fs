@@ -14,7 +14,7 @@ let main args =
     ]
 
   // check if we can fail on focused tests
-  if runTests { defaultConfig with fail_on_focused_tests = true } localList <> 1 then
+  if runTests { defaultConfig with failOnFocusedTests = true } localList <> 1 then
     failwith "focused test check didn't fail"
 
   runTestsInAssembly defaultConfig args

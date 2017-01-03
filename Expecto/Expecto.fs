@@ -767,7 +767,7 @@ module Tests =
       parallel : bool
       /// Whether to make the test runner fail if focused tests exist.
       /// This can be used from CI servers to ensure no focused tests are commited and therefor all tests are run.
-      fail_on_focused_tests : bool
+      failOnFocusedTests : bool
       /// An optional filter function. Useful if you only would
       /// like to run a subset of all the tests defined in your assembly.
       filter   : Test -> Test
@@ -781,7 +781,7 @@ module Tests =
   let defaultConfig =
     { parallel  = true
       filter    = id
-      fail_on_focused_tests = false
+      failOnFocusedTests = false
       printer   = TestPrinters.Default
       verbosity = LogLevel.Info }
 
@@ -840,7 +840,7 @@ module Tests =
         function
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
         | Parallel -> fun o -> { o with parallel = true }
-        | Fail_On_Focused_Tests -> fun o -> { o with fail_on_focused_tests = true }
+        | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
         | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
         | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
         | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
@@ -872,7 +872,7 @@ module Tests =
   /// otherwise 1
   let runTests config (tests:Test) =
     let passesFocusTestCheck config tests =
-      if not config.fail_on_focused_tests then true else
+      if not config.failOnFocusedTests then true else
       let tests = Test.toTestCodeList tests
       let count =
         tests
