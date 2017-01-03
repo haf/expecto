@@ -881,7 +881,7 @@ module Tests =
         |> List.length
 
       if count > 0 then
-        config.printer.info "It was requested that no focused tests exists, but yet there are %d focused tests."
+        config.printer.info "It was requested that no focused tests exist, but yet there are %d focused tests found."
         1
       else
         0
