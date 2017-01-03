@@ -291,10 +291,10 @@ module Impl =
 
   [<StructuredFormatDisplay("{description}")>]
   type TestResultSummary =
-    { passed   : string list
-      ignored  : string list
-      failed   : string list
-      errored  : string list
+    { passed   : TestRunResult list
+      ignored  : TestRunResult list
+      failed   : TestRunResult list
+      errored  : TestRunResult list
       duration : TimeSpan }
 
       member x.total =
@@ -316,8 +316,8 @@ module Impl =
       static member errorCode (c: TestResultSummary) =
         (if c.failed.Length > 0 then 1 else 0) ||| (if c.errored.Length > 0 then 2 else 0)
 
-  [<StructuredFormatDisplay("{description}")>]
-  type TestRunResult =
+
+  and [<StructuredFormatDisplay("{description}")>] TestRunResult =
    { name     : string
      location : SourceLocation
      result   : TestResult
@@ -339,7 +339,7 @@ module Impl =
 
     let get result =
       match counts.TryGetValue (TestResult.tag result) with
-      | true, v -> v |> Seq.map (fun r -> r.name) |> Seq.toList
+      | true, v -> v |> Seq.toList
       | _ -> List.empty
 
     { passed   = get TestResult.Passed
@@ -362,6 +362,7 @@ module Impl =
   let createSummaryMessage (summary: TestResultSummary) =
     let handleLineBreaks elements =
         elements
+        |> List.map (fun n -> n.name)
         |> List.map (fun x -> "\n\t" + x)
         |> String.concat ""
 
@@ -380,7 +381,7 @@ module Impl =
         |> List.max
 
     let align (d:int) offset = d.ToString().PadLeft(offset + digits)
-    
+
     eventX "EXPECTO?! Summary...\nPassed: {passedCount}{passed}\nIgnored: {ignoredCount}{ignored}\nFailed: {failedCount}{failed}\nErrored: {erroredCount}{errored}"
     >> setField "passed" passed
     >> setField "passedCount" (align passedCount 1)
