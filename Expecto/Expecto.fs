@@ -1,4 +1,4 @@
-﻿namespace Expecto
+namespace Expecto
 
 #nowarn "46"
 
@@ -596,7 +596,7 @@ module Impl =
 
       if not (List.isEmpty sequenced) then
         printAsync := false
-        printer.info "Staring sequenced tests..."
+        printer.info "Starting sequenced tests..."
 
       let sequencedResults =
         List.map (fun (index, test) -> index, fn test) sequenced
