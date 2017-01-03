@@ -372,6 +372,13 @@ let performance =
   ]
 ```
 
+A failure would look like this:
+
+```
+[13:23:19 ERR] samples/fn1 faster than fn2 failed in 00:00:00.0981990.
+half is faster. Expected f1 (0.3067 ± 0.0123 ms) to be faster than f2 (0.1513 ± 0.0019 ms) but is ~103% slower.
+```
+
 ## `main argv` – how to run console apps
 
 Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in your code:
