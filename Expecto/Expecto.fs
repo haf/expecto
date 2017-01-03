@@ -872,8 +872,8 @@ module Tests =
   /// Runs tests with supplied options. Returns 0 if all tests passed, =
   /// otherwise 1
   let runTests config (tests:Test) =
-    let focusTestCheck config tests =
-      if not config.fail_on_focused_tests then 0 else
+    let passesFocusTestCheck config tests =
+      if not config.fail_on_focused_tests then true else
       let tests = Test.toTestCodeList tests
       let count =
         tests
@@ -882,17 +882,18 @@ module Tests =
 
       if count > 0 then
         config.printer.info "It was requested that no focused tests exist, but yet there are %d focused tests found."
-        1
+        false
       else
-        0
+        true
 
     let run = if config.parallel then runParallel else run
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity) :> Logger }
-    match focusTestCheck config tests with
-    | 0 -> run config.printer tests
-    | result -> result
+    if passesFocusTestCheck config tests then
+      run config.printer tests
+    else
+      1
 
   /// Runs tests in this assembly with supplied command-line options. Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
