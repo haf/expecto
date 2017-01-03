@@ -188,6 +188,13 @@ module Test =
     | TestLabel (label, test, state) -> TestLabel (label, wrap f test, state)
     | Sequenced test -> Sequenced (wrap f test)
 
+  let rec apply f =
+    function
+    | TestCase (test, state, location) -> TestCase (f (test,state,location))
+    | TestList (testList, state) -> TestList ((List.map (apply f) testList), state)
+    | TestLabel (label, test, state) -> TestLabel (label, apply f test, state)
+    | Sequenced test -> Sequenced (apply f test)
+
   /// Enforce a FocusState on a test by replacing the current state
   /// Is not used (against YAGNI), but is here to make it clear for intellisense discovery
   /// that the translateFocusState is not intended as replacement
@@ -251,6 +258,7 @@ module Impl =
   open Expecto.Logging
   open Expecto.Logging.Message
   open Helpers
+  open Mono.Cecil
   open Mono.Cecil.Rocks
 
   let logger = Log.create "Expecto"
@@ -723,11 +731,91 @@ module Impl =
       |> Seq.toList
       |> listToTestListOption
 
+  // If the test function we've found doesn't seem to be in the test assembly, it's
+  // possible we're looking at an FsCheck 'testProperty' style check. In that case,
+  // the function of interest (i.e., the one in the test assembly, and for which we
+  // might be able to find corresponding source code) is referred to in a field
+  // of the function object.
+  let isFsharpFuncType t =
+    let baseType =
+      let rec findBase (t:Type) =
+        if t.BaseType = null || t.BaseType = typeof<obj> then
+          t
+        else
+          findBase t.BaseType
+      findBase t
+    baseType.IsGenericType && baseType.GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
+
+  let getFuncTypeToUse (testFunc:TestCode) (asm:Assembly) =
+    let t = testFunc.GetType()
+    if t.Assembly.FullName = asm.FullName then
+      t
+    else
+      let nestedFunc =
+        t.GetFields()
+        |> Seq.tryFind (fun f -> isFsharpFuncType f.FieldType)
+      match nestedFunc with
+      | Some f -> f.GetValue(testFunc).GetType()
+      | None -> t
+
+  let getMethodName asm testFunc =
+    let t = getFuncTypeToUse testFunc asm
+    let m = t.GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
+    (t.FullName, m.Name)
+
+  //Ported from: https://github.com/adamchester/expecto-adapter/blob/master/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
+  let getSourceLocation (asm:Assembly) className methodName =
+    let lineNumberIndicatingHiddenLine = 0xfeefee
+    let getEcma335TypeName (clrTypeName:string) = clrTypeName.Replace("+", "/")
+
+    let types =
+      let readerParams = new ReaderParameters( ReadSymbols = true )
+      let moduleDefinition = ModuleDefinition.ReadModule(asm.Location, readerParams)
+
+      seq { for t in moduleDefinition.GetTypes() -> (t.FullName, t) }
+      |> Map.ofSeq
+
+    let getMethods typeName =
+      match types.TryFind (getEcma335TypeName typeName) with
+      | Some t -> Some (t.GetMethods())
+      | _ -> None
+
+    let optionFromObj = function
+      | null -> None
+      | x -> Some x
+
+    let getFirstOrDefaultSequencePoint (m:MethodDefinition) =
+      m.Body.Instructions
+      |> Seq.tryFind (fun i -> (i.SequencePoint <> null && i.SequencePoint.StartLine <> lineNumberIndicatingHiddenLine))
+      |> Option.map (fun i -> i.SequencePoint)
+
+    match getMethods className with
+    | None -> SourceLocation.Empty
+    | Some methods ->
+      let candidateSequencePoints =
+        methods
+        |> Seq.where (fun m -> m.Name = methodName)
+        |> Seq.choose getFirstOrDefaultSequencePoint
+        |> Seq.sortBy (fun sp -> sp.StartLine)
+        |> Seq.toList
+      match candidateSequencePoints with
+      | [] -> SourceLocation.Empty
+      | xs -> {SourcePath = xs.Head.Document.Url ; LineNumber = xs.Head.StartLine}
+
+  //val apply : f:(TestCode * FocusState * SourceLocation -> TestCode * FocusState * SourceLocation) -> _arg1:Test -> Test
+  let setLocation (asm:Assembly) (code, state,_) =
+    let typeName, methodName = getMethodName asm code
+    let location = getSourceLocation asm typeName methodName
+    code, state, location
+
+
+
   /// Scan filtered tests marked with TestsAttribute from an assembly
   let testFromAssemblyWithFilter typeFilter (a: Assembly) =
     a.GetExportedTypes()
     |> Seq.filter typeFilter
     |> Seq.choose testFromType
+    |> Seq.map (Test.apply (setLocation a))
     |> Seq.toList
     |> listToTestListOption
 
@@ -956,7 +1044,12 @@ module Tests =
   let listTests test =
     test
     |> Test.toTestCodeList
-    |> Seq.iter (fun t -> printfn "%s" t.name)
+    |> Seq.iter (fun t ->
+      if t.location <> SourceLocation.Empty then
+        printfn "%s [%s:%d]" t.name t.location.SourcePath t.location.LineNumber
+      else
+        printfn "%s" t.name)
+
 
   /// Runs tests with the supplied options.
   /// Returns 0 if all tests passed, otherwise 1
