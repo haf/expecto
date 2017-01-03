@@ -242,9 +242,9 @@ let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: M
   
   let noOfFoundElements element value =
     let foundElements = (getMapValue elementsToContain element)
-    let missingElements = value - foundElements
-    if missingElements > 0ul then getResult foundElements value
-    else 0ul,0ul
+    match value > foundElements with
+    | true -> getResult foundElements value
+    | _ -> 0ul,0ul
   
   let elementsWhichDiffer element value = 
     match elementsToContain |> Map.containsKey(element) with
