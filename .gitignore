@@ -18,3 +18,4 @@ paket-files/
 BenchmarkDotNet.Artifacts/
 /.fake/
 /.vs/
+build/
