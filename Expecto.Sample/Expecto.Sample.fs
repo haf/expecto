@@ -1,5 +1,23 @@
 module Expecto.Sample
 
+module Utils =
+  let inline repeat10 f a =
+    let mutable v = f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v <- f a
+    v
+  let inline repeat100 f a = repeat10 (repeat10 f) a
+  let inline repeat1000 f a = repeat10 (repeat100 f) a
+  let inline repeat10000 f a = repeat10 (repeat1000 f) a
+
+open Utils
 open Expecto
 
 [<Tests>]
@@ -28,12 +46,7 @@ let tests =
                          "Expecting we have one (1) in there"
 
     testCase "Sometimes I want to ༼ノಠل͟ಠ༽ノ ︵ ┻━┻" <| fun _ ->
-      Expect.equal "\
-      abc\n\
-      dëf\
-      "
-        "abc\ndef"
-        "These should equal"
+      Expect.equal "abcdëf" "abcdef" "These should equal"
 
     test "I am (should fail)" {
       "╰〳 ಠ 益 ಠೃ 〵╯" |> Expect.equal true false
@@ -41,6 +54,18 @@ let tests =
 
     testCase "You know exns" <| fun _ ->
       failwith "unhandled exception from test code"
+
+    ptestCase "I'm pending" <| fun _ -> ()
+
+    // uncomment me:
+    //ftestCase "I'm focused, I will cause all other tests to be skipped" <| fun () -> ()
+
+    testSequenced (
+      testCase "fn1 faster than fn2" <| fun _ ->
+        Expect.isFasterThan (fun () -> repeat10000 log 76.0)
+                            (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
+                            "half is faster"
+    )
   ]
 
 [<EntryPoint>]

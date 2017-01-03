@@ -22,8 +22,11 @@ compositional (just like Suave and Logary are).
       * [Pending tests](#pending-tests)
     * [Expectations](#expectations)
       * [Expect module](#expect-module)
+      * [Performance module](#performance-module)
+        * [Example](#example)
     * [main argv – how to run console apps](#main-argv--how-to-run-console-apps)
       * [The config](#the-config)
+    * [Contributing](#contributing)
     * [FsCheck usage](#fscheck-usage)
     * [BenchmarkDotNet usage](#benchmarkdotnet-usage)
     * [You're not alone\!](#youre-not-alone)
@@ -39,7 +42,7 @@ In your paket.dependencies:
 
 ```
 nuget Expecto
-nuget Expecto.PerfUtil
+nuget Expecto.BenchmarkDotNet
 nuget Expecto.FsCheck
 ```
 
@@ -76,7 +79,6 @@ with. A testing library without a good assertion library is like love without
 kisses.
 
 Now compile and run! `xbuild Sample.fsproj && mono --debug bin/Debug/Sample.exe`
-
 
 ## Running tests
 
@@ -207,6 +209,27 @@ let myTests =
   ]
 ```
 
+### Sequenced tests
+
+You can mark an individual spec or container as Sequenced.
+This will make sure these tests are run sequentially.
+This can be useful for timeout and performance testing.
+
+```fsharp
+[<Tests>]
+let timeout =
+    testSequenced <| testList "Timeout" [
+      testCase "fail" <| fun _ ->
+        let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
+        let result = evalSilent test |> sumTestResults
+        result.failed.Length ==? 1
+      testCase "pass" <| fun _ ->
+        let test = TestCase(Test.timeout 1000 ignore, Normal)
+        let result = evalSilent test |> sumTestResults
+        result.passed.Length ==? 1
+    ]
+```
+
 ## Expectations
 
 All expect-functions have the signature `actual -> expected -> string -> unit`,
@@ -234,29 +257,157 @@ This module is your main entry-point when asserting.
  - `isFalse`
  - `isTrue`
  - `sequenceEqual`
- - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If it does not
-   then fail with `format` as an error message together with a description
-   of `subject` and `prefix`.
+ - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If
+   it does not then fail with `format` as an error message together with a
+   description of `subject` and `prefix`.
  - `isAscending` - Expect the sequence `subject` to be ascending. If it does not
    then fail with `format` as an error message.
- - `isDescending` - Expect the sequence `subject` to be descending. If it does not
-   then fail with `format` as an error message.
+ - `isDescending` - Expect the sequence `subject` to be descending. If it does
+   not then fail with `format` as an error message.
  - `stringContains` – Expect the string `subject` to contain `substring` as part
    of itself.  If it does not, then fail with `format` and `subject` and
    `substring` as part of the error message.
  - `stringStarts` – Expect the string `subject` to start with `prefix` and if it
    does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
- - `stringEnds` - Expect the string `subject` to end with `suffix`. If it does not
-   then fail with `format` as an error message together with a description
+ - `stringEnds` - Expect the string `subject` to end with `suffix`. If it does
+   not then fail with `format` as an error message together with a description
    of `subject` and `suffix`.
- - `stringHasLength` - Expect the string `subject` to have length equals `length`. If it does not
-   then fail with `format` as an error message together with a description
-   of `subject` and `length`.
- - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain the item.
- - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence contains all elements from second sequence (not taking into account an order of elements and number of occurrences of elements)
+ - `stringHasLength` - Expect the string `subject` to have length equals
+   `length`. If it does not then fail with `format` as an error message together
+   with a description of `subject` and `length`.
+ - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain
+   the item.
+ - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
+   contains all elements from second sequence (not taking into account an order
+   of elements)
  - `distribution: 'a seq -> Map<'a, uint32> -> string -> unit` - Expect the sequence contains all elements from map (first element in tuple is an item expected to be in sequence, second is a positive number of its occurrences in a sequence). Function is not taking into account an order of elements.
  - `streamsEqual` – Expect the streams to be byte-wise identical.
+ - `isFasterThan : (unit -> 'a) -> (unit -> 'a) -> string -> unit` – Expect the
+    first function to be faster than the second function with the passed string
+    message, printed on failure. See the next section on Performance for example
+    usage.
+ - `isFasterThanSub` – Like the above but with passed function signature of
+   `Performance.Measurer<unit,'a> -> 'a`, allowing you to do setup and teardown
+   of your subject under test (the function) before calling the Measurer. See
+   the next section on Performance for example usage.
+
+### `Performance` module
+
+Expecto supports testing that an implementation is faster than another. Use it
+by calling `Expect.isFasterThan` wrapping your `Test` in `testSequenced`.
+
+![Sample output](./docs/half-is-faster.png)
+
+This function makes use of a statistical test called [Welch's t-test](https://en.wikipedia.org/wiki/Welch's_t-test).
+It starts with the null hypothesis that the functions mean execution times are the same.
+The functions are run alternately increasing the sample size to test this hypothesis.
+
+Once a confidence level of 99.99% is reached that this hypothesis is incorrect it stops and reports the results.
+If the performance is very close the test will declare them equal when there is 99.99% confidence they differ by less than 0.5%.
+99.99% is chosen such that if a test set has 100 performance tests a false test failure would be reported once in many more than 100 runs.
+
+This results in a performance test that is very quick to run (the greater the difference the quicker it will run).
+Also, because it is a relative test it can normally be run across all configurations as part of unit testing.
+
+The functions must return the same result for same input. Note that since
+Expecto also has a FsCheck integration, your outer (sequenced) test could be
+the property test, generating random data, and your TestCode/function body/
+actual test could be an assertion that for the same (random instance) of test-
+data, one function should be faster than the other.
+
+From `Expect.isFasterThanSub`, these results are possible (all of which generate
+a test failure, except the MetricLessThan case):
+
+```fsharp
+  type 'a CompareResult =
+    | ResultNotTheSame of result1:'a * result2:'a
+    | MetricTooShort of sMax:SampleStatistics * machineResolution:SampleStatistics
+    | MetricLessThan of s1:SampleStatistics * s2:SampleStatistics
+    | MetricMoreThan of s1:SampleStatistics * s2:SampleStatistics
+    | MetricEqual of s1:SampleStatistics * s2:SampleStatistics
+```
+
+You can explore these cases yourself with `Expecto.Performance.timeCompare`,
+should you wish to.
+
+#### Example
+
+All of the below tests pass.
+
+```fsharp
+[<Tests>]
+let performance =
+  testSequenced <| testList "performance" [
+
+    testCase "1 <> 2" <| fun _ ->
+      let test () =
+        Expect.isFasterThan (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
+      assertTestFailsWithMsgContaining "same" (test, Normal)
+
+    testCase "half is faster" <| fun _ ->
+      Expect.isFasterThan (fun () -> repeat10000 log 76.0)
+                          (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
+                          "half is faster"
+
+    testCase "double is faster should fail" <| fun _ ->
+      let test () =
+        Expect.isFasterThan (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
+                            (fun () -> repeat10000 log 76.0)
+                            "double is faster should fail"
+      assertTestFailsWithMsgContaining "slower" (test, Normal)
+
+    ptestCase "same function is faster should fail" <| fun _ ->
+      let test () =
+        Expect.isFasterThan (fun () -> repeat100000 log 76.0)
+                            (fun () -> repeat100000 log 76.0)
+                            "same function is faster should fail"
+      assertTestFailsWithMsgContaining "equal" (test, Normal)
+
+    testCase "matrix" <| fun _ ->
+      let n = 100
+      let rand = Random 123
+      let a = Array2D.init n n (fun _ _ -> rand.NextDouble())
+      let b = Array2D.init n n (fun _ _ -> rand.NextDouble())
+      let c = Array2D.zeroCreate n n
+
+      let reset() =
+        for i = 0 to n-1 do
+            for j = 0 to n-1 do
+              c.[i,j] <- 0.0
+
+      let mulIJK() =
+        for i = 0 to n-1 do
+          for j = 0 to n-1 do
+            for k = 0 to n-1 do
+              c.[i,k] <- c.[i,k] + a.[i,j] * b.[j,k]
+
+      let mulIKJ() =
+        for i = 0 to n-1 do
+          for k = 0 to n-1 do
+            let mutable t = 0.0
+            for j = 0 to n-1 do
+              t <- t + a.[i,j] * b.[j,k]
+            c.[i,k] <- t
+      Expect.isFasterThanSub (fun measurer -> reset(); measurer mulIKJ ())
+                             (fun measurer -> reset(); measurer mulIJK ())
+                             "ikj faster than ijk"
+
+    testCase "popcount" <| fun _ ->
+      let test () =
+        Expect.isFasterThan (fun () -> repeat10000 (popCount16 >> int) 987us)
+                            (fun () -> repeat10000 (popCount >> int) 987us)
+                            "popcount 16 faster than 32 fails"
+      assertTestFailsWithMsgContaining "slower" (test, Normal)
+  ]
+```
+
+A failure would look like this:
+
+```
+[13:23:19 ERR] performance/double is faster failed in 00:00:00.0981990.
+double is faster. Expected f1 (0.3067 ± 0.0123 ms) to be faster than f2 (0.1513 ± 0.0019 ms) but is ~103% slower.
+```
 
 ## `main argv` – how to run console apps
 
@@ -289,6 +440,10 @@ ExpetoConfig record, that looks like:
 ```
 
 By doing a `let config = { defaultConfig with parallel = true }`, for example.
+
+## Contributing
+
+Please see the [Devguide](./DEVGUIDE.md).
 
 ## FsCheck usage
 

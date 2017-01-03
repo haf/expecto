@@ -1,14 +1,50 @@
+# Devguide
+
 ## Setup
 
+ 1. **EditorConfig** – If you haven't already, install the EditorConfig
+    extension to prevent any conflicts between your default F# formatting
+    conventions and the ones used by this project.
+    * Visual Studio - [EditorConfig VS Extension][ec-vs]
+    * vscode - [EditorConfig VScode Extension][ec-vsc]
+ 1. Install the latest version of the [**netcore SDK**][netcore-sdk]
+ 1. You need [albacore][ac] installed to build like I do – it needs to build
+    with the `Rakefile` or I won't accept the PR.
+ 1. New features:
+   - Make your test for your change
+   - Make your change
+   - If appropriate, write docs in README.md.
+ 1. For variables: prefer `test` over `t`. Prefer `test` over
+    `sequencedTestCode`.
+ 1. Try to stick to max 80 chars wide lines, unless it improves readability to
+    let the line be longer. `set tw=80` can be used in vim.
+ 1. If you have a function that takes a list of tests, `let run` then it's
+    better to name the list/seq `ts` than `l` for three reasons:
+      1. You may be using a sequence an not a list in the future, so `l` is not
+         necessarily forwards-compatible.
+      2. When iterating `ts`, it becomes natural to read and understand each
+         element as `t`: `Seq.mapi (fun i t -> ...)`
+      3. `l` is easily confused with `I` and `1`, depending on typeface.
 
-1. **EditorConfig**  
-    If you haven't already, install the EditorConfig extension to prevent any conflicts between your default F# formatting conventions and the ones used by this project.
+## Code style
 
-    * Visual Studio - [EditorConfig VS Extension](https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig)
-    * vscode - [EditorConfig VScode Extension](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig) 
+ - Spaces after function names.
+ - Spaces after parameter names like so `param : typ`.
+ - 2 space indentation.
+ - Use `lowerCaseCamelCase`, also on properties.
+ - Interfaces *do not* start with `I`. Can you use a function instead, perhaps?
+ - LF (not CRLF) in source files.
+ - Prefer flat namespaces.
+ - Prefer namespaces containing *only* what a consumer needs to use – no
+   utilities should be public if it can be helped.
+ - Follow the existing style of the library.
+ - For single-argument function calls, prefer `fn par` over `par |> fn`. For
+   multiple-argument function calls, `par3 |> fn par1 par2` is OK.
+ - No final newline in files, please.
+ - Open specify `open` directives for the used namespaces and modules.
+ - Prefer to cluster `open` directives at the top of the file.
 
-
-2. Install the latest version of the [**netcore SDK**](https://github.com/dotnet/cli#installers-and-binaries)  
-
-
-
+ [ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
+ [ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
+ [netcore-sdk]: https://github.com/dotnet/cli#installers-and-binaries
+ [ac]: https://github.com/albacore/albacore
