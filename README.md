@@ -276,6 +276,31 @@ Expecto supports testing that an implementation is faster than another. Use it
 by calling wrapping your `Test` in `testSequenced` and then using
 `Expect.isFasterThan`.
 
+The assertion will run a fixpoint function that accumulates enough samples to
+say that with 99.99% certainty, one function is faster than the other. If this
+can't be stated, the assertion will fail after a while.
+
+The functions must return the same result for same input. Note that since
+Expecto also has a FsCheck integration, your outer (sequenced) test could be
+the property test, generating random data, and your TestCode/function body/
+actual test could be an assertion that for the same (random instance) of test-
+data, one function should be faster than the other.
+
+From `Expect.isFasterThanSub`, these results are possible (all of which generate
+a test failure, except the MetricLessThan case):
+
+```fsharp
+  type 'a CompareResult =
+    | ResultNotTheSame of result1:'a * result2:'a
+    | MetricTooShort of sMax:SampleStatistics * machineResolution:SampleStatistics
+    | MetricLessThan of s1:SampleStatistics * s2:SampleStatistics
+    | MetricMoreThan of s1:SampleStatistics * s2:SampleStatistics
+    | MetricEqual of s1:SampleStatistics * s2:SampleStatistics
+```
+
+You can explore these cases yourself with `Expecto.Performance.timeCompare`,
+should you wish to.
+
 #### Example
 
 All of the below tests pass.
