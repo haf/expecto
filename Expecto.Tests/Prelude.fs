@@ -76,13 +76,27 @@ module TestHelpers =
           |> Gen.suchThat (fun t -> t.Days = 0)
       )
 
+  let genTestRunResult =
+    lazy (
+      gen {
+        let! name = Arb.generate<string>
+        let! duration = genLimitedTimeSpan.Value
+
+        return
+          { TestRunResult.name = name
+            location = SourceLocation.Empty
+            result = Passed
+            duration = duration }
+      }
+    )
+
   let genTestResultCounts =
       lazy (
           gen {
-              let! passed = Arb.generate<string list>
-              let! ignored = Arb.generate<string list>
-              let! failed = Arb.generate<string list>
-              let! errored = Arb.generate<string list>
+              let! passed =  genTestRunResult.Value |> Gen.listOf
+              let! ignored = genTestRunResult.Value |> Gen.listOf
+              let! failed = genTestRunResult.Value |> Gen.listOf
+              let! errored = genTestRunResult.Value |> Gen.listOf
               let! duration = genLimitedTimeSpan.Value
               return
                 { TestResultSummary.passed = passed
