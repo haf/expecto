@@ -39,7 +39,7 @@ In your paket.dependencies:
 
 ```
 nuget Expecto
-nuget Expecto.PerfUtil
+nuget Expecto.BenchmarkDotNet
 nuget Expecto.FsCheck
 ```
 
@@ -76,7 +76,6 @@ with. A testing library without a good assertion library is like love without
 kisses.
 
 Now compile and run! `xbuild Sample.fsproj && mono --debug bin/Debug/Sample.exe`
-
 
 ## Running tests
 
@@ -288,6 +287,10 @@ ExpetoConfig record, that looks like:
 ```
 
 By doing a `let config = { defaultConfig with parallel = true }`, for example.
+
+## Contributing
+
+Please see the [Devguide](./DEVGUIDE.md).
 
 ## FsCheck usage
 

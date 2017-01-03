@@ -125,7 +125,7 @@ NUGET
     Microsoft.NETCore.Windows.ApiSets (1.0.1) - framework: net10, net11, net20, net30, net35, net40, net40-full
     Microsoft.VisualBasic (10.1) - framework: net10, net11, net20, net30, net35, net40, net40-full
     NETStandard.Library (1.6.1) - framework: net10, net11, net20, net30, net35, net40, net40-full
-    NuGet.CommandLine (3.4.3)
+    NuGet.CommandLine (3.5)
     System.AppContext (4.3) - framework: >= net46
     System.Buffers (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Collections (4.3) - framework: >= net46, >= netstandard16
@@ -215,11 +215,11 @@ NUGET
     System.Reflection.Metadata (1.4.2) - framework: >= net10
 GITHUB
   remote: logary/logary
-    src/Logary.Facade/Facade.fs (66b76e5e4c552e61c356fb3d935d714778b872bb) 4b21d888e83d72d1238ab0f36110e2a3946240e7
+    src/Logary.Facade/Facade.fs (41b3a6ca510f8e44ecbabfe8b83ae8dae368e11c) 4b21d888e83d72d1238ab0f36110e2a3946240e7
 GROUP build
 NUGET
   remote: https://www.nuget.org/api/v2
-    FAKE (4.47.1)
+    FAKE (4.47.2)
 
 GROUP netcore
 
