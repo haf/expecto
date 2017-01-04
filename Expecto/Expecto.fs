@@ -88,6 +88,10 @@ module Helpers =
   module Seq =
     let cons x xs = seq { yield x; yield! xs }
 
+  module Option =
+    let orDefault def =
+      Option.fold (fun s t -> t) def
+
   type Type with
     static member TryGetType t =
       try
@@ -672,9 +676,24 @@ module Impl =
   /// Scan tests marked with TestsAttribute from entry assembly
   let testFromThisAssembly () = testFromAssembly (Assembly.GetEntryAssembly())
 
+  /// When the failOnFocusedTests switch is activated this function that no
+  /// focused tests exist.
+  ///
+  /// Returns true if the check passes, otherwise false.
+  let passesFocusTestCheck config tests =
+    let isFocused : FlatTest -> _ = function t when t.state = Focused -> true | _ -> false
+    let focused = Test.toTestCodeList tests |> List.filter isFocused
+    if focused.Length = 0 then true
+    else
+      logger.info (
+        eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
+        >> setField "count" focused.Length)
+      false
+
 [<AutoOpen; Extension>]
 module Tests =
   open Impl
+  open Helpers
   open Argu
   open Expecto.Logging
   open Expecto.Logging.Message
@@ -868,20 +887,6 @@ module Tests =
     |> Test.toTestCodeList
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
-  /// When the failOnFocusedTests switch is activated this function that no
-  /// focused tests exist.
-  ///
-  /// Returns true if the check passes, otherwise false.
-  let passesFocusTestCheck config tests =
-    let isFocused : FlatTest -> _ = function t when t.state = Focused -> true | _ -> false
-    let focused = Test.toTestCodeList tests |> List.filter isFocused
-    if focused.Length = 0 then true
-    else
-      logger.info (
-        eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
-        >> setField "count" focused.Length)
-      false
-
   /// Runs tests with supplied options. Returns 0 if all tests passed, otherwise 1.
   let runTests config (tests:Test) =
     let run = if config.parallel then runParallel else run
@@ -896,10 +901,7 @@ module Tests =
   /// Runs tests in this assembly with supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
-    let tests =
-      match testFromAssembly (Assembly.GetEntryAssembly()) with
-      | Some t -> t
-      | None -> TestList ([], Normal)
+    let tests = testFromThisAssembly () |> Option.orDefault (TestList ([], Normal))
     let config, isList = args |> ExpectoConfig.fillFromArgs config
     let tests = tests |> config.filter
     if isList then
