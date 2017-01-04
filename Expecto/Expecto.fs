@@ -335,17 +335,21 @@ module Impl =
       duration = results |> Seq.map (fun r -> r.duration) |> Seq.fold (+) TimeSpan.Zero }
 
   let logSummary (summary : TestResultSummary) =
-    let passed = summary.passed |> String.concat "\n\t"
+    let handleLineBreaks elements = 
+        let text = elements |> String.concat "\n\t"
+        if text = "" then text else text + "\n"
+
+    let passed = summary.passed |> handleLineBreaks
     let passedCount = summary.passed |> List.length
-    let ignored = summary.ignored |> String.concat "\n\t"
+    let ignored = summary.ignored |> handleLineBreaks
     let ignoredCount = summary.ignored |> List.length
-    let failed = summary.failed |> String.concat "\n\t"
+    let failed = summary.failed |> handleLineBreaks
     let failedCount = summary.failed |> List.length
-    let errored = summary.errored |> String.concat "\n\t"
+    let errored = summary.errored |> handleLineBreaks
     let erroredCount = summary.errored |> List.length
 
     logger.info (
-      eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}\nIgnored: {ignoredCount}\n\t{ignored}\nFailed: {failedCount}\n\t{failed}\nErrored: {erroredCount}\n\t{errored} "
+      eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}Ignored: {ignoredCount}\n\t{ignored}Failed: {failedCount}\n\t{failed}Errored: {erroredCount}\n\t{errored}"
       >> setField "passed" passed
       >> setField "passedCount" passedCount
       >> setField "ignored" ignored
@@ -354,7 +358,6 @@ module Impl =
       >> setField "failedCount" failedCount
       >> setField "errored" errored
       >> setField "erroredCount" erroredCount)
-
 
 
   /// Hooks to print report through test run
