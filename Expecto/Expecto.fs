@@ -400,6 +400,40 @@ module Impl =
     createSummaryMessage summary
     |> log.write Info
 
+  let logSummaryWithLocation (log: Log) (summary: TestResultSummary) =
+    let handleLineBreaks elements =
+        let format n = sprintf "%s [%s:%d]" n.name n.location.sourcePath n.location.lineNumber
+
+        let text = elements |> Seq.map format |> String.concat "\n\t"
+        if text = "" then text else text + "\n"
+
+    let passed = summary.passed |> handleLineBreaks
+    let passedCount = summary.passed |> List.length
+    let ignored = summary.ignored |> handleLineBreaks
+    let ignoredCount = summary.ignored |> List.length
+    let failed = summary.failed |> handleLineBreaks
+    let failedCount = summary.failed |> List.length
+    let errored = summary.errored |> handleLineBreaks
+    let erroredCount = summary.errored |> List.length
+
+    let digits =
+        [passedCount; ignoredCount; failedCount; erroredCount ]
+        |> List.map (fun x -> x.ToString().Length)
+        |> List.max
+
+    let align (d:int) offset = d.ToString().PadLeft(offset + digits)
+
+    log.write Info (
+      eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}Ignored: {ignoredCount}\n\t{ignored}Failed: {failedCount}\n\t{failed}Errored: {erroredCount}\n\t{errored}"
+      >> setField "passed" passed
+      >> setField "passedCount" (align passedCount 1)
+      >> setField "ignored" ignored
+      >> setField "ignoredCount" (align ignoredCount 0)
+      >> setField "failed" failed
+      >> setField "failedCount" (align failedCount 1)
+      >> setField "errored" errored
+      >> setField "erroredCount" (align erroredCount 0))
+
   /// Hooks to print report through test run
   type TestPrinters =
     { /// ...
@@ -503,6 +537,12 @@ module Impl =
           summary = fun summary ->
             defaultPrinter.summary summary
             logSummary defaultPrinter.log summary }
+    static member SummaryWithLocation =
+      let defaultPrinter = TestPrinters.Default
+      { TestPrinters.Default with
+          summary = fun summary ->
+            TestPrinters.Default.summary summary
+            logSummaryWithLocation defaultPrinter.log summary }
 
     [<Obsolete "Subject to change without bump in Major version">]
     member m.MakeAsync() = m.log.isAsync := true
@@ -960,6 +1000,7 @@ module Tests =
     | List_Tests
     | Summary
     | Version
+    | Summary_Location
 
     interface IArgParserTemplate with
       member s.Usage =
@@ -975,6 +1016,7 @@ module Tests =
         | List_Tests -> "Doesn't run tests, but prints out list of tests instead."
         | Summary -> "Prints out summary after all tests are finished."
         | Version -> "Prints out version information."
+        | Summary_Location -> "Prints out summary after all tests are finished including their source code location"
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
@@ -1021,6 +1063,7 @@ module Tests =
         | List_Tests -> id
         | Summary -> fun o -> {o with printer = TestPrinters.Summary}
         | Version -> fun o -> printExpectoVersion(); o
+        | Summary_Location -> fun o -> {o with printer = TestPrinters.SummaryWithLocation}
 
       fun (args: string[]) ->
         let parsed =
