@@ -19,3 +19,4 @@ BenchmarkDotNet.Artifacts/
 /.fake/
 /.vs/
 build/
+*.orig
