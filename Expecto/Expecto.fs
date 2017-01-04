@@ -7,11 +7,11 @@ open System.Linq
 open System.Runtime.CompilerServices
 open System.Reflection
 
-type SourceLocation ={
-  SourcePath: string
-  LineNumber: int
+type SourceLocation = {
+  sourcePath: string
+  lineNumber: int
 }
-with static member Empty = {SourcePath = ""; LineNumber = 0}
+with static member Empty = {sourcePath = ""; lineNumber = 0}
 
 
 /// Actual test function
@@ -557,7 +557,7 @@ module Impl =
       else
         None
 
-    fun (localization : TestCode -> SourceLocation) (printers: TestPrinters) map ->
+    fun (locate : TestCode -> SourceLocation) (printers: TestPrinters) map ->
 
       let beforeEach test =
         printers.beforeEach test.name
@@ -568,7 +568,7 @@ module Impl =
         | Some ignoredMessage ->
           { name     = test.name
             result   = Ignored ignoredMessage
-            location = localization test.test
+            location = locate test.test
             duration = TimeSpan.Zero }
 
         | _ ->
@@ -580,7 +580,7 @@ module Impl =
           test.test ()
           w.Stop()
           { name     = test.name
-            location = localization test.test
+            location = locate test.test
             result   = Passed
             duration = w.Elapsed }
         with e ->
@@ -594,17 +594,17 @@ module Impl =
                 |> Enumerable.FirstOrDefault
               sprintf "\n%s\n%s\n" e.Message firstLine
             { name     = test.name
-              location = localization test.test
+              location = locate test.test
               result   = Failed msg
               duration = w.Elapsed }
           | ExceptionInList ignoreExceptionTypes.Value ->
             { name     = test.name
-              location = localization test.test
+              location = locate test.test
               result   = Ignored e.Message
               duration = w.Elapsed }
           | _ ->
             { name     = test.name
-              location = localization test.test
+              location = locate test.test
               result   = TestResult.Error e
               duration = w.Elapsed }
 
@@ -628,17 +628,17 @@ module Impl =
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
-  let eval (localization : TestCode -> SourceLocation) (printer: TestPrinters) map tests =
+  let eval (locate : TestCode -> SourceLocation) (printer: TestPrinters) map tests =
     Test.toTestCodeList tests
-    |> evalTestList localization printer map
+    |> evalTestList locate printer map
 
   /// Evaluates tests sequentially
-  let evalSeq localization (printer: TestPrinters) =
+  let evalSeq locate (printer: TestPrinters) =
     printer.MakeSync()
-    eval localization printer List.map
+    eval locate printer List.map
 
   /// Evaluates tests in parallel
-  let evalPar localization (printer: TestPrinters) =
+  let evalPar locate (printer: TestPrinters) =
 
     let pmap fn ts =
       let sequenced, parallel =
@@ -669,14 +669,14 @@ module Impl =
       |> List.sortBy fst
       |> List.map snd
 
-    eval localization printer pmap
+    eval locate printer pmap
 
   /// Runs tests, returns error code
-  let runEval localization printer eval (tests: Test) =
+  let runEval locate printer eval (tests: Test) =
     printer.beforeRun tests
 
     let w = System.Diagnostics.Stopwatch.StartNew()
-    let results = eval localization printer tests
+    let results = eval locate printer tests
     w.Stop()
     let summary = { sumTestResults results with duration = w.Elapsed }
     printer.summary summary
@@ -791,7 +791,7 @@ module Impl =
         |> Seq.toList
       match candidateSequencePoints with
       | [] -> SourceLocation.Empty
-      | xs -> {SourcePath = xs.Head.Document.Url ; LineNumber = xs.Head.StartLine}
+      | xs -> {sourcePath = xs.Head.Document.Url ; lineNumber = xs.Head.StartLine}
 
   //val apply : f:(TestCode * FocusState * SourceLocation -> TestCode * FocusState * SourceLocation) -> _arg1:Test -> Test
   let getLocation (asm:Assembly) code =
@@ -910,12 +910,12 @@ module Tests =
     TestCaseBuilder (name, Pending)
 
   /// Runs the passed tests
-  let run localization printer tests =
-    runEval localization printer evalSeq tests
+  let run locate printer tests =
+    runEval locate printer evalSeq tests
 
   /// Runs tests in parallel
-  let runParallel localization printer tests =
-    runEval localization printer evalPar tests
+  let runParallel locate printer tests =
+    runEval locate printer evalPar tests
 
   // Runner options
   type ExpectoConfig =
@@ -936,7 +936,7 @@ module Tests =
       verbosity : LogLevel
       /// Optional function used for finding source code location of test
       /// Defaults to empty source code
-      localization : TestCode -> SourceLocation
+      locate : TestCode -> SourceLocation
     }
 
   /// The default configuration for Expecto.
@@ -946,7 +946,7 @@ module Tests =
       failOnFocusedTests = false
       printer   = TestPrinters.Default
       verbosity = LogLevel.Info
-      localization = (fun _ -> SourceLocation.Empty) }
+      locate = fun _ -> SourceLocation.Empty }
 
   type CLIArguments =
     | Sequenced
@@ -1047,7 +1047,7 @@ module Tests =
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity) :> Logger }
     if not config.failOnFocusedTests || passesFocusTestCheck config tests then
-      run config.localization config.printer tests
+      run config.locate config.printer tests
     else
       1
 
@@ -1065,7 +1065,7 @@ module Tests =
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
-    let config = { config with localization = getLocation (Assembly.GetEntryAssembly()) }
+    let config = { config with locate = getLocation (Assembly.GetEntryAssembly()) }
     testFromThisAssembly ()
     |> Option.orDefault (TestList ([], Normal))
     |> runTestsWithArgs config args
