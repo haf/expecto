@@ -72,6 +72,28 @@ let all =
         let result = evalSilent focusedTests |> synth
         result.passed.Length ==? 11
         result.ignored.Length ==? 19
+    testCase "can detect focused test" <| fun _ ->
+      let localList = 
+        testList "local" [
+          ftestList "focused" [
+            testCase "test" (fun () -> ())
+          ]
+        ]
+
+      // check if we can fail on focused tests
+      if runTests { defaultConfig with failOnFocusedTests = true } localList <> 1 then
+        failwith "focused test check didn't fail"
+    testCase "can run if no focused test was found" <| fun _ ->
+      let localList = 
+        testList "local" [
+          testList "focused" [
+            testCase "test" (fun () -> ())
+          ]
+        ]
+
+      // check if we pass if no focused tests exist
+      if runTests { defaultConfig with failOnFocusedTests = true } localList <> 0 then
+        failwith "focused test check didn't fail"
 ]
 
 [<PTests>]
