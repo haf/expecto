@@ -41,7 +41,7 @@ type FocusState =
 type Test =
   /// A test case is a function from unit to unit, that can be executed
   /// by Expecto to run the test code.
-  | TestCase of code:TestCode * state:FocusState * location:SourceLocation
+  | TestCase of code:TestCode * state:FocusState
   /// A collection/list of tests.
   | TestList of tests:Test list * state:FocusState
   /// A labelling of a Test (list or test code).
@@ -152,7 +152,6 @@ type FlatTest =
   { name      : string
     test      : TestCode
     state     : FocusState
-    location  : SourceLocation
     sequenced : bool }
 
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -175,7 +174,7 @@ module Test =
             then name
             else parentName + "/" + name
         loop fullName testList (computeChildFocusState parentState state) sequenced test
-      | TestCase (test, state, location) -> {name=parentName; test=test; state=computeChildFocusState parentState state; sequenced=sequenced; location=location} :: testList
+      | TestCase (test, state) -> {name=parentName; test=test; state=computeChildFocusState parentState state; sequenced=sequenced;} :: testList
       | TestList (tests, state) -> List.collect (loop parentName testList (computeChildFocusState parentState state) sequenced) tests
       | Sequenced test -> loop parentName testList parentState true test
     loop null [] Normal false
@@ -183,24 +182,17 @@ module Test =
   /// Recursively maps all TestCodes in a Test
   let rec wrap f =
     function
-    | TestCase (test, state, location) -> TestCase ((f test), state, location)
+    | TestCase (test, state) -> TestCase ((f test), state)
     | TestList (testList, state) -> TestList ((List.map (wrap f) testList), state)
     | TestLabel (label, test, state) -> TestLabel (label, wrap f test, state)
     | Sequenced test -> Sequenced (wrap f test)
-
-  let rec apply f =
-    function
-    | TestCase (test, state, location) -> TestCase (f (test,state,location))
-    | TestList (testList, state) -> TestList ((List.map (apply f) testList), state)
-    | TestLabel (label, test, state) -> TestLabel (label, apply f test, state)
-    | Sequenced test -> Sequenced (apply f test)
 
   /// Enforce a FocusState on a test by replacing the current state
   /// Is not used (against YAGNI), but is here to make it clear for intellisense discovery
   /// that the translateFocusState is not intended as replacement
   let rec replaceFocusState newFocusState =
     function
-    | TestCase (test, _, location) -> TestCase(test, newFocusState, location)
+    | TestCase (test, _) -> TestCase(test, newFocusState)
     | TestList (testList, _) -> TestList(testList, newFocusState)
     | TestLabel (label, test, _) -> TestLabel(label, test, newFocusState)
     | Sequenced test -> Sequenced (replaceFocusState newFocusState test)
@@ -214,7 +206,7 @@ module Test =
   /// to change the test states
   let rec translateFocusState newFocusState =
     function
-    | TestCase (test, oldFocusState, location) -> TestCase(test, computeChildFocusState oldFocusState newFocusState, location)
+    | TestCase (test, oldFocusState) -> TestCase(test, computeChildFocusState oldFocusState newFocusState)
     | TestList (testList, oldFocusState) -> TestList(testList, computeChildFocusState oldFocusState newFocusState)
     | TestLabel (label, test, oldFocusState) -> TestLabel(label, test, computeChildFocusState oldFocusState newFocusState)
     | Sequenced test -> Sequenced (translateFocusState newFocusState test)
@@ -223,10 +215,10 @@ module Test =
   /// Check translateFocusState for focus state behavior description
   let rec replaceTestCode (f:string -> TestCode -> Test) =
     function
-    | TestLabel (label, TestCase (test, childState, location), parentState) ->
+    | TestLabel (label, TestCase (test, childState), parentState) ->
           f label test
           |> translateFocusState (computeChildFocusState parentState childState)
-    | TestCase (test, state, location) ->
+    | TestCase (test, state) ->
           f null test
           |> translateFocusState state
     | TestList (testList, state) -> TestList (List.map (replaceTestCode f) testList, state)
@@ -238,7 +230,7 @@ module Test =
     toTestCodeList
     >> List.filter (fun t -> pred t.name)
     >> List.map (fun t ->
-        let test = TestLabel (t.name, TestCase (t.test, t.state, t.location), t.state)
+        let test = TestLabel (t.name, TestCase (t.test, t.state), t.state)
         if t.sequenced then Sequenced test else test)
     >> (fun x -> TestList (x,Normal))
 
@@ -538,13 +530,12 @@ module Impl =
             | a -> UnFocused a
           let existsFocusedTests = tests |> List.exists (fun t -> FocusState.isFocused t.state)
           let wrappingMethod = if existsFocusedTests then applyFocusedWrapping else Enabled
-          tests |> List.map (fun t -> {name=t.name; test=t.test; state=wrappingMethod t.state; sequenced=t.sequenced; location=t.location})
+          tests |> List.map (fun t -> {name=t.name; test=t.test; state=wrappingMethod t.state; sequenced=t.sequenced })
 
     and WrappedFlatTest =
       { name      : string
         test      : TestCode
         state     : WrappedFocusedState
-        location  : SourceLocation
         sequenced : bool }
 
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
@@ -566,7 +557,7 @@ module Impl =
       else
         None
 
-    fun (printers: TestPrinters) map ->
+    fun (localization : TestCode -> SourceLocation) (printers: TestPrinters) map ->
 
       let beforeEach test =
         printers.beforeEach test.name
@@ -577,7 +568,7 @@ module Impl =
         | Some ignoredMessage ->
           { name     = test.name
             result   = Ignored ignoredMessage
-            location = test.location
+            location = localization test.test
             duration = TimeSpan.Zero }
 
         | _ ->
@@ -589,7 +580,7 @@ module Impl =
           test.test ()
           w.Stop()
           { name     = test.name
-            location = test.location
+            location = localization test.test
             result   = Passed
             duration = w.Elapsed }
         with e ->
@@ -603,17 +594,17 @@ module Impl =
                 |> Enumerable.FirstOrDefault
               sprintf "\n%s\n%s\n" e.Message firstLine
             { name     = test.name
-              location = test.location
+              location = localization test.test
               result   = Failed msg
               duration = w.Elapsed }
           | ExceptionInList ignoreExceptionTypes.Value ->
             { name     = test.name
-              location = test.location
+              location = localization test.test
               result   = Ignored e.Message
               duration = w.Elapsed }
           | _ ->
             { name     = test.name
-              location = test.location
+              location = localization test.test
               result   = TestResult.Error e
               duration = w.Elapsed }
 
@@ -637,17 +628,17 @@ module Impl =
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
-  let eval (printer: TestPrinters) map tests =
+  let eval (localization : TestCode -> SourceLocation) (printer: TestPrinters) map tests =
     Test.toTestCodeList tests
-    |> evalTestList printer map
+    |> evalTestList localization printer map
 
   /// Evaluates tests sequentially
-  let evalSeq (printer: TestPrinters) =
+  let evalSeq localization (printer: TestPrinters) =
     printer.MakeSync()
-    eval printer List.map
+    eval localization printer List.map
 
   /// Evaluates tests in parallel
-  let evalPar (printer: TestPrinters) =
+  let evalPar localization (printer: TestPrinters) =
 
     let pmap fn ts =
       let sequenced, parallel =
@@ -678,14 +669,14 @@ module Impl =
       |> List.sortBy fst
       |> List.map snd
 
-    eval printer pmap
+    eval localization printer pmap
 
   /// Runs tests, returns error code
-  let runEval printer eval (tests: Test) =
+  let runEval localization printer eval (tests: Test) =
     printer.beforeRun tests
 
     let w = System.Diagnostics.Stopwatch.StartNew()
-    let results = eval printer tests
+    let results = eval localization printer tests
     w.Stop()
     let summary = { sumTestResults results with duration = w.Elapsed }
     printer.summary summary
@@ -803,11 +794,9 @@ module Impl =
       | xs -> {SourcePath = xs.Head.Document.Url ; LineNumber = xs.Head.StartLine}
 
   //val apply : f:(TestCode * FocusState * SourceLocation -> TestCode * FocusState * SourceLocation) -> _arg1:Test -> Test
-  let setLocation (asm:Assembly) (code, state,_) =
+  let getLocation (asm:Assembly) code =
     let typeName, methodName = getMethodName asm code
-    let location = getSourceLocation asm typeName methodName
-    code, state, location
-
+    getSourceLocation asm typeName methodName
 
 
   /// Scan filtered tests marked with TestsAttribute from an assembly
@@ -815,7 +804,6 @@ module Impl =
     a.GetExportedTypes()
     |> Seq.filter typeFilter
     |> Seq.choose testFromType
-    |> Seq.map (Test.apply (setLocation a))
     |> Seq.toList
     |> listToTestListOption
 
@@ -867,11 +855,11 @@ module Tests =
   let inline ptestList name tests = TestLabel(name, TestList (tests, Pending), Pending)
 
   /// Builds a test case that will be ignored by Expecto if exists focused tests and none of the parents is focused
-  let inline testCase name test = TestLabel(name, TestCase (test,Normal, SourceLocation.Empty), Normal)
+  let inline testCase name test = TestLabel(name, TestCase (test,Normal), Normal)
   /// Builds a test case that will make Expecto to ignore other unfocused tests
-  let inline ftestCase name test = TestLabel(name, TestCase (test, Focused, SourceLocation.Empty), Focused)
+  let inline ftestCase name test = TestLabel(name, TestCase (test, Focused), Focused)
   /// Builds a test case that will be ignored by Expecto
-  let inline ptestCase name test = TestLabel(name, TestCase (test, Pending, SourceLocation.Empty), Pending)
+  let inline ptestCase name test = TestLabel(name, TestCase (test, Pending), Pending)
   /// Test case or list needs to run sequenced. Use for any benchmark code or
   /// for tests using `Expect.fastThan`
   let inline testSequenced test = Sequenced test
@@ -922,12 +910,12 @@ module Tests =
     TestCaseBuilder (name, Pending)
 
   /// Runs the passed tests
-  let run printer tests =
-    runEval printer evalSeq tests
+  let run localization printer tests =
+    runEval localization printer evalSeq tests
 
   /// Runs tests in parallel
-  let runParallel printer tests =
-    runEval printer evalPar tests
+  let runParallel localization printer tests =
+    runEval localization printer evalPar tests
 
   // Runner options
   type ExpectoConfig =
@@ -946,6 +934,9 @@ module Tests =
       printer : TestPrinters
       /// Verbosity level (default: Info)
       verbosity : LogLevel
+      /// Optional function used for finding source code location of test
+      /// Defaults to empty source code
+      localization : TestCode -> SourceLocation
     }
 
   /// The default configuration for Expecto.
@@ -954,7 +945,8 @@ module Tests =
       filter    = id
       failOnFocusedTests = false
       printer   = TestPrinters.Default
-      verbosity = LogLevel.Info }
+      verbosity = LogLevel.Info
+      localization = (fun _ -> SourceLocation.Empty) }
 
   type CLIArguments =
     | Sequenced
@@ -1044,11 +1036,7 @@ module Tests =
   let listTests test =
     test
     |> Test.toTestCodeList
-    |> Seq.iter (fun t ->
-      if t.location <> SourceLocation.Empty then
-        printfn "%s [%s:%d]" t.name t.location.SourcePath t.location.LineNumber
-      else
-        printfn "%s" t.name)
+    |> Seq.iter (fun t -> printfn "%s" t.name)
 
 
   /// Runs tests with the supplied options.
@@ -1059,7 +1047,7 @@ module Tests =
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity) :> Logger }
     if not config.failOnFocusedTests || passesFocusTestCheck config tests then
-      run config.printer tests
+      run config.localization config.printer tests
     else
       1
 
@@ -1077,6 +1065,7 @@ module Tests =
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
+    let config = { config with localization = getLocation (Assembly.GetEntryAssembly()) }
     testFromThisAssembly ()
     |> Option.orDefault (TestList ([], Normal))
     |> runTestsWithArgs config args
