@@ -7,6 +7,13 @@ open System.Linq
 open System.Runtime.CompilerServices
 open System.Reflection
 
+type SourceLocation ={
+  SourcePath: string
+  LineNumber: int
+}
+with static member Empty = {SourcePath = ""; LineNumber = 0}
+
+
 /// Actual test function
 type TestCode = unit -> unit
 
@@ -34,7 +41,7 @@ type FocusState =
 type Test =
   /// A test case is a function from unit to unit, that can be executed
   /// by Expecto to run the test code.
-  | TestCase of code:TestCode * state:FocusState
+  | TestCase of code:TestCode * state:FocusState * location:SourceLocation
   /// A collection/list of tests.
   | TestList of tests:Test list * state:FocusState
   /// A labelling of a Test (list or test code).
@@ -69,6 +76,10 @@ module Helpers =
   let fst3 (a,_,_) = a
   let snd3 (_,b,_) = b
   let trd3 (_,_,c) = c
+
+  let fst4 (a,_,_,_) = a
+  let snd4 (_,b,_,_) = b
+  let trd4 (_,_,c,_) = c
 
   let inline ignore2 _ = ignore
   let inline ignore3 _ = ignore2
@@ -141,6 +152,7 @@ type FlatTest =
   { name      : string
     test      : TestCode
     state     : FocusState
+    location  : SourceLocation
     sequenced : bool }
 
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -163,7 +175,7 @@ module Test =
             then name
             else parentName + "/" + name
         loop fullName testList (computeChildFocusState parentState state) sequenced test
-      | TestCase (test, state) -> {name=parentName; test=test; state=computeChildFocusState parentState state; sequenced=sequenced} :: testList
+      | TestCase (test, state, location) -> {name=parentName; test=test; state=computeChildFocusState parentState state; sequenced=sequenced; location=location} :: testList
       | TestList (tests, state) -> List.collect (loop parentName testList (computeChildFocusState parentState state) sequenced) tests
       | Sequenced test -> loop parentName testList parentState true test
     loop null [] Normal false
@@ -171,8 +183,8 @@ module Test =
   /// Recursively maps all TestCodes in a Test
   let rec wrap f =
     function
-    | TestCase (test, state) -> TestCase ((f test), state)
-    | TestList (testList, state) -> TestList (List.map (wrap f) testList, state)
+    | TestCase (test, state, location) -> TestCase ((f test), state, location)
+    | TestList (testList, state) -> TestList ((List.map (wrap f) testList), state)
     | TestLabel (label, test, state) -> TestLabel (label, wrap f test, state)
     | Sequenced test -> Sequenced (wrap f test)
 
@@ -181,7 +193,7 @@ module Test =
   /// that the translateFocusState is not intended as replacement
   let rec replaceFocusState newFocusState =
     function
-    | TestCase (test, _) -> TestCase(test, newFocusState)
+    | TestCase (test, _, location) -> TestCase(test, newFocusState, location)
     | TestList (testList, _) -> TestList(testList, newFocusState)
     | TestLabel (label, test, _) -> TestLabel(label, test, newFocusState)
     | Sequenced test -> Sequenced (replaceFocusState newFocusState test)
@@ -195,7 +207,7 @@ module Test =
   /// to change the test states
   let rec translateFocusState newFocusState =
     function
-    | TestCase (test, oldFocusState) -> TestCase(test, computeChildFocusState oldFocusState newFocusState)
+    | TestCase (test, oldFocusState, location) -> TestCase(test, computeChildFocusState oldFocusState newFocusState, location)
     | TestList (testList, oldFocusState) -> TestList(testList, computeChildFocusState oldFocusState newFocusState)
     | TestLabel (label, test, oldFocusState) -> TestLabel(label, test, computeChildFocusState oldFocusState newFocusState)
     | Sequenced test -> Sequenced (translateFocusState newFocusState test)
@@ -204,10 +216,10 @@ module Test =
   /// Check translateFocusState for focus state behavior description
   let rec replaceTestCode (f:string -> TestCode -> Test) =
     function
-    | TestLabel (label, TestCase (test, childState), parentState) ->
+    | TestLabel (label, TestCase (test, childState, location), parentState) ->
           f label test
           |> translateFocusState (computeChildFocusState parentState childState)
-    | TestCase (test, state) ->
+    | TestCase (test, state, location) ->
           f null test
           |> translateFocusState state
     | TestList (testList, state) -> TestList (List.map (replaceTestCode f) testList, state)
@@ -219,7 +231,7 @@ module Test =
     toTestCodeList
     >> List.filter (fun t -> pred t.name)
     >> List.map (fun t ->
-        let test = TestLabel (t.name, TestCase (t.test, t.state), t.state)
+        let test = TestLabel (t.name, TestCase (t.test, t.state, t.location), t.state)
         if t.sequenced then Sequenced test else test)
     >> (fun x -> TestList (x,Normal))
 
@@ -239,6 +251,7 @@ module Impl =
   open Expecto.Logging
   open Expecto.Logging.Message
   open Helpers
+  open Mono.Cecil.Rocks
 
   let logger = Log.create "Expecto"
 
@@ -306,6 +319,7 @@ module Impl =
   [<StructuredFormatDisplay("{description}")>]
   type TestRunResult =
    { name     : string
+     location : SourceLocation
      result   : TestResult
      duration : TimeSpan }
     override x.ToString() =
@@ -515,12 +529,13 @@ module Impl =
             | a -> UnFocused a
           let existsFocusedTests = tests |> List.exists (fun t -> FocusState.isFocused t.state)
           let wrappingMethod = if existsFocusedTests then applyFocusedWrapping else Enabled
-          tests |> List.map (fun t -> {name=t.name; test=t.test; state=wrappingMethod t.state; sequenced=t.sequenced})
+          tests |> List.map (fun t -> {name=t.name; test=t.test; state=wrappingMethod t.state; sequenced=t.sequenced; location=t.location})
 
     and WrappedFlatTest =
       { name      : string
         test      : TestCode
         state     : WrappedFocusedState
+        location  : SourceLocation
         sequenced : bool }
 
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
@@ -553,7 +568,9 @@ module Impl =
         | Some ignoredMessage ->
           { name     = test.name
             result   = Ignored ignoredMessage
+            location = test.location
             duration = TimeSpan.Zero }
+
         | _ ->
           next test
 
@@ -563,6 +580,7 @@ module Impl =
           test.test ()
           w.Stop()
           { name     = test.name
+            location = test.location
             result   = Passed
             duration = w.Elapsed }
         with e ->
@@ -576,14 +594,17 @@ module Impl =
                 |> Enumerable.FirstOrDefault
               sprintf "\n%s\n%s\n" e.Message firstLine
             { name     = test.name
+              location = test.location
               result   = Failed msg
               duration = w.Elapsed }
           | ExceptionInList ignoreExceptionTypes.Value ->
             { name     = test.name
+              location = test.location
               result   = Ignored e.Message
               duration = w.Elapsed }
           | _ ->
             { name     = test.name
+              location = test.location
               result   = TestResult.Error e
               duration = w.Elapsed }
 
@@ -756,13 +777,12 @@ module Tests =
   /// Builds a list/group of tests that will be ignored by Expecto
   let inline ptestList name tests = TestLabel(name, TestList (tests, Pending), Pending)
 
-  /// Builds a test case that will be ignored by Expecto if exists focused
-  /// tests and none of the parents is focused
-  let inline testCase name test = TestLabel(name, TestCase (test,Normal), Normal)
+  /// Builds a test case that will be ignored by Expecto if exists focused tests and none of the parents is focused
+  let inline testCase name test = TestLabel(name, TestCase (test,Normal, SourceLocation.Empty), Normal)
   /// Builds a test case that will make Expecto to ignore other unfocused tests
-  let inline ftestCase name test = TestLabel(name, TestCase (test, Focused), Focused)
+  let inline ftestCase name test = TestLabel(name, TestCase (test, Focused, SourceLocation.Empty), Focused)
   /// Builds a test case that will be ignored by Expecto
-  let inline ptestCase name test = TestLabel(name, TestCase (test, Pending), Pending)
+  let inline ptestCase name test = TestLabel(name, TestCase (test, Pending, SourceLocation.Empty), Pending)
   /// Test case or list needs to run sequenced. Use for any benchmark code or
   /// for tests using `Expect.fastThan`
   let inline testSequenced test = Sequenced test
