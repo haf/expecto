@@ -56,7 +56,7 @@ let tests =
           %s
           String `actual` was shorter than expected, at pos %i for expected item %A."
             format expected diffString 4 actual diffString 4 '2'
-        assertTestFailsWithMsg msg (test, Normal, SourceLocation.Empty)
+        assertTestFailsWithMsg msg (test, Normal)
       }
 
       test "different length, actual is longer" {
@@ -72,7 +72,7 @@ let tests =
                ↑
           String `actual` was longer than expected, at pos 4 found item '2'."""
             format
-        assertTestFailsWithMsg msg (test, Normal, SourceLocation.Empty)
+        assertTestFailsWithMsg msg (test, Normal)
       }
 
       test "fail - different content" {
@@ -89,7 +89,7 @@ let tests =
               ↑
           String does not match at position 3. Expected char: '2', but got 't'."""
             format
-        assertTestFailsWithMsg msg (test, Normal, SourceLocation.Empty)
+        assertTestFailsWithMsg msg (test, Normal)
       }
     ]
 
@@ -146,7 +146,7 @@ let tests =
     testList "Exception handling" [
       testCase "Expecto ignore" <| fun _ ->
         let test () = skiptest "b"
-        let test = TestCase (test, Normal, SourceLocation.Empty)
+        let test = TestCase (test, Normal)
         match evalSilent test with
         | [{ result = Ignored "b" }] -> ()
         | x -> failtestf "Expected result = Ignored, got\n %A" x
@@ -223,11 +223,11 @@ let expecto =
 
     testSequenced <| testList "Timeout" [
       testCase "fail" <| fun _ ->
-        let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal, SourceLocation.Empty)
+        let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
         let result = evalSilent test |> sumTestResults
         result.failed.Length ==? 1
       testCase "pass" <| fun _ ->
-        let test = TestCase(Test.timeout 1000 ignore, Normal, SourceLocation.Empty)
+        let test = TestCase(Test.timeout 1000 ignore, Normal)
         let result = evalSilent test |> sumTestResults
         result.passed.Length ==? 1
     ]
@@ -381,7 +381,7 @@ let expecto =
 
         testCase "fail" <| fun _ ->
           let test () = Expect.notEqual "" "" "should fail"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
       ]
 
       testList "raise" [
@@ -394,12 +394,12 @@ let expecto =
             Expect.throwsT<ArgumentException> (fun _ -> nullArg "")
                                               "Expected argument exception."
 
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
 
         testCase "fail with no exception" <| fun _ ->
           let test () =
             Expect.throwsT<ArgumentNullException> ignore "Ignore 'should' throw an exn, ;)"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
       ]
 
       testList "string contain" [
@@ -408,7 +408,7 @@ let expecto =
 
         testCase "fail" <| fun _ ->
           let test () = Expect.stringContains "hello world" "a" "Deliberately failing"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
       ]
 
       testList "string starts" [
@@ -417,7 +417,7 @@ let expecto =
 
         testCase "fail" <| fun _ ->
           let test () = Expect.stringStarts "hello world" "a" "Deliberately failing"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
       ]
 
       testList "string ends" [
@@ -426,7 +426,7 @@ let expecto =
 
         testCase "fail" <| fun _ ->
           let test () = Expect.stringEnds "hello world" "a" "Deliberately failing"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
       ]
 
       testList "string has length" [
@@ -435,7 +435,7 @@ let expecto =
 
         testCase "fail" <| fun _ ->
           let test () = Expect.stringHasLength "hello world" 5 "Deliberately failing"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
       ]
 
       testList "#containsAll" [
@@ -462,7 +462,7 @@ let expecto =
         Extra elements in `actual`:
         {2, 3}"
               format
-          assertTestFailsWithMsg msg (test, Normal, SourceLocation.Empty)
+          assertTestFailsWithMsg msg (test, Normal)
       ]
 
       testList "#distribution" [
@@ -550,11 +550,11 @@ let expecto =
 
         testCase "fail - longer" <| fun _ ->
           let test () = Expect.sequenceEqual [1;2;3] [1] "Deliberately failing"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
 
         testCase "fail - shorter" <| fun _ ->
           let test () = Expect.sequenceEqual [1] [1;2;3] "Deliberately failing"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
       ]
 
       testList "sequence starts" [
@@ -563,11 +563,11 @@ let expecto =
 
         testCase "fail - different" <| fun _ ->
           let test () = Expect.sequenceStarts [1;2;3] [2] "Deliberately failing"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
 
         testCase "fail - subject shorter" <| fun _ ->
           let test () = Expect.sequenceStarts [1] [1;2;3] "Deliberately failing"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
       ]
 
       testList "sequence ascending" [
@@ -576,7 +576,7 @@ let expecto =
 
         testCase "fail " <| fun _ ->
           let test () = Expect.isAscending [1;3;2] "Deliberately failing"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
       ]
 
       testList "sequence descending" [
@@ -585,7 +585,7 @@ let expecto =
 
         testCase "fail " <| fun _ ->
           let test () = Expect.isDescending [3;1;2] "Deliberately failing"
-          assertTestFails (test, Normal, SourceLocation.Empty)
+          assertTestFails (test, Normal)
       ]
 
     ]
@@ -638,7 +638,7 @@ let performance =
     testCase "1 <> 2" <| fun _ ->
       let test () =
         Expect.isFasterThan (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
-      assertTestFailsWithMsgContaining "same" (test, Normal, SourceLocation.Empty)
+      assertTestFailsWithMsgContaining "same" (test, Normal)
 
     testCase "half is faster" <| fun _ ->
       Expect.isFasterThan (fun () -> repeat10000 log 76.0)
@@ -650,14 +650,14 @@ let performance =
         Expect.isFasterThan (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
                             (fun () -> repeat10000 log 76.0)
                             "double is faster should fail"
-      assertTestFailsWithMsgContaining "slower" (test, Normal, SourceLocation.Empty)
+      assertTestFailsWithMsgContaining "slower" (test, Normal)
 
     ptestCase "same function is faster should fail" <| fun _ ->
       let test () =
         Expect.isFasterThan (fun () -> repeat100000 log 76.0)
                             (fun () -> repeat100000 log 76.0)
                             "same function is faster should fail"
-      assertTestFailsWithMsgContaining "equal" (test, Normal, SourceLocation.Empty)
+      assertTestFailsWithMsgContaining "equal" (test, Normal)
 
     testCase "matrix" <| fun _ ->
       let n = 100
@@ -693,5 +693,5 @@ let performance =
         Expect.isFasterThan (fun () -> repeat10000 (popCount16 >> int) 987us)
                             (fun () -> repeat10000 (popCount >> int) 987us)
                             "popcount 16 faster than 32 fails"
-      assertTestFailsWithMsgContaining "slower" (test, Normal, SourceLocation.Empty)
+      assertTestFailsWithMsgContaining "slower" (test, Normal)
   ]
