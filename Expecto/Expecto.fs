@@ -677,6 +677,7 @@ module Tests =
   open Impl
   open Argu
   open Expecto.Logging
+  open Expecto.Logging.Message
 
   /// Fail this test
   let inline failtest msg = raise <| AssertException msg
@@ -688,7 +689,8 @@ module Tests =
   /// Skip this test
   let inline skiptestf fmt = Printf.ksprintf (fun msg -> raise <| IgnoreException msg) fmt
 
-  /// Builds a list/group of tests that will be ignored by Expecto if exists focused tests and none of the parents is focused
+  /// Builds a list/group of tests that will be ignored by Expecto if exists
+  /// focused tests and none of the parents is focused
   let inline testList name tests = TestLabel(name, TestList (tests, Normal), Normal)
 
   /// Builds a list/group of tests that will make Expecto to ignore other unfocused tests
@@ -696,7 +698,8 @@ module Tests =
   /// Builds a list/group of tests that will be ignored by Expecto
   let inline ptestList name tests = TestLabel(name, TestList (tests, Pending), Pending)
 
-  /// Builds a test case that will be ignored by Expecto if exists focused tests and none of the parents is focused
+  /// Builds a test case that will be ignored by Expecto if exists focused
+  /// tests and none of the parents is focused
   let inline testCase name test = TestLabel(name, TestCase (test,Normal), Normal)
   /// Builds a test case that will make Expecto to ignore other unfocused tests
   let inline ftestCase name test = TestLabel(name, TestCase (test, Focused), Focused)
@@ -766,7 +769,8 @@ module Tests =
       /// state by default.
       parallel : bool
       /// Whether to make the test runner fail if focused tests exist.
-      /// This can be used from CI servers to ensure no focused tests are commited and therefor all tests are run.
+      /// This can be used from CI servers to ensure no focused tests are
+      /// commited and therefor all tests are run.
       failOnFocusedTests : bool
       /// An optional filter function. Useful if you only would
       /// like to run a subset of all the tests defined in your assembly.
@@ -835,7 +839,6 @@ module Tests =
         | [||] -> ""
         | xs -> xs.Last()
 
-
       let reduceKnown : CLIArguments -> (_ -> ExpectoConfig) =
         function
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
@@ -865,36 +868,27 @@ module Tests =
     |> Test.toTestCodeList
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
-  /// When the failOnFocusedTests switch is activated this function checks
-  /// that no focused tests exist. 
+  /// When the failOnFocusedTests switch is activated this function that no
+  /// focused tests exist.
+  ///
   /// Returns true if the check passes, otherwise false.
   let passesFocusTestCheck config tests =
-    if not config.failOnFocusedTests then true else
-    let tests = Test.toTestCodeList tests
-    let count =
-      tests
-      |> List.filter (fun t ->
-          match t.state with
-          | Focused -> true
-          | _ -> false)
-      |> List.length
-
-    if count > 0 then
-      logger.info (
-        Message.eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
-          >> Message.setField "count" count)
-      false
+    let isFocused : FlatTest -> _ = function t when t.state = Focused -> true | _ -> false
+    let focused = Test.toTestCodeList tests |> List.filter isFocused
+    if focused.Length = 0 then true
     else
-      true
+      logger.info (
+        eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
+        >> setField "count" focused.Length)
+      false
 
-  /// Runs tests with supplied options.
-  /// Returns 0 if all tests passed, otherwise 1
+  /// Runs tests with supplied options. Returns 0 if all tests passed, otherwise 1.
   let runTests config (tests:Test) =
     let run = if config.parallel then runParallel else run
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity) :> Logger }
-    if passesFocusTestCheck config tests then
+    if not config.failOnFocusedTests || passesFocusTestCheck config tests then
       run config.printer tests
     else
       1
@@ -908,4 +902,8 @@ module Tests =
       | None -> TestList ([], Normal)
     let config, isList = args |> ExpectoConfig.fillFromArgs config
     let tests = tests |> config.filter
-    if isList then listTests tests; 0 else runTests config tests
+    if isList then
+      listTests tests
+      0
+    else
+      runTests config tests
