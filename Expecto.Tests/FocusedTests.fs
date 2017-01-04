@@ -86,7 +86,6 @@ let canDetectFocusedTest =
   // check if we can fail on focused tests
   if runTests { defaultConfig with failOnFocusedTests = true } localList <> 1 then
     failwith "focused test check didn't fail"
-  failwith "soundcheck"
 
 [<Tests>]
 let canRunIfNoFocusedTest =
@@ -100,7 +99,6 @@ let canRunIfNoFocusedTest =
   // check if we pass if no focused tests exist
   if runTests { defaultConfig with failOnFocusedTests = true } localList <> 0 then
     failwith "focused test check didn't fail"
-  failwith "soundcheck2"
 
 [<PTests>]
 let ignoredTest = testCase "all focused tests/ignored by attribute" failing
