@@ -107,6 +107,11 @@ operating system as error code.
 Signature `ExpectoConfig -> Test -> int`. Runs the passed tests with the passed
 configuration record.
 
+### `runTestsWithArgs`
+
+Signature `ExpectoConfig -> string[] -> Test -> int`. Runs the passed tests
+and also overrides the passed `ExpectoConfig` with the command line parameters.
+
 ### `runTestsInAssembly`
 
 Signature `ExpectoConfig -> string[] -> int`. Runs the tests in the current
@@ -177,6 +182,9 @@ let focusedTests =
     testCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
   ]
 ```
+
+Expecto accepts the command line argument `--fail-on-focused-tests`, which checks if focused tests exist.
+This parameter can be set in build scripts and allows CI servers to reject commits that accidentally included focused tests.
 
 ### Pending tests
 
