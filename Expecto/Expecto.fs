@@ -865,8 +865,9 @@ module Tests =
     |> Test.toTestCodeList
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
-  /// When the failOnFocusedTests switch is activated this function checks that no
-  /// focused tests exist. Returns true if the check passes, otherwise false.
+  /// When the failOnFocusedTests switch is activated this function checks
+  /// that no focused tests exist. 
+  /// Returns true if the check passes, otherwise false.
   let passesFocusTestCheck config tests =
     if not config.failOnFocusedTests then true else
     let tests = Test.toTestCodeList tests
@@ -885,7 +886,8 @@ module Tests =
     else
       true
 
-  /// Runs tests with supplied options. Returns 0 if all tests passed, otherwise 1
+  /// Runs tests with supplied options.
+  /// Returns 0 if all tests passed, otherwise 1
   let runTests config (tests:Test) =
     let run = if config.parallel then runParallel else run
     Global.initialiseIfDefault
