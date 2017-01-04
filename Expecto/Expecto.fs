@@ -887,7 +887,8 @@ module Tests =
     |> Test.toTestCodeList
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
-  /// Runs tests with supplied options. Returns 0 if all tests passed, otherwise 1.
+  /// Runs tests with the supplied options.
+  /// Returns 0 if all tests passed, otherwise 1
   let runTests config (tests:Test) =
     let run = if config.parallel then runParallel else run
     Global.initialiseIfDefault
@@ -898,14 +899,20 @@ module Tests =
     else
       1
 
-  /// Runs tests in this assembly with supplied command-line options.
+  /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
-  let runTestsInAssembly config args =
-    let tests = testFromThisAssembly () |> Option.orDefault (TestList ([], Normal))
-    let config, isList = args |> ExpectoConfig.fillFromArgs config
-    let tests = tests |> config.filter
+  let runTestsWithArgs config args tests =
+    let config, isList = ExpectoConfig.fillFromArgs config args
+    let tests = config.filter tests
     if isList then
       listTests tests
       0
     else
       runTests config tests
+
+  /// Runs tests in this assembly with the supplied command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsInAssembly config args =
+    testFromThisAssembly ()
+    |> Option.orDefault (TestList ([], Normal))
+    |> runTestsWithArgs config args
