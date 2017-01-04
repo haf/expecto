@@ -880,8 +880,9 @@ module Tests =
       |> List.length
 
     if count > 0 then
-      sprintf "It was requested that no focused tests exist, but yet there are %d focused tests found." count
-      |> config.printer.info
+      logger.info (
+        Message.eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
+          >> Message.setField "count" count)
       false
     else
       true
