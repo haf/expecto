@@ -865,29 +865,27 @@ module Tests =
     |> Test.toTestCodeList
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
-  
-  
+  /// When the failOnFocusedTests switch is activated this function checks that no
+  /// focused tests exist. Returns true if the check passes, otherwise false.
+  let passesFocusTestCheck config tests =
+    if not config.failOnFocusedTests then true else
+    let tests = Test.toTestCodeList tests
+    let count =
+      tests
+      |> List.filter (fun t ->
+          match t.state with
+          | Focused -> true
+          | _ -> false)
+      |> List.length
 
-  /// Runs tests with supplied options. Returns 0 if all tests passed, =
-  /// otherwise 1
+    if count > 0 then
+      config.printer.info "It was requested that no focused tests exist, but yet there are %d focused tests found."
+      false
+    else
+      true
+
+  /// Runs tests with supplied options. Returns 0 if all tests passed, otherwise 1
   let runTests config (tests:Test) =
-    let passesFocusTestCheck config tests =
-      if not config.failOnFocusedTests then true else
-      let tests = Test.toTestCodeList tests
-      let count =
-        tests
-        |> List.filter (fun t ->
-            match t.state with
-            | Focused -> true
-            | _ -> false)
-        |> List.length
-
-      if count > 0 then
-        config.printer.info "It was requested that no focused tests exist, but yet there are %d focused tests found."
-        false
-      else
-        true
-
     let run = if config.parallel then runParallel else run
     Global.initialiseIfDefault
       { Global.defaultConfig with
