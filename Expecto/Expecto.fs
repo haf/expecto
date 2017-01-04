@@ -879,7 +879,8 @@ module Tests =
       |> List.length
 
     if count > 0 then
-      config.printer.info "It was requested that no focused tests exist, but yet there are %d focused tests found."
+      sprintf "It was requested that no focused tests exist, but yet there are %d focused tests found." count
+      |> config.printer.info
       false
     else
       true
@@ -895,7 +896,8 @@ module Tests =
     else
       1
 
-  /// Runs tests in this assembly with supplied command-line options. Returns 0 if all tests passed, otherwise 1
+  /// Runs tests in this assembly with supplied command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
     let tests =
       match testFromAssembly (Assembly.GetEntryAssembly()) with
