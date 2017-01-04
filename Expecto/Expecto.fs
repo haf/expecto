@@ -876,9 +876,9 @@ module Tests =
       let tests = Test.toTestCodeList tests
       let count =
         tests
-        |> List.filter (fun t -> 
-            match t.state with 
-            | Focused -> true 
+        |> List.filter (fun t ->
+            match t.state with
+            | Focused -> true
             | _ -> false)
         |> List.length
 
