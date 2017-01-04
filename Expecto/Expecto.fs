@@ -685,7 +685,7 @@ module Impl =
     let focused = Test.toTestCodeList tests |> List.filter isFocused
     if focused.Length = 0 then true
     else
-      logger.info (
+      logger.error (
         eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
         >> setField "count" focused.Length)
       false
