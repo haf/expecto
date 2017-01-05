@@ -349,7 +349,7 @@ module Impl =
     let erroredCount = summary.errored |> List.length
 
     let digits = 
-        [passedCount; ignoredCount; failedCount; erroredCount; 1000]
+        [passedCount; ignoredCount; failedCount; erroredCount ]
         |> List.map (fun x -> x.ToString().Length)
         |> List.max
 
