@@ -95,12 +95,12 @@ let tests =
 
     testList "sumTestResults" [
       let sumTestResultsTests =
-        [ { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 2.; location =  SourceLocation.Empty }
-          { TestRunResult.name = ""; result = TestResult.Error (ArgumentException()); duration = TimeSpan.FromMinutes 3.; location =  SourceLocation.Empty }
-          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 4.; location =  SourceLocation.Empty }
-          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 5.; location =  SourceLocation.Empty }
-          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 6.; location =  SourceLocation.Empty }
-          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 7.; location =  SourceLocation.Empty }
+        [ { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 2.; location = SourceLocation.empty }
+          { TestRunResult.name = ""; result = TestResult.Error (ArgumentException()); duration = TimeSpan.FromMinutes 3.; location =SourceLocation.empty }
+          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 4.; location = SourceLocation.empty }
+          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 5.; location = SourceLocation.empty }
+          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 6.; location = SourceLocation.empty }
+          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 7.; location = SourceLocation.empty }
         ]
       let r = lazy sumTestResults sumTestResultsTests
       yield testCase "passed" <| fun _ ->
@@ -135,7 +135,7 @@ let tests =
       testCase "ToString" <| fun _ ->
         let tr = {
           name = ""
-          location = SourceLocation.Empty
+          location =SourceLocation.empty
           result = Passed
           duration = TimeSpan.MaxValue
         }
@@ -537,7 +537,7 @@ let expecto =
         All elements in `expected` ['item', 'number of expected occurrences']:
         {2: 1, 4: 1}
         Missing elements from `actual`:
-        
+
         Extra elements in `actual`:
         '2' (2/1)"
               format

@@ -43,7 +43,7 @@ module TestHelpers =
   open Expecto
   open Expecto.Impl
 
-  let evalSilent = eval (fun _ -> SourceLocation.Empty) TestPrinters.silent List.map
+  let evalSilent = eval (fun _ -> SourceLocation.empty) TestPrinters.silent List.map
 
   let inline assertTestFails test =
     let test = TestCase test
@@ -84,7 +84,7 @@ module TestHelpers =
 
         return
           { TestRunResult.name = name
-            location = SourceLocation.Empty
+            location = SourceLocation.empty
             result = Passed
             duration = duration }
       }
