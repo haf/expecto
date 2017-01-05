@@ -345,7 +345,7 @@ module Impl =
         else
           logger.logWithAck l m |> Async.RunSynchronously
 
-  let createSummaryText (summary: TestResultSummary) =
+  let createSummaryMessage (summary: TestResultSummary) =
     let handleLineBreaks elements =
         elements
         |> List.map (fun x -> "\n\t" + x)
@@ -377,8 +377,12 @@ module Impl =
     >> setField "errored" errored
     >> setField "erroredCount" (align erroredCount 0)
 
+  let createSummaryText (summary: TestResultSummary) =
+    createSummaryMessage summary Info
+    |> Expecto.Logging.Formatting.defaultFormatter
+
   let logSummary (log: Log) (summary: TestResultSummary) =
-    createSummaryText summary
+    createSummaryMessage summary
     |> log.write Info
 
   /// Hooks to print report through test run
