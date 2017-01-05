@@ -486,7 +486,7 @@ module Impl =
           | UnFocused Focused -> failwith "Should never reach this state - this is a bug in Expecto - please let us know"
           | UnFocused Pending
           | Enabled Pending -> Some "The test or one of his parents is marked as Pending"
-          | UnFocused _ -> Some "The test is skiped because other tests are Focused"
+          | UnFocused _ -> Some "The test is skipped because other tests are Focused"
           | Enabled _-> None
 
         /// tests: FlatTest list -> WrappedFlatTest list
