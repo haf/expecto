@@ -43,7 +43,7 @@ module TestHelpers =
   open Expecto
   open Expecto.Impl
 
-  let evalSilent = eval (fun _ -> SourceLocation.empty) TestPrinters.silent List.map
+  let evalSilent = eval (fun _ -> SourceLocation.empty) TestPrinters.silent true List.map
 
   let inline assertTestFails test =
     let test = TestCase test

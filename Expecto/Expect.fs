@@ -235,24 +235,24 @@ let containsAll (actual : _ seq)
   |> Tests.failtest
 
 let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: Map<_,uint32>) (isExcept: bool) =
-  let getMapValue (map: Map<_, uint32>) (element) = 
+  let getMapValue (map: Map<_, uint32>) (element) =
     map |> Map.find element
-  let getResult found expected = 
+  let getResult found expected =
     match isExcept with
     | true -> found, expected
     | _ -> expected, found
-  
+
   let noOfFoundElements element value =
     let foundElements = (getMapValue elementsToContain element)
     match value > foundElements with
     | true -> getResult foundElements value
     | _ -> 0ul,0ul
-  
-  let elementsWhichDiffer element value = 
+
+  let elementsWhichDiffer element value =
     match elementsToContain |> Map.containsKey(element) with
     | true -> noOfFoundElements element value
     | _ -> getResult 0ul value
-  
+
   let printResult found =
     sprintf "(%d/%d)" (fst found) (snd found)
 
@@ -266,7 +266,7 @@ let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: M
 /// first element in every tuple from `expected` map means item which should be
 /// presented in `actual` sequence, the second element means an expected number of occurrences
 /// of this item in sequence.
-/// Function is not taking into account an order of elements. 
+/// Function is not taking into account an order of elements.
 /// Calling this function will enumerate both sequences; they have to be finite.
 let distribution (actual : _ seq)
                 (expected : Map<_,uint32>)
@@ -281,7 +281,7 @@ let distribution (actual : _ seq)
   let extra, missing =
     except groupedActual expected false,
     except expected groupedActual true
-  
+
   let isCorrect = List.isEmpty missing && List.isEmpty extra
   if isCorrect then () else
   let formatInput(data) = formatSet ", " "{%s}" "" data
@@ -434,12 +434,13 @@ let isFasterThanSub (f1:Performance.Measurer<_,_>->'a) (f2:Performance.Measurer<
     Tests.failtestf "%s. Expected f1 (%s) to be faster than f2 (%s) but is ~%.0f%% slower."
                     format (toString s1) (toString s2) ((s1.mean/s2.mean-1.0)*100.0)
   | Performance.MetricLessThan (s1,s2) ->
-    Impl.logger.info (
+    Impl.logger.infoWithBP (
       eventX "{message}. f1 ({sample1}) is {percent} faster than f2 ({sample2})."
       >> setField "message" format
       >> setField "sample1" (toString s1)
       >> setField "percent" (sprintf "~%.0f%%" ((1.0-s1.mean/s2.mean)*100.0))
       >> setField "sample2" (toString s2))
+    |> Async.StartImmediate
     //printfn "%s. f1 (%s) is ~%.0f%% faster than f2 (%s)." format (toString s1) ((1.0-s1.mean/s2.mean)*100.0) (toString s2)
 
 /// Expects function `f1` is faster than `f2`. Statistical test to 99.99%
