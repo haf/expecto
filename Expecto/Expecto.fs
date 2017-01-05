@@ -334,7 +334,21 @@ module Impl =
       errored  = get (TestResult.Error null)
       duration = results |> Seq.map (fun r -> r.duration) |> Seq.fold (+) TimeSpan.Zero }
 
-  let logSummary (summary : TestResultSummary) =
+  type Log =
+    {
+        Async: bool ref
+    }
+    member x.Write =
+      fun l m ->
+        if !x.Async then
+          logger.log l m |> Async.Start
+        else
+          logger.logWithAck l m |> Async.RunSynchronously
+    member x.WriteSync =
+      fun l m ->
+        logger.logWithAck l m |> Async.RunSynchronously
+
+  let logSummary (log: Log) (summary: TestResultSummary) =
     let handleLineBreaks elements = 
         let text = elements |> String.concat "\n\t"
         if text = "" then text else text + "\n"
@@ -355,21 +369,23 @@ module Impl =
 
     let align (d:int) offset = d.ToString().PadLeft(offset + digits)
 
-    logger.info (
+    log.Write Info (
       eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}Ignored: {ignoredCount}\n\t{ignored}Failed: {failedCount}\n\t{failed}Errored: {erroredCount}\n\t{errored}"
       >> setField "passed" passed
       >> setField "passedCount" (align passedCount 1)
       >> setField "ignored" ignored
-      >> setField "ignoredCount" (align ignoredCount)
+      >> setField "ignoredCount" (align ignoredCount 0)
       >> setField "failed" failed
       >> setField "failedCount" (align failedCount 1)
       >> setField "errored" errored
-      >> setField "erroredCount" (align erroredCount))
-
+      >> setField "erroredCount" (align erroredCount 0))
 
   /// Hooks to print report through test run
   type TestPrinters =
-    { /// Called before a test run (e.g. at the top of your main function)
+    {
+      /// Underlying log command
+      log: Log
+      /// Called before a test run (e.g. at the top of your main function)
       beforeRun: Test -> unit
       /// Called before atomic test (TestCode) is executed.
       beforeEach: string -> unit
@@ -386,40 +402,55 @@ module Impl =
       /// Prints a summary given the test result counts
       summary : TestResultSummary -> unit }
 
-    static member private logger log =
-      { beforeRun = fun _tests ->
-          log Info (
+    static member silent =
+      {
+        log = {Async=ref false}
+        beforeRun = fun _ -> ()
+        beforeEach = fun _ -> ()
+        info = fun _ -> ()
+        passed = fun _ _ -> ()
+        ignored = fun _ _ -> ()
+        failed = fun _ _ _ -> ()
+        exn = fun _ _ _ -> ()
+        summary = fun _ -> () }
+
+    static member Default =
+      let log = {Async=ref false}
+      {
+        log = log
+        beforeRun = fun _tests ->
+          log.Write Info (
             eventX "EXPECTO? Running tests...")
 
         beforeEach = fun n ->
-          log Debug (
+          log.Write Debug (
             eventX "{testName} starting..."
             >> setField "testName" n)
 
         info = fun s ->
-          log Info (eventX s)
+          log.Write Info (eventX s)
 
         passed = fun n d ->
-          log Debug (
+          log.Write Debug (
             eventX "{testName} passed in {duration}."
             >> setField "testName" n
             >> setField "duration" d)
 
         ignored = fun n m ->
-          log Debug (
+          log.Write Debug (
             eventX "{testName} was ignored. {reason}"
             >> setField "testName" n
             >> setField "reason" m)
 
         failed = fun n m d ->
-          log LogLevel.Error (
+          log.Write LogLevel.Error (
             eventX "{testName} failed in {duration}. {message}"
             >> setField "testName" n
             >> setField "duration" d
             >> setField "message" m)
 
         exn = fun n e d ->
-          log LogLevel.Error (
+          log.Write LogLevel.Error (
             eventX "{testName} errored in {duration}"
             >> setField "testName" n
             >> setField "duration" d
@@ -437,7 +468,7 @@ module Impl =
                 "( ರ Ĺ̯ ರೃ )"
               else
                 ""
-          log Info (
+          log.Write Info (
             eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
             >> setField "total" summary.total
             >> setField "duration" summary.duration
@@ -448,32 +479,15 @@ module Impl =
             >> setField "spirit" spirit)
           }
 
-    static member silent =
-      { beforeRun = fun _ -> ()
-        beforeEach = fun _ -> ()
-        info = fun _ -> ()
-        passed = fun _ _ -> ()
-        ignored = fun _ _ -> ()
-        failed = fun _ _ _ -> ()
-        exn = fun _ _ _ -> ()
-        summary = fun _ -> () }
-
-    static member Default =
-      TestPrinters.logger (fun l m -> logger.logWithAck l m |> Async.RunSynchronously)
-
-    static member Async =
-      TestPrinters.logger (fun l m -> logger.log l m |> Async.Start)
-
-    static member combined (async:bool ref) =
-      TestPrinters.logger (fun l m ->
-        if !async then logger.log l m |> Async.Start
-        else logger.logWithAck l m |> Async.RunSynchronously)
-
     static member Summary =
-      { TestPrinters.Default with
+      let defaultPrinter = TestPrinters.Default
+      { defaultPrinter with
           summary = fun summary ->
-            TestPrinters.Default.summary summary
-            logSummary summary }
+            defaultPrinter.summary summary
+            logSummary defaultPrinter.log summary }
+
+    member m.MakeAsync() = m.log.Async := true
+    member m.MakeSync() = m.log.Async := false
 
     type WrappedFocusedState =
       | Enabled of state:FocusState
@@ -593,18 +607,19 @@ module Impl =
     |> evalTestList printer map
 
   /// Evaluates tests sequentially
-  let evalSeq =
-    eval TestPrinters.Default List.map
+  let evalSeq (printer: TestPrinters) =
+    printer.MakeSync()
+    eval printer List.map
 
   /// Evaluates tests in parallel
-  let evalPar =
-    let printAsync = ref true
-    let printer = TestPrinters.combined printAsync
+  let evalPar (printer: TestPrinters) =
 
     let pmap fn ts =
       let sequenced, parallel =
         List.mapi (fun i t -> i, t) ts
         |> List.partition (fun (i, t) -> t.sequenced)
+      
+      printer.MakeAsync()
 
       let parallelResults =
         List.map (fun (index, test) ->
@@ -616,8 +631,9 @@ module Impl =
         |> Async.RunSynchronously
         |> Array.toList
 
+      printer.MakeSync()
+
       if not (List.isEmpty sequenced) then
-        printAsync := false
         printer.info "Starting sequenced tests..."
 
       let sequencedResults =
@@ -634,7 +650,7 @@ module Impl =
     printer.beforeRun tests
 
     let w = System.Diagnostics.Stopwatch.StartNew()
-    let results = eval tests
+    let results = eval printer tests
     w.Stop()
     let summary = { sumTestResults results with duration = w.Elapsed }
     printer.summary summary
