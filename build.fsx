@@ -57,7 +57,7 @@ Target "Build" (fun _ ->
 
 Target "RunTests" (fun _ ->
     !! testExecutables
-    |> Expecto (fun p -> { p with Parallel = false } )
+    |> Expecto id
     |> ignore
 )
 
