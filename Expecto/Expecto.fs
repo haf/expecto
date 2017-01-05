@@ -347,8 +347,9 @@ module Impl =
 
   let logSummary (log: Log) (summary: TestResultSummary) =
     let handleLineBreaks elements =
-        let text = elements |> String.concat "\n\t"
-        if text = "" then text else text + "\n"
+        elements
+        |> List.map (fun x -> "\n\t" + x)
+        |> String.concat ""
 
     let passed = summary.passed |> handleLineBreaks
     let passedCount = summary.passed |> List.length
@@ -367,7 +368,7 @@ module Impl =
     let align (d:int) offset = d.ToString().PadLeft(offset + digits)
 
     log.write Info (
-      eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}Ignored: {ignoredCount}\n\t{ignored}Failed: {failedCount}\n\t{failed}Errored: {erroredCount}\n\t{errored}"
+      eventX "EXPECTO?! Summary...\nPassed: {passedCount}{passed}\nIgnored: {ignoredCount}{ignored}\nFailed: {failedCount}{failed}\nErrored: {erroredCount}{errored}"
       >> setField "passed" passed
       >> setField "passedCount" (align passedCount 1)
       >> setField "ignored" ignored
