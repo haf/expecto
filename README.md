@@ -3,8 +3,8 @@
 [![Build Status](https://travis-ci.org/haf/expecto.svg?branch=master)](https://travis-ci.org/haf/expecto)
 [![NuGet Badge](https://buildstats.info/nuget/FAKE)](https://www.nuget.org/packages/expecto)
 
-Expecto is a unit testing library for F#. It's a fork of Fuchu aiming to be
-properly updated and pushed to nuget when PRs come in. It aims to be an
+Expecto is a unit testing library for F#. It's a fork of [Fuchu](https://github.com/mausch/Fuchu) aiming to be
+properly updated and pushed to NuGet when PRs come in. It aims to be an
 opinionated testing framework with batteries included, while still being
 compositional (just like Suave and Logary are).
 
