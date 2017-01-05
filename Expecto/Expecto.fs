@@ -861,7 +861,9 @@ module Tests =
     let printExpectoVersion() =
       let assembly = Assembly.GetExecutingAssembly()
       let fileInfoVersion = FileVersionInfo.GetVersionInfo assembly.Location
-      logger.info (eventX "EXPECTO version {version}" >> setField "version" fileInfoVersion.ProductVersion)
+      logger.info
+        (eventX "EXPECTO version {version}"
+          >> setField "version" fileInfoVersion.ProductVersion)
 
     /// Parses command-line arguments into a config. This allows you to
     /// override the config from the command line, rather than having
