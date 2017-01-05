@@ -348,16 +348,23 @@ module Impl =
     let errored = summary.errored |> handleLineBreaks
     let erroredCount = summary.errored |> List.length
 
+    let digits = 
+        [passedCount; ignoredCount; failedCount; erroredCount; 1000]
+        |> List.map (fun x -> x.ToString().Length)
+        |> List.max
+
+    let align (d:int) offset = d.ToString().PadLeft(offset + digits)
+
     logger.info (
       eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}Ignored: {ignoredCount}\n\t{ignored}Failed: {failedCount}\n\t{failed}Errored: {erroredCount}\n\t{errored}"
       >> setField "passed" passed
-      >> setField "passedCount" passedCount
+      >> setField "passedCount" (align passedCount 1)
       >> setField "ignored" ignored
-      >> setField "ignoredCount" ignoredCount
+      >> setField "ignoredCount" (align ignoredCount)
       >> setField "failed" failed
-      >> setField "failedCount" failedCount
+      >> setField "failedCount" (align failedCount 1)
       >> setField "errored" errored
-      >> setField "erroredCount" erroredCount)
+      >> setField "erroredCount" (align erroredCount))
 
 
   /// Hooks to print report through test run
