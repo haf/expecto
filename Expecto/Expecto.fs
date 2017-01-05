@@ -837,23 +837,31 @@ module Tests =
     | Run of tests:string list
     | List_Tests
     | Summary
+    | Version
 
     interface IArgParserTemplate with
       member s.Usage =
         match s with
-        | Sequenced -> "Don't run the tests in parallel."
-        | Parallel -> "Run all tests in parallel (default)."
+        | Sequenced -> "Doesn't run the tests in parallel."
+        | Parallel -> "Runs all tests in parallel (default)."
         | Fail_On_Focused_Tests -> "This will make the test runner fail if focused tests exist."
         | Debug -> "Extra verbose printing. Useful to combine with --sequenced."
-        | Filter _ -> "Filter the list of tests by a hierarchy that's slash (/) separated."
-        | Filter_Test_List _ -> "Filter the list of test lists by a substring."
-        | Filter_Test_Case _ -> "Filter the list of test cases by a substring."
-        | Run _ -> "Run only provided tests"
-        | List_Tests -> "Doesn't run tests, print out list of tests instead"
-        | Summary -> "Prints out summary after all tests are finished"
+        | Filter _ -> "Filters the list of tests by a hierarchy that's slash (/) separated."
+        | Filter_Test_List _ -> "Filters the list of test lists by a substring."
+        | Filter_Test_Case _ -> "Filters the list of test cases by a substring."
+        | Run _ -> "Runs only provided tests."
+        | List_Tests -> "Doesn't run tests, but prints out list of tests instead."
+        | Summary -> "Prints out summary after all tests are finished."
+        | Version -> "Prints out version information."
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
+    open System.Diagnostics
+
+    let printExpectoVersion() =
+      let assembly = Assembly.GetExecutingAssembly()
+      let fileInfoVersion = FileVersionInfo.GetVersionInfo assembly.Location
+      logger.info (eventX "EXPECTO version {version}" >> setField "version" fileInfoVersion.ProductVersion)
 
     /// Parses command-line arguments into a config. This allows you to
     /// override the config from the command line, rather than having
@@ -888,6 +896,7 @@ module Tests =
         | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
         | List_Tests -> id
         | Summary -> fun o -> {o with printer = TestPrinters.Summary}
+        | Version -> fun o -> printExpectoVersion(); o
 
       fun (args: string[]) ->
         let parsed =
