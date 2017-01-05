@@ -188,9 +188,9 @@ let contains sequence element format =
   | None ->
     Tests.failtestf "%s. Sequence did not contain %A." format element
 
-let inline private formatSet<'a> (ss : 'a seq) : string =
+let inline private formatSet<'a> (concatBy) (formatResult) (whenEmpty) (ss : 'a seq) : string =
   if Seq.isEmpty ss then
-    "{}"
+    whenEmpty
   else
     (match box (Seq.nth 0 ss) with
     | :? IComparable ->
@@ -203,10 +203,11 @@ let inline private formatSet<'a> (ss : 'a seq) : string =
       ss
       |> Seq.map (fun a -> a.ToString())
       |> Seq.sort)
-    |> String.concat ", "
-    |> sprintf "{%s}"
+    |> String.concat concatBy
+    |> sprintf formatResult
 
 /// Expects the `actual` sequence to contain all elements from `expected`
+/// it doesn't take into account number of occurances of characters
 /// sequence (not taking into account an order of elements). Calling this
 /// function will enumerate both sequences; they have to be finite.
 let containsAll (actual : _ seq)
@@ -219,7 +220,7 @@ let containsAll (actual : _ seq)
     exs |> List.filter (fun e -> not (ixs |> List.exists ((=) e)))
 
   if List.isEmpty missing then () else
-
+  let formatResult = formatSet ", " "{%s}" "{}"
   sprintf "%s.
     Sequence `actual` does not contain all `expected` elements.
         All elements in `actual`:
@@ -230,7 +231,76 @@ let containsAll (actual : _ seq)
         %s
         Extra elements in `actual`:
         %s"
-              format (formatSet axs) (formatSet exs) (formatSet missing) (formatSet extra)
+              format (formatResult axs) (formatResult exs) (formatResult missing) (formatResult extra)
+  |> Tests.failtest
+
+let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: Map<_,uint32>) (isExcept: bool) =
+  let getMapValue (map: Map<_, uint32>) (element) = 
+    map |> Map.find element
+  let getResult found expected = 
+    match isExcept with
+    | true -> found, expected
+    | _ -> expected, found
+  
+  let noOfFoundElements element value =
+    let foundElements = (getMapValue elementsToContain element)
+    match value > foundElements with
+    | true -> getResult foundElements value
+    | _ -> 0ul,0ul
+  
+  let elementsWhichDiffer element value = 
+    match elementsToContain |> Map.containsKey(element) with
+    | true -> noOfFoundElements element value
+    | _ -> getResult 0ul value
+  
+  let printResult found =
+    sprintf "(%d/%d)" (fst found) (snd found)
+
+  elementsToCheck
+  |> Map.map elementsWhichDiffer
+  |> Map.filter (fun key found -> snd found <> 0ul)
+  |> Map.toList
+  |> List.map (fun elem -> sprintf "'%A' %s" (fst elem) (snd elem |> printResult))
+
+/// Expects the `actual` sequence to contain all elements from `expected` map,
+/// first element in every tuple from `expected` map means item which should be
+/// presented in `actual` sequence, the second element means an expected number of occurrences
+/// of this item in sequence.
+/// Function is not taking into account an order of elements. 
+/// Calling this function will enumerate both sequences; they have to be finite.
+let distribution (actual : _ seq)
+                (expected : Map<_,uint32>)
+                format =
+  let groupByOccurances sequence =
+    sequence
+    |> Seq.groupBy id
+    |> Seq.map (fun (item, occurances) -> (item, occurances |> Seq.length |> uint32))
+    |> Map.ofSeq
+  let groupedActual = groupByOccurances actual
+
+  let extra, missing =
+    except groupedActual expected false,
+    except expected groupedActual true
+  
+  let isCorrect = List.isEmpty missing && List.isEmpty extra
+  if isCorrect then () else
+  let formatInput(data) = formatSet ", " "{%s}" "" data
+  let formatResult(data) = formatSet "\n\t" "%s" "" data
+  let formatedExpected =
+    expected
+    |> Map.toList
+    |> List.map (fun element -> sprintf "%A: %d" (fst element) (snd element))
+  sprintf "%s.
+    Sequence `actual` does not contain every `expected` elements.
+        All elements in `actual`:
+        %s
+        All elements in `expected` ['item', 'number of expected occurrences']:
+        %s
+        Missing elements from `actual`:
+        %s
+        Extra elements in `actual`:
+        %s"
+              format (formatInput actual) (formatInput formatedExpected) (formatResult missing) (formatResult extra)
   |> Tests.failtest
 
 /// Expects the `actual` sequence to equal the `expected` one.

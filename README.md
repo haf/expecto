@@ -289,6 +289,7 @@ This module is your main entry-point when asserting.
  - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
    contains all elements from second sequence (not taking into account an order
    of elements)
+ - `distribution: 'a seq -> Map<'a, uint32> -> string -> unit` - Expect the sequence contains all elements from map (first element in tuple is an item expected to be in sequence, second is a positive number of its occurrences in a sequence). Function is not taking into account an order of elements.
  - `streamsEqual` – Expect the streams to be byte-wise identical.
  - `isFasterThan : (unit -> 'a) -> (unit -> 'a) -> string -> unit` – Expect the
     first function to be faster than the second function with the passed string
