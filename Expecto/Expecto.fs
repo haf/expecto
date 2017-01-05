@@ -7,11 +7,10 @@ open System.Linq
 open System.Runtime.CompilerServices
 open System.Reflection
 
-type SourceLocation = {
-  sourcePath: string
-  lineNumber: int
-}
-with static member Empty = {sourcePath = ""; lineNumber = 0}
+type SourceLocation =
+  { sourcePath: string
+    lineNumber: int }
+with static member empty = {sourcePath = ""; lineNumber = 0}
 
 
 /// Actual test function
@@ -174,7 +173,7 @@ module Test =
             then name
             else parentName + "/" + name
         loop fullName testList (computeChildFocusState parentState state) sequenced test
-      | TestCase (test, state) -> {name=parentName; test=test; state=computeChildFocusState parentState state; sequenced=sequenced;} :: testList
+      | TestCase (test, state) -> {name=parentName; test=test; state=computeChildFocusState parentState state; sequenced=sequenced} :: testList
       | TestList (tests, state) -> List.collect (loop parentName testList (computeChildFocusState parentState state) sequenced) tests
       | Sequenced test -> loop parentName testList parentState true test
     loop null [] Normal false
@@ -183,7 +182,7 @@ module Test =
   let rec wrap f =
     function
     | TestCase (test, state) -> TestCase ((f test), state)
-    | TestList (testList, state) -> TestList ((List.map (wrap f) testList), state)
+    | TestList (testList, state) -> TestList (testList |> List.map (wrap f), state)
     | TestLabel (label, test, state) -> TestLabel (label, wrap f test, state)
     | Sequenced test -> Sequenced (wrap f test)
 
@@ -821,7 +820,7 @@ module Impl =
       |> Option.map (fun i -> i.SequencePoint)
 
     match getMethods className with
-    | None -> SourceLocation.Empty
+    | None -> SourceLocation.empty
     | Some methods ->
       let candidateSequencePoints =
         methods
@@ -830,7 +829,7 @@ module Impl =
         |> Seq.sortBy (fun sp -> sp.StartLine)
         |> Seq.toList
       match candidateSequencePoints with
-      | [] -> SourceLocation.Empty
+      | [] -> SourceLocation.empty
       | xs -> {sourcePath = xs.Head.Document.Url ; lineNumber = xs.Head.StartLine}
 
   //val apply : f:(TestCode * FocusState * SourceLocation -> TestCode * FocusState * SourceLocation) -> _arg1:Test -> Test
@@ -986,7 +985,7 @@ module Tests =
       failOnFocusedTests = false
       printer   = TestPrinters.Default
       verbosity = LogLevel.Info
-      locate = fun _ -> SourceLocation.Empty }
+      locate = fun _ -> SourceLocation.empty }
 
   type CLIArguments =
     | Sequenced
