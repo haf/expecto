@@ -334,22 +334,19 @@ module Impl =
       errored  = get (TestResult.Error null)
       duration = results |> Seq.map (fun r -> r.duration) |> Seq.fold (+) TimeSpan.Zero }
 
+  [<Obsolete "Subject to change without bump in Major version">]
   type Log =
-    {
-        Async: bool ref
-    }
-    member x.Write =
+    { isAsync: bool ref }
+  with
+    member x.write =
       fun l m ->
-        if !x.Async then
-          logger.log l m |> Async.Start
+        if !x.isAsync then
+          logger.logWithAck l m |> Async.Start
         else
           logger.logWithAck l m |> Async.RunSynchronously
-    member x.WriteSync =
-      fun l m ->
-        logger.logWithAck l m |> Async.RunSynchronously
 
   let logSummary (log: Log) (summary: TestResultSummary) =
-    let handleLineBreaks elements = 
+    let handleLineBreaks elements =
         let text = elements |> String.concat "\n\t"
         if text = "" then text else text + "\n"
 
@@ -362,14 +359,14 @@ module Impl =
     let errored = summary.errored |> handleLineBreaks
     let erroredCount = summary.errored |> List.length
 
-    let digits = 
+    let digits =
         [passedCount; ignoredCount; failedCount; erroredCount ]
         |> List.map (fun x -> x.ToString().Length)
         |> List.max
 
     let align (d:int) offset = d.ToString().PadLeft(offset + digits)
 
-    log.Write Info (
+    log.write Info (
       eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}Ignored: {ignoredCount}\n\t{ignored}Failed: {failedCount}\n\t{failed}Errored: {erroredCount}\n\t{errored}"
       >> setField "passed" passed
       >> setField "passedCount" (align passedCount 1)
@@ -382,8 +379,7 @@ module Impl =
 
   /// Hooks to print report through test run
   type TestPrinters =
-    {
-      /// Underlying log command
+    { /// ...
       log: Log
       /// Called before a test run (e.g. at the top of your main function)
       beforeRun: Test -> unit
@@ -403,8 +399,7 @@ module Impl =
       summary : TestResultSummary -> unit }
 
     static member silent =
-      {
-        log = {Async=ref false}
+      { log = {isAsync=ref false}
         beforeRun = fun _ -> ()
         beforeEach = fun _ -> ()
         info = fun _ -> ()
@@ -415,42 +410,42 @@ module Impl =
         summary = fun _ -> () }
 
     static member Default =
-      let log = {Async=ref false}
+      let log = {isAsync=ref false}
       {
         log = log
         beforeRun = fun _tests ->
-          log.Write Info (
+          log.write Info (
             eventX "EXPECTO? Running tests...")
 
         beforeEach = fun n ->
-          log.Write Debug (
+          log.write Debug (
             eventX "{testName} starting..."
             >> setField "testName" n)
 
         info = fun s ->
-          log.Write Info (eventX s)
+          log.write Info (eventX s)
 
         passed = fun n d ->
-          log.Write Debug (
+          log.write Debug (
             eventX "{testName} passed in {duration}."
             >> setField "testName" n
             >> setField "duration" d)
 
         ignored = fun n m ->
-          log.Write Debug (
+          log.write Debug (
             eventX "{testName} was ignored. {reason}"
             >> setField "testName" n
             >> setField "reason" m)
 
         failed = fun n m d ->
-          log.Write LogLevel.Error (
+          log.write LogLevel.Error (
             eventX "{testName} failed in {duration}. {message}"
             >> setField "testName" n
             >> setField "duration" d
             >> setField "message" m)
 
         exn = fun n e d ->
-          log.Write LogLevel.Error (
+          log.write LogLevel.Error (
             eventX "{testName} errored in {duration}"
             >> setField "testName" n
             >> setField "duration" d
@@ -468,7 +463,7 @@ module Impl =
                 "( ರ Ĺ̯ ರೃ )"
               else
                 ""
-          log.Write Info (
+          log.write Info (
             eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
             >> setField "total" summary.total
             >> setField "duration" summary.duration
@@ -486,8 +481,10 @@ module Impl =
             defaultPrinter.summary summary
             logSummary defaultPrinter.log summary }
 
-    member m.MakeAsync() = m.log.Async := true
-    member m.MakeSync() = m.log.Async := false
+    [<Obsolete "Subject to change without bump in Major version">]
+    member m.MakeAsync() = m.log.isAsync := true
+    [<Obsolete "Subject to change without bump in Major version">]
+    member m.MakeSync() = m.log.isAsync := false
 
     type WrappedFocusedState =
       | Enabled of state:FocusState
@@ -618,8 +615,8 @@ module Impl =
       let sequenced, parallel =
         List.mapi (fun i t -> i, t) ts
         |> List.partition (fun (i, t) -> t.sequenced)
-      
-      printer.MakeAsync()
+
+      printer.MakeAsync() // TODO: remove
 
       let parallelResults =
         List.map (fun (index, test) ->
@@ -631,7 +628,7 @@ module Impl =
         |> Async.RunSynchronously
         |> Array.toList
 
-      printer.MakeSync()
+      printer.MakeSync() // TODO: remove
 
       if not (List.isEmpty sequenced) then
         printer.info "Starting sequenced tests..."
