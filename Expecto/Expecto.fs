@@ -345,7 +345,7 @@ module Impl =
         else
           logger.logWithAck l m |> Async.RunSynchronously
 
-  let logSummary (log: Log) (summary: TestResultSummary) =
+  let createSummaryText (summary: TestResultSummary) =
     let handleLineBreaks elements =
         elements
         |> List.map (fun x -> "\n\t" + x)
@@ -366,17 +366,20 @@ module Impl =
         |> List.max
 
     let align (d:int) offset = d.ToString().PadLeft(offset + digits)
+    
+    eventX "EXPECTO?! Summary...\nPassed: {passedCount}{passed}\nIgnored: {ignoredCount}{ignored}\nFailed: {failedCount}{failed}\nErrored: {erroredCount}{errored}"
+    >> setField "passed" passed
+    >> setField "passedCount" (align passedCount 1)
+    >> setField "ignored" ignored
+    >> setField "ignoredCount" (align ignoredCount 0)
+    >> setField "failed" failed
+    >> setField "failedCount" (align failedCount 1)
+    >> setField "errored" errored
+    >> setField "erroredCount" (align erroredCount 0)
 
-    log.write Info (
-      eventX "EXPECTO?! Summary...\nPassed: {passedCount}{passed}\nIgnored: {ignoredCount}{ignored}\nFailed: {failedCount}{failed}\nErrored: {erroredCount}{errored}"
-      >> setField "passed" passed
-      >> setField "passedCount" (align passedCount 1)
-      >> setField "ignored" ignored
-      >> setField "ignoredCount" (align ignoredCount 0)
-      >> setField "failed" failed
-      >> setField "failedCount" (align failedCount 1)
-      >> setField "errored" errored
-      >> setField "erroredCount" (align erroredCount 0))
+  let logSummary (log: Log) (summary: TestResultSummary) =
+    createSummaryText summary
+    |> log.write Info
 
   /// Hooks to print report through test run
   type TestPrinters =
