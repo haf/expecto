@@ -3,8 +3,10 @@
 System.IO.Directory.SetCurrentDirectory __SOURCE_DIRECTORY__
 open System
 open Fake
+open Fake.Testing.Expecto
 
-
+// Pattern specifying assemblies to be tested using expecto
+let testExecutables = "./Expecto.Tests/**/bin/Release/*Tests*.exe"
 
 let run cmd args dir =
   if execProcess( fun info ->
@@ -53,6 +55,11 @@ Target "Build" (fun _ ->
   |> ignore
 )
 
+Target "RunTests" (fun _ ->
+    !! testExecutables
+    |> Expecto (fun p -> { p with Parallel = false } )
+    |> ignore
+)
 
 // --------------------------------------------------------------------------------------
 // Build netcore expecto library
@@ -75,6 +82,7 @@ Target "All" DoNothing
 "ExpectoChangeo"
   ==> "Clean"
   ==> "Build"
+  ==> "RunTests"
   <=> "DotnetBuild"
 
 "Build"       ==> "All"

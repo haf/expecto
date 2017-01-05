@@ -11,7 +11,7 @@
     <AssemblyName>Expecto.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>Expecto.Tests</Name>
-	<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="Prelude.fs" />
     <Compile Include="Tests.fs" />
+    <Compile Include="SummaryTests.fs" />
     <Compile Include="FocusedTests.fs" />
     <Compile Include="FsCheckTests.fs" />
     <Compile Include="BenchmarkDotNet.fs" />

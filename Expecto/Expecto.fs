@@ -345,10 +345,11 @@ module Impl =
         else
           logger.logWithAck l m |> Async.RunSynchronously
 
-  let logSummary (log: Log) (summary: TestResultSummary) =
+  let createSummaryMessage (summary: TestResultSummary) =
     let handleLineBreaks elements =
-        let text = elements |> String.concat "\n\t"
-        if text = "" then text else text + "\n"
+        elements
+        |> List.map (fun x -> "\n\t" + x)
+        |> String.concat ""
 
     let passed = summary.passed |> handleLineBreaks
     let passedCount = summary.passed |> List.length
@@ -365,17 +366,24 @@ module Impl =
         |> List.max
 
     let align (d:int) offset = d.ToString().PadLeft(offset + digits)
+    
+    eventX "EXPECTO?! Summary...\nPassed: {passedCount}{passed}\nIgnored: {ignoredCount}{ignored}\nFailed: {failedCount}{failed}\nErrored: {erroredCount}{errored}"
+    >> setField "passed" passed
+    >> setField "passedCount" (align passedCount 1)
+    >> setField "ignored" ignored
+    >> setField "ignoredCount" (align ignoredCount 0)
+    >> setField "failed" failed
+    >> setField "failedCount" (align failedCount 1)
+    >> setField "errored" errored
+    >> setField "erroredCount" (align erroredCount 0)
 
-    log.write Info (
-      eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}Ignored: {ignoredCount}\n\t{ignored}Failed: {failedCount}\n\t{failed}Errored: {erroredCount}\n\t{errored}"
-      >> setField "passed" passed
-      >> setField "passedCount" (align passedCount 1)
-      >> setField "ignored" ignored
-      >> setField "ignoredCount" (align ignoredCount 0)
-      >> setField "failed" failed
-      >> setField "failedCount" (align failedCount 1)
-      >> setField "errored" errored
-      >> setField "erroredCount" (align erroredCount 0))
+  let createSummaryText (summary: TestResultSummary) =
+    createSummaryMessage summary Info
+    |> Expecto.Logging.Formatting.defaultFormatter
+
+  let logSummary (log: Log) (summary: TestResultSummary) =
+    createSummaryMessage summary
+    |> log.write Info
 
   /// Hooks to print report through test run
   type TestPrinters =
