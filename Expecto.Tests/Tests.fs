@@ -537,10 +537,10 @@ let expecto =
         All elements in `expected` ['item', 'number of expected occurrences']:
         {2: 1, 4: 1}
         Missing elements from `actual`:
-
+        %s
         Extra elements in `actual`:
         '2' (2/1)"
-              format
+              format ""
           assertTestFailsWithMsg msg (test, Normal)
       ]
 
