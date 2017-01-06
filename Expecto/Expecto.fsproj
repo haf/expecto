@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -52,6 +52,7 @@
       <Paket>True</Paket>
       <Link>paket-files/Facade.fs</Link>
     </Compile>
+    <Compile Include="AssemblyVersionInfo.fs" />
     <Compile Include="Expecto.fs" />
     <Compile Include="Performance.fs" />
     <Compile Include="Expect.fs" />
