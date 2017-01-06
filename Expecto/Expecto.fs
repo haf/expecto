@@ -14,7 +14,9 @@ with static member empty = {sourcePath = ""; lineNumber = 0}
 
 
 /// Actual test function
-type TestCode = unit -> unit
+type TestCode =
+  | Sync of (unit->unit)
+  | Async of Async<unit>
 
 /// The parent state (watching the tests as a tree structure) will influence
 /// the child tests state. By following rules, if parent test state is:
@@ -70,11 +72,57 @@ type PTestsAttribute() = inherit Attribute()
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
 type FTestsAttribute() = inherit Attribute()
 
+module Async =
+  let map fn a =
+    async {
+      let! v = a
+      return fn v
+    }
+
+  let parallelLimit n s =
+    let handle = new System.Threading.ManualResetEventSlim()
+    let mutable results = []
+    let mb =
+      MailboxProcessor.Start(fun mb ->
+        let rec loop queue count =
+          async {
+            let! msg = mb.Receive()
+            match msg with
+            | None ->
+              match queue with
+              | asyncWork::newQueue ->
+                async {
+                  try
+                    let! r = asyncWork
+                    Some r |> mb.Post
+                  finally
+                    mb.Post None
+                } |> Async.Start
+                return! loop newQueue count
+              | [] ->
+                if count=1 then
+                  handle.Set()
+                  (mb:>IDisposable).Dispose()
+                else
+                  return! loop queue (count-1)
+            | Some r ->
+              results <- r::results
+              return! loop queue count
+          }
+        loop s n)
+    let rec start n =
+      if n>0 then
+        mb.Post None
+        start (n-1)
+    start n
+    Async.AwaitWaitHandle handle.WaitHandle
+    |> map (fun _ -> results)
+
 module Helpers =
 
-  let fst3 (a,_,_) = a
-  let snd3 (_,b,_) = b
-  let trd3 (_,_,c) = c
+  let inline fst3 (a,_,_) = a
+  let inline snd3 (_,b,_) = b
+  let inline trd3 (_,_,c) = c
 
   let fst4 (a,_,_,_) = a
   let snd4 (_,b,_,_) = b
@@ -235,15 +283,20 @@ module Test =
 
   /// Applies a timeout to a test
   let timeout timeout (test: TestCode) : TestCode =
-    let testFunc = Func<_,_> test
-    let asyncTestFunc = Async.FromBeginEnd((fun (b,c) -> testFunc.BeginInvoke((),b,c)), testFunc.EndInvoke)
-    fun () ->
-      try
-        Async.RunSynchronously(asyncTestFunc, timeout = timeout)
-      with :? TimeoutException ->
-        let ts = TimeSpan.FromMilliseconds (float timeout)
-        raise <| AssertException(sprintf "Timeout (%A)" ts)
+      async {
+        try
 
+          let test =
+            match test with
+            | Async test -> test
+            | Sync test -> async { test() }
+
+          let! async = Async.StartChild(test, timeout)
+          do! async
+        with :? TimeoutException ->
+          let ts = TimeSpan.FromMilliseconds (float timeout)
+          raise <| AssertException(sprintf "Timeout (%A)" ts)
+      } |> Async
 
 module Impl =
   open Expecto.Logging
@@ -386,7 +439,7 @@ module Impl =
 
   let logSummary (summary: TestResultSummary) =
     createSummaryMessage summary
-    |> logger.logWithAck Info
+    |> logger.log Info
     |> Async.StartImmediate
 
   let logSummaryWithLocation (summary: TestResultSummary) =
@@ -444,52 +497,51 @@ module Impl =
       summary : TestResultSummary -> unit }
 
     static member silent =
-      let asyncIgnore = async { return () }
       { beforeRun = fun _ -> ()
-        beforeEach = fun _ -> asyncIgnore
-        info = fun _ -> asyncIgnore
-        passed = fun _ _ -> asyncIgnore
-        ignored = fun _ _ -> asyncIgnore
-        failed = fun _ _ _ -> asyncIgnore
-        exn = fun _ _ _ -> asyncIgnore
+        beforeEach = fun _ -> async.Zero()
+        info = fun _ -> async.Zero()
+        passed = fun _ _ -> async.Zero()
+        ignored = fun _ _ -> async.Zero()
+        failed = fun _ _ _ -> async.Zero()
+        exn = fun _ _ _ -> async.Zero()
         summary = fun _ -> () }
 
     static member Default =
       {
         beforeRun = fun _tests ->
-          logger.logWithAck Info (
+          logger.log Info (
             eventX "EXPECTO? Running tests...")
           |> Async.StartImmediate
 
         beforeEach = fun n ->
-          logger.logWithAck Debug (
+          logger.log Debug (
             eventX "{testName} starting..."
             >> setField "testName" n)
 
         info = fun s ->
-          logger.logWithAck Info (eventX s)
+          logger.log Info (eventX s)
 
         passed = fun n d ->
-          logger.logWithAck Debug (
+          logger.log Debug (
             eventX "{testName} passed in {duration}."
             >> setField "testName" n
             >> setField "duration" d)
 
         ignored = fun n m ->
-          logger.logWithAck Debug (
+          logger.log Debug (
             eventX "{testName} was ignored. {reason}"
             >> setField "testName" n
             >> setField "reason" m)
 
         failed = fun n m d ->
-          logger.logWithAck LogLevel.Error (
+          logger.log LogLevel.Error (
             eventX "{testName} failed in {duration}. {message}"
             >> setField "testName" n
             >> setField "duration" d
             >> setField "message" m)
 
         exn = fun n e d ->
-          logger.logWithAck LogLevel.Error (
+          logger.log LogLevel.Error (
             eventX "{testName} errored in {duration}"
             >> setField "testName" n
             >> setField "duration" d
@@ -507,7 +559,7 @@ module Impl =
                 "( ರ Ĺ̯ ರೃ )"
               else
                 ""
-          logger.logWithAck Info (
+          logger.log Info (
             eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
             >> setField "total" summary.total
             >> setField "duration" summary.duration
@@ -562,6 +614,31 @@ module Impl =
         state     : WrappedFocusedState
         sequenced : bool }
 
+  // Runner options
+  type ExpectoConfig =
+    { /// Whether to run the tests in parallel. Defaults to
+      /// true, because your code should not mutate global
+      /// state by default.
+      parallel : bool
+      /// Number of parallel workers. Defaults to the number of
+      /// logical processors.
+      parallelWorkers : int
+      /// Whether to make the test runner fail if focused tests exist.
+      /// This can be used from CI servers to ensure no focused tests are
+      /// commited and therefor all tests are run.
+      failOnFocusedTests : bool
+      /// An optional filter function. Useful if you only would
+      /// like to run a subset of all the tests defined in your assembly.
+      filter   : Test -> Test
+      /// Allows the test printer to be parametised to your liking.
+      printer : TestPrinters
+      /// Verbosity level (default: Info)
+      verbosity : LogLevel
+      /// Optional function used for finding source code location of test
+      /// Defaults to empty source code
+      locate : TestCode -> SourceLocation
+    }
+
   /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
   let evalTestList =
@@ -581,75 +658,77 @@ module Impl =
       else
         None
 
-    fun (locate : TestCode -> SourceLocation) (printers: TestPrinters) map ->
-
-      let log test =
-        if test.sequenced then Async.StartImmediate else Async.Start
+    fun config map ->
 
       let beforeEach test =
-        printers.beforeEach test.name
-        |> log test
-        test
+        config.printer.beforeEach test.name
 
       let execFocused next test =
         match test.state.ShouldSkipEvaluation with
         | Some ignoredMessage ->
           { name     = test.name
             result   = Ignored ignoredMessage
-            location = locate test.test
-            duration = TimeSpan.Zero }
-
+            location = config.locate test.test
+            duration = TimeSpan.Zero } |> async.Return
         | _ ->
           next test
 
       let execOne test =
-        let w = System.Diagnostics.Stopwatch.StartNew()
-        try
-          test.test ()
-          w.Stop()
-          { name     = test.name
-            location = locate test.test
-            result   = Passed
-            duration = w.Elapsed }
-        with e ->
-          w.Stop()
-          match e with
-          | ExceptionInList failExceptionTypes.Value ->
-            let msg =
-              let firstLine =
-                (stackTraceToString e.StackTrace).Split('\n')
-                |> Seq.filter (fun q -> q.Contains ",1): ")
-                |> Enumerable.FirstOrDefault
-              sprintf "\n%s\n%s\n" e.Message firstLine
-            { name     = test.name
-              location = locate test.test
-              result   = Failed msg
-              duration = w.Elapsed }
-          | ExceptionInList ignoreExceptionTypes.Value ->
-            { name     = test.name
-              location = locate test.test
-              result   = Ignored e.Message
-              duration = w.Elapsed }
-          | _ ->
-            { name     = test.name
-              location = locate test.test
-              result   = TestResult.Error e
-              duration = w.Elapsed }
+        async {
+          let w = System.Diagnostics.Stopwatch.StartNew()
+          try
+            match test.test with
+            | Async test ->
+              do! test
+            | Sync test ->
+              test()
+            w.Stop()
+            return { name     = test.name
+                     location = config.locate test.test
+                     result   = Passed
+                     duration = w.Elapsed }
+          with e ->
+            w.Stop()
+            match e with
+            | ExceptionInList failExceptionTypes.Value ->
+              let msg =
+                let firstLine =
+                  (stackTraceToString e.StackTrace).Split('\n')
+                  |> Seq.filter (fun q -> q.Contains ",1): ")
+                  |> Enumerable.FirstOrDefault
+                sprintf "\n%s\n%s\n" e.Message firstLine
+              return { name     = test.name
+                       location = config.locate test.test
+                       result   = Failed msg
+                       duration = w.Elapsed }
+            | ExceptionInList ignoreExceptionTypes.Value ->
+              return { name     = test.name
+                       location = config.locate test.test
+                       result   = Ignored e.Message
+                       duration = w.Elapsed }
+            | _ ->
+              return { name     = test.name
+                       location = config.locate test.test
+                       result   = TestResult.Error e
+                       duration = w.Elapsed }
+        }
 
-      let printOne test result =
+      let printOne result =
         match result.result with
-        | Passed -> printers.passed result.name result.duration
-        | Failed message -> printers.failed result.name message result.duration
-        | Ignored message -> printers.ignored result.name message
-        | Error e -> printers.exn result.name e result.duration
-        |> log test
-        result
+        | Passed -> config.printer.passed result.name result.duration
+        | Failed message -> config.printer.failed result.name message result.duration
+        | Ignored message -> config.printer.ignored result.name message
+        | Error e -> config.printer.exn result.name e result.duration
 
       let pipeline =
         execFocused (fun test ->
-          beforeEach test
-          |> execOne
-          |> printOne test
+          async {
+            let! beforeAsync = beforeEach test |> Async.StartChild
+            let! result = execOne test
+            do! beforeAsync
+            do! printOne result
+            return result
+          }
         )
 
       WrappedFocusedState.WrapStates
@@ -657,51 +736,48 @@ module Impl =
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
-  let eval (locate : TestCode -> SourceLocation) (printer: TestPrinters) parallel map tests =
+  let eval config map tests =
     Test.toTestCodeList tests
-    |> if parallel then id else List.map (fun t -> {t with sequenced=true})
-    |> evalTestList locate printer map
+    |> if config.parallel then id else List.map (fun t -> {t with sequenced=true})
+    |> evalTestList config map
 
   /// Evaluates tests
-  let evalPar locate (printer: TestPrinters) parallel =
+  let evalPar config tests =
 
     let pmap fn ts =
       let sequenced, parallel =
-        List.mapi (fun i t -> i, t) ts
-        |> List.partition (fun (i, t) -> t.sequenced)
+        List.mapi (fun i t -> t.sequenced, fn t |> Async.map (fun r -> i,r)) ts
+        |> List.partition fst
+        |> fun (s,p) -> List.map snd s, List.map snd p
 
-      let parallelResults =
-        List.map (fun (index, test) ->
-          async {
-            let r = fn test
-            return index, r
-          }) parallel
-        |> Async.Parallel
-        |> Async.RunSynchronously
-        |> Array.toList
+      async {
+        let! parallelResults = Async.parallelLimit config.parallelWorkers parallel
 
-      if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
-        printer.info "Starting sequenced tests..."
-        |> Async.StartImmediate
+        if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
+          do! config.printer.info "Starting sequenced tests..."
 
-      let sequencedResults =
-        List.map (fun (index, test) -> index, fn test) sequenced
+        let sequencedResults =
+          List.map Async.RunSynchronously sequenced
 
-      List.append sequencedResults parallelResults
-      |> List.sortBy fst
-      |> List.map snd
+        let results =
+          List.append sequencedResults parallelResults
+          |> List.sortBy fst
+          |> List.map snd
 
-    eval locate printer parallel pmap
+        return results
+      } |> Async.RunSynchronously
+
+    eval config pmap tests
 
   /// Runs tests, returns error code
-  let runEval locate printer parallel (tests: Test) =
-    printer.beforeRun tests
+  let runEval config (tests: Test) =
+    config.printer.beforeRun tests
 
     let w = System.Diagnostics.Stopwatch.StartNew()
-    let results = evalPar locate printer parallel tests
+    let results = evalPar config tests
     w.Stop()
     let summary = { sumTestResults results with duration = w.Elapsed }
-    printer.summary summary
+    config.printer.summary summary
 
     TestResultSummary.errorCode summary
 
@@ -759,7 +835,7 @@ module Impl =
       findBase t
     baseType.IsGenericType && baseType.GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
 
-  let getFuncTypeToUse (testFunc:TestCode) (asm:Assembly) =
+  let getFuncTypeToUse (testFunc:unit->unit) (asm:Assembly) =
     let t = testFunc.GetType()
     if t.Assembly.FullName = asm.FullName then
       t
@@ -771,10 +847,14 @@ module Impl =
       | Some f -> f.GetValue(testFunc).GetType()
       | None -> t
 
-  let getMethodName asm testFunc =
-    let t = getFuncTypeToUse testFunc asm
-    let m = t.GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
-    (t.FullName, m.Name)
+  let getMethodName asm testCode =
+    match testCode with
+    | Sync test ->
+      let t = getFuncTypeToUse test asm
+      let m = t.GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
+      (t.FullName, m.Name)
+    | Async _ ->
+      ("Unknown Async","Unknown Async")
 
   //Ported from: https://github.com/adamchester/expecto-adapter/blob/master/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
   let getSourceLocation (asm:Assembly) className methodName =
@@ -844,9 +924,10 @@ module Impl =
     let focused = Test.toTestCodeList tests |> List.filter isFocused
     if focused.Length = 0 then true
     else
-      logger.error (
+      logger.log LogLevel.Error (
         eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
         >> setField "count" focused.Length)
+      |> Async.Start
       false
 
 [<AutoOpen; Extension>]
@@ -876,14 +957,17 @@ module Tests =
   /// Builds a list/group of tests that will be ignored by Expecto
   let inline ptestList name tests = TestLabel(name, TestList (tests, Pending), Pending)
 
-  /// Builds a test case that will be ignored by Expecto if exists focused tests and none of the parents is focused
-  let inline testCase name test = TestLabel(name, TestCase (test,Normal), Normal)
+  /// Builds a test case that will be ignored by Expecto if exists focused
+  /// tests and none of the parents is focused
+  let inline testCase name test = TestLabel(name, TestCase (Sync test,Normal), Normal)
+  /// Builds an async test case
+  let inline testCaseAsync name test = TestLabel(name, TestCase (Async test,Normal), Normal)
   /// Builds a test case that will make Expecto to ignore other unfocused tests
-  let inline ftestCase name test = TestLabel(name, TestCase (test, Focused), Focused)
+  let inline ftestCase name test = TestLabel(name, TestCase (Sync test, Focused), Focused)
   /// Builds a test case that will be ignored by Expecto
-  let inline ptestCase name test = TestLabel(name, TestCase (test, Pending), Pending)
+  let inline ptestCase name test = TestLabel(name, TestCase (Sync test, Pending), Pending)
   /// Test case or list needs to run sequenced. Use for any benchmark code or
-  /// for tests using `Expect.fastThan`
+  /// for tests using `Expect.isFasterThan`
   let inline testSequenced test = Sequenced test
 
   /// Applies a function to a list of values to build test cases
@@ -932,38 +1016,13 @@ module Tests =
     TestCaseBuilder (name, Pending)
 
   /// Runs the passed tests
-  let run locate printer tests =
-    runEval locate printer false tests
-
-  /// Runs tests in parallel
-  let runParallel locate printer tests =
-    runEval locate printer true tests
-
-  // Runner options
-  type ExpectoConfig =
-    { /// Whether to run the tests in parallel. Defaults to
-      /// true, because your code should not mutate global
-      /// state by default.
-      parallel : bool
-      /// Whether to make the test runner fail if focused tests exist.
-      /// This can be used from CI servers to ensure no focused tests are
-      /// commited and therefor all tests are run.
-      failOnFocusedTests : bool
-      /// An optional filter function. Useful if you only would
-      /// like to run a subset of all the tests defined in your assembly.
-      filter   : Test -> Test
-      /// Allows the test printer to be parametised to your liking.
-      printer : TestPrinters
-      /// Verbosity level (default: Info)
-      verbosity : LogLevel
-      /// Optional function used for finding source code location of test
-      /// Defaults to empty source code
-      locate : TestCode -> SourceLocation
-    }
+  let run config tests =
+    runEval config tests
 
   /// The default configuration for Expecto.
   let defaultConfig =
     { parallel  = true
+      parallelWorkers = Environment.ProcessorCount
       filter    = id
       failOnFocusedTests = false
       printer   = TestPrinters.Default
@@ -973,6 +1032,7 @@ module Tests =
   type CLIArguments =
     | Sequenced
     | Parallel
+    | Parallel_Workers of int
     | Fail_On_Focused_Tests
     | Debug
     | Filter of hiera:string
@@ -989,6 +1049,7 @@ module Tests =
         match s with
         | Sequenced -> "Doesn't run the tests in parallel."
         | Parallel -> "Runs all tests in parallel (default)."
+        | Parallel_Workers _ -> "Number of parallel workers (defaults to the number of logical processors)"
         | Fail_On_Focused_Tests -> "This will make the test runner fail if focused tests exist."
         | Debug -> "Extra verbose printing. Useful to combine with --sequenced."
         | Filter _ -> "Filters the list of tests by a hierarchy that's slash (/) separated."
@@ -1036,6 +1097,7 @@ module Tests =
         function
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
         | Parallel -> fun o -> { o with parallel = true }
+        | Parallel_Workers n -> fun o -> { o with parallelWorkers = n }
         | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
         | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
         | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
@@ -1069,12 +1131,11 @@ module Tests =
   /// Runs tests with the supplied options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTests config (tests:Test) =
-    let run = if config.parallel then runParallel else run
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity) :> Logger }
     if not config.failOnFocusedTests || passesFocusTestCheck tests then
-      run config.locate config.printer tests
+      run config tests
     else
       1
 

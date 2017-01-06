@@ -43,16 +43,18 @@ module TestHelpers =
   open Expecto
   open Expecto.Impl
 
-  let evalSilent = eval (fun _ -> SourceLocation.empty) TestPrinters.silent true List.map
+  let evalSilent =
+    eval {Tests.defaultConfig with printer=TestPrinters.silent}
+         (fun m l -> List.map (m>>Async.RunSynchronously) l)
 
-  let inline assertTestFails test =
-    let test = TestCase test
+  let inline assertTestFails (test,focusState) =
+    let test = TestCase (Sync test,focusState)
     match evalSilent test with
     | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
     | x -> failtestf "Should have failed, but was %A" x
 
-  let inline assertTestFailsWithMsg (msg : string) test =
-    let test = TestCase test
+  let inline assertTestFailsWithMsg (msg : string) (test,focusState) =
+    let test = TestCase (Sync test,focusState)
     match evalSilent test with
     | [{ TestRunResult.result = TestResult.Failed x }] ->
       let trimmed = x.Trim('\n')
@@ -60,8 +62,8 @@ module TestHelpers =
     | x ->
       failtestf "Should have failed, but was %A" x
 
-  let inline assertTestFailsWithMsgContaining (msg : string) test =
-    let test = TestCase test
+  let inline assertTestFailsWithMsgContaining (msg : string) (test,focusState) =
+    let test = TestCase (Sync test,focusState)
     match evalSilent test with
     | [{ TestRunResult.result = TestResult.Failed x }] when x.Contains msg -> ()
     | [{ TestRunResult.result = TestResult.Failed x }] ->
