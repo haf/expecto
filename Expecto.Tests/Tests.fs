@@ -493,11 +493,7 @@ let expecto =
         All elements in `actual`:
         {2, 2, 4}
         All elements in `expected` ['item', 'number of expected occurrences']:
-        {1: 1, 2: 1, 4: 2}
-        Missing elements from `actual`:
-        '1' (0/1)\n\t'4' (1/2)
-        Extra elements in `actual`:
-        '2' (2/1)"
+        {1: 1, 2: 1, 4: 2}\n\tMissing elements from `actual`:\n\t'1' (0/1)\n\t'4' (1/2)\n\tExtra elements in `actual`:\n\t'2' (2/1)"
               format
           assertTestFailsWithMsg msg (test, Normal)
 
@@ -514,9 +510,7 @@ let expecto =
         All elements in `actual`:
         {2, 2}
         All elements in `expected` ['item', 'number of expected occurrences']:
-        {2: 2, 4: 1}
-        Missing elements from `actual`:
-        '4' (0/1)"
+        {2: 2, 4: 1}\n\tMissing elements from `actual`:\n\t'4' (0/1)"
               format
           assertTestFailsWithMsg msg (test, Normal)
 
@@ -533,9 +527,7 @@ let expecto =
         All elements in `actual`:
         {2, 2, 4}
         All elements in `expected` ['item', 'number of expected occurrences']:
-        {2: 1, 4: 1}
-        Extra elements in `actual`:
-        '2' (2/1)"
+        {2: 1, 4: 1}\n\tExtra elements in `actual`:\n\t'2' (2/1)"
               format
           assertTestFailsWithMsg msg (test, Normal)
       ]
