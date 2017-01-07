@@ -47,6 +47,11 @@ module TestHelpers =
     eval {Tests.defaultConfig with printer=TestPrinters.silent}
          (fun m l -> List.map (m>>Async.RunSynchronously) l)
 
+  let inline assetTestFails' test =
+    match evalSilent test with
+    | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
+    | x -> failtestf "Should have failed, but was %A" x
+
   let inline assertTestFails (test,focusState) =
     let test = TestCase (Sync test,focusState)
     match evalSilent test with

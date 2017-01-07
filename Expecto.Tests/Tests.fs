@@ -623,6 +623,29 @@ let popcountTest =
   ]
 
 [<Tests>]
+let async =
+  testList "async" [
+
+    testCaseAsync "simple" <| async {
+      Expect.equal 1 1 "1=1"
+    }
+
+    testCaseAsync "let" <| async {
+      let! n = async { return 1 }
+      Expect.equal 1 n "1=n"
+    }
+
+    testCase "can fail" <| fun _ ->
+      let test =
+        testCaseAsync "let" <| async {
+          let! n = async { return 2 }
+          Expect.equal 1 n "1=n"
+        }
+      assetTestFails' test
+
+  ]
+
+[<Tests>]
 let performance =
   testSequenced <| testList "performance" [
 

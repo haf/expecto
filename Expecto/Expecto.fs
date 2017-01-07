@@ -403,8 +403,7 @@ module Impl =
   let createSummaryMessage (summary: TestResultSummary) =
     let handleLineBreaks elements =
         elements
-        |> List.map (fun n -> n.name)
-        |> List.map (fun x -> "\n\t" + x)
+        |> List.map (fun n -> "\n\t" + n.name)
         |> String.concat ""
 
     let passed = summary.passed |> handleLineBreaks
@@ -572,14 +571,12 @@ module Impl =
           }
 
     static member Summary =
-      let defaultPrinter = TestPrinters.Default
-      { defaultPrinter with
+      { TestPrinters.Default with
           summary = fun summary ->
-            defaultPrinter.summary summary
+            TestPrinters.Default.summary summary
             logSummary summary }
 
     static member SummaryWithLocation =
-      let defaultPrinter = TestPrinters.Default
       { TestPrinters.Default with
           summary = fun summary ->
             TestPrinters.Default.summary summary
@@ -750,22 +747,20 @@ module Impl =
         |> List.partition fst
         |> fun (s,p) -> List.map snd s, List.map snd p
 
-      async {
-        let! parallelResults = Async.parallelLimit config.parallelWorkers parallel
+      let parallelResults =
+        Async.parallelLimit config.parallelWorkers parallel
+        |> Async.RunSynchronously
 
-        if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
-          do! config.printer.info "Starting sequenced tests..."
+      if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
+        config.printer.info "Starting sequenced tests..."
+        |> Async.RunSynchronously
 
-        let sequencedResults =
-          List.map Async.RunSynchronously sequenced
+      let sequencedResults =
+        List.map Async.RunSynchronously sequenced
 
-        let results =
-          List.append sequencedResults parallelResults
-          |> List.sortBy fst
-          |> List.map snd
-
-        return results
-      } |> Async.RunSynchronously
+      List.append sequencedResults parallelResults
+      |> List.sortBy fst
+      |> List.map snd
 
     eval config pmap tests
 
