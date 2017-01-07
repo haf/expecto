@@ -516,9 +516,7 @@ let expecto =
         All elements in `expected` ['item', 'number of expected occurrences']:
         {2: 2, 4: 1}
         Missing elements from `actual`:
-        '4' (0/1)
-        Extra elements in `actual`:
-        "
+        '4' (0/1)"
               format
           assertTestFailsWithMsg msg (test, Normal)
 
@@ -536,11 +534,9 @@ let expecto =
         {2, 2, 4}
         All elements in `expected` ['item', 'number of expected occurrences']:
         {2: 1, 4: 1}
-        Missing elements from `actual`:
-        %s
         Extra elements in `actual`:
         '2' (2/1)"
-              format ""
+              format
           assertTestFailsWithMsg msg (test, Normal)
       ]
 

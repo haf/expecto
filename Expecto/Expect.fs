@@ -290,17 +290,22 @@ let distribution (actual : _ seq)
     expected
     |> Map.toList
     |> List.map (fun element -> sprintf "%A: %d" (fst element) (snd element))
+
+  let missingElementsInfo, extraElementsInfo = 
+    let incorrectElementsInfo elements is direction =
+      match List.isEmpty elements with
+      | true -> ""
+      | _ -> sprintf "\n\t%s elements %s `actual`:\n\t%s" is direction (formatResult elements)
+    incorrectElementsInfo missing "Missing" "from",
+    incorrectElementsInfo extra "Extra" "in"
+
   sprintf "%s.
     Sequence `actual` does not contain every `expected` elements.
         All elements in `actual`:
         %s
         All elements in `expected` ['item', 'number of expected occurrences']:
-        %s
-        Missing elements from `actual`:
-        %s
-        Extra elements in `actual`:
-        %s"
-              format (formatInput actual) (formatInput formatedExpected) (formatResult missing) (formatResult extra)
+        %s%s%s"
+              format (formatInput actual) (formatInput formatedExpected) missingElementsInfo extraElementsInfo
   |> Tests.failtest
 
 /// Expects the `actual` sequence to equal the `expected` one.
