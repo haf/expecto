@@ -117,37 +117,30 @@ NUGET
     Microsoft.NETCore.DotNetHostResolver (1.1) - framework: net10, net11, net20, net30, net35, net40, net40-full
       Microsoft.NETCore.DotNetHost (>= 1.1)
     Microsoft.NETCore.Jit (1.1) - framework: net10, net11, net20, net30, net35, net40, net40-full
-    Microsoft.NETCore.Platforms (1.1) - framework: >= net46, >= netstandard16
     Microsoft.NETCore.Runtime.CoreCLR (1.1) - framework: net10, net11, net20, net30, net35, net40, net40-full
       Microsoft.NETCore.Jit (>= 1.1)
       Microsoft.NETCore.Windows.ApiSets (>= 1.0.1)
-    Microsoft.NETCore.Targets (1.1) - framework: >= net46, >= netstandard16
     Microsoft.NETCore.Windows.ApiSets (1.0.1) - framework: net10, net11, net20, net30, net35, net40, net40-full
     Microsoft.VisualBasic (10.1) - framework: net10, net11, net20, net30, net35, net40, net40-full
+    Mono.Cecil (0.9.6.4)
     NETStandard.Library (1.6.1) - framework: net10, net11, net20, net30, net35, net40, net40-full
     NuGet.CommandLine (3.5)
     System.AppContext (4.3) - framework: >= net46
     System.Buffers (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
-    System.Collections (4.3) - framework: >= net46, >= netstandard16
+    System.Collections (4.3) - framework: >= net46
     System.Collections.Concurrent (4.3) - framework: >= net46
     System.ComponentModel (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.ComponentModel.Annotations (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Console (4.3) - framework: >= net46
-    System.Diagnostics.Debug (4.3) - framework: >= net46, >= netstandard16
+    System.Diagnostics.Debug (4.3) - framework: >= net46
     System.Diagnostics.DiagnosticSource (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Diagnostics.FileVersionInfo (4.3) - framework: >= net46
     System.Diagnostics.Process (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Diagnostics.StackTrace (4.3) - framework: >= net46
-    System.Diagnostics.Tools (4.3) - framework: >= net46, >= netstandard16
+    System.Diagnostics.Tools (4.3) - framework: >= net46
     System.Dynamic.Runtime (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full, >= net46
-    System.Globalization (4.3) - framework: >= net46, >= netstandard16
+    System.Globalization (4.3) - framework: >= net46
     System.Globalization.Extensions (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
-    System.IO (4.3) - framework: >= net46, >= netstandard16
-      Microsoft.NETCore.Platforms (>= 1.1) - framework: dnxcore50, netstandard10, netstandard13, >= netstandard15
-      Microsoft.NETCore.Targets (>= 1.1) - framework: dnxcore50, netstandard10, netstandard13, >= netstandard15
-      System.Runtime (>= 4.3) - framework: dnxcore50, netstandard10, netstandard13, >= netstandard15
-      System.Text.Encoding (>= 4.3) - framework: dnxcore50, netstandard10, netstandard13, >= netstandard15
-      System.Threading.Tasks (>= 4.3) - framework: dnxcore50, netstandard10, netstandard13, >= netstandard15
     System.IO.FileSystem (4.3) - framework: >= net46
       System.IO.FileSystem.Primitives (>= 4.3) - framework: >= net46, >= netstandard13
     System.IO.FileSystem.Primitives (4.3) - framework: >= net46
@@ -163,14 +156,14 @@ NUGET
     System.Net.Security (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Net.WebHeaderCollection (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Numerics.Vectors (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
-    System.Reflection (4.3) - framework: >= net46, >= netstandard16
+    System.Reflection (4.3) - framework: >= net46
     System.Reflection.DispatchProxy (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Reflection.Primitives (4.3) - framework: >= net46
     System.Reflection.TypeExtensions (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Resources.Reader (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
-    System.Resources.ResourceManager (4.3) - framework: >= net46, >= netstandard16
-    System.Runtime (4.3) - framework: >= net46, >= netstandard16
-    System.Runtime.Extensions (4.3) - framework: >= net46, >= netstandard16
+    System.Resources.ResourceManager (4.3) - framework: >= net46
+    System.Runtime (4.3) - framework: >= net46
+    System.Runtime.Extensions (4.3) - framework: >= net46
     System.Runtime.Handles (4.3) - framework: >= net46
     System.Runtime.InteropServices (4.3) - framework: >= net46
       System.Runtime (>= 4.3) - framework: net462, >= net463, dnxcore50, netstandard11, netstandard12, netstandard13, >= netstandard15
@@ -181,30 +174,18 @@ NUGET
     System.Security.Cryptography.Encoding (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full, >= net46
     System.Security.Cryptography.Primitives (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Security.Cryptography.X509Certificates (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full, >= net46
-    System.Text.Encoding (4.3) - framework: >= net46, >= netstandard16
+    System.Text.Encoding (4.3) - framework: >= net46
     System.Text.Encoding.CodePages (4.3) - framework: >= net46
     System.Text.Encoding.Extensions (4.3) - framework: >= net46
-    System.Threading (4.3) - framework: >= net46, >= netstandard16
-    System.Threading.Tasks (4.3) - framework: >= net45, >= netstandard16
+    System.Threading (4.3) - framework: >= net46
+    System.Threading.Tasks (4.3) - framework: >= net45
     System.Threading.Tasks.Dataflow (4.7) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Threading.Tasks.Extensions (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
     System.Threading.Tasks.Parallel (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full, >= net46
     System.Threading.Thread (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full, >= net46
     System.Threading.ThreadPool (4.3) - framework: net10, net11, net20, net30, net35, net40, net40-full
-    System.Xml.ReaderWriter (4.3) - framework: >= net46, >= netstandard16
-    System.Xml.XDocument (4.3) - framework: >= net46, >= netstandard16
-      System.Collections (>= 4.3) - framework: dnxcore50, >= netstandard13
-      System.Diagnostics.Debug (>= 4.3) - framework: dnxcore50, >= netstandard13
-      System.Diagnostics.Tools (>= 4.3) - framework: dnxcore50, >= netstandard13
-      System.Globalization (>= 4.3) - framework: dnxcore50, >= netstandard13
-      System.IO (>= 4.3) - framework: dnxcore50, netstandard10, >= netstandard13
-      System.Reflection (>= 4.3) - framework: dnxcore50, >= netstandard13
-      System.Resources.ResourceManager (>= 4.3) - framework: dnxcore50, >= netstandard13
-      System.Runtime (>= 4.3) - framework: dnxcore50, netstandard10, >= netstandard13
-      System.Runtime.Extensions (>= 4.3) - framework: dnxcore50, >= netstandard13
-      System.Text.Encoding (>= 4.3) - framework: dnxcore50, >= netstandard13
-      System.Threading (>= 4.3) - framework: dnxcore50, >= netstandard13
-      System.Xml.ReaderWriter (>= 4.3) - framework: dnxcore50, netstandard10, >= netstandard13
+    System.Xml.ReaderWriter (4.3) - framework: >= net46
+    System.Xml.XDocument (4.3) - framework: >= net46
     System.Xml.XmlDocument (4.3) - framework: >= net46
     System.Xml.XPath (4.3) - framework: >= net46
     System.Xml.XPath.XDocument (4.3) - framework: >= net46

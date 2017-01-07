@@ -7,6 +7,12 @@ open System.Linq
 open System.Runtime.CompilerServices
 open System.Reflection
 
+type SourceLocation =
+  { sourcePath: string
+    lineNumber: int }
+with static member empty = {sourcePath = ""; lineNumber = 0}
+
+
 /// Actual test function
 type TestCode = unit -> unit
 
@@ -69,6 +75,10 @@ module Helpers =
   let fst3 (a,_,_) = a
   let snd3 (_,b,_) = b
   let trd3 (_,_,c) = c
+
+  let fst4 (a,_,_,_) = a
+  let snd4 (_,b,_,_) = b
+  let trd4 (_,_,c,_) = c
 
   let inline ignore2 _ = ignore
   let inline ignore3 _ = ignore2
@@ -172,7 +182,7 @@ module Test =
   let rec wrap f =
     function
     | TestCase (test, state) -> TestCase ((f test), state)
-    | TestList (testList, state) -> TestList (List.map (wrap f) testList, state)
+    | TestList (testList, state) -> TestList (testList |> List.map (wrap f), state)
     | TestLabel (label, test, state) -> TestLabel (label, wrap f test, state)
     | Sequenced test -> Sequenced (wrap f test)
 
@@ -239,6 +249,8 @@ module Impl =
   open Expecto.Logging
   open Expecto.Logging.Message
   open Helpers
+  open Mono.Cecil
+  open Mono.Cecil.Rocks
 
   let logger = Log.create "Expecto"
 
@@ -278,10 +290,10 @@ module Impl =
 
   [<StructuredFormatDisplay("{description}")>]
   type TestResultSummary =
-    { passed   : string list
-      ignored  : string list
-      failed   : string list
-      errored  : string list
+    { passed   : TestRunResult list
+      ignored  : TestRunResult list
+      failed   : TestRunResult list
+      errored  : TestRunResult list
       duration : TimeSpan }
 
       member x.total =
@@ -303,9 +315,10 @@ module Impl =
       static member errorCode (c: TestResultSummary) =
         (if c.failed.Length > 0 then 1 else 0) ||| (if c.errored.Length > 0 then 2 else 0)
 
-  [<StructuredFormatDisplay("{description}")>]
-  type TestRunResult =
+
+  and [<StructuredFormatDisplay("{description}")>] TestRunResult =
    { name     : string
+     location : SourceLocation
      result   : TestResult
      duration : TimeSpan }
     override x.ToString() =
@@ -325,7 +338,7 @@ module Impl =
 
     let get result =
       match counts.TryGetValue (TestResult.tag result) with
-      | true, v -> v |> Seq.map (fun r -> r.name) |> Seq.toList
+      | true, v -> v |> Seq.toList
       | _ -> List.empty
 
     { passed   = get TestResult.Passed
@@ -348,6 +361,7 @@ module Impl =
   let createSummaryMessage (summary: TestResultSummary) =
     let handleLineBreaks elements =
         elements
+        |> List.map (fun n -> n.name)
         |> List.map (fun x -> "\n\t" + x)
         |> String.concat ""
 
@@ -366,7 +380,7 @@ module Impl =
         |> List.max
 
     let align (d:int) offset = d.ToString().PadLeft(offset + digits)
-    
+
     eventX "EXPECTO?! Summary...\nPassed: {passedCount}{passed}\nIgnored: {ignoredCount}{ignored}\nFailed: {failedCount}{failed}\nErrored: {erroredCount}{errored}"
     >> setField "passed" passed
     >> setField "passedCount" (align passedCount 1)
@@ -384,6 +398,40 @@ module Impl =
   let logSummary (log: Log) (summary: TestResultSummary) =
     createSummaryMessage summary
     |> log.write Info
+
+  let logSummaryWithLocation (log: Log) (summary: TestResultSummary) =
+    let handleLineBreaks elements =
+        let format n = sprintf "%s [%s:%d]" n.name n.location.sourcePath n.location.lineNumber
+
+        let text = elements |> Seq.map format |> String.concat "\n\t"
+        if text = "" then text else text + "\n"
+
+    let passed = summary.passed |> handleLineBreaks
+    let passedCount = summary.passed |> List.length
+    let ignored = summary.ignored |> handleLineBreaks
+    let ignoredCount = summary.ignored |> List.length
+    let failed = summary.failed |> handleLineBreaks
+    let failedCount = summary.failed |> List.length
+    let errored = summary.errored |> handleLineBreaks
+    let erroredCount = summary.errored |> List.length
+
+    let digits =
+        [passedCount; ignoredCount; failedCount; erroredCount ]
+        |> List.map (fun x -> x.ToString().Length)
+        |> List.max
+
+    let align (d:int) offset = d.ToString().PadLeft(offset + digits)
+
+    log.write Info (
+      eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}Ignored: {ignoredCount}\n\t{ignored}Failed: {failedCount}\n\t{failed}Errored: {erroredCount}\n\t{errored}"
+      >> setField "passed" passed
+      >> setField "passedCount" (align passedCount 1)
+      >> setField "ignored" ignored
+      >> setField "ignoredCount" (align ignoredCount 0)
+      >> setField "failed" failed
+      >> setField "failedCount" (align failedCount 1)
+      >> setField "errored" errored
+      >> setField "erroredCount" (align erroredCount 0))
 
   /// Hooks to print report through test run
   type TestPrinters =
@@ -488,6 +536,12 @@ module Impl =
           summary = fun summary ->
             defaultPrinter.summary summary
             logSummary defaultPrinter.log summary }
+    static member SummaryWithLocation =
+      let defaultPrinter = TestPrinters.Default
+      { TestPrinters.Default with
+          summary = fun summary ->
+            TestPrinters.Default.summary summary
+            logSummaryWithLocation defaultPrinter.log summary }
 
     [<Obsolete "Subject to change without bump in Major version">]
     member m.MakeAsync() = m.log.isAsync := true
@@ -515,7 +569,7 @@ module Impl =
             | a -> UnFocused a
           let existsFocusedTests = tests |> List.exists (fun t -> FocusState.isFocused t.state)
           let wrappingMethod = if existsFocusedTests then applyFocusedWrapping else Enabled
-          tests |> List.map (fun t -> {name=t.name; test=t.test; state=wrappingMethod t.state; sequenced=t.sequenced})
+          tests |> List.map (fun t -> {name=t.name; test=t.test; state=wrappingMethod t.state; sequenced=t.sequenced })
 
     and WrappedFlatTest =
       { name      : string
@@ -542,7 +596,7 @@ module Impl =
       else
         None
 
-    fun (printers: TestPrinters) map ->
+    fun (locate : TestCode -> SourceLocation) (printers: TestPrinters) map ->
 
       let beforeEach test =
         printers.beforeEach test.name
@@ -553,7 +607,9 @@ module Impl =
         | Some ignoredMessage ->
           { name     = test.name
             result   = Ignored ignoredMessage
+            location = locate test.test
             duration = TimeSpan.Zero }
+
         | _ ->
           next test
 
@@ -563,6 +619,7 @@ module Impl =
           test.test ()
           w.Stop()
           { name     = test.name
+            location = locate test.test
             result   = Passed
             duration = w.Elapsed }
         with e ->
@@ -576,14 +633,17 @@ module Impl =
                 |> Enumerable.FirstOrDefault
               sprintf "\n%s\n%s\n" e.Message firstLine
             { name     = test.name
+              location = locate test.test
               result   = Failed msg
               duration = w.Elapsed }
           | ExceptionInList ignoreExceptionTypes.Value ->
             { name     = test.name
+              location = locate test.test
               result   = Ignored e.Message
               duration = w.Elapsed }
           | _ ->
             { name     = test.name
+              location = locate test.test
               result   = TestResult.Error e
               duration = w.Elapsed }
 
@@ -607,17 +667,17 @@ module Impl =
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
-  let eval (printer: TestPrinters) map tests =
+  let eval (locate : TestCode -> SourceLocation) (printer: TestPrinters) map tests =
     Test.toTestCodeList tests
-    |> evalTestList printer map
+    |> evalTestList locate printer map
 
   /// Evaluates tests sequentially
-  let evalSeq (printer: TestPrinters) =
+  let evalSeq locate (printer: TestPrinters) =
     printer.MakeSync()
-    eval printer List.map
+    eval locate printer List.map
 
   /// Evaluates tests in parallel
-  let evalPar (printer: TestPrinters) =
+  let evalPar locate (printer: TestPrinters) =
 
     let pmap fn ts =
       let sequenced, parallel =
@@ -648,14 +708,14 @@ module Impl =
       |> List.sortBy fst
       |> List.map snd
 
-    eval printer pmap
+    eval locate printer pmap
 
   /// Runs tests, returns error code
-  let runEval printer eval (tests: Test) =
+  let runEval locate printer eval (tests: Test) =
     printer.beforeRun tests
 
     let w = System.Diagnostics.Stopwatch.StartNew()
-    let results = eval printer tests
+    let results = eval locate printer tests
     w.Stop()
     let summary = { sumTestResults results with duration = w.Elapsed }
     printer.summary summary
@@ -700,6 +760,83 @@ module Impl =
       |> Seq.choose testFromMember
       |> Seq.toList
       |> listToTestListOption
+
+  // If the test function we've found doesn't seem to be in the test assembly, it's
+  // possible we're looking at an FsCheck 'testProperty' style check. In that case,
+  // the function of interest (i.e., the one in the test assembly, and for which we
+  // might be able to find corresponding source code) is referred to in a field
+  // of the function object.
+  let isFsharpFuncType t =
+    let baseType =
+      let rec findBase (t:Type) =
+        if t.BaseType = null || t.BaseType = typeof<obj> then
+          t
+        else
+          findBase t.BaseType
+      findBase t
+    baseType.IsGenericType && baseType.GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
+
+  let getFuncTypeToUse (testFunc:TestCode) (asm:Assembly) =
+    let t = testFunc.GetType()
+    if t.Assembly.FullName = asm.FullName then
+      t
+    else
+      let nestedFunc =
+        t.GetFields()
+        |> Seq.tryFind (fun f -> isFsharpFuncType f.FieldType)
+      match nestedFunc with
+      | Some f -> f.GetValue(testFunc).GetType()
+      | None -> t
+
+  let getMethodName asm testFunc =
+    let t = getFuncTypeToUse testFunc asm
+    let m = t.GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
+    (t.FullName, m.Name)
+
+  //Ported from: https://github.com/adamchester/expecto-adapter/blob/master/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
+  let getSourceLocation (asm:Assembly) className methodName =
+    let lineNumberIndicatingHiddenLine = 0xfeefee
+    let getEcma335TypeName (clrTypeName:string) = clrTypeName.Replace("+", "/")
+
+    let types =
+      let readerParams = new ReaderParameters( ReadSymbols = true )
+      let moduleDefinition = ModuleDefinition.ReadModule(asm.Location, readerParams)
+
+      seq { for t in moduleDefinition.GetTypes() -> (t.FullName, t) }
+      |> Map.ofSeq
+
+    let getMethods typeName =
+      match types.TryFind (getEcma335TypeName typeName) with
+      | Some t -> Some (t.GetMethods())
+      | _ -> None
+
+    let optionFromObj = function
+      | null -> None
+      | x -> Some x
+
+    let getFirstOrDefaultSequencePoint (m:MethodDefinition) =
+      m.Body.Instructions
+      |> Seq.tryFind (fun i -> (i.SequencePoint <> null && i.SequencePoint.StartLine <> lineNumberIndicatingHiddenLine))
+      |> Option.map (fun i -> i.SequencePoint)
+
+    match getMethods className with
+    | None -> SourceLocation.empty
+    | Some methods ->
+      let candidateSequencePoints =
+        methods
+        |> Seq.where (fun m -> m.Name = methodName)
+        |> Seq.choose getFirstOrDefaultSequencePoint
+        |> Seq.sortBy (fun sp -> sp.StartLine)
+        |> Seq.toList
+      match candidateSequencePoints with
+      | [] -> SourceLocation.empty
+      | xs -> {sourcePath = xs.Head.Document.Url ; lineNumber = xs.Head.StartLine}
+
+  //val apply : f:(TestCode * FocusState * SourceLocation -> TestCode * FocusState * SourceLocation) -> _arg1:Test -> Test
+  let getLocation (asm:Assembly) code =
+    let typeName, methodName = getMethodName asm code
+    getSourceLocation asm typeName methodName
+
 
   /// Scan filtered tests marked with TestsAttribute from an assembly
   let testFromAssemblyWithFilter typeFilter (a: Assembly) =
@@ -756,8 +893,7 @@ module Tests =
   /// Builds a list/group of tests that will be ignored by Expecto
   let inline ptestList name tests = TestLabel(name, TestList (tests, Pending), Pending)
 
-  /// Builds a test case that will be ignored by Expecto if exists focused
-  /// tests and none of the parents is focused
+  /// Builds a test case that will be ignored by Expecto if exists focused tests and none of the parents is focused
   let inline testCase name test = TestLabel(name, TestCase (test,Normal), Normal)
   /// Builds a test case that will make Expecto to ignore other unfocused tests
   let inline ftestCase name test = TestLabel(name, TestCase (test, Focused), Focused)
@@ -813,12 +949,12 @@ module Tests =
     TestCaseBuilder (name, Pending)
 
   /// Runs the passed tests
-  let run printer tests =
-    runEval printer evalSeq tests
+  let run locate printer tests =
+    runEval locate printer evalSeq tests
 
   /// Runs tests in parallel
-  let runParallel printer tests =
-    runEval printer evalPar tests
+  let runParallel locate printer tests =
+    runEval locate printer evalPar tests
 
   // Runner options
   type ExpectoConfig =
@@ -837,6 +973,9 @@ module Tests =
       printer : TestPrinters
       /// Verbosity level (default: Info)
       verbosity : LogLevel
+      /// Optional function used for finding source code location of test
+      /// Defaults to empty source code
+      locate : TestCode -> SourceLocation
     }
 
   /// The default configuration for Expecto.
@@ -845,7 +984,8 @@ module Tests =
       filter    = id
       failOnFocusedTests = false
       printer   = TestPrinters.Default
-      verbosity = LogLevel.Info }
+      verbosity = LogLevel.Info
+      locate = fun _ -> SourceLocation.empty }
 
   type CLIArguments =
     | Sequenced
@@ -859,6 +999,7 @@ module Tests =
     | List_Tests
     | Summary
     | Version
+    | Summary_Location
 
     interface IArgParserTemplate with
       member s.Usage =
@@ -874,6 +1015,7 @@ module Tests =
         | List_Tests -> "Doesn't run tests, but prints out list of tests instead."
         | Summary -> "Prints out summary after all tests are finished."
         | Version -> "Prints out version information."
+        | Summary_Location -> "Prints out summary after all tests are finished including their source code location"
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
@@ -920,6 +1062,7 @@ module Tests =
         | List_Tests -> id
         | Summary -> fun o -> {o with printer = TestPrinters.Summary}
         | Version -> fun o -> printExpectoVersion(); o
+        | Summary_Location -> fun o -> {o with printer = TestPrinters.SummaryWithLocation}
 
       fun (args: string[]) ->
         let parsed =
@@ -937,6 +1080,7 @@ module Tests =
     |> Test.toTestCodeList
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
+
   /// Runs tests with the supplied options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTests config (tests:Test) =
@@ -945,7 +1089,7 @@ module Tests =
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity) :> Logger }
     if not config.failOnFocusedTests || passesFocusTestCheck config tests then
-      run config.printer tests
+      run config.locate config.printer tests
     else
       1
 
@@ -963,6 +1107,7 @@ module Tests =
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
+    let config = { config with locate = getLocation (Assembly.GetEntryAssembly()) }
     testFromThisAssembly ()
     |> Option.orDefault (TestList ([], Normal))
     |> runTestsWithArgs config args

@@ -95,12 +95,12 @@ let tests =
 
     testList "sumTestResults" [
       let sumTestResultsTests =
-        [ { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 2. }
-          { TestRunResult.name = ""; result = TestResult.Error (ArgumentException()); duration = TimeSpan.FromMinutes 3. }
-          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 4. }
-          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 5. }
-          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 6. }
-          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 7. }
+        [ { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 2.; location = SourceLocation.empty }
+          { TestRunResult.name = ""; result = TestResult.Error (ArgumentException()); duration = TimeSpan.FromMinutes 3.; location =SourceLocation.empty }
+          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 4.; location = SourceLocation.empty }
+          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 5.; location = SourceLocation.empty }
+          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 6.; location = SourceLocation.empty }
+          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 7.; location = SourceLocation.empty }
         ]
       let r = lazy sumTestResults sumTestResultsTests
       yield testCase "passed" <| fun _ ->
@@ -133,7 +133,13 @@ let tests =
           fun a b r -> r.duration = a.duration + b.duration
       ]
       testCase "ToString" <| fun _ ->
-        let c1 = { passed = [""]; ignored = [""; ""; ""; ""; ""]; failed = [""; ""]; errored = [""; ""; ""]; duration = TimeSpan.FromSeconds 20. }
+        let tr = {
+          name = ""
+          location =SourceLocation.empty
+          result = Passed
+          duration = TimeSpan.MaxValue
+        }
+        let c1 = { passed = [tr]; ignored = [tr; tr; tr; tr; tr]; failed = [tr; tr]; errored = [tr; tr; tr]; duration = TimeSpan.FromSeconds 20. }
         c1.ToString() ==? "6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n"
     ]
 
@@ -531,10 +537,10 @@ let expecto =
         All elements in `expected` ['item', 'number of expected occurrences']:
         {2: 1, 4: 1}
         Missing elements from `actual`:
-        
+        %s
         Extra elements in `actual`:
         '2' (2/1)"
-              format
+              format ""
           assertTestFailsWithMsg msg (test, Normal)
       ]
 

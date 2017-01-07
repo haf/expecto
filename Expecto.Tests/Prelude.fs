@@ -43,7 +43,7 @@ module TestHelpers =
   open Expecto
   open Expecto.Impl
 
-  let evalSilent = eval TestPrinters.silent List.map
+  let evalSilent = eval (fun _ -> SourceLocation.empty) TestPrinters.silent List.map
 
   let inline assertTestFails test =
     let test = TestCase test
@@ -76,13 +76,27 @@ module TestHelpers =
           |> Gen.suchThat (fun t -> t.Days = 0)
       )
 
+  let genTestRunResult =
+    lazy (
+      gen {
+        let! name = Arb.generate<string>
+        let! duration = genLimitedTimeSpan.Value
+
+        return
+          { TestRunResult.name = name
+            location = SourceLocation.empty
+            result = Passed
+            duration = duration }
+      }
+    )
+
   let genTestResultCounts =
       lazy (
           gen {
-              let! passed = Arb.generate<string list>
-              let! ignored = Arb.generate<string list>
-              let! failed = Arb.generate<string list>
-              let! errored = Arb.generate<string list>
+              let! passed =  genTestRunResult.Value |> Gen.listOf
+              let! ignored = genTestRunResult.Value |> Gen.listOf
+              let! failed = genTestRunResult.Value |> Gen.listOf
+              let! errored = genTestRunResult.Value |> Gen.listOf
               let! duration = genLimitedTimeSpan.Value
               return
                 { TestResultSummary.passed = passed
