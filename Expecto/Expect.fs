@@ -293,9 +293,8 @@ let distribution (actual : _ seq)
 
   let missingElementsInfo, extraElementsInfo = 
     let incorrectElementsInfo elements is direction =
-      match List.isEmpty elements with
-      | true -> ""
-      | _ -> sprintf "\n\t%s elements %s `actual`:\n\t%s" is direction (formatResult elements)
+      if List.isEmpty elements then ""
+      else sprintf "\n\t%s elements %s `actual`:\n\t%s" is direction (formatResult elements)
     incorrectElementsInfo missing "Missing" "from",
     incorrectElementsInfo extra "Extra" "in"
 
