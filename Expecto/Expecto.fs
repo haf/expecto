@@ -1111,3 +1111,22 @@ module Tests =
     testFromThisAssembly ()
     |> Option.orDefault (TestList ([], Normal))
     |> runTestsWithArgs config args
+
+
+type Accuracy =
+    {
+        absolute: float
+        relative: float
+    }
+
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
+module Accuracy =
+  let inline areCloseLhs a b = abs(a-b)
+  let inline areCloseRhs m a b = m.absolute + m.relative * (max (abs a) (abs b))
+  let inline areClose m a b = areCloseLhs a b <= areCloseRhs m a b
+
+[<AutoOpen>]
+module AccuracyAuto =
+  let accTo3figs = {absolute=1e-2; relative=1e-2}
+  let accTo6figs = {absolute=1e-5; relative=1e-5}
+  let accTo9figs = {absolute=1e-8; relative=1e-8}

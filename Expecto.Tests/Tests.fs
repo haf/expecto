@@ -683,3 +683,19 @@ let performance =
                             "popcount 16 faster than 32 fails"
       assertTestFailsWithMsgContaining "slower" (test, Normal)
   ]
+
+[<Tests>]
+let close =
+  testList "floatClose" [
+
+    testCase "small" <| fun _ ->
+      Expect.floatClose accTo3figs 1.004 1.000 "small to 3 figs"
+
+    testCase "large" <| fun _ ->
+      Expect.floatClose accTo3figs 1004.0 1000.0 "large to 3 figs"
+
+    testCase "can fail" <| fun _ ->
+      let test() =
+        Expect.floatClose accTo3figs 104.0 100.0 "can fail to 3 figs"
+      assertTestFails (test, Normal)
+  ]

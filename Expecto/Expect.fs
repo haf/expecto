@@ -7,7 +7,6 @@ module Expecto.Expect
 open System
 open Expecto.Logging
 open Expecto.Logging.Message
-type HSet<'a> = System.Collections.Generic.HashSet<'a>
 
 /// Expects f to throw an exception.
 let throws f format =
@@ -124,6 +123,18 @@ let floatEqual actual expected epsilon format =
     Tests.failtestf "%s. Actual value was %f but was expected to be %f within %f epsilon."
                     format actual expected epsilon
 
+/// Expects `actual` and `expected` (that are both floats) to be within a
+/// given `accuracy`.
+let floatClose accuracy actual expected format =
+  if Accuracy.areClose accuracy actual expected then
+    ()
+  else
+    Tests.failtestf
+      "%s. Difference was %g but was expected to be less than %g to meet accuracy (absolute=%g relative=%g)"
+      format (Accuracy.areCloseLhs actual expected)
+             (Accuracy.areCloseRhs accuracy actual expected)
+             accuracy.absolute accuracy.relative
+
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) format =
   match box actual, box expected with
@@ -235,24 +246,24 @@ let containsAll (actual : _ seq)
   |> Tests.failtest
 
 let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: Map<_,uint32>) (isExcept: bool) =
-  let getMapValue (map: Map<_, uint32>) (element) = 
+  let getMapValue (map: Map<_, uint32>) (element) =
     map |> Map.find element
-  let getResult found expected = 
+  let getResult found expected =
     match isExcept with
     | true -> found, expected
     | _ -> expected, found
-  
+
   let noOfFoundElements element value =
     let foundElements = (getMapValue elementsToContain element)
     match value > foundElements with
     | true -> getResult foundElements value
     | _ -> 0ul,0ul
-  
-  let elementsWhichDiffer element value = 
+
+  let elementsWhichDiffer element value =
     match elementsToContain |> Map.containsKey(element) with
     | true -> noOfFoundElements element value
     | _ -> getResult 0ul value
-  
+
   let printResult found =
     sprintf "(%d/%d)" (fst found) (snd found)
 
@@ -266,7 +277,7 @@ let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: M
 /// first element in every tuple from `expected` map means item which should be
 /// presented in `actual` sequence, the second element means an expected number of occurrences
 /// of this item in sequence.
-/// Function is not taking into account an order of elements. 
+/// Function is not taking into account an order of elements.
 /// Calling this function will enumerate both sequences; they have to be finite.
 let distribution (actual : _ seq)
                 (expected : Map<_,uint32>)
@@ -281,7 +292,7 @@ let distribution (actual : _ seq)
   let extra, missing =
     except groupedActual expected false,
     except expected groupedActual true
-  
+
   let isCorrect = List.isEmpty missing && List.isEmpty extra
   if isCorrect then () else
   let formatInput(data) = formatSet ", " "{%s}" "" data
