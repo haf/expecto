@@ -688,14 +688,32 @@ let performance =
 let close =
   testList "floatClose" [
 
+    testCase "zero" <| fun _ ->
+      Expect.floatClose accVeryHigh 0.0 0.0 "zero"
+
     testCase "small" <| fun _ ->
-      Expect.floatClose accTo3figs 1.004 1.000 "small to 3 figs"
+      Expect.floatClose accLow 0.000001 0.0 "small"
 
     testCase "large" <| fun _ ->
-      Expect.floatClose accTo3figs 1004.0 1000.0 "large to 3 figs"
+      Expect.floatClose accLow 10004.0 10000.0 "large"
+
+    testCase "user" <| fun _ ->
+      Expect.floatClose {absolute=0.0; relative=1e-3}
+        10004.0 10000.0 "user"
 
     testCase "can fail" <| fun _ ->
       let test() =
-        Expect.floatClose accTo3figs 104.0 100.0 "can fail to 3 figs"
+        Expect.floatClose accLow 1004.0 1000.0 "can fail"
       assertTestFails (test, Normal)
+
+    testCase "nan fails" <| fun _ ->
+      let test() =
+        Expect.floatClose accLow nan 1.0 "nan fails"
+      assertTestFails (test, Normal)
+
+    testCase "inf fails" <| fun _ ->
+      let test() =
+        Expect.floatClose accLow infinity 1.0 "inf fails"
+      assertTestFails (test, Normal)
+
   ]

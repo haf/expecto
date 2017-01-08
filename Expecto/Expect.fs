@@ -110,11 +110,12 @@ let isGreaterThan a b format =
 let isGreaterThanOrEqual a b format =
   if a >= b then ()
   else
-    Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)"
+    Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)."
                     format a b
 
 /// Expects `actual` and `expected` (that are both floats) to equal within a
 /// given `epsilon`.
+[<Obsolete "Please use the more general Expect.floatClose">]
 let floatEqual actual expected epsilon format =
   let epsilon = defaultArg epsilon 0.001
   if expected <= actual + epsilon && expected >= actual - epsilon then
@@ -126,14 +127,16 @@ let floatEqual actual expected epsilon format =
 /// Expects `actual` and `expected` (that are both floats) to be within a
 /// given `accuracy`.
 let floatClose accuracy actual expected format =
-  if Accuracy.areClose accuracy actual expected then
-    ()
-  else
+  if Double.IsInfinity actual then
+    Tests.failtestf "%s. Expected actual to not be infinity, but it was." format
+  elif Double.IsInfinity expected then
+    Tests.failtestf "%s. Expected expected to not be infinity, but it was." format
+  elif Accuracy.areClose accuracy actual expected |> not then
     Tests.failtestf
-      "%s. Difference was %g but was expected to be less than %g to meet accuracy (absolute=%g relative=%g)"
-      format (Accuracy.areCloseLhs actual expected)
-             (Accuracy.areCloseRhs accuracy actual expected)
-             accuracy.absolute accuracy.relative
+      "%s. Expected difference to be less than %g for accuracy {absolute=%g; relative=%g}, but was %g."
+      format (Accuracy.areCloseRhs accuracy actual expected)
+      accuracy.absolute accuracy.relative
+      (Accuracy.areCloseLhs actual expected)
 
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) format =
@@ -302,7 +305,7 @@ let distribution (actual : _ seq)
     |> Map.toList
     |> List.map (fun element -> sprintf "%A: %d" (fst element) (snd element))
 
-  let missingElementsInfo, extraElementsInfo = 
+  let missingElementsInfo, extraElementsInfo =
     let incorrectElementsInfo elements is direction =
       if List.isEmpty elements then ""
       else sprintf "\n\t%s elements %s `actual`:\n\t%s" is direction (formatResult elements)

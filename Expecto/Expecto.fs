@@ -1114,19 +1114,20 @@ module Tests =
 
 
 type Accuracy =
-    {
-        absolute: float
-        relative: float
-    }
+  {
+    absolute: float
+    relative: float
+  }
 
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Accuracy =
   let inline areCloseLhs a b = abs(a-b)
-  let inline areCloseRhs m a b = m.absolute + m.relative * (max (abs a) (abs b))
+  let inline areCloseRhs m a b = m.absolute + m.relative * max (abs a) (abs b)
   let inline areClose m a b = areCloseLhs a b <= areCloseRhs m a b
 
 [<AutoOpen>]
 module AccuracyAuto =
-  let accTo3figs = {absolute=1e-2; relative=1e-2}
-  let accTo6figs = {absolute=1e-5; relative=1e-5}
-  let accTo9figs = {absolute=1e-8; relative=1e-8}
+  let accLow = {absolute=1e-6; relative=1e-3}
+  let accMedium = {absolute=1e-8; relative=1e-5}
+  let accHigh = {absolute=1e-10; relative=1e-7}
+  let accVeryHigh = {absolute=1e-12; relative=1e-9}
