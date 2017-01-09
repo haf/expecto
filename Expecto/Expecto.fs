@@ -1168,16 +1168,13 @@ type Accuracy =
     absolute: float
     relative: float
   }
+  static member low = {absolute=1e-6; relative=1e-3}
+  static member medium = {absolute=1e-8; relative=1e-5}
+  static member high = {absolute=1e-10; relative=1e-7}
+  static member veryHigh = {absolute=1e-12; relative=1e-9}
 
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Accuracy =
   let inline areCloseLhs a b = abs(a-b)
   let inline areCloseRhs m a b = m.absolute + m.relative * max (abs a) (abs b)
   let inline areClose m a b = areCloseLhs a b <= areCloseRhs m a b
-
-[<AutoOpen>]
-module AccuracyAuto =
-  let accLow = {absolute=1e-6; relative=1e-3}
-  let accMedium = {absolute=1e-8; relative=1e-5}
-  let accHigh = {absolute=1e-10; relative=1e-7}
-  let accVeryHigh = {absolute=1e-12; relative=1e-9}

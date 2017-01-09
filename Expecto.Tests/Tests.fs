@@ -715,13 +715,13 @@ let close =
   testList "floatClose" [
 
     testCase "zero" <| fun _ ->
-      Expect.floatClose accVeryHigh 0.0 0.0 "zero"
+      Expect.floatClose Accuracy.veryHigh 0.0 0.0 "zero"
 
     testCase "small" <| fun _ ->
-      Expect.floatClose accLow 0.000001 0.0 "small"
+      Expect.floatClose Accuracy.low 0.000001 0.0 "small"
 
     testCase "large" <| fun _ ->
-      Expect.floatClose accLow 10004.0 10000.0 "large"
+      Expect.floatClose Accuracy.low 10004.0 10000.0 "large"
 
     testCase "user" <| fun _ ->
       Expect.floatClose {absolute=0.0; relative=1e-3}
@@ -729,17 +729,17 @@ let close =
 
     testCase "can fail" <| fun _ ->
       let test() =
-        Expect.floatClose accLow 1004.0 1000.0 "can fail"
+        Expect.floatClose Accuracy.low 1004.0 1000.0 "can fail"
       assertTestFails (test, Normal)
 
     testCase "nan fails" <| fun _ ->
       let test() =
-        Expect.floatClose accLow nan 1.0 "nan fails"
+        Expect.floatClose Accuracy.low nan 1.0 "nan fails"
       assertTestFails (test, Normal)
 
     testCase "inf fails" <| fun _ ->
       let test() =
-        Expect.floatClose accLow infinity 1.0 "inf fails"
+        Expect.floatClose Accuracy.low infinity 1.0 "inf fails"
       assertTestFails (test, Normal)
 
   ]
