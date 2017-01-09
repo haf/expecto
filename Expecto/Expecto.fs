@@ -901,8 +901,10 @@ module Impl =
   //val apply : f:(TestCode * FocusState * SourceLocation -> TestCode * FocusState * SourceLocation) -> _arg1:Test -> Test
   let getLocation (asm:Assembly) code =
     let typeName, methodName = getMethodName asm code
-    getSourceLocation asm typeName methodName
-
+    try
+      getSourceLocation asm typeName methodName
+    with :? IO.FileNotFoundException as ioe ->
+      SourceLocation.empty
 
   /// Scan filtered tests marked with TestsAttribute from an assembly
   let testFromAssemblyWithFilter typeFilter (a: Assembly) =
