@@ -1,5 +1,7 @@
 # Devguide
 
+2 space indentation, please.
+
 ## Setup
 
  1. **EditorConfig** – If you haven't already, install the EditorConfig
@@ -43,6 +45,19 @@
  - No final newline in files, please.
  - Open specify `open` directives for the used namespaces and modules.
  - Prefer to cluster `open` directives at the top of the file.
+
+## Invariants
+
+ - I will release this project if all tests go through. If you contribute
+   functionality you need to make sure that all tests pass and that the intended
+   functionality is properly tested, otherwise it may break at any time.
+ - Prefer to test all cases of your code, over testing only the happy path.
+
+## Logging/printing from within Expecto
+
+ - If you want the logging/printing to properly print before the process exists,
+   you need to use the `logWithAck` function, because the returned async will
+   yield when the data has been written to the configured output.
 
  [ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
  [ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig

@@ -44,8 +44,8 @@ module TestHelpers =
   open Expecto.Impl
 
   let evalSilent =
-    eval {Tests.defaultConfig with printer=TestPrinters.silent}
-         (fun m l -> List.map (m>>Async.RunSynchronously) l)
+    eval { Tests.defaultConfig with printer = TestPrinters.silent }
+         (fun m l -> List.map ( m >> Async.RunSynchronously) l)
 
   let inline assetTestFails' test =
     match evalSilent test with

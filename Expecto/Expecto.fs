@@ -6,17 +6,21 @@ open System
 open System.Linq
 open System.Runtime.CompilerServices
 open System.Reflection
+open System.Diagnostics
+open System.Threading
 
 type SourceLocation =
-  { sourcePath: string
-    lineNumber: int }
-with static member empty = {sourcePath = ""; lineNumber = 0}
+  { sourcePath : string
+    lineNumber : int }
+with
+  static member empty =
+    { sourcePath = ""
+      lineNumber = 0 }
 
-
-/// Actual test function
+/// Actual test function; either an async one, or a synchronous one.
 type TestCode =
-  | Sync of (unit->unit)
-  | Async of Async<unit>
+  | Sync of stest:(unit -> unit)
+  | Async of atest:Async<unit>
 
 /// The parent state (watching the tests as a tree structure) will influence
 /// the child tests state. By following rules, if parent test state is:
@@ -79,18 +83,24 @@ module Async =
       return fn v
     }
 
-  let parallelLimit n s =
-    let handle = new System.Threading.ManualResetEventSlim()
+  let bind fn a =
+    async.Bind(a, fn)
+
+  /// Traverses the list of async, spawning them with Async.Start and
+  let parallelLimit maxParallelism s =
+    let handle = new ManualResetEventSlim(false)
     let mutable results = []
     let mb =
       MailboxProcessor.Start(fun mb ->
         let rec loop queue count =
           async {
+            // by receiving one by one, we ensure we can mutate `results`
             let! msg = mb.Receive()
             match msg with
+            // None acts as a kanban card – running another one
             | None ->
               match queue with
-              | asyncWork::newQueue ->
+              | asyncWork :: newQueue ->
                 async {
                   try
                     let! r = asyncWork
@@ -99,22 +109,27 @@ module Async =
                     mb.Post None
                 } |> Async.Start
                 return! loop newQueue count
+
               | [] ->
-                if count=1 then
+                if count = 1 then
                   handle.Set()
-                  (mb:>IDisposable).Dispose()
+                  (mb :> IDisposable).Dispose()
                 else
                   return! loop queue (count-1)
+
+            // the other side of the coin; receiving results
             | Some r ->
-              results <- r::results
+              results <- r :: results
               return! loop queue count
           }
-        loop s n)
+        loop s maxParallelism)
+
     let rec start n =
-      if n>0 then
+      if n > 0 then
         mb.Post None
         start (n-1)
-    start n
+
+    start maxParallelism
     Async.AwaitWaitHandle handle.WaitHandle
     |> map (fun _ -> results)
 
@@ -258,21 +273,21 @@ module Test =
     | TestLabel (label, test, oldFocusState) -> TestLabel(label, test, computeChildFocusState oldFocusState newFocusState)
     | Sequenced test -> Sequenced (translateFocusState newFocusState test)
 
-  /// Recursively replaces TestCodes in a Test
-  /// Check translateFocusState for focus state behavior description
+  /// Recursively replaces TestCodes in a Test.
+  /// Check translateFocusState for focus state behaviour description.
   let rec replaceTestCode (f:string -> TestCode -> Test) =
     function
     | TestLabel (label, TestCase (test, childState), parentState) ->
-          f label test
-          |> translateFocusState (computeChildFocusState parentState childState)
+      f label test
+      |> translateFocusState (computeChildFocusState parentState childState)
     | TestCase (test, state) ->
-          f null test
-          |> translateFocusState state
+      f null test
+      |> translateFocusState state
     | TestList (testList, state) -> TestList (List.map (replaceTestCode f) testList, state)
     | TestLabel (label, test, state) -> TestLabel (label, replaceTestCode f test, state)
     | Sequenced test -> Sequenced (replaceTestCode f test)
 
-  /// Filter tests by name
+  /// Filter tests by name.
   let filter pred =
     toTestCodeList
     >> List.filter (fun t -> pred t.name)
@@ -281,22 +296,21 @@ module Test =
         if t.sequenced then Sequenced test else test)
     >> (fun x -> TestList (x,Normal))
 
-  /// Applies a timeout to a test
+  /// Applies a timeout to a test.
   let timeout timeout (test: TestCode) : TestCode =
-      async {
-        try
+    async {
+      try
+        let test =
+          match test with
+          | Async test -> test
+          | Sync test -> async { test() }
 
-          let test =
-            match test with
-            | Async test -> test
-            | Sync test -> async { test() }
-
-          let! async = Async.StartChild(test, timeout)
-          do! async
-        with :? TimeoutException ->
-          let ts = TimeSpan.FromMilliseconds (float timeout)
-          raise <| AssertException(sprintf "Timeout (%A)" ts)
-      } |> Async
+        let! async = Async.StartChild(test, timeout)
+        do! async
+      with :? TimeoutException ->
+        let ts = TimeSpan.FromMilliseconds (float timeout)
+        raise <| AssertException(sprintf "Timeout (%A)" ts)
+    } |> Async
 
 module Impl =
   open Expecto.Logging
@@ -416,9 +430,9 @@ module Impl =
     let erroredCount = summary.errored |> List.length
 
     let digits =
-        [passedCount; ignoredCount; failedCount; erroredCount ]
-        |> List.map (fun x -> x.ToString().Length)
-        |> List.max
+      [passedCount; ignoredCount; failedCount; erroredCount ]
+      |> List.map (fun x -> x.ToString().Length)
+      |> List.max
 
     let align (d:int) offset = d.ToString().PadLeft(offset + digits)
 
@@ -438,15 +452,14 @@ module Impl =
 
   let logSummary (summary: TestResultSummary) =
     createSummaryMessage summary
-    |> logger.log Info
-    |> Async.StartImmediate
+    |> logger.logWithAck Info
 
   let logSummaryWithLocation (summary: TestResultSummary) =
     let handleLineBreaks elements =
-        let format n = sprintf "%s [%s:%d]" n.name n.location.sourcePath n.location.lineNumber
+      let format n = sprintf "%s [%s:%d]" n.name n.location.sourcePath n.location.lineNumber
 
-        let text = elements |> Seq.map format |> String.concat "\n\t"
-        if text = "" then text else text + "\n"
+      let text = elements |> Seq.map format |> String.concat "\n\t"
+      if text = "" then text else text + "\n"
 
     let passed = summary.passed |> handleLineBreaks
     let passedCount = summary.passed |> List.length
@@ -458,13 +471,13 @@ module Impl =
     let erroredCount = summary.errored |> List.length
 
     let digits =
-        [passedCount; ignoredCount; failedCount; erroredCount ]
-        |> List.map (fun x -> x.ToString().Length)
-        |> List.max
+      [passedCount; ignoredCount; failedCount; erroredCount ]
+      |> List.map (fun x -> x.ToString().Length)
+      |> List.max
 
     let align (d:int) offset = d.ToString().PadLeft(offset + digits)
 
-    logger.log Info (
+    logger.logWithAck Info (
       eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}Ignored: {ignoredCount}\n\t{ignored}Failed: {failedCount}\n\t{failed}Errored: {erroredCount}\n\t{errored}"
       >> setField "passed" passed
       >> setField "passedCount" (align passedCount 1)
@@ -474,12 +487,11 @@ module Impl =
       >> setField "failedCount" (align failedCount 1)
       >> setField "errored" errored
       >> setField "erroredCount" (align erroredCount 0))
-    |> Async.StartImmediate
 
   /// Hooks to print report through test run
   type TestPrinters =
     { /// Called before a test run (e.g. at the top of your main function)
-      beforeRun: Test -> unit
+      beforeRun: Test -> Async<unit>
       /// Called before atomic test (TestCode) is executed.
       beforeEach: string -> Async<unit>
       /// info
@@ -493,54 +505,51 @@ module Impl =
       /// test name -> exception -> time taken -> unit
       exn: string -> exn -> TimeSpan -> Async<unit>
       /// Prints a summary given the test result counts
-      summary : TestResultSummary -> unit }
+      summary : TestResultSummary -> Async<unit> }
 
     static member silent =
-      { beforeRun = fun _ -> ()
+      { beforeRun = fun _ -> async.Zero()
         beforeEach = fun _ -> async.Zero()
         info = fun _ -> async.Zero()
         passed = fun _ _ -> async.Zero()
         ignored = fun _ _ -> async.Zero()
         failed = fun _ _ _ -> async.Zero()
         exn = fun _ _ _ -> async.Zero()
-        summary = fun _ -> () }
+        summary = fun _ -> async.Zero() }
 
-    static member Default =
-      {
-        beforeRun = fun _tests ->
-          logger.log Info (
-            eventX "EXPECTO? Running tests...")
-          |> Async.StartImmediate
+    static member defaultPrinter =
+      { beforeRun = fun _tests ->
+          logger.logWithAck Info (eventX "EXPECTO? Running tests...")
 
         beforeEach = fun n ->
-          logger.log Debug (
+          logger.logWithAck Debug (
             eventX "{testName} starting..."
             >> setField "testName" n)
 
         info = fun s ->
-          logger.log Info (eventX s)
+          logger.logWithAck Info (eventX s)
 
         passed = fun n d ->
-          logger.log Debug (
+          logger.logWithAck Debug (
             eventX "{testName} passed in {duration}."
             >> setField "testName" n
             >> setField "duration" d)
 
         ignored = fun n m ->
-          logger.log Debug (
+          logger.logWithAck Debug (
             eventX "{testName} was ignored. {reason}"
             >> setField "testName" n
             >> setField "reason" m)
 
         failed = fun n m d ->
-          logger.log LogLevel.Error (
+          logger.logWithAck LogLevel.Error (
             eventX "{testName} failed in {duration}. {message}"
             >> setField "testName" n
             >> setField "duration" d
             >> setField "message" m)
 
         exn = fun n e d ->
-          logger.log LogLevel.Error (
+          logger.logWithAck LogLevel.Error (
             eventX "{testName} errored in {duration}"
             >> setField "testName" n
             >> setField "duration" d
@@ -558,7 +567,7 @@ module Impl =
                 "( ರ Ĺ̯ ರೃ )"
               else
                 ""
-          logger.log Info (
+          logger.logWithAck Info (
             eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
             >> setField "total" summary.total
             >> setField "duration" summary.duration
@@ -567,20 +576,19 @@ module Impl =
             >> setField "failures" summary.failed.Length
             >> setField "errors" summary.errored.Length
             >> setField "spirit" spirit)
-          |> Async.StartImmediate
           }
 
-    static member Summary =
-      { TestPrinters.Default with
+    static member summaryPrinter =
+      { TestPrinters.defaultPrinter with
           summary = fun summary ->
-            TestPrinters.Default.summary summary
-            logSummary summary }
+            TestPrinters.defaultPrinter.summary summary |> Async.bind (fun () ->
+            logSummary summary) }
 
-    static member SummaryWithLocation =
-      { TestPrinters.Default with
+    static member summaryWithLocationPrinter =
+      { TestPrinters.defaultPrinter with
           summary = fun summary ->
-            TestPrinters.Default.summary summary
-            logSummaryWithLocation summary }
+            TestPrinters.defaultPrinter.summary summary |> Async.bind (fun () ->
+            logSummaryWithLocation summary) }
 
     type WrappedFocusedState =
       | Enabled of state:FocusState
@@ -672,7 +680,7 @@ module Impl =
 
       let execOne test =
         async {
-          let w = System.Diagnostics.Stopwatch.StartNew()
+          let w = Stopwatch.StartNew()
           try
             match test.test with
             | Async test ->
@@ -738,7 +746,7 @@ module Impl =
     |> if config.parallel then id else List.map (fun t -> {t with sequenced=true})
     |> evalTestList config map
 
-  /// Evaluates tests
+  /// Evaluates tests.
   let evalPar config tests =
 
     let pmap fn ts =
@@ -766,15 +774,15 @@ module Impl =
 
   /// Runs tests, returns error code
   let runEval config (tests: Test) =
-    config.printer.beforeRun tests
+    config.printer.beforeRun tests |> Async.RunSynchronously
 
-    let w = System.Diagnostics.Stopwatch.StartNew()
+    let w = Stopwatch.StartNew()
     let results = evalPar config tests
     w.Stop()
-    let summary = { sumTestResults results with duration = w.Elapsed }
-    config.printer.summary summary
+    let testSummary = { sumTestResults results with duration = w.Elapsed }
+    config.printer.summary testSummary |> Async.RunSynchronously
 
-    TestResultSummary.errorCode summary
+    TestResultSummary.errorCode testSummary
 
   let testFromMember (mi: MemberInfo): Test option  =
     let getTestFromMemberInfo focusedState =
@@ -849,7 +857,7 @@ module Impl =
       let m = t.GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
       (t.FullName, m.Name)
     | Async _ ->
-      ("Unknown Async","Unknown Async")
+      ("Unknown Async", "Unknown Async")
 
   //Ported from: https://github.com/adamchester/expecto-adapter/blob/master/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
   let getSourceLocation (asm:Assembly) className methodName =
@@ -1020,7 +1028,7 @@ module Tests =
       parallelWorkers = Environment.ProcessorCount
       filter    = id
       failOnFocusedTests = false
-      printer   = TestPrinters.Default
+      printer   = TestPrinters.defaultPrinter
       verbosity = LogLevel.Info
       locate = fun _ -> SourceLocation.empty }
 
@@ -1058,7 +1066,6 @@ module Tests =
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
-    open System.Diagnostics
 
     let printExpectoVersion() =
       let assembly = Assembly.GetExecutingAssembly()
@@ -1100,9 +1107,9 @@ module Tests =
         | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}
         | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
         | List_Tests -> id
-        | Summary -> fun o -> {o with printer = TestPrinters.Summary}
+        | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter}
         | Version -> fun o -> printExpectoVersion(); o
-        | Summary_Location -> fun o -> {o with printer = TestPrinters.SummaryWithLocation}
+        | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter}
 
       fun (args: string[]) ->
         let parsed =
