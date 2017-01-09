@@ -146,7 +146,7 @@ let tests =
     testList "Exception handling" [
       testCase "Expecto ignore" <| fun _ ->
         let test () = skiptest "b"
-        let test = TestCase (test, Normal)
+        let test = TestCase (Sync test, Normal)
         match evalSilent test with
         | [{ result = Ignored "b" }] -> ()
         | x -> failtestf "Expected result = Ignored, got\n %A" x
@@ -223,11 +223,11 @@ let expecto =
 
     testSequenced <| testList "Timeout" [
       testCase "fail" <| fun _ ->
-        let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
+        let test = TestCase(Test.timeout 10 (async { do! Async.Sleep 100 } |> Async), Normal)
         let result = evalSilent test |> sumTestResults
         result.failed.Length ==? 1
       testCase "pass" <| fun _ ->
-        let test = TestCase(Test.timeout 1000 ignore, Normal)
+        let test = TestCase(Test.timeout 1000 (Sync ignore), Normal)
         let result = evalSilent test |> sumTestResults
         result.passed.Length ==? 1
     ]
@@ -337,13 +337,16 @@ let expecto =
 
     testList "transformations" [
       testCase "multiple cultures" <| fun _ ->
-        let withCulture culture f x =
-          let c = Thread.CurrentThread.CurrentCulture
-          try
-            Thread.CurrentThread.CurrentCulture <- culture
-            f x
-          finally
-            Thread.CurrentThread.CurrentCulture <- c
+        let withCulture culture test =
+          fun () ->
+            let c = Thread.CurrentThread.CurrentCulture
+            try
+              Thread.CurrentThread.CurrentCulture <- culture
+              match test with
+              | Sync test -> test()
+              | Async test -> Async.StartImmediate test
+            finally
+              Thread.CurrentThread.CurrentCulture <- c
 
         let testWithCultures (cultures: #seq<CultureInfo>) =
           Test.replaceTestCode <| fun name test ->
@@ -617,6 +620,29 @@ let inline popCount16 i =
 let popcountTest =
   testList "performance" [
     testProperty "popcount same" (fun i -> (popCount i |> int) = (popCount16 i |> int))
+  ]
+
+[<Tests>]
+let async =
+  testList "async" [
+
+    testCaseAsync "simple" <| async {
+      Expect.equal 1 1 "1=1"
+    }
+
+    testCaseAsync "let" <| async {
+      let! n = async { return 1 }
+      Expect.equal 1 n "1=n"
+    }
+
+    testCase "can fail" <| fun _ ->
+      let test =
+        testCaseAsync "let" <| async {
+          let! n = async { return 2 }
+          Expect.equal 1 n "1=n"
+        }
+      assetTestFails' test
+
   ]
 
 [<Tests>]
