@@ -88,6 +88,7 @@ module Async =
 
   /// Traverses the list of async, spawning them with Async.Start and
   let parallelLimit maxParallelism s =
+    let workers = List.length s |> min maxParallelism
     let handle = new ManualResetEventSlim(false)
     let mutable results = []
     let mb =
@@ -122,14 +123,14 @@ module Async =
               results <- r :: results
               return! loop queue count
           }
-        loop s maxParallelism)
+        loop s workers)
 
     let rec start n =
       if n > 0 then
         mb.Post None
         start (n-1)
 
-    start maxParallelism
+    start workers
     Async.AwaitWaitHandle handle.WaitHandle
     |> map (fun _ -> results)
 
@@ -138,10 +139,6 @@ module Helpers =
   let inline fst3 (a,_,_) = a
   let inline snd3 (_,b,_) = b
   let inline trd3 (_,_,c) = c
-
-  let fst4 (a,_,_,_) = a
-  let snd4 (_,b,_,_) = b
-  let trd4 (_,_,c,_) = c
 
   let inline ignore2 _ = ignore
   let inline ignore3 _ = ignore2
@@ -163,7 +160,7 @@ module Helpers =
 
   module Option =
     let orDefault def =
-      Option.fold (fun s t -> t) def
+      function | Some a -> a | None -> def
 
   type Type with
     static member TryGetType t =
@@ -946,12 +943,12 @@ module Tests =
   /// Fail this test
   let inline failtest msg = raise <| AssertException msg
   /// Fail this test
-  let inline failtestf fmt = Printf.ksprintf (fun msg -> raise <| AssertException msg) fmt
+  let inline failtestf fmt = Printf.ksprintf (AssertException >> raise) fmt
 
   /// Skip this test
   let inline skiptest msg = raise <| IgnoreException msg
   /// Skip this test
-  let inline skiptestf fmt = Printf.ksprintf (fun msg -> raise <| IgnoreException msg) fmt
+  let inline skiptestf fmt = Printf.ksprintf (IgnoreException >> raise) fmt
 
   /// Builds a list/group of tests that will be ignored by Expecto if exists
   /// focused tests and none of the parents is focused
@@ -969,8 +966,12 @@ module Tests =
   let inline testCaseAsync name test = TestLabel(name, TestCase (Async test,Normal), Normal)
   /// Builds a test case that will make Expecto to ignore other unfocused tests
   let inline ftestCase name test = TestLabel(name, TestCase (Sync test, Focused), Focused)
+  /// Builds an async test case that will make Expecto to ignore other unfocused tests
+  let inline ftestCaseAsync name test = TestLabel(name, TestCase (Async test, Focused), Focused)
   /// Builds a test case that will be ignored by Expecto
   let inline ptestCase name test = TestLabel(name, TestCase (Sync test, Pending), Pending)
+  /// Builds an async test case that will be ignored by Expecto
+  let inline ptestCaseAsync name test = TestLabel(name, TestCase (Async test, Pending), Pending)
   /// Test case or list needs to run sequenced. Use for any benchmark code or
   /// for tests using `Expect.isFasterThan`
   let inline testSequenced test = Sequenced test
@@ -1054,7 +1055,7 @@ module Tests =
         match s with
         | Sequenced -> "Doesn't run the tests in parallel."
         | Parallel -> "Runs all tests in parallel (default)."
-        | Parallel_Workers _ -> "Number of parallel workers (defaults to the number of logical processors)"
+        | Parallel_Workers _ -> "Number of parallel workers (defaults to the number of logical processors)."
         | Fail_On_Focused_Tests -> "This will make the test runner fail if focused tests exist."
         | Debug -> "Extra verbose printing. Useful to combine with --sequenced."
         | Filter _ -> "Filters the list of tests by a hierarchy that's slash (/) separated."
