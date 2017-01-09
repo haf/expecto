@@ -30,7 +30,9 @@ build :quick_compile do |b|
 end
 
 task :paket_bootstrap do
-  system 'tools/paket.bootstrapper.exe', clr_command: true unless File.exists? 'tools/paket.exe'
+  system 'tools/paket.bootstrapper.exe',
+      %|4.0.0-alpha030|,
+      clr_command: true unless File.exists? 'tools/paket.exe'
 end
 
 task :paket_files do

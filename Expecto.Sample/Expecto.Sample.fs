@@ -66,6 +66,11 @@ let tests =
                             (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
                             "half is faster"
     )
+
+    testCaseAsync "simple, not doing very much" <| async {
+      Expect.equal 1 1 "1=1"
+      do! async.Zero ()
+    }
   ]
 
 [<EntryPoint>]

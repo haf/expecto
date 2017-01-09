@@ -128,10 +128,18 @@ let tests =
   testList "A test group" [
     testCase "one test" <| fun _ ->
       Expect.equal (2+2) 4 "2+2"
+
     testCase "another test that fails" <| fun _ ->
       Expect.equal (3+3) 5 "3+3"
+
+    testCaseAsync "this is an async test" async {
+      do! async.Return()
+    }
   ]
 ```
+
+Also have a look at [the
+samples](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sample.fs).
 
 ### Filtering with `filter`
 
