@@ -7,7 +7,6 @@ module Expecto.Expect
 open System
 open Expecto.Logging
 open Expecto.Logging.Message
-type HSet<'a> = System.Collections.Generic.HashSet<'a>
 
 /// Expects f to throw an exception.
 let throws f format =
@@ -111,11 +110,12 @@ let isGreaterThan a b format =
 let isGreaterThanOrEqual a b format =
   if a >= b then ()
   else
-    Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)"
+    Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)."
                     format a b
 
 /// Expects `actual` and `expected` (that are both floats) to equal within a
 /// given `epsilon`.
+[<Obsolete "Please use the more general Expect.floatClose">]
 let floatEqual actual expected epsilon format =
   let epsilon = defaultArg epsilon 0.001
   if expected <= actual + epsilon && expected >= actual - epsilon then
@@ -123,6 +123,20 @@ let floatEqual actual expected epsilon format =
   else
     Tests.failtestf "%s. Actual value was %f but was expected to be %f within %f epsilon."
                     format actual expected epsilon
+
+/// Expects `actual` and `expected` (that are both floats) to be within a
+/// given `accuracy`.
+let floatClose accuracy actual expected format =
+  if Double.IsInfinity actual then
+    Tests.failtestf "%s. Expected actual to not be infinity, but it was." format
+  elif Double.IsInfinity expected then
+    Tests.failtestf "%s. Expected expected to not be infinity, but it was." format
+  elif Accuracy.areClose accuracy actual expected |> not then
+    Tests.failtestf
+      "%s. Expected difference to be less than %g for accuracy {absolute=%g; relative=%g}, but was %g."
+      format (Accuracy.areCloseRhs accuracy actual expected)
+      accuracy.absolute accuracy.relative
+      (Accuracy.areCloseLhs actual expected)
 
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) format =
@@ -235,24 +249,24 @@ let containsAll (actual : _ seq)
   |> Tests.failtest
 
 let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: Map<_,uint32>) (isExcept: bool) =
-  let getMapValue (map: Map<_, uint32>) (element) = 
+  let getMapValue (map: Map<_, uint32>) (element) =
     map |> Map.find element
-  let getResult found expected = 
+  let getResult found expected =
     match isExcept with
     | true -> found, expected
     | _ -> expected, found
-  
+
   let noOfFoundElements element value =
     let foundElements = (getMapValue elementsToContain element)
     match value > foundElements with
     | true -> getResult foundElements value
     | _ -> 0ul,0ul
-  
-  let elementsWhichDiffer element value = 
+
+  let elementsWhichDiffer element value =
     match elementsToContain |> Map.containsKey(element) with
     | true -> noOfFoundElements element value
     | _ -> getResult 0ul value
-  
+
   let printResult found =
     sprintf "(%d/%d)" (fst found) (snd found)
 
@@ -266,7 +280,7 @@ let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: M
 /// first element in every tuple from `expected` map means item which should be
 /// presented in `actual` sequence, the second element means an expected number of occurrences
 /// of this item in sequence.
-/// Function is not taking into account an order of elements. 
+/// Function is not taking into account an order of elements.
 /// Calling this function will enumerate both sequences; they have to be finite.
 let distribution (actual : _ seq)
                 (expected : Map<_,uint32>)
@@ -281,7 +295,7 @@ let distribution (actual : _ seq)
   let extra, missing =
     except groupedActual expected false,
     except expected groupedActual true
-  
+
   let isCorrect = List.isEmpty missing && List.isEmpty extra
   if isCorrect then () else
   let formatInput(data) = formatSet ", " "{%s}" "" data
@@ -291,7 +305,7 @@ let distribution (actual : _ seq)
     |> Map.toList
     |> List.map (fun element -> sprintf "%A: %d" (fst element) (snd element))
 
-  let missingElementsInfo, extraElementsInfo = 
+  let missingElementsInfo, extraElementsInfo =
     let incorrectElementsInfo elements is direction =
       if List.isEmpty elements then ""
       else sprintf "\n\t%s elements %s `actual`:\n\t%s" is direction (formatResult elements)
