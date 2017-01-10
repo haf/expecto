@@ -325,9 +325,9 @@ This function makes use of a statistical test called [Welch's t-test](https://en
 It starts with the null hypothesis that the functions mean execution times are the same.
 The functions are run alternately increasing the sample size to test this hypothesis.
 
-Once a confidence level of 99.99% is reached that this hypothesis is incorrect it stops and reports the results.
+Once the probability the null hypothesis is correct goes below 0.01% it stops and reports the results.
 If the performance is very close the test will declare them equal when there is 99.99% confidence they differ by less than 0.5%.
-99.99% is chosen such that if a test set has 100 performance tests a false test failure would be reported once in many more than 100 runs.
+0.01%/99.99% are chosen such that if a test list has 100 performance tests a false test failure would be reported once in many more than 100 runs.
 
 This results in a performance test that is very quick to run (the greater the difference the quicker it will run).
 Also, because it is a relative test it can normally be run across all configurations as part of unit testing.
@@ -438,6 +438,7 @@ Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in
  - `--debug`: Extra verbose output for your tests.
  - `--sequenced`: Run all tests in sequence.
  - `--parallel`: (default) Run all tests in parallel.
+ - `--parallel-workers`: Number of parallel workers (defaults to the number of logical processors).
  - `--filter <hiera>`: Filter a specific hierarchy to run.
  - `--filter-test-list <substring>`: Filter a specific test list to run.
  - `--filter-test-case <substring>`: Filter a specific test case to run.
@@ -454,6 +455,8 @@ ExpetoConfig record, that looks like:
 { /// Whether to run the tests in parallel. Defaults to true, because your
   /// code should not mutate global state by default.
   parallel : bool
+  /// Number of parallel workers. Defaults to the number of logical processors.
+  parallelWorkers : int
   /// An optional filter function. Useful if you only would like to run a
   /// subset of all the tests defined in your assembly.
   filter   : Test -> Test
