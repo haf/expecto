@@ -9,7 +9,9 @@ nuget Argu
 nuget FsCheck
 nuget FSharp.Core ~> 3
 nuget FSharpx.Core
-nuget BenchmarkDotNet
+nuget BenchmarkDotNet = 0.9.9
+nuget BenchmarkDotNet.Toolchains.Roslyn = 0.9.9
+nuget BenchmarkDotNet.Core = 0.9.9
 nuget NuGet.CommandLine
 nuget Mono.Cecil
 
