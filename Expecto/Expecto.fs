@@ -102,7 +102,6 @@ type PTestsAttribute() = inherit Attribute()
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
 type FTestsAttribute() = inherit Attribute()
 
-
 [<AutoOpen>]
 module internal Helpers =
   let inline dispose (d:IDisposable) = d.Dispose()

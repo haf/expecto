@@ -3,6 +3,8 @@ source https://dotnet.myget.org/F/dotnet-core
 source https://www.myget.org/F/fsharp-daily
 source https://www.myget.org/F/netcorecli-fsc-preview3
 
+redirects: on
+
 github logary/logary src/Logary.Facade/Facade.fs 4b21d888e83d72d1238ab0f36110e2a3946240e7
 
 nuget Argu
