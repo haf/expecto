@@ -83,6 +83,8 @@ module Async =
       return fn v
     }
 
+  let awaitTask (t : System.Threading.Tasks.Task) = t |> (Async.AwaitIAsyncResult >> Async.Ignore)
+
   let bind fn a =
     async.Bind(a, fn)
 
