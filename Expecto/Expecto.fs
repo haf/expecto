@@ -586,6 +586,84 @@ module Impl =
           summary = fun summary ->
             TestPrinters.defaultPrinter.summary summary |> Async.bind (fun () ->
             logSummaryWithLocation summary) }
+    static member teamCityPrinter innerPrinter =
+      // https://confluence.jetbrains.com/display/TCD10/Build+Script+Interaction+with+TeamCity#BuildScriptInteractionwithTeamCity-Escapedvalues
+      let escape (msg: string) =
+        let replaced =
+          msg.Replace("|", "||")
+            .Replace("'", "|'")
+            .Replace("\r", "|r")
+            .Replace("\n", "|n")
+            .Replace("]", "|]")
+            .Replace("[", "|[")
+
+        let reg = Text.RegularExpressions.Regex(@"[^\u0020-\u007F]")
+        reg.Replace(replaced, fun m -> "|0x" + ((int m.Value.[0]).ToString("X4")))
+
+      let tcLog msgName props =
+        let tcMsg =
+          props
+          |> List.map (fun (k,v) -> sprintf "%s='%s'" k (escape v))
+          |> String.concat " "
+          |> sprintf "##teamcity[%s %s]" msgName
+
+        Global.lockSem (fun _ -> Console.WriteLine tcMsg)
+
+      { beforeRun = fun _tests -> async {
+          do! innerPrinter.beforeRun _tests
+          tcLog "testSuiteStarted" [
+            "name", "ExpectoTestSuite" ] }
+
+        beforeEach = fun n -> async {
+          do! innerPrinter.beforeEach n
+          tcLog "testStarted" [
+            "flowId", n
+            "name", n ] }
+
+        passed = fun n d -> async {
+          do! innerPrinter.passed n d
+          tcLog "testFinished" [
+            "flowId", n
+            "name", n
+            "duration", d.TotalMilliseconds |> int |> string ] }
+
+        info = fun s ->
+          innerPrinter.info s
+
+        ignored = fun n m -> async {
+          do! innerPrinter.ignored n m
+          tcLog "testIgnored" [
+            "flowId", n
+            "name", n
+            "message", m ] }
+
+        failed = fun n m d -> async {
+          do! innerPrinter.failed n m d
+          tcLog "testFailed" [
+            "flowId", n
+            "name", n
+            "message", m ]
+          tcLog "testFinished" [
+            "flowId", n
+            "name", n
+            "duration", d.TotalMilliseconds |> int |> string ] }
+
+        exn = fun n e d -> async {
+          do! innerPrinter.beforeEach n
+          tcLog "testFailed" [
+            "flowId", n
+            "name", n
+            "message", e.Message
+            "details", e.StackTrace ]
+          tcLog "testFinished" [
+            "flowId", n
+            "name", n
+            "duration", d.TotalMilliseconds |> int |> string ] }
+
+        summary = fun s -> async {
+          do! innerPrinter.summary s
+          tcLog "testSuiteFinished" [
+            "name", "ExpectoTestSuite" ] } }
 
     type WrappedFocusedState =
       | Enabled of state:FocusState
@@ -1031,7 +1109,11 @@ module Tests =
       parallelWorkers = Environment.ProcessorCount
       filter    = id
       failOnFocusedTests = false
-      printer   = TestPrinters.defaultPrinter
+      printer   =
+        if Environment.GetEnvironmentVariable "TEAMCITY_PROJECT_NAME" <> null then
+          TestPrinters.teamCityPrinter TestPrinters.defaultPrinter
+        else
+          TestPrinters.defaultPrinter
       verbosity = LogLevel.Info
       locate = fun _ -> SourceLocation.empty }
 
@@ -1138,7 +1220,7 @@ module Tests =
   let runTests config (tests:Test) =
     Global.initialiseIfDefault
       { Global.defaultConfig with
-          getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity) :> Logger }
+          getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity, consoleSemaphore = Global.semaphore()) :> Logger }
     if not config.failOnFocusedTests || passesFocusTestCheck tests then
       run config tests
     else
