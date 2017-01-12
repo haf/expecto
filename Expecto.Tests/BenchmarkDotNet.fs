@@ -1,3 +1,4 @@
+
 module Expecto.BenchmarkDotNetTests
 
 open System
@@ -26,18 +27,15 @@ let benchmarks =
 let performance =
   testSequenced <| testList "performance cryptography tests" [
 
-    testCase "md5 equals sha256" <| fun _ ->
+    testCase "md5 equals sha256" (fun _ ->
       let a = Md5VsSha256()
-      let test() =
-        Expect.isFasterThan a.Md5 a.Sha256 "MD5 equals SHA256 should fail"
-      assertTestFailsWithMsgContaining "same" (test, Normal)
+      Expect.isFasterThan a.Md5 a.Sha256 "MD5 equals SHA256 should fail"
+    ) |> assertTestFailsWithMsgContaining "same"
 
-    testCase "sha256 versus md5" <| fun _ ->
+    testCase "sha256 versus md5" (fun _ ->
       let a = Md5VsSha256()
-
-      let test() =
-        Expect.isFasterThan (a.Sha256 >> ignore) (a.Md5 >> ignore) "SHA256 is faster than MD5 should fail"
-      assertTestFailsWithMsgContaining "slower" (test, Normal)
+      Expect.isFasterThan (a.Sha256 >> ignore) (a.Md5 >> ignore) "SHA256 is faster than MD5 should fail"
+    ) |> assertTestFailsWithMsgContaining "slower"
 
     testCase "md5 versus sha256" <| fun _ ->
       let a = Md5VsSha256()

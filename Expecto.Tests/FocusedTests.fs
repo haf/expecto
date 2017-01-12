@@ -3,7 +3,7 @@ open Expecto
 open Expecto.Tests
 open Expecto.Impl
 
-let synth = Expecto.Impl.sumTestResults
+let synth = Impl.sumTestResults
 let failing = fun _ -> 1 ==? 2
 let working = ignore
 
@@ -64,14 +64,22 @@ let focusedTests =
 [<Tests>]
 let all =
   testList "all focused tests" [
-    testCase "pending" <| fun _ ->
-        let result = evalSilent pendingTests |> synth
-        result.passed.Length ==? 2
-        result.ignored.Length ==? 5
-    testCase "focused" <| fun _ ->
-        let result = evalSilent focusedTests |> synth
-        result.passed.Length ==? 11
-        result.ignored.Length ==? 19
+    testCaseAsync "pending" <| async {
+      let! result =
+        Impl.evalSilentAsync pendingTests
+        |> Async.map synth
+
+      result.passed.Length ==? 2
+      result.ignored.Length ==? 5
+    }
+    testCaseAsync "focused" <| async {
+      let! result =
+        Impl.evalSilentAsync focusedTests
+        |> Async.map synth
+
+      result.passed.Length ==? 11
+      result.ignored.Length ==? 19
+    }
     testCase "can detect focused test" <| fun _ ->
       let localList =
         testList "local" [

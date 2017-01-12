@@ -20,8 +20,8 @@ let properties =
 
 [<Tests>]
 let runFsCheckTests =
-  testCase "run" <| fun _ ->
-    let results = evalSilent properties
+  testCaseAsync "run" <| async {
+    let! results = Impl.evalSilentAsync properties
     Expect.equal results.Length 3 "results length"
     Expect.equal results.[0].result TestResult.Passed "passed count"
 
@@ -36,3 +36,4 @@ let runFsCheckTests =
       Expect.equal "Because I feel like it." e "It should fail with the right message."
     | x ->
       failtestf "Expected Ignored, actual %A" x
+  }
