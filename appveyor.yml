@@ -10,18 +10,18 @@ install:
 build_script:  
   - bundle exec rake
 
-  # .NET Core SDK binaries
-  - ps: $url = "https://dotnetcli.blob.core.windows.net/dotnet/Sdk/rel-1.0.0/dotnet-dev-win-x64.latest.zip"
-
-  # Download .NET Core SDK and add to PATH
-  - ps: $env:DOTNET_INSTALL_DIR = "$pwd\.dotnetsdk"
-  - ps: mkdir $env:DOTNET_INSTALL_DIR -Force | Out-Null
-  - ps: $tempFile = [System.IO.Path]::GetTempFileName()
-  - ps: (New-Object System.Net.WebClient).DownloadFile($url, $tempFile)
-  - ps: Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory($tempFile, $env:DOTNET_INSTALL_DIR)
-  - ps: $env:Path = "$env:DOTNET_INSTALL_DIR;$env:Path"
-  - dotnet --info	
-  - cmd: build.cmd
+#  # .NET Core SDK binaries
+#  - ps: $url = "https://dotnetcli.blob.core.windows.net/dotnet/Sdk/rel-1.0.0/dotnet-dev-win-x64.latest.zip"
+#
+#  # Download .NET Core SDK and add to PATH
+#  - ps: $env:DOTNET_INSTALL_DIR = "$pwd\.dotnetsdk"
+#  - ps: mkdir $env:DOTNET_INSTALL_DIR -Force | Out-Null
+#  - ps: $tempFile = [System.IO.Path]::GetTempFileName()
+#  - ps: (New-Object System.Net.WebClient).DownloadFile($url, $tempFile)
+#  - ps: Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory($tempFile, $env:DOTNET_INSTALL_DIR)
+#  - ps: $env:Path = "$env:DOTNET_INSTALL_DIR;$env:Path"
+#  - dotnet --info	
+#  - cmd: build.cmd
 
 # artifacts:
 #  - path: 'bin'
