@@ -719,100 +719,84 @@ module Impl =
       locate : TestCode -> SourceLocation
     }
 
-  /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
-  /// Returns list of results.
-  let evalTestList =
-    let failExceptions = [
-      typeof<AssertException>.AssemblyQualifiedName
-    ]
-    let ignoreExceptions = [
-      typeof<IgnoreException>.AssemblyQualifiedName
-    ]
-    let failExceptionTypes = lazy List.choose Type.TryGetType failExceptions
-    let ignoreExceptionTypes = lazy List.choose Type.TryGetType ignoreExceptions
-
-    let (|ExceptionInList|_|) (l: Type list) (e: #exn) =
-      let et = e.GetType()
-      if l |> List.exists (fun x -> x.IsAssignableFrom et) then
-        Some()
-      else
-        None
-
-    fun config map ->
-
-      let beforeEach test =
-        config.printer.beforeEach test.name
-
-      let execFocused next test =
+  let execTestAsync locate test =
+    async {
+      let w = Stopwatch.StartNew()
+      try
         match test.state.ShouldSkipEvaluation with
         | Some ignoredMessage ->
-          { name     = test.name
-            result   = Ignored ignoredMessage
-            location = config.locate test.test
-            duration = TimeSpan.Zero } |> async.Return
-        | _ ->
-          next test
+          return { name     = test.name
+                   result   = Ignored ignoredMessage
+                   location = locate test.test
+                   duration = TimeSpan.Zero }
+        | None ->
+          match test.test with
+          | Async test ->
+            do! test
+          | Sync test ->
+            test()
+          w.Stop()
+          return { name     = test.name
+                   location = locate test.test
+                   result   = Passed
+                   duration = w.Elapsed }
+      with
+        | :? AssertException as e ->
+          w.Stop()
+          let msg =
+            (stackTraceToString e.StackTrace).Split('\n')
+            |> Seq.filter (fun q -> q.Contains ",1): ")
+            |> Enumerable.FirstOrDefault
+            |> sprintf "\n%s\n%s\n" e.Message
+          return { name     = test.name
+                   location = locate test.test
+                   result   = Failed msg
+                   duration = w.Elapsed }
+        | :? IgnoreException as e ->
+          w.Stop()
+          return { name     = test.name
+                   location = locate test.test
+                   result   = Ignored e.Message
+                   duration = w.Elapsed }
+        | e ->
+          w.Stop()
+          return { name     = test.name
+                   location = locate test.test
+                   result   = TestResult.Error e
+                   duration = w.Elapsed }
+    }
 
-      let execOne test =
-        async {
-          let w = Stopwatch.StartNew()
-          try
-            match test.test with
-            | Async test ->
-              do! test
-            | Sync test ->
-              test()
-            w.Stop()
-            return { name     = test.name
-                     location = config.locate test.test
-                     result   = Passed
-                     duration = w.Elapsed }
-          with e ->
-            w.Stop()
-            match e with
-            | ExceptionInList failExceptionTypes.Value ->
-              let msg =
-                let firstLine =
-                  (stackTraceToString e.StackTrace).Split('\n')
-                  |> Seq.filter (fun q -> q.Contains ",1): ")
-                  |> Enumerable.FirstOrDefault
-                sprintf "\n%s\n%s\n" e.Message firstLine
-              return { name     = test.name
-                       location = config.locate test.test
-                       result   = Failed msg
-                       duration = w.Elapsed }
-            | ExceptionInList ignoreExceptionTypes.Value ->
-              return { name     = test.name
-                       location = config.locate test.test
-                       result   = Ignored e.Message
-                       duration = w.Elapsed }
-            | _ ->
-              return { name     = test.name
-                       location = config.locate test.test
-                       result   = TestResult.Error e
-                       duration = w.Elapsed }
-        }
+  /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
+  /// Returns list of results.
+  let evalTestList config map =
 
-      let printOne result =
-        match result.result with
-        | Passed -> config.printer.passed result.name result.duration
-        | Failed message -> config.printer.failed result.name message result.duration
-        | Ignored message -> config.printer.ignored result.name message
-        | Error e -> config.printer.exn result.name e result.duration
+    let beforeEach test =
+      config.printer.beforeEach test.name
 
-      let pipeline =
-        execFocused (fun test ->
-          async {
-            let! beforeAsync = beforeEach test |> Async.StartChild
-            let! result = execOne test
-            do! beforeAsync
-            do! printOne result
-            return result
-          }
-        )
+    let printOne result =
+      match result.result with
+      | Passed -> config.printer.passed result.name result.duration
+      | Failed message -> config.printer.failed result.name message result.duration
+      | Ignored message -> config.printer.ignored result.name message
+      | Error e -> config.printer.exn result.name e result.duration
 
-      WrappedFocusedState.WrapStates
-      >> (map pipeline)
+    let pipeline test =
+      async {
+        let! beforeAsync = beforeEach test |> Async.StartChild
+        let! result = execTestAsync config.locate test
+        do! beforeAsync
+        do! printOne result
+        return result
+      }
+
+    WrappedFocusedState.WrapStates >> map pipeline
+
+  let evalSilentAsync test =
+    Test.toTestCodeList test
+    |> WrappedFocusedState.WrapStates
+    |> List.map (execTestAsync (fun _ -> SourceLocation.empty))
+    |> Async.Parallel
+    |> Async.map List.ofArray
 
   /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
   /// Returns list of results.
@@ -826,13 +810,28 @@ module Impl =
 
     let pmap fn ts =
       let sequenced, parallel =
-        List.mapi (fun i t -> t.sequenced, fn t |> Async.map (fun r -> i,r)) ts
-        |> List.partition fst
-        |> fun (s,p) -> List.map snd s, List.map snd p
+        if config.parallelWorkers = 1 then
+          List.map fn ts,[]
+        else
+          List.partition (fun t -> t.sequenced) ts
+          |> fun (s,p) -> List.map fn s, List.map fn p
 
       let parallelResults =
-        Async.parallelLimit config.parallelWorkers parallel
-        |> Async.RunSynchronously
+        let noWorkers =
+          if config.parallelWorkers < 0 then
+            -config.parallelWorkers * Environment.ProcessorCount
+          elif config.parallelWorkers = 0 then
+            Int32.MaxValue
+          else
+            config.parallelWorkers
+
+        if List.length parallel <= noWorkers then
+          Async.Parallel parallel
+          |> Async.RunSynchronously
+          |> List.ofArray
+        else
+          Async.parallelLimit noWorkers parallel
+          |> Async.RunSynchronously
 
       if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
         config.printer.info "Starting sequenced tests..."
@@ -842,8 +841,6 @@ module Impl =
         List.map Async.RunSynchronously sequenced
 
       List.append sequencedResults parallelResults
-      |> List.sortBy fst
-      |> List.map snd
 
     eval config pmap tests
 

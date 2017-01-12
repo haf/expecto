@@ -43,37 +43,49 @@ module TestHelpers =
   open Expecto
   open Expecto.Impl
 
-  let evalSilent =
-    eval { Tests.defaultConfig with printer = TestPrinters.silent }
-         (fun m l -> List.map ( m >> Async.RunSynchronously) l)
+  let rec private makeTest originalTest asyncTestFn =
+    match originalTest with
+    | TestCase (_,state)
+    | TestList (_,state) ->
+      TestCase(Async asyncTestFn, state)
+    | TestLabel (label,_,state) ->
+      TestLabel (label, TestCase(Async asyncTestFn, state), state)
+    | Test.Sequenced test ->
+      makeTest test asyncTestFn |> testSequenced
 
-  let inline assetTestFails' test =
-    match evalSilent test with
-    | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
-    | x -> failtestf "Should have failed, but was %A" x
+  let assertTestFails test =
+    async {
+      let! result = Impl.evalSilentAsync test
+      match result with
+      | [{ TestRunResult.result = TestResult.Ignored _ }] -> ()
+      | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
+      | [x] -> failtestf "Should have failed, but was %A" x
+      | _ -> failtestf "Should have one test to assert"
+    } |> makeTest test
 
-  let inline assertTestFails (test,focusState) =
-    let test = TestCase (Sync test,focusState)
-    match evalSilent test with
-    | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
-    | x -> failtestf "Should have failed, but was %A" x
+  let assertTestFailsWithMsgStarting (msg : string) test =
+    async {
+      let! result = Impl.evalSilentAsync test
+      match result with
+      | [{ TestRunResult.result = TestResult.Ignored _ }] -> ()
+      | [{ TestRunResult.result = TestResult.Failed x }] ->
+        let removeCR = x.Replace("\r","").Trim('\n')
+        Expect.stringStarts removeCR msg "Test failure strings should equal"
+      | [x] -> failtestf "Should have failed, but was %A" x
+      | _ -> failtestf "Should have one test to assert"
+    } |> makeTest test
 
-  let inline assertTestFailsWithMsg (msg : string) (test,focusState) =
-    let test = TestCase (Sync test,focusState)
-    match evalSilent test with
-    | [{ TestRunResult.result = TestResult.Failed x }] ->
-      let trimmed = x.Trim('\n')
-      Expect.equal trimmed msg "Test failure strings should equal"
-    | x ->
-      failtestf "Should have failed, but was %A" x
-
-  let inline assertTestFailsWithMsgContaining (msg : string) (test,focusState) =
-    let test = TestCase (Sync test,focusState)
-    match evalSilent test with
-    | [{ TestRunResult.result = TestResult.Failed x }] when x.Contains msg -> ()
-    | [{ TestRunResult.result = TestResult.Failed x }] ->
-      failtestf "Should have failed with message containing: \"%s\" but failed with \"%s\"" msg x
-    | x -> failtestf "Should have failed, but was %A" x
+  let assertTestFailsWithMsgContaining (msg : string) test =
+    async {
+      let! result = Impl.evalSilentAsync test
+      match result with
+      | [{ TestRunResult.result = TestResult.Ignored _ }] -> ()
+      | [{ TestRunResult.result = TestResult.Failed x }] when x.Contains msg -> ()
+      | [{ TestRunResult.result = TestResult.Failed x }] ->
+        failtestf "Should have failed with message containing: \"%s\" but failed with \"%s\"" msg x
+      | [x] -> failtestf "Should have failed, but was %A" x
+      | _ -> failtestf "Should have one test to assert"
+    } |> makeTest test
 
   open FsCheck
 

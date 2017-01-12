@@ -41,56 +41,16 @@ let tests =
       }
 
       test "different length, actual is shorter" {
-        let format = "Failing - string with different length"
-        let actual = "Test"
-        let expected = "Test2"
-        let diffString = "     ↑"
-        let test () = Expect.equal actual expected format
-        let msg =
-          sprintf "%s.
-          Expected string to equal:
-          %A
-          %s
-          The string differs at index %d.
-          %A
-          %s
-          String `actual` was shorter than expected, at pos %i for expected item %A."
-            format expected diffString 4 actual diffString 4 '2'
-        assertTestFailsWithMsg msg (test, Normal)
-      }
+        Expect.equal "Test" "Test2" "Failing - string with different length"
+      } |> assertTestFailsWithMsgStarting "Failing - string with different length.\n          Expected string to equal:\n          \"Test2\"\n               ↑\n          The string differs at index 4.\n          \"Test\"\n               ↑\n          String `actual` was shorter than expected, at pos 4 for expected item '2'."
 
       test "different length, actual is longer" {
-        let format = "Failing - string with different length"
-        let test () = Expect.equal "Test2" "Test" format
-        let msg =
-          sprintf """%s.
-          Expected string to equal:
-          "Test"
-               ↑
-          The string differs at index 4.
-          "Test2"
-               ↑
-          String `actual` was longer than expected, at pos 4 found item '2'."""
-            format
-        assertTestFailsWithMsg msg (test, Normal)
-      }
+        Expect.equal "Test2" "Test" "Failing - string with different length"
+      } |> assertTestFailsWithMsgStarting "Failing - string with different length.\n          Expected string to equal:\n          \"Test\"\n               ↑\n          The string differs at index 4.\n          \"Test2\"\n               ↑\n          String `actual` was longer than expected, at pos 4 found item '2'."
 
       test "fail - different content" {
-        let format = "Failing - string with different content"
-        let test () = Expect.equal "Test" "Tes2" format
-        let diffString = "   ↑"
-        let msg =
-          sprintf """%s.
-          Expected string to equal:
-          "Tes2"
-              ↑
-          The string differs at index 3.
-          "Test"
-              ↑
-          String does not match at position 3. Expected char: '2', but got 't'."""
-            format
-        assertTestFailsWithMsg msg (test, Normal)
-      }
+        Expect.equal "Test" "Tes2" "Failing - string with different content"
+      } |> assertTestFailsWithMsgStarting "Failing - string with different content.\n          Expected string to equal:\n          \"Tes2\"\n              ↑\n          The string differs at index 3.\n          \"Test\"\n              ↑\n          String does not match at position 3. Expected char: '2', but got 't'."
     ]
 
     testList "sumTestResults" [
@@ -144,12 +104,14 @@ let tests =
     ]
 
     testList "Exception handling" [
-      testCase "Expecto ignore" <| fun _ ->
+      testCaseAsync "Expecto ignore" <| async {
         let test () = skiptest "b"
         let test = TestCase (Sync test, Normal)
-        match evalSilent test with
+        let! result = Impl.evalSilentAsync test
+        match result with
         | [{ result = Ignored "b" }] -> ()
         | x -> failtestf "Expected result = Ignored, got\n %A" x
+      }
     ]
 
     testList "Setup & teardown" [
@@ -222,14 +184,16 @@ let expecto =
     ]
 
     testSequenced <| testList "Timeout" [
-      testCase "fail" <| fun _ ->
-        let test = TestCase(Test.timeout 10 (async { do! Async.Sleep 100 } |> Async), Normal)
-        let result = evalSilent test |> sumTestResults
-        result.failed.Length ==? 1
-      testCase "pass" <| fun _ ->
-        let test = TestCase(Test.timeout 1000 (Sync ignore), Normal)
-        let result = evalSilent test |> sumTestResults
-        result.passed.Length ==? 1
+      testCaseAsync "fail" <| async {
+        let test = TestCase(Async.Sleep 100 |> Async |> Test.timeout 10, Normal)
+        let! result = Impl.evalSilentAsync test
+        (sumTestResults result).failed.Length ==? 1
+      }
+      testCaseAsync "pass" <| async {
+        let test = TestCase(Sync ignore |> Test.timeout 1000, Normal)
+        let! result = Impl.evalSilentAsync test
+        (sumTestResults result).passed.Length ==? 1
+      }
     ]
 
     testList "Reflection" [
@@ -336,7 +300,7 @@ let expecto =
     ]
 
     testList "transformations" [
-      testCase "multiple cultures" <| fun _ ->
+      testCaseAsync "multiple cultures" <| async {
         let withCulture culture test =
           fun () ->
             let c = Thread.CurrentThread.CurrentCulture
@@ -365,8 +329,10 @@ let expecto =
 
         let culturizedTests = testWithCultures cultures atest
 
+        let! results = Impl.evalSilentAsync culturizedTests
+
         let results =
-          evalSilent culturizedTests
+          results
           |> Seq.map (fun r -> r.name, r.result)
           |> Map.ofSeq
 
@@ -375,6 +341,7 @@ let expecto =
         Expect.isTrue (TestResult.isFailed results.["parse/en-US"]) "parse en-US fails"
         Expect.isTrue (TestResult.isPassed results.["parse/es-AR"]) "parse es-AR passes"
         Expect.isTrue (TestResult.isPassed results.["parse/fr-FR"]) "parse fr-FR passes"
+      }
     ]
 
     testList "expectations" [
@@ -382,63 +349,62 @@ let expecto =
         testCase "pass" <| fun _ ->
           Expect.notEqual "" "monkey" "should be different"
 
-        testCase "fail" <| fun _ ->
-          let test () = Expect.notEqual "" "" "should fail"
-          assertTestFails (test, Normal)
+        testCase "fail" (fun _ ->
+          Expect.notEqual "" "" "should fail"
+        ) |> assertTestFails
       ]
 
       testList "raise" [
+
         testCase "pass" <| fun _ ->
           Expect.throwsT<ArgumentNullException> (fun _ -> nullArg "")
                                                 "Should throw null arg"
 
-        testCase "fail with incorrect exception" <| fun _ ->
-          let test () =
-            Expect.throwsT<ArgumentException> (fun _ -> nullArg "")
-                                              "Expected argument exception."
+        testCase "fail with incorrect exception" (fun _ ->
+          Expect.throwsT<ArgumentException> (fun _ -> nullArg "")
+                                            "Expected argument exception."
+        ) |> assertTestFails
 
-          assertTestFails (test, Normal)
+        testCase "fail with no exception" (fun _ ->
+          Expect.throwsT<ArgumentNullException> ignore "Ignore 'should' throw an exn, ;)"
+        ) |> assertTestFails
 
-        testCase "fail with no exception" <| fun _ ->
-          let test () =
-            Expect.throwsT<ArgumentNullException> ignore "Ignore 'should' throw an exn, ;)"
-          assertTestFails (test, Normal)
       ]
 
       testList "string contain" [
         testCase "pass" <| fun _ ->
           Expect.stringContains "hello world" "hello" "String actually contains"
 
-        testCase "fail" <| fun _ ->
-          let test () = Expect.stringContains "hello world" "a" "Deliberately failing"
-          assertTestFails (test, Normal)
+        testCase "fail" (fun _ ->
+          Expect.stringContains "hello world" "a" "Deliberately failing"
+        ) |> assertTestFails
       ]
 
       testList "string starts" [
         testCase "pass" <| fun _ ->
           Expect.stringStarts "hello world" "hello" "String actually starts"
 
-        testCase "fail" <| fun _ ->
-          let test () = Expect.stringStarts "hello world" "a" "Deliberately failing"
-          assertTestFails (test, Normal)
+        testCase "fail" (fun _ ->
+          Expect.stringStarts "hello world" "a" "Deliberately failing"
+        ) |> assertTestFails
       ]
 
       testList "string ends" [
         testCase "pass" <| fun _ ->
           Expect.stringEnds "hello world" "world" "String actually ends"
 
-        testCase "fail" <| fun _ ->
-          let test () = Expect.stringEnds "hello world" "a" "Deliberately failing"
-          assertTestFails (test, Normal)
+        testCase "fail" (fun _ ->
+          Expect.stringEnds "hello world" "a" "Deliberately failing"
+        ) |> assertTestFails
       ]
 
       testList "string has length" [
         testCase "pass" <| fun _ ->
           Expect.stringHasLength "hello" 5 "String actually has length"
 
-        testCase "fail" <| fun _ ->
-          let test () = Expect.stringHasLength "hello world" 5 "Deliberately failing"
-          assertTestFails (test, Normal)
+        testCase "fail" (fun _ ->
+          Expect.stringHasLength "hello world" 5 "Deliberately failing"
+        ) |> assertTestFails
       ]
 
       testList "#containsAll" [
@@ -449,134 +415,79 @@ let expecto =
           Expect.containsAll [|21;37|] [|37;21|]
                              "Same elements in different order"
 
-        testCase "sequence contains everything expected" <| fun _ ->
-          let format = "Sequence should contain one and five"
-          let test () =
-            Expect.containsAll [|2; 1; 3|] [| 1; 5 |] format
-          let msg =
-            sprintf "%s.
-    Sequence `actual` does not contain all `expected` elements.
-        All elements in `actual`:
-        {1, 2, 3}
-        All elements in `expected`:
-        {1, 5}
-        Missing elements from `actual`:
-        {5}
-        Extra elements in `actual`:
-        {2, 3}"
-              format
-          assertTestFailsWithMsg msg (test, Normal)
+        testCase "sequence contains everything expected" (fun _ ->
+          Expect.containsAll [|2; 1; 3|] [| 1; 5 |]
+                      "Sequence should contain one and five"
+        ) |> assertTestFailsWithMsgStarting "Sequence should contain one and five.\n    Sequence `actual` does not contain all `expected` elements.\n        All elements in `actual`:\n        {1, 2, 3}\n        All elements in `expected`:\n        {1, 5}\n        Missing elements from `actual`:\n        {5}\n        Extra elements in `actual`:\n        {2, 3}"
       ]
 
       testList "#distribution" [
         testCase "identical sequence" <| fun _ ->
-          Expect.distribution [|21;37|] <| Map [
-              (21, 1ul)
-              (37, 1ul)
-            ] <| "Identical"
+          Expect.distribution [21;37] (Map [21,1ul; 37,1ul])
+            "Identical"
 
         testCase "sequence contains all in different order" <| fun _ ->
-          Expect.distribution [|21;37|] <| Map[
-              (37, 1ul)
-              (21, 1ul)
-            ]
-                             <| "Same elements in different order"
+          Expect.distribution [21;37] (Map [37,1ul; 21,1ul])
+            "Same elements in different order"
 
-        testCase "sequence doesn't contain repeats in expected" <| fun _ ->
-          let format = "Sequence should contain one, two and four"
-          let test () =
-            Expect.distribution [|2; 2; 4|]  <| Map [
-                  (2, 1ul)
-                  (1, 1ul)
-                  (4, 2ul)
-                ] <| format
-          let msg =
-            sprintf "%s.
-    Sequence `actual` does not contain every `expected` elements.
-        All elements in `actual`:
-        {2, 2, 4}
-        All elements in `expected` ['item', 'number of expected occurrences']:
-        {1: 1, 2: 1, 4: 2}\n\tMissing elements from `actual`:\n\t'1' (0/1)\n\t'4' (1/2)\n\tExtra elements in `actual`:\n\t'2' (2/1)"
-              format
-          assertTestFailsWithMsg msg (test, Normal)
+        testCase "sequence doesn't contain repeats in expected" (fun _ ->
+          Expect.distribution [2;2;4] (Map [2,1ul; 1,1ul; 4,2ul])
+            "Sequence should contain one, two and four"
+        ) |> assertTestFailsWithMsgStarting "Sequence should contain one, two and four.\n    Sequence `actual` does not contain every `expected` elements.\n        All elements in `actual`:\n        {2, 2, 4}\n        All elements in `expected` ['item', 'number of expected occurrences']:\n        {1: 1, 2: 1, 4: 2}\n\tMissing elements from `actual`:\n\t'1' (0/1)\n\t'4' (1/2)\n\tExtra elements in `actual`:\n\t'2' (2/1)"
 
-        testCase "sequence does contain repeats in expected but should not" <| fun _ ->
-          let format = "Sequence should contain two, two and four"
-          let test () =
-            Expect.distribution [|2; 2|] <| Map[
-                (2, 2ul)
-                (4, 1ul)
-            ] <| format
-          let msg =
-            sprintf "%s.
-    Sequence `actual` does not contain every `expected` elements.
-        All elements in `actual`:
-        {2, 2}
-        All elements in `expected` ['item', 'number of expected occurrences']:
-        {2: 2, 4: 1}\n\tMissing elements from `actual`:\n\t'4' (0/1)"
-              format
-          assertTestFailsWithMsg msg (test, Normal)
+        testCase "sequence does contain repeats in expected but should not" (fun _ ->
+          Expect.distribution [2;2] (Map [2,2ul; 4,1ul])
+            "Sequence should contain two, two and four"
+        ) |> assertTestFailsWithMsgStarting "Sequence should contain two, two and four.\n    Sequence `actual` does not contain every `expected` elements.\n        All elements in `actual`:\n        {2, 2}\n        All elements in `expected` ['item', 'number of expected occurrences']:\n        {2: 2, 4: 1}\n\tMissing elements from `actual`:\n\t'4' (0/1)"
 
-        testCase "sequence does not contains everything expected" <| fun _ ->
-          let format = "Sequence should contain two and two"
-          let test () =
-            Expect.distribution [|2; 2; 4|] <| Map[
-              (2, 1ul)
-              (4, 1ul)
-            ] <| format
-          let msg =
-            sprintf "%s.
-    Sequence `actual` does not contain every `expected` elements.
-        All elements in `actual`:
-        {2, 2, 4}
-        All elements in `expected` ['item', 'number of expected occurrences']:
-        {2: 1, 4: 1}\n\tExtra elements in `actual`:\n\t'2' (2/1)"
-              format
-          assertTestFailsWithMsg msg (test, Normal)
+        testCase "sequence does not contains everything expected" (fun _ ->
+          Expect.distribution [2;2;4] (Map [2,1ul; 4,1ul])
+            "Sequence should contain two and two"
+        ) |> assertTestFailsWithMsgStarting "Sequence should contain two and two.\n    Sequence `actual` does not contain every `expected` elements.\n        All elements in `actual`:\n        {2, 2, 4}\n        All elements in `expected` ['item', 'number of expected occurrences']:\n        {2: 1, 4: 1}\n\tExtra elements in `actual`:\n\t'2' (2/1)"
       ]
 
       testList "sequence equal" [
         testCase "pass" <| fun _ ->
           Expect.sequenceEqual [1;2;3] [1;2;3] "Sequences actually equal"
 
-        testCase "fail - longer" <| fun _ ->
-          let test () = Expect.sequenceEqual [1;2;3] [1] "Deliberately failing"
-          assertTestFails (test, Normal)
+        testCase "fail - longer" (fun _ ->
+          Expect.sequenceEqual [1;2;3] [1] "Deliberately failing"
+        ) |> assertTestFails
 
-        testCase "fail - shorter" <| fun _ ->
-          let test () = Expect.sequenceEqual [1] [1;2;3] "Deliberately failing"
-          assertTestFails (test, Normal)
+        testCase "fail - shorter" (fun _ ->
+          Expect.sequenceEqual [1] [1;2;3] "Deliberately failing"
+        ) |> assertTestFails
       ]
 
       testList "sequence starts" [
         testCase "pass" <| fun _ ->
           Expect.sequenceStarts [1;2;3] [1;2] "Sequences actually starts"
 
-        testCase "fail - different" <| fun _ ->
-          let test () = Expect.sequenceStarts [1;2;3] [2] "Deliberately failing"
-          assertTestFails (test, Normal)
+        testCase "fail - different" (fun _ ->
+          Expect.sequenceStarts [1;2;3] [2] "Deliberately failing"
+        ) |> assertTestFails
 
-        testCase "fail - subject shorter" <| fun _ ->
-          let test () = Expect.sequenceStarts [1] [1;2;3] "Deliberately failing"
-          assertTestFails (test, Normal)
+        testCase "fail - subject shorter" (fun _ ->
+          Expect.sequenceStarts [1] [1;2;3] "Deliberately failing"
+        ) |> assertTestFails
       ]
 
       testList "sequence ascending" [
         testCase "pass" <| fun _ ->
           Expect.isAscending [1;2;3] "Sequences actually ascending"
 
-        testCase "fail " <| fun _ ->
-          let test () = Expect.isAscending [1;3;2] "Deliberately failing"
-          assertTestFails (test, Normal)
+        testCase "fail " (fun _ ->
+          Expect.isAscending [1;3;2] "Deliberately failing"
+        ) |> assertTestFails
       ]
 
       testList "sequence descending" [
         testCase "pass" <| fun _ ->
           Expect.isDescending [3;2;1] "Sequences actually descending"
 
-        testCase "fail " <| fun _ ->
-          let test () = Expect.isDescending [3;1;2] "Deliberately failing"
-          assertTestFails (test, Normal)
+        testCase "fail " (fun _ ->
+          Expect.isDescending [3;1;2] "Deliberately failing"
+        ) |> assertTestFails
       ]
 
     ]
@@ -596,12 +507,13 @@ let expecto =
             then failwith "over 5"
         }
       for c in [-5; 1; 6] ->
-        testCase (sprintf "compare comp.exp. and normal with value %d" c) <| fun _ ->
-          let normal = evalSilent <| testNormal c
-          let compexp = evalSilent <| testCompExp c
+        testCaseAsync (sprintf "compare comp.exp. and normal with value %d" c) <| async {
+          let! normal = testNormal c |> Impl.evalSilentAsync
+          let! compexp = testCompExp c |> Impl.evalSilentAsync
           let normalTag = TestResult.tag normal.[0].result
           let compexpTag = TestResult.tag compexp.[0].result
           Expect.equal normalTag compexpTag "result"
+        }
     ]
   ]
 
@@ -623,7 +535,7 @@ let popcountTest =
   ]
 
 [<Tests>]
-let async =
+let asyncTests =
   testList "async" [
 
     testCaseAsync "simple" <| async {
@@ -635,13 +547,10 @@ let async =
       Expect.equal 1 n "1=n"
     }
 
-    testCase "can fail" <| fun _ ->
-      let test =
-        testCaseAsync "let" <| async {
-          let! n = async { return 2 }
-          Expect.equal 1 n "1=n"
-        }
-      assetTestFails' test
+    testCaseAsync "can fail" <| async {
+      let! n = async { return 2 }
+      Expect.equal 1 n "1=n"
+    } |> assertTestFails
 
   ]
 
@@ -649,29 +558,27 @@ let async =
 let performance =
   testSequenced <| testList "performance" [
 
-    testCase "1 <> 2" <| fun _ ->
-      let test () =
-        Expect.isFasterThan (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
-      assertTestFailsWithMsgContaining "same" (test, Normal)
+    testCase "1 <> 2" (fun _ ->
+      Expect.isFasterThan (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
+    )
+    |> assertTestFailsWithMsgContaining "same"
 
     testCase "half is faster" <| fun _ ->
       Expect.isFasterThan (fun () -> repeat10000 log 76.0)
                           (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
                           "half is faster"
 
-    testCase "double is faster should fail" <| fun _ ->
-      let test () =
-        Expect.isFasterThan (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
-                            (fun () -> repeat10000 log 76.0)
-                            "double is faster should fail"
-      assertTestFailsWithMsgContaining "slower" (test, Normal)
+    testCase "double is faster should fail" (fun _ ->
+      Expect.isFasterThan (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
+                          (fun () -> repeat10000 log 76.0)
+                          "double is faster should fail"
+      ) |> assertTestFailsWithMsgContaining "slower"
 
-    ptestCase "same function is faster should fail" <| fun _ ->
-      let test () =
-        Expect.isFasterThan (fun () -> repeat100000 log 76.0)
-                            (fun () -> repeat100000 log 76.0)
-                            "same function is faster should fail"
-      assertTestFailsWithMsgContaining "equal" (test, Normal)
+    ptestCase "same function is faster should fail" (fun _ ->
+      Expect.isFasterThan (fun () -> repeat100000 log 76.0)
+                          (fun () -> repeat100000 log 76.0)
+                          "same function is faster should fail"
+      ) |> assertTestFailsWithMsgContaining "equal"
 
     testCase "matrix" <| fun _ ->
       let n = 100
@@ -702,12 +609,11 @@ let performance =
                              (fun measurer -> reset(); measurer mulIJK ())
                              "ikj faster than ijk"
 
-    testCase "popcount" <| fun _ ->
-      let test () =
-        Expect.isFasterThan (fun () -> repeat10000 (popCount16 >> int) 987us)
-                            (fun () -> repeat10000 (popCount >> int) 987us)
-                            "popcount 16 faster than 32 fails"
-      assertTestFailsWithMsgContaining "slower" (test, Normal)
+    testCase "popcount" (fun _ ->
+      Expect.isFasterThan (fun () -> repeat10000 (popCount16 >> int) 987us)
+                          (fun () -> repeat10000 (popCount >> int) 987us)
+                          "popcount 16 faster than 32 fails"
+      ) |> assertTestFailsWithMsgContaining "slower"
   ]
 
 [<Tests>]
@@ -727,19 +633,16 @@ let close =
       Expect.floatClose {absolute=0.0; relative=1e-3}
         10004.0 10000.0 "user"
 
-    testCase "can fail" <| fun _ ->
-      let test() =
-        Expect.floatClose Accuracy.low 1004.0 1000.0 "can fail"
-      assertTestFails (test, Normal)
+    testCase "can fail" (fun _ ->
+      Expect.floatClose Accuracy.low 1004.0 1000.0 "can fail"
+    ) |> assertTestFails
 
-    testCase "nan fails" <| fun _ ->
-      let test() =
-        Expect.floatClose Accuracy.low nan 1.0 "nan fails"
-      assertTestFails (test, Normal)
+    testCase "nan fails" (fun _ ->
+      Expect.floatClose Accuracy.low nan 1.0 "nan fails"
+    ) |> assertTestFails
 
-    testCase "inf fails" <| fun _ ->
-      let test() =
-        Expect.floatClose Accuracy.low infinity 1.0 "inf fails"
-      assertTestFails (test, Normal)
+    testCase "inf fails" (fun _ ->
+      Expect.floatClose Accuracy.low infinity 1.0 "inf fails"
+    ) |> assertTestFails
 
   ]
