@@ -494,6 +494,28 @@ run properties
 
 You can freely mix testProperty with testCase and testList.
 
+### Link collection
+
+These are a few resources that will get you on your way towards fully-specified
+systems with property-based testing.
+
+ - [An introduction to property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing/) with [slides and video](http://fsharpforfunandprofit.com/pbt/).
+ - [Choosing properties for property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing-2/).
+ - [(video) Race conditions, distribution and interactions](https://vimeo.com/68383317).
+ - [Test data: generators, schrinkers and instances](https://fscheck.github.io/FsCheck/TestData.html).
+ - [Model based testing](https://fscheck.github.io/FsCheck/StatefulTesting.html).
+ - [Testing and quality assurance in Haskell](http://book.realworldhaskell.org/read/testing-and-quality-assurance.html).
+ - [Property-based testing for better code](https://www.youtube.com/watch?v=shngiiBfD80).
+
+#### Code from FsCheck
+
+These code snippets show a bit of the API usage and how to create Arbitrary
+instances (which encapsulate generation with Gen instances and shrinkage),
+respectively.
+
+ - [FsCheck Examples.fs](https://github.com/fscheck/FsCheck/blob/master/examples/FsCheck.Examples/Examples.fs).
+ - [FsCheck Arbitrary.fs](https://github.com/fscheck/FsCheck/blob/master/src/FsCheck/Arbitrary.fs#L26)
+
 ## BenchmarkDotNet usage
 
 The integration with
