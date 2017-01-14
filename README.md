@@ -19,9 +19,11 @@ compositional (just like Suave and Logary are).
       * [runTestsInAssembly](#runtestsinassembly)
       * [Filtering with filter](#filtering-with-filter)
     * [Writing tests](#writing-tests)
+      * [Normal tests](#normal-tests)
       * [testList for grouping](#testlist-for-grouping)
+      * [Test fixtures](#test-fixtures)
+      * [Pending tests](#pending-tests)
       * [Focusing tests](#focusing-tests)
-      * [Pending tests (ptestCase, ptestList)](#pending-tests-ptestcase-ptestlist)
       * [Sequenced tests with testSequenced](#sequenced-tests-with-testsequenced)
     * [Expectations with Expect](#expectations-with-expect)
       * [Expect module](#expect-module)
@@ -141,6 +143,7 @@ integrationTests // from MyLib.Tests
 Expecto supports the following test constructors:
 
  - normal test cases with `testCase` and `testCaseAsync`
+ - lists of tests with `testList`
  - test fixtures with `testFixture`
  - pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
  - focused tests (that are the only ones run) with `ftestCase` and `ftestCaseAsync`
@@ -157,6 +160,12 @@ All of the above compile to a `Test` value that you can compose. For example,
 you can compose a `test` and a `testCaseAsync` in a `testList` which you wrap in
 `testSequenced` because all tests in the list use either `Expect.fasterThan` or
 they are using `Expecto.BenchmarkDotNet` for performance tests.
+
+### Normal tests
+
+ - `testCase : string -> (unit -> unit) -> Test`
+ - `test : string -> TestCaseBuilder`
+ - `testCaseAsync : string -> Async<unit> -> Test`
 
 ### `testList` for grouping
 
@@ -180,6 +189,71 @@ let tests =
 
 Also have a look at [the
 samples](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sample.fs).
+
+
+### Test fixtures
+
+ - `testFixture : ('a -> unit -> unit) -> (seq<string * 'a>) -> seq<Test>`
+
+The test fixture takes a factory and a sequence of partial tests. The `'a`
+parameter will be inferred to the *function type*, such as
+`MemoryStream -> 'a -> unit -> 'a`.
+
+Example:
+
+```fsharp
+testList "Setup & teardown 3" [
+  let withMemoryStream f () =
+    use ms = new MemoryStream()
+    f ms
+  yield! testFixture withMemoryStream [
+    "can read",
+      fun ms -> ms.CanRead ==? true
+    "can write",
+      fun ms -> ms.CanWrite ==? true
+  ]
+]
+```
+
+### Pending tests
+
+ - `ptestCase`
+ - `ptest`
+ - `ptestCaseAsync`
+
+You can mark an individual spec or container as Pending. This will prevent the
+spec (or specs within the list) from running.  You do this by adding a `p`
+before *testCase* or *testList* or `P` before *Tests* attribute (when reflection
+tests discovery is used).
+
+```fsharp
+open Expecto
+
+[<PTests>]
+let skippedTestFromReflectionDiscovery = testCase "skipped" <| fun _ ->
+    Expect.equal (2+2) 4 "2+2"
+
+[<Tests>]
+let myTests =
+  testList "normal" [
+    testList "unfocused list" [
+      ptestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
+      testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+      ptest "skipped" { Expect.equal (2+2) 1 "2+2?" }
+    ]
+    testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+    ptestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
+    ptestList "skipped list" [
+      testCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
+      ftestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
+    ]
+  ]
+```
+
+Optionally, in the `TestCode` (function body):
+
+ - `Tests.skiptest`
+ - `Tests.skiptestf`
 
 ### Focusing tests
 
@@ -227,37 +301,6 @@ let focusedTests =
 
 Expecto accepts the command line argument `--fail-on-focused-tests`, which checks if focused tests exist.
 This parameter can be set in build scripts and allows CI servers to reject commits that accidentally included focused tests.
-
-### Pending tests (`ptestCase`, `ptestList`)
-
-You can mark an individual spec or container as Pending. This will prevent the
-spec (or specs within the list) from running.  You do this by adding a `p`
-before *testCase* or *testList* or `P` before *Tests* attribute (when reflection
-tests discovery is used).
-
-```fsharp
-open Expecto
-
-[<PTests>]
-let skippedTestFromReflectionDiscovery = testCase "skipped" <| fun _ ->
-    Expect.equal (2+2) 4 "2+2"
-
-[<Tests>]
-let myTests =
-  testList "normal" [
-    testList "unfocused list" [
-      ptestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
-      testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
-      ptest "skipped" { Expect.equal (2+2) 1 "2+2?" }
-    ]
-    testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
-    ptestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
-    ptestList "skipped list" [
-      testCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
-      ftestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
-    ]
-  ]
-```
 
 ### Sequenced tests with `testSequenced`
 

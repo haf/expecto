@@ -95,7 +95,7 @@ let tests =
       testCase "ToString" <| fun _ ->
         let tr = {
           name = ""
-          location =SourceLocation.empty
+          location = SourceLocation.empty
           result = Passed
           duration = TimeSpan.MaxValue
         }
