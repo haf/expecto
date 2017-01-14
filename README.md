@@ -118,6 +118,40 @@ Signature `ExpectoConfig -> string[] -> int`. Runs the tests in the current
 assembly and also overrides the passed `ExpectoConfig` with the command line
 parameters.
 
+### Filtering with `filter`
+
+You can single out tests by filtering them by name (e.g. in the
+interactive/REPL). For example:
+
+```fsharp
+open Expecto
+open MyLib.Tests
+integrationTests // from MyLib.Tests
+|> Test.filter (fun s -> s.EndsWith "another test") // the filtering function
+|> runTests defaultConfig
+```
+
+## Writing tests
+
+Expecto supports the following test constructors:
+
+ - normal test cases with `testCase` and `testCaseAsync`
+ - test fixtures with `testFixture`
+ - pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
+ - focused tests (that are the only ones run) with `ftestCase` and `ftestCaseAsync`
+ - sequenced tests with `testSequenced`
+ - parametised tests with `testParam`
+ - property based tests with `testProperty` and `testPropertyWithConfig` from
+   `Expecto.FsCheck`
+ - testCases with the workflow builder `test`, `ptest`, `ftest` supporting
+   deterministic disposal, loops and such
+ - performance tests with `Expecto.BenchmarkDotNet`
+
+All of the above compile to a `Test` value that you can compose. For example,
+you can compose a `test` and a `testCaseAsync` in a `testList` which you wrap in
+`testSequenced` because all tests in the list use either `Expect.fasterThan` or
+they are using `Expecto.BenchmarkDotNet` for performance tests.
+
 ### `testList` for grouping
 
 Tests can be grouped (with arbitrary nesting):
@@ -141,20 +175,14 @@ let tests =
 Also have a look at [the
 samples](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sample.fs).
 
-### Filtering with `filter`
-
-You can single out tests by filtering them by name (e.g. in the
-interactive/REPL). For example:
-
-```fsharp
-open Expecto
-open MyLib.Tests
-integrationTests // from MyLib.Tests
-|> Test.filter (fun s -> s.EndsWith "another test") // the filtering function
-|> runTests defaultConfig
-```
-
 ### Focusing tests
+
+Focusing can be done with
+
+ - `ftestCase`
+ - `ftestList`
+ - `ftestCaseAsync`
+ - `ftest`
 
 It is often convenient, when developing to be able to run a subset of specs.
 Expecto allows you to focus specific test cases or tests list by putting `f` before *testCase* or *testList* or `F` before attribute *Tests*(when reflection tests discovery is used).
@@ -194,7 +222,7 @@ let focusedTests =
 Expecto accepts the command line argument `--fail-on-focused-tests`, which checks if focused tests exist.
 This parameter can be set in build scripts and allows CI servers to reject commits that accidentally included focused tests.
 
-### Pending tests
+### Pending tests (`ptestCase`, `ptestList`)
 
 You can mark an individual spec or container as Pending. This will prevent the
 spec (or specs within the list) from running.  You do this by adding a `p`
@@ -225,7 +253,7 @@ let myTests =
   ]
 ```
 
-### Sequenced tests
+### Sequenced tests with `testSequenced`
 
 You can mark an individual spec or container as Sequenced.
 This will make sure these tests are run sequentially.
@@ -246,7 +274,7 @@ let timeout =
     ]
 ```
 
-## Expectations
+## Expectations with `Expect`
 
 All expect-functions have the signature `actual -> expected -> string -> unit`,
 leaving out `expected` when obvious from the function.
