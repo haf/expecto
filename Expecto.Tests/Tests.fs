@@ -158,6 +158,16 @@ let expecto =
       ]
     ]
 
+    testList "testParam 1" (
+      testParam 1333 [
+        "First sample",
+          fun value () ->
+            Expect.equal value 1333 "Should be expected value"
+        "Second sample",
+          fun value () ->
+            Expect.isLessThan value 1444 "Should be less than"
+    ] |> List.ofSeq)
+
     testList "Test filter" [
       let tests =
         TestList (

@@ -25,6 +25,9 @@ compositional (just like Suave and Logary are).
       * [Pending tests](#pending-tests)
       * [Focusing tests](#focusing-tests)
       * [Sequenced tests with testSequenced](#sequenced-tests-with-testsequenced)
+      * [Parametised tests with testParam](#parametised-tests-with-testparam)
+      * [Property based tests](#property-based-tests)
+      * [Performance tests](#performance-tests)
     * [Expectations with Expect](#expectations-with-expect)
       * [Expect module](#expect-module)
       * [Performance module](#performance-module)
@@ -149,10 +152,10 @@ Expecto supports the following test constructors:
  - focused tests (that are the only ones run) with `ftestCase` and `ftestCaseAsync`
  - sequenced tests with `testSequenced`
  - parametised tests with `testParam`
- - property based tests with `testProperty` and `testPropertyWithConfig` from
-   `Expecto.FsCheck`
  - testCases with the workflow builder `test`, `ptest`, `ftest` supporting
    deterministic disposal, loops and such
+ - property based tests with `testProperty` and `testPropertyWithConfig` from
+   `Expecto.FsCheck`
  - performance tests with `Expecto.BenchmarkDotNet` and
    `benchmark<TBench> : string -> Test`.
 
@@ -311,17 +314,41 @@ This can be useful for timeout and performance testing.
 ```fsharp
 [<Tests>]
 let timeout =
-    testSequenced <| testList "Timeout" [
-      testCase "fail" <| fun _ ->
-        let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
-        let result = evalSilent test |> sumTestResults
-        result.failed.Length ==? 1
-      testCase "pass" <| fun _ ->
-        let test = TestCase(Test.timeout 1000 ignore, Normal)
-        let result = evalSilent test |> sumTestResults
-        result.passed.Length ==? 1
-    ]
+  testSequenced <| testList "Timeout" [
+    testCase "fail" <| fun _ ->
+      let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
+      let result = evalSilent test |> sumTestResults
+      result.failed.Length ==? 1
+    testCase "pass" <| fun _ ->
+      let test = TestCase(Test.timeout 1000 ignore, Normal)
+      let result = evalSilent test |> sumTestResults
+      result.passed.Length ==? 1
+  ]
 ```
+
+### Parametised tests with `testParam`
+
+ - `testParam`
+
+```fsharp
+testList "numberology 101" (
+  testParam 1333 [
+    "First sample",
+      fun value () ->
+        Expect.equal value 1333 "Should be expected value"
+    "Second sample",
+      fun value () ->
+        Expect.isLessThan value 1444 "Should be less than"
+] |> List.ofSeq)
+```
+
+### Property based tests
+
+See the FsCheck section below.
+
+### Performance tests
+
+See the BenchmarkDotNet section below.
 
 ## Expectations with `Expect`
 
