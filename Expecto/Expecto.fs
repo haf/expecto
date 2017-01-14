@@ -931,7 +931,8 @@ module Impl =
     | Async _ ->
       ("Unknown Async", "Unknown Async")
 
-  //Ported from: https://github.com/adamchester/expecto-adapter/blob/master/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
+  // Ported from
+  // https://github.com/adamchester/expecto-adapter/blob/885fc9fff0/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
   let getSourceLocation (asm:Assembly) className methodName =
     let lineNumberIndicatingHiddenLine = 0xfeefee
     let getEcma335TypeName (clrTypeName:string) = clrTypeName.Replace("+", "/")
