@@ -3,12 +3,31 @@
 [![Build Status](https://travis-ci.org/haf/expecto.svg?branch=master)](https://travis-ci.org/haf/expecto)
 [![NuGet Badge](https://buildstats.info/nuget/expecto)](https://www.nuget.org/packages/expecto)
 
-Expecto is a unit testing library for F#. It's a fork of Fuchu aiming to be
-properly updated and pushed to nuget when PRs come in. It aims to be an
-opinionated testing framework with batteries included, while still being
-compositional (just like Suave and Logary are).
+Expecto is a smooth testing framework for F#, with **APIs made for humans**,
+giving **strong testing methodologies to everyone**.
 
-![Sample output](docs/sample-output-2.png)
+With Expecto you write tests as values. Tests can be composed, reduced,
+filtered, repeated and passed as values, because they are values. This gives the
+programmer a lot of leverage when writing tests.
+
+Expecto comes with batteries included, but it's still open for extension due to
+its compositional model.
+
+VSCode and Ionide (`ionide-fsharp`) integrate out-of-the-box with Expecto's command-line output.
+There's also a nuget `Expecto.VisualStudio.TestAdapter` that you can add to your
+test project to enable Visual Studio integration.
+
+Originally, Expecto is a fork of Fuchu aiming to be properly updated and pushed
+to nuget when PRs come in. Expecto is part of the F# suite of libraries I've
+built or am building, to make F# the most approachable language for system
+programming.
+
+ - [Suave](https://suave.io)
+ - [Logary](https://github.com/logary/)
+ - [Http.fs](https://github.com/haf/Http.fs/)
+
+What follows is the Table of Contents for this README, which also serves as the
+documentation for the project.
 
   * [expecto](#expecto)
     * [Installing](#installing)
@@ -45,6 +64,8 @@ compositional (just like Suave and Logary are).
     * [About upgrading from Fuchu](#about-upgrading-from-fuchu)
       * [Why the strange name?](#why-the-strange-name)
       * [What does 'expected to have type TestCode' mean?](#what-does-expected-to-have-type-testcode-mean)
+
+![Sample output](docs/sample-output-2.png)
 
 ## Installing
 
