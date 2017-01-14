@@ -150,7 +150,8 @@ Expecto supports the following test constructors:
    `Expecto.FsCheck`
  - testCases with the workflow builder `test`, `ptest`, `ftest` supporting
    deterministic disposal, loops and such
- - performance tests with `Expecto.BenchmarkDotNet`
+ - performance tests with `Expecto.BenchmarkDotNet` and
+   `benchmark<TBench> : string -> Test`.
 
 All of the above compile to a `Test` value that you can compose. For example,
 you can compose a `test` and a `testCaseAsync` in a `testList` which you wrap in
