@@ -45,6 +45,7 @@
  - No final newline in files, please.
  - Open specify `open` directives for the used namespaces and modules.
  - Prefer to cluster `open` directives at the top of the file.
+ - Remember to follow [the guidelines!][http://devopsreactions.tumblr.com/post/140324458371/when-someone-doesnt-follow-the-coding-style]
 
 ## Invariants
 
