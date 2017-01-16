@@ -365,7 +365,53 @@ testList "numberology 101" (
 
 ### Property based tests
 
-See the FsCheck section below.
+Reference [FsCheck](https://github.com/fscheck/FsCheck) and Expecto.FsCheck to
+test properties:
+
+```fsharp
+let config = { FsCheck.Config.Default with MaxTest = 10000 }
+
+let properties =
+  testList "FsCheck" [
+    testProperty "Addition is commutative" <| fun a b ->
+      a + b = b + a
+
+    // you can also override the FsCheck config
+    testPropertyWithConfig config "Product is distributive over addition" <|
+      fun a b c ->
+        a * (b + c) = a * b + a * c
+        
+    // you can also focus on a StdGen seed value (failing test will give you this)   
+    ftestProperty (12345,67890) "Focused on seed" <| fun a b ->
+      a + b = b + a
+  ]
+
+run properties
+```
+
+You can freely mix testProperty with testCase and testList.
+
+#### Link collection
+
+These are a few resources that will get you on your way towards fully-specified
+systems with property-based testing.
+
+ - [An introduction to property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing/) with [slides and video](http://fsharpforfunandprofit.com/pbt/)
+ - [Choosing properties for property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing-2/)
+ - [(video) Race conditions, distribution and interactions](https://vimeo.com/68383317)
+ - [Test data: generators, schrinkers and instances](https://fscheck.github.io/FsCheck/TestData.html)
+ - [Model based testing](https://fscheck.github.io/FsCheck/StatefulTesting.html)
+ - [Testing and quality assurance in Haskell](http://book.realworldhaskell.org/read/testing-and-quality-assurance.html)
+ - [Property-based testing for better code](https://www.youtube.com/watch?v=shngiiBfD80)
+
+#### Code from FsCheck
+
+These code snippets show a bit of the API usage and how to create Arbitrary
+instances (which encapsulate generation with Gen instances and shrinkage),
+respectively.
+
+ - [FsCheck Examples.fs](https://github.com/fscheck/FsCheck/blob/master/examples/FsCheck.Examples/Examples.fs)
+ - [FsCheck Arbitrary.fs](https://github.com/fscheck/FsCheck/blob/master/src/FsCheck/Arbitrary.fs#L26)
 
 ### Performance tests
 
@@ -450,7 +496,7 @@ This function makes use of a statistical test called [Welch's t-test](https://en
 It starts with the null hypothesis that the functions mean execution times are the same.
 The functions are run alternately increasing the sample size to test this hypothesis.
 
-Once the probability the null hypothesis is correct goes below 0.01% it stops and reports the results.
+Once the probability of getting this result based on the null hypothesis goes below 0.01% it rejects the null hypothesis and reports the results.
 If the performance is very close the test will declare them equal when there is 99.99% confidence they differ by less than 0.5%.
 0.01%/99.99% are chosen such that if a test list has 100 performance tests a false test failure would be reported once in many more than 100 runs.
 
@@ -569,7 +615,7 @@ Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in
  - `--filter-test-case <substring>`: Filter a specific test case to run.
  - `--run [<tests1> <test2> ...]`: Run only provided tests.
  - `--list-tests`: Doesn't run tests, print out list of tests instead.
- - `--summary`: Prints out summary after all tests are finished
+ - `--summary`: Prints out summary after all tests are finished.
 
 ### The config
 
@@ -594,52 +640,6 @@ By doing a `let config = { defaultConfig with parallel = true }`, for example.
 ## Contributing
 
 Please see the [Devguide](./DEVGUIDE.md).
-
-## FsCheck usage
-
-Reference [FsCheck](https://github.com/fscheck/FsCheck) and Expecto.FsCheck to
-test properties:
-
-```fsharp
-let config = { FsCheck.Config.Default with MaxTest = 10000 }
-
-let properties =
-  testList "FsCheck" [
-    testProperty "Addition is commutative" <| fun a b ->
-      a + b = b + a
-
-    // you can also override the FsCheck config
-    testPropertyWithConfig config "Product is distributive over addition" <|
-      fun a b c ->
-        a * (b + c) = a * b + a * c
-  ]
-
-run properties
-```
-
-You can freely mix testProperty with testCase and testList.
-
-### Link collection
-
-These are a few resources that will get you on your way towards fully-specified
-systems with property-based testing.
-
- - [An introduction to property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing/) with [slides and video](http://fsharpforfunandprofit.com/pbt/).
- - [Choosing properties for property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing-2/).
- - [(video) Race conditions, distribution and interactions](https://vimeo.com/68383317).
- - [Test data: generators, schrinkers and instances](https://fscheck.github.io/FsCheck/TestData.html).
- - [Model based testing](https://fscheck.github.io/FsCheck/StatefulTesting.html).
- - [Testing and quality assurance in Haskell](http://book.realworldhaskell.org/read/testing-and-quality-assurance.html).
- - [Property-based testing for better code](https://www.youtube.com/watch?v=shngiiBfD80).
-
-#### Code from FsCheck
-
-These code snippets show a bit of the API usage and how to create Arbitrary
-instances (which encapsulate generation with Gen instances and shrinkage),
-respectively.
-
- - [FsCheck Examples.fs](https://github.com/fscheck/FsCheck/blob/master/examples/FsCheck.Examples/Examples.fs).
- - [FsCheck Arbitrary.fs](https://github.com/fscheck/FsCheck/blob/master/src/FsCheck/Arbitrary.fs#L26)
 
 ## BenchmarkDotNet usage
 
