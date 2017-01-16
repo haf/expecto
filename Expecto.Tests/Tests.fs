@@ -541,7 +541,8 @@ let inline popCount16 i =
 [<Tests>]
 let popcountTest =
   testList "performance" [
-    testProperty "popcount same" (fun i -> (popCount i |> int) = (popCount16 i |> int))
+    testProperty "popcount same"
+      (fun i -> (popCount i |> int) = (popCount16 i |> int))
   ]
 
 [<Tests>]
