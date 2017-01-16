@@ -436,17 +436,20 @@ let isFasterThanSub (f1:Performance.Measurer<_,_>->'a) (f2:Performance.Measurer<
 
   match Performance.timeCompare f1 f2 with
   | Performance.ResultNotTheSame (r1, r2)->
-    Tests.failtestf "%s. Expected function results to be the same (%A vs %A)."
-                    format r1 r2
+    Tests.failtestNoStackf
+      "%s. Expected function results to be the same (%A vs %A)." format r1 r2
   | Performance.MetricTooShort (s,p) ->
-    Tests.failtestf "%s. Expected metric (%s) to be much longer than the machine resolution (%s)."
-                    format (toString s) (toString p)
+    Tests.failtestNoStackf
+      "%s. Expected metric (%s) to be much longer than the machine resolution (%s)."
+      format (toString s) (toString p)
   | Performance.MetricEqual (s1,s2) ->
-    Tests.failtestf "%s. Expected f1 (%s) to be faster than f2 (%s) but are equal."
-                    format (toString s1) (toString s2)
+    Tests.failtestNoStackf
+      "%s. Expected f1 (%s) to be faster than f2 (%s) but are equal."
+      format (toString s1) (toString s2)
   | Performance.MetricMoreThan (s1,s2) ->
-    Tests.failtestf "%s. Expected f1 (%s) to be faster than f2 (%s) but is ~%.0f%% slower."
-                    format (toString s1) (toString s2) ((s1.mean/s2.mean-1.0)*100.0)
+    Tests.failtestNoStackf
+      "%s. Expected f1 (%s) to be faster than f2 (%s) but is ~%.0f%% slower."
+      format (toString s1) (toString s2) ((s1.mean/s2.mean-1.0)*100.0)
   | Performance.MetricLessThan (s1,s2) ->
     Impl.logger.log Info (
       eventX "{message}. f1 ({sample1}) is {percent} faster than f2 ({sample2})."

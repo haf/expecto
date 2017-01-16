@@ -56,6 +56,7 @@ type Test =
 
 type ExpectoException(msg) = inherit Exception(msg)
 type AssertException(msg) = inherit ExpectoException(msg)
+type FailedException(msg) = inherit ExpectoException(msg)
 type IgnoreException(msg) = inherit ExpectoException(msg)
 
 /// Marks a top-level test for scanning
@@ -752,6 +753,12 @@ module Impl =
                    location = locate test.test
                    result   = Failed msg
                    duration = w.Elapsed }
+        | :? FailedException as e ->
+          w.Stop()
+          return { name     = test.name
+                   location = locate test.test
+                   result   = Failed ("\n"+e.Message)
+                   duration = w.Elapsed }
         | :? IgnoreException as e ->
           w.Stop()
           return { name     = test.name
@@ -1020,6 +1027,10 @@ module Tests =
   let inline failtest msg = raise <| AssertException msg
   /// Fail this test
   let inline failtestf fmt = Printf.ksprintf (AssertException >> raise) fmt
+  /// Fail this test
+  let inline failtestNoStack msg = raise <| FailedException msg
+  /// Fail this test
+  let inline failtestNoStackf fmt = Printf.ksprintf (FailedException >> raise) fmt
 
   /// Skip this test
   let inline skiptest msg = raise <| IgnoreException msg

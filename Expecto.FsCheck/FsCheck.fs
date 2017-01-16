@@ -1,55 +1,85 @@
 ﻿namespace Expecto
 
 open System
-open global.FsCheck
+open FsCheck
+open Expecto
 
 [<AutoOpen; CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module ExpectoFsCheck =
-  open Expecto
-  open Expecto.Helpers
-  open Expecto.Impl
-  open global.FsCheck
-  open global.FsCheck.Runner
 
-  let internal (|Ignored|_|) (e: exn) =
-    match e with
-    | :? IgnoreException as e -> Some e
-    | _ -> None
+  let private propertyTest methodName focusState config name property =
 
-  /// This running plugs into FsCheck and gives us the ability to
-  /// get called by the framework on start/finish of fixtues.
-  let internal wrapRunner (r : IRunner) =
-    { new IRunner with
-        member __.OnStartFixture t =
-          r.OnStartFixture t
-        member __.OnArguments(ntest, args, every) =
-          r.OnArguments(ntest, args, every)
-        member __.OnShrink(args, everyShrink) =
-          r.OnShrink(args, everyShrink)
-        member __.OnFinished(name,testResult) =
-          match testResult with
-          | FsCheck.TestResult.True _ ->
-            r.OnFinished(name, testResult)
-          | FsCheck.TestResult.False (_,_,_, Outcome.Exception (Ignored e),_) ->
-            raise e
-          | _ ->
-            failtest (onFinishedToString name testResult)
-    }
+    /// This running plugs into FsCheck and gives us the ability to
+    /// get called by the framework on start/finish of fixtues.
+    let runner =
+      { new IRunner with
+          member __.OnStartFixture _ = ()
+          member __.OnArguments(_,_,_) = ()
+          member __.OnShrink(_,_) = ()
+          member __.OnFinished(_,testResult) =
+            let numTests i = if i=1 then "1 test" else string i+" tests"
+            match testResult with
+            | TestResult.True (_testData,_b) ->
+              ()
+            | TestResult.False
+                (_,_,_,Outcome.Exception (:? IgnoreException as e),_) ->
+              raise e
+            | TestResult.False
+              (data, original, shrunk, outcome, Random.StdGen (std,gen)) ->
 
-  let internal config =
-    { Config.Default with
-        Runner = wrapRunner Config.Default.Runner }
+              sprintf
+                "Failed after %s. Parameters: %s Result: %A\n%s (%i,%i)"
+                (numTests data.NumberOfTests)
+                (String.Join(" ",List.map (sprintf "%A") original) +
+                  if data.NumberOfShrinks>0 then
+                    " (Shrunk: " +
+                        String.Join(" ",List.map (sprintf "%A") shrunk) + ")"
+                  else "")
+                outcome
+                ("Focus on failure: "+methodName)
+                std gen
+              |> FailedException |> raise
+            | TestResult.Exhausted data ->
+              "Exhausted after " + (numTests data.NumberOfTests) + "."
+              |> FailedException |> raise
+      }
 
-  let testPropertyWithConfig (config: Config) name property =
     let config =
       { config with
-          Runner = wrapRunner config.Runner }
-    testCase name <|
-        fun _ ->
-          //ignore Runner.init.Value
-          FsCheck.Check.One(name, config, property)
+          Runner = runner }
 
-  let testProperty name = testPropertyWithConfig config name
+    let test = async {
+      Check.One(String.Empty, config, property)
+    }
+
+    TestLabel(name, TestCase (Async test, focusState), focusState)
+
+  /// Builds a test property with config
+  let testPropertyWithConfig config name =
+    propertyTest "ftestPropertyWithConfig" Normal config name
+  /// Builds a test property with config that will be ignored by Expecto
+  let ptestPropertyWithConfig config name =
+    propertyTest "ftestPropertyWithConfig" Pending config name
+  /// Builds a test property with config that will make Expecto to
+  /// ignore other unfocused tests
+  let ftestPropertyWithConfig stdGen config name =
+    let config =
+      { config with
+          Replay = Random.StdGen stdGen |> Some }
+    propertyTest "ftestPropertyWithConfig" Focused config name
+  /// Builds a test property
+  let testProperty name =
+    propertyTest "ftestProperty" Normal Config.Default name
+  /// Builds a test property that will be ignored by Expecto
+  let ptestProperty name =
+    propertyTest "ftestProperty" Pending Config.Default name
+  /// Builds a test property that will make Expecto to ignore other unfocused tests
+  let ftestProperty stdGen name =
+    let config =
+      { Config.Default with
+          Replay = Random.StdGen stdGen |> Some }
+    propertyTest "ftestProperty" Focused config name
+
 
 type FsCheck =
   static member Property(name, property: Func<_,bool>) =
