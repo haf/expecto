@@ -67,6 +67,7 @@ nugets_pack :create_nugets => ['build/pkg', :versioning, :compile] do |p|
     m.description = 'Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.'
     m.authors     = 'Henrik Feldt, Logibit AB, formerly @mausch'
     m.project_url = 'https://github.com/haf/expecto'
+    m.icon_url    = 'https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png'
     m.tags        = 'testing fsharp assert expect'
     m.version     = ENV['NUGET_VERSION']
   end
