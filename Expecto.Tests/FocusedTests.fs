@@ -106,3 +106,24 @@ let all =
 
 [<PTests>]
 let ignoredTest = testCase "all focused tests/ignored by attribute" failing
+
+[<Tests>]
+let configTests =
+
+  let dummyTests =
+    testList "dummy" [
+      testCase "hi" ignore
+      testCase "2nd" ignore |> testSequenced
+    ]
+
+  testList "config tests" [
+    testCase "parallel config works" <| fun _ ->
+      let retCode = runTests { defaultConfig with ``parallel`` = false } dummyTests
+      Expect.equal retCode 0 "return code zero"
+
+    testCase "parallel config overrides" <| fun _ ->
+      let retCode = runTests { defaultConfig with
+                                ``parallel`` = false
+                                parallelWorkers = 8 } dummyTests
+      Expect.equal retCode 0 "return code zero"
+  ]
