@@ -57,7 +57,7 @@
     <Compile Include="SummaryTests.fs" />
     <Compile Include="FocusedTests.fs" />
     <Compile Include="FsCheckTests.fs" />
-    <Compile Include="BenchmarkDotNet.fs" />
+    <Compile Include="BenchmarkDotNetTests.fs" />
     <Compile Include="Main.fs" />
     <None Include="Tests.fsx" />
     <None Include="paket.references" />

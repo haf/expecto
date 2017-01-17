@@ -784,21 +784,29 @@ module Impl =
                    duration = w.Elapsed }
     }
 
-  /// Runs a list of tests, with parameterized printers (progress indicators) and traversal.
-  /// Returns list of results.
-  let evalTestList config map =
+  let evalSilentAsync test =
+    Test.toTestCodeList test
+    |> WrappedFocusedState.WrapStates
+    |> List.map (execTestAsync (fun _ -> SourceLocation.empty))
+    |> Async.Parallel
+    |> Async.map List.ofArray
 
-    let beforeEach test =
-      config.printer.beforeEach test.name
 
-    let printOne result =
-      match result.result with
-      | Passed -> config.printer.passed result.name result.duration
-      | Failed message -> config.printer.failed result.name message result.duration
-      | Ignored message -> config.printer.ignored result.name message
-      | Error e -> config.printer.exn result.name e result.duration
+  /// Evaluates tests.
+  let evalTests config test =
 
-    let pipeline test =
+    let evalWrappedFlatTestAsync test =
+
+      let beforeEach test =
+        config.printer.beforeEach test.name
+
+      let printOne result =
+        match result.result with
+        | Passed -> config.printer.passed result.name result.duration
+        | Failed message -> config.printer.failed result.name message result.duration
+        | Ignored message -> config.printer.ignored result.name message
+        | Error e -> config.printer.exn result.name e result.duration
+
       async {
         let! beforeAsync = beforeEach test |> Async.StartChild
         let! result = execTestAsync config.locate test
@@ -807,73 +815,56 @@ module Impl =
         return result
       }
 
-    WrappedFocusedState.WrapStates >> map pipeline
+    let tests =
+      Test.toTestCodeList test
+      |> WrappedFocusedState.WrapStates
 
-  let evalSilentAsync test =
-    Test.toTestCodeList test
-    |> WrappedFocusedState.WrapStates
-    |> List.map (execTestAsync (fun _ -> SourceLocation.empty))
-    |> Async.Parallel
-    |> Async.map List.ofArray
+    if not config.``parallel`` || config.parallelWorkers = 1 then
+      List.map (evalWrappedFlatTestAsync >> Async.RunSynchronously) tests
+    else
+      let sequenced =
+        List.filter (fun t -> t.sequenced) tests
+        |> List.map evalWrappedFlatTestAsync
 
-  /// Runs a tree of tests, with parameterized printers (progress indicators) and traversal.
-  /// Returns list of results.
-  let eval config map tests =
-    Test.toTestCodeList tests
-    |> if config.parallel then id else List.map (fun t -> {t with sequenced=true})
-    |> evalTestList config map
+      let parallel =
+        List.filter (fun t -> not t.sequenced) tests
+        |> List.map evalWrappedFlatTestAsync
 
-  /// Evaluates tests.
-  let evalPar config tests =
-
-    let pmap fn ts =
-      if not config.``parallel`` || config.parallelWorkers = 1 then
-          List.map (fn >> Async.RunSynchronously) ts
-      else
-        let sequenced =
-          List.filter (fun t -> t.sequenced) ts
-          |> List.map fn
-
-        let parallel =
-          List.filter (fun t -> not t.sequenced) ts
-          |> List.map fn
-
-        let parallelResults =
-          let noWorkers =
-            if config.parallelWorkers < 0 then
-              -config.parallelWorkers * Environment.ProcessorCount
-            elif config.parallelWorkers = 0 then
-              Int32.MaxValue
-            else
-              config.parallelWorkers
-
-          if List.isEmpty parallel then
-            []
-          elif List.length parallel <= noWorkers then
-            Async.Parallel parallel
-            |> Async.RunSynchronously
-            |> List.ofArray
+      let parallelResults =
+        let noWorkers =
+          if config.parallelWorkers < 0 then
+            -config.parallelWorkers * Environment.ProcessorCount
+          elif config.parallelWorkers = 0 then
+            Int32.MaxValue
           else
-            Async.parallelLimit noWorkers parallel
-            |> Async.RunSynchronously
+            config.parallelWorkers
 
-        if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
-          config.printer.info "Starting sequenced tests..."
+        if List.isEmpty parallel then
+          []
+        elif List.length parallel <= noWorkers then
+          Async.Parallel parallel
+          |> Async.RunSynchronously
+          |> List.ofArray
+        else
+          Async.parallelLimit noWorkers parallel
           |> Async.RunSynchronously
 
-        let sequencedResults =
-          List.map Async.RunSynchronously sequenced
+      if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
+        config.printer.info "Starting sequenced tests..."
+        |> Async.RunSynchronously
 
-        List.append sequencedResults parallelResults
+      let sequencedResults =
+        List.map Async.RunSynchronously sequenced
 
-    eval config pmap tests
+      List.append sequencedResults parallelResults
+
 
   /// Runs tests, returns error code
   let runEval config (tests: Test) =
     config.printer.beforeRun tests |> Async.RunSynchronously
 
     let w = Stopwatch.StartNew()
-    let results = evalPar config tests
+    let results = evalTests config tests
     w.Stop()
     let testSummary = { sumTestResults results with duration = w.Elapsed }
     config.printer.summary testSummary |> Async.RunSynchronously
