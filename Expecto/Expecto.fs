@@ -816,38 +816,44 @@ module Impl =
   let evalPar config tests =
 
     let pmap fn ts =
-      let sequenced, parallel =
-        if config.parallelWorkers = 1 then
-          List.map fn ts,[]
-        else
-          List.partition (fun t -> t.sequenced) ts
-          |> fun (s,p) -> List.map fn s, List.map fn p
+      if not config.``parallel`` || config.parallelWorkers = 1 then
+          List.map (fn >> Async.RunSynchronously) ts
+      else
+        let sequenced =
+          List.filter (fun t -> t.sequenced) ts
+          |> List.map fn
 
-      let parallelResults =
-        let noWorkers =
-          if config.parallelWorkers < 0 then
-            -config.parallelWorkers * Environment.ProcessorCount
-          elif config.parallelWorkers = 0 then
-            Int32.MaxValue
+        let parallel =
+          List.filter (fun t -> not t.sequenced) ts
+          |> List.map fn
+
+        let parallelResults =
+          let noWorkers =
+            if config.parallelWorkers < 0 then
+              -config.parallelWorkers * Environment.ProcessorCount
+            elif config.parallelWorkers = 0 then
+              Int32.MaxValue
+            else
+              config.parallelWorkers
+
+          if List.isEmpty parallel then
+            []
+          elif List.length parallel <= noWorkers then
+            Async.Parallel parallel
+            |> Async.RunSynchronously
+            |> List.ofArray
           else
-            config.parallelWorkers
+            Async.parallelLimit noWorkers parallel
+            |> Async.RunSynchronously
 
-        if List.length parallel <= noWorkers then
-          Async.Parallel parallel
-          |> Async.RunSynchronously
-          |> List.ofArray
-        else
-          Async.parallelLimit noWorkers parallel
+        if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
+          config.printer.info "Starting sequenced tests..."
           |> Async.RunSynchronously
 
-      if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
-        config.printer.info "Starting sequenced tests..."
-        |> Async.RunSynchronously
+        let sequencedResults =
+          List.map Async.RunSynchronously sequenced
 
-      let sequencedResults =
-        List.map Async.RunSynchronously sequenced
-
-      List.append sequencedResults parallelResults
+        List.append sequencedResults parallelResults
 
     eval config pmap tests
 
