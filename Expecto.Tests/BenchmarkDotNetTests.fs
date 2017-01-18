@@ -18,9 +18,11 @@ type Md5VsSha256() =
 
 [<Tests>]
 let benchmarks =
-  testSequenced <| ptestList "some different benchmarks" [
+  testSequenced <| testList "some different benchmarks" [
     benchmark<Md5VsSha256> "md5 versus sha256" benchmarkConfig ignore
   ]
+
+
 
 [<Tests>]
 let performance =

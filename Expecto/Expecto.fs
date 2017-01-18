@@ -715,6 +715,8 @@ module Impl =
       /// Number of parallel workers. Defaults to the number of
       /// logical processors.
       parallelWorkers : int
+      /// Run the tests randomly for the given time span.
+      stress : float option
       /// Whether to make the test runner fail if focused tests exist.
       /// This can be used from CI servers to ensure no focused tests are
       /// commited and therefor all tests are run.
@@ -965,10 +967,6 @@ module Impl =
       | Some t -> Some (t.GetMethods())
       | _ -> None
 
-    let optionFromObj = function
-      | null -> None
-      | x -> Some x
-
     let getFirstOrDefaultSequencePoint (m:MethodDefinition) =
       m.Body.Instructions
       |> Seq.tryFind (fun i -> (i.SequencePoint <> null && i.SequencePoint.StartLine <> lineNumberIndicatingHiddenLine))
@@ -1084,28 +1082,28 @@ module Tests =
 
   // TODO: docs
   type TestCaseBuilder(name, focusState) =
-    member x.TryFinally(f, compensation) =
+    member __.TryFinally(f, compensation) =
       try
         f()
       finally
         compensation()
-    member x.TryWith(f, catchHandler) =
+    member __.TryWith(f, catchHandler) =
       try
         f()
       with e -> catchHandler e
-    member x.Using(disposable: #IDisposable, f) =
+    member __.Using(disposable: #IDisposable, f) =
       try
         f disposable
       finally
         match disposable with
         | null -> ()
         | disp -> disp.Dispose()
-    member x.For(sequence, f) =
+    member __.For(sequence, f) =
       for i in sequence do f i
-    member x.Combine(f1, f2) = f2(); f1
-    member x.Zero() = ()
-    member x.Delay f = f
-    member x.Run f =
+    member __.Combine(f1, f2) = f2(); f1
+    member __.Zero() = ()
+    member __.Delay f = f
+    member __.Run f =
       match focusState with
       | Normal -> testCase name f
       | Focused -> ftestCase name f
@@ -1129,6 +1127,7 @@ module Tests =
   let defaultConfig =
     { parallel  = true
       parallelWorkers = Environment.ProcessorCount
+      stress = None
       filter    = id
       failOnFocusedTests = false
       printer   =
@@ -1144,6 +1143,7 @@ module Tests =
     | Sequenced
     | Parallel
     | Parallel_Workers of int
+    | Stress of float
     | Fail_On_Focused_Tests
     | Debug
     | Filter of hiera:string
@@ -1158,36 +1158,46 @@ module Tests =
     interface IArgParserTemplate with
       member s.Usage =
         match s with
-        | Sequenced -> "Doesn't run the tests in parallel."
-        | Parallel -> "Runs all tests in parallel (default)."
-        | Parallel_Workers _ -> "Number of parallel workers (defaults to the number of logical processors)."
-        | Fail_On_Focused_Tests -> "This will make the test runner fail if focused tests exist."
-        | Debug -> "Extra verbose printing. Useful to combine with --sequenced."
-        | Filter _ -> "Filters the list of tests by a hierarchy that's slash (/) separated."
-        | Filter_Test_List _ -> "Filters the list of test lists by a substring."
-        | Filter_Test_Case _ -> "Filters the list of test cases by a substring."
-        | Run _ -> "Runs only provided tests."
-        | List_Tests -> "Doesn't run tests, but prints out list of tests instead."
-        | Summary -> "Prints out summary after all tests are finished."
-        | Version -> "Prints out version information."
-        | Summary_Location -> "Prints out summary after all tests are finished including their source code location"
+        | Sequenced -> "doesn't run the tests in parallel."
+        | Parallel -> "runs all tests in parallel (default)."
+        | Parallel_Workers _ -> "number of parallel workers (defaults to the number of logical processors)."
+        | Stress _ -> "run the tests randomly for the given time span."
+        | Fail_On_Focused_Tests -> "this will make the test runner fail if focused tests exist."
+        | Debug -> "extra verbose printing. Useful to combine with --sequenced."
+        | Filter _ -> "filters the list of tests by a hierarchy that's slash (/) separated."
+        | Filter_Test_List _ -> "filters the list of test lists by a substring."
+        | Filter_Test_Case _ -> "filters the list of test cases by a substring."
+        | Run _ -> "runs only provided tests."
+        | List_Tests -> "doesn't run tests, but prints out list of tests instead."
+        | Summary -> "prints out summary after all tests are finished."
+        | Version -> "prints out version information."
+        | Summary_Location -> "prints out summary after all tests are finished including their source code location."
+
+  type FillFromArgsResult =
+    | ArgsRun of ExpectoConfig
+    | ArgsList of ExpectoConfig
+    | ArgsUsage of usage:string * optionErrors:string list
+    | ArgsException of usage:string * exceptionMessage:string
 
   // TODO: docs
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
 
-    let printExpectoVersion() =
+    let expectoVersion() =
       let assembly = Assembly.GetExecutingAssembly()
       let fileInfoVersion = FileVersionInfo.GetVersionInfo assembly.Location
+      fileInfoVersion.ProductVersion
+
+    let printExpectoVersion() =
       logger.info
         (eventX "EXPECTO version {version}"
-          >> setField "version" fileInfoVersion.ProductVersion)
+          >> setField "version" (expectoVersion()))
 
     /// Parses command-line arguments into a config. This allows you to
     /// override the config from the command line, rather than having
     /// to go into the compiled code to change how they are being run.
     /// Also checks if tests should be run or only listed
-    let fillFromArgs baseConfig =
+    let fillFromArgs baseConfig args =
       let parser = ArgumentParser.Create<CLIArguments>()
       let flip f a b = f b a
 
@@ -1209,6 +1219,7 @@ module Tests =
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
         | Parallel -> fun o -> { o with parallel = true }
         | Parallel_Workers n -> fun o -> { o with parallelWorkers = n }
+        | Stress n -> fun o  -> {o with stress = Some n }
         | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
         | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
         | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
@@ -1220,17 +1231,38 @@ module Tests =
         | Version -> fun o -> printExpectoVersion(); o
         | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter}
 
-      fun (args: string[]) ->
-        let parsed =
+
+
+      let parsed =
+        try
           parser.Parse(
             args,
             ignoreMissing = true,
             ignoreUnrecognized = true,
             raiseOnUsage = false)
-        let isList = parsed.Contains <@ List_Tests @>
+          |> Choice1Of2
+        with
+        | e -> Choice2Of2 e.Message
 
-        parsed.GetAllResults()
-        |> Seq.fold (flip reduceKnown) baseConfig, isList
+      match parsed with
+      | Choice1Of2 parsed ->
+        if parsed.IsUsageRequested || List.isEmpty parsed.UnrecognizedCliParams |> not then
+          ArgsUsage (parser.PrintUsage(), parsed.UnrecognizedCliParams)
+        else
+          let config =
+            parsed.GetAllResults()
+            |> Seq.fold (flip reduceKnown) baseConfig
+          if parsed.Contains <@ List_Tests @> then
+            ArgsList config
+          else
+            ArgsRun config
+      | Choice2Of2 error ->
+        let upTo (s1:string) (s2:string) =
+          let i = s2.IndexOf(s1)
+          if i<0 then s2
+          else
+            s2.Substring(0,i)
+        ArgsException (parser.PrintUsage(), upTo "\n" error)
 
   /// Prints out names of all tests for given test suite.
   let listTests test =
@@ -1253,12 +1285,26 @@ module Tests =
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithArgs config args tests =
-    let config, isList = ExpectoConfig.fillFromArgs config args
-    let tests = config.filter tests
-    if isList then
+    match ExpectoConfig.fillFromArgs config args with
+    | ArgsException (usage,message) ->
+      printfn "%s\n" message
+
+      printfn "EXPECTO version %s\n\n%s"
+        (ExpectoConfig.expectoVersion()) usage
+      1
+    | ArgsUsage (usage,errors) ->
+      if List.isEmpty errors |> not then
+        printfn "ERROR unknown options: %s\n" (String.Join(" ",errors))
+
+      printfn "EXPECTO version %s\n\n%s"
+        (ExpectoConfig.expectoVersion()) usage
+
+      if List.isEmpty errors then 0 else 1
+    | ArgsList config ->
+      let tests = config.filter tests
       listTests tests
       0
-    else
+    | ArgsRun config ->
       runTests config tests
 
   /// Runs tests in this assembly with the supplied command-line options.
