@@ -66,7 +66,7 @@ let all =
   testList "all focused tests" [
     testCaseAsync "pending" <| async {
       let! result =
-        Impl.evalSilentAsync pendingTests
+        Impl.evalTestsSilent pendingTests
         |> Async.map synth
 
       result.passed.Length ==? 2
@@ -74,7 +74,7 @@ let all =
     }
     testCaseAsync "focused" <| async {
       let! result =
-        Impl.evalSilentAsync focusedTests
+        Impl.evalTestsSilent focusedTests
         |> Async.map synth
 
       result.passed.Length ==? 11
@@ -89,7 +89,10 @@ let all =
         ]
 
       // check if we can fail on focused tests
-      if runTests { defaultConfig with failOnFocusedTests = true } localList <> 1 then
+      if runTests { defaultConfig with
+                      failOnFocusedTests = true
+                      printer = TestPrinters.silent
+                      verbosity = Logging.LogLevel.Fatal } localList <> 1 then
         failwith "focused test check didn't fail"
     testCase "can run if no focused test was found" <| fun _ ->
       let localList =
@@ -100,7 +103,10 @@ let all =
         ]
 
       // check if we pass if no focused tests exist
-      if runTests { defaultConfig with failOnFocusedTests = true } localList <> 0 then
+      if runTests { defaultConfig with
+                      failOnFocusedTests = true
+                      printer = TestPrinters.silent
+                      verbosity = Logging.LogLevel.Fatal } localList <> 0 then
         failwith "focused test check didn't fail"
 ]
 
@@ -118,12 +124,15 @@ let configTests =
 
   testList "config tests" [
     testCase "parallel config works" <| fun _ ->
-      let retCode = runTests { defaultConfig with ``parallel`` = false } dummyTests
+      let retCode = runTests { defaultConfig with
+                                ``parallel`` = false
+                                printer = TestPrinters.silent } dummyTests
       Expect.equal retCode 0 "return code zero"
 
     testCase "parallel config overrides" <| fun _ ->
       let retCode = runTests { defaultConfig with
                                 ``parallel`` = false
-                                parallelWorkers = 8 } dummyTests
+                                parallelWorkers = 8
+                                printer = TestPrinters.silent } dummyTests
       Expect.equal retCode 0 "return code zero"
   ]

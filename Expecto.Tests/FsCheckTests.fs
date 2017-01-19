@@ -23,7 +23,7 @@ let properties =
 [<Tests>]
 let runFsCheckTests =
   testCaseAsync "run" <| async {
-    let! results = Impl.evalSilentAsync properties
+    let! results = Impl.evalTestsSilent properties
     Expect.equal results.Length 4 "results length"
     Expect.equal results.[0].result TestResult.Passed "passed count"
 
@@ -59,7 +59,7 @@ let focused =
 [<Tests>]
 let runFsCheckFocusedTests =
   testCaseAsync "focused" <| async {
-    let! results = Impl.evalSilentAsync focused
+    let! results = Impl.evalTestsSilent focused
     Expect.equal results.Length 2 "results length"
 
     match results.[0].result with
@@ -92,7 +92,7 @@ let config =
 [<Tests>]
 let runFsCheckConfigTests =
   testCaseAsync "config" <| async {
-    let! results = Impl.evalSilentAsync config
+    let! results = Impl.evalTestsSilent config
     Expect.equal results.Length 2 "results length"
 
     match results.[0].result with

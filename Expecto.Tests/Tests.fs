@@ -107,7 +107,7 @@ let tests =
       testCaseAsync "Expecto ignore" <| async {
         let test () = skiptest "b"
         let test = TestCase (Sync test, Normal)
-        let! result = Impl.evalSilentAsync test
+        let! result = Impl.evalTestsSilent test
         match result with
         | [{ result = Ignored "b" }] -> ()
         | x -> failtestf "Expected result = Ignored, got\n %A" x
@@ -196,12 +196,12 @@ let expecto =
     testSequenced <| testList "Timeout" [
       testCaseAsync "fail" <| async {
         let test = TestCase(Async.Sleep 100 |> Async |> Test.timeout 10, Normal)
-        let! result = Impl.evalSilentAsync test
+        let! result = Impl.evalTestsSilent test
         (sumTestResults result).failed.Length ==? 1
       }
       testCaseAsync "pass" <| async {
         let test = TestCase(Sync ignore |> Test.timeout 1000, Normal)
-        let! result = Impl.evalSilentAsync test
+        let! result = Impl.evalTestsSilent test
         (sumTestResults result).passed.Length ==? 1
       }
     ]
@@ -316,21 +316,24 @@ let expecto =
     testList "transformations" [
       testCaseAsync "multiple cultures" <| async {
         let withCulture culture test =
-          fun () ->
+          async {
             let c = Thread.CurrentThread.CurrentCulture
             try
               Thread.CurrentThread.CurrentCulture <- culture
               match test with
-              | Sync test -> test()
-              | Async test -> Async.StartImmediate test
+              | Sync test ->
+                test()
+              | Async test ->
+                do! test
             finally
               Thread.CurrentThread.CurrentCulture <- c
+          }
 
         let testWithCultures (cultures: #seq<CultureInfo>) =
           Test.replaceTestCode <| fun name test ->
             testList name [
               for c in cultures ->
-                testCase c.Name (withCulture c test)
+                testCaseAsync c.Name (withCulture c test)
             ]
 
         let atest = test "parse" {
@@ -343,7 +346,7 @@ let expecto =
 
         let culturizedTests = testWithCultures cultures atest
 
-        let! results = Impl.evalSilentAsync culturizedTests
+        let! results = Impl.evalTestsSilent culturizedTests
 
         let results =
           results
@@ -522,8 +525,8 @@ let expecto =
         }
       for c in [-5; 1; 6] ->
         testCaseAsync (sprintf "compare comp.exp. and normal with value %d" c) <| async {
-          let! normal = testNormal c |> Impl.evalSilentAsync
-          let! compexp = testCompExp c |> Impl.evalSilentAsync
+          let! normal = testNormal c |> Impl.evalTestsSilent
+          let! compexp = testCompExp c |> Impl.evalTestsSilent
           let normalTag = TestResult.tag normal.[0].result
           let compexpTag = TestResult.tag compexp.[0].result
           Expect.equal normalTag compexpTag "result"

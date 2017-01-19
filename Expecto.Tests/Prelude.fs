@@ -36,7 +36,7 @@ module TestHelpers =
 
   let assertTestFails test =
     async {
-      let! result = Impl.evalSilentAsync test
+      let! result = Impl.evalTestsSilent test
       match result with
       | [{ TestRunResult.result = TestResult.Ignored _ }] -> ()
       | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
@@ -46,7 +46,7 @@ module TestHelpers =
 
   let assertTestFailsWithMsgStarting (msg : string) test =
     async {
-      let! result = Impl.evalSilentAsync test
+      let! result = Impl.evalTestsSilent test
       match result with
       | [{ TestRunResult.result = TestResult.Ignored _ }] -> ()
       | [{ TestRunResult.result = TestResult.Failed x }] ->
@@ -58,7 +58,7 @@ module TestHelpers =
 
   let assertTestFailsWithMsgContaining (msg : string) test =
     async {
-      let! result = Impl.evalSilentAsync test
+      let! result = Impl.evalTestsSilent test
       match result with
       | [{ TestRunResult.result = TestResult.Ignored _ }] -> ()
       | [{ TestRunResult.result = TestResult.Failed x }] when x.Contains msg -> ()

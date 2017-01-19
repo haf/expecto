@@ -95,6 +95,16 @@ module Async =
   let bind fn a =
     async.Bind(a, fn)
 
+  let synchronous s =
+    async {
+      let a = List.toArray s
+      let r = Array.length a |> Array.zeroCreate
+      for i = 0 to Array.length a-1 do
+        let! ai = a.[i]
+        r.[i] <- ai
+      return List.ofArray r
+    }
+
   /// Traverses the list of async, spawning them with Async.Start and
   let parallelLimit maxParallelism s =
     let workers = List.length s |> min maxParallelism
@@ -715,8 +725,8 @@ module Impl =
       /// Number of parallel workers. Defaults to the number of
       /// logical processors.
       parallelWorkers : int
-      /// Run the tests randomly for the given time span.
-      stress : float option
+      /// Run the tests randomly for the given TimeSpan.
+      stress : TimeSpan option
       /// Whether to make the test runner fail if focused tests exist.
       /// This can be used from CI servers to ensure no focused tests are
       /// commited and therefor all tests are run.
@@ -732,6 +742,19 @@ module Impl =
       /// Defaults to empty source code
       locate : TestCode -> SourceLocation
     }
+    static member Default =
+      { parallel = true
+        parallelWorkers = Environment.ProcessorCount
+        stress = None
+        filter = id
+        failOnFocusedTests = false
+        printer =
+          if Environment.GetEnvironmentVariable "TEAMCITY_PROJECT_NAME" <> null then
+            TestPrinters.teamCityPrinter TestPrinters.defaultPrinter
+          else
+            TestPrinters.defaultPrinter
+        verbosity = LogLevel.Info
+        locate = fun _ -> SourceLocation.empty }
 
   let execTestAsync locate test =
     async {
@@ -786,92 +809,90 @@ module Impl =
                    duration = w.Elapsed }
     }
 
-  let evalSilentAsync test =
-    Test.toTestCodeList test
-    |> WrappedFocusedState.WrapStates
-    |> List.map (execTestAsync (fun _ -> SourceLocation.empty))
-    |> Async.Parallel
-    |> Async.map List.ofArray
-
-
   /// Evaluates tests.
   let evalTests config test =
+    async {
 
-    let evalWrappedFlatTestAsync test =
+      let evalWrappedFlatTestAsync test =
 
-      let beforeEach test =
-        config.printer.beforeEach test.name
+        let beforeEach test =
+          config.printer.beforeEach test.name
 
-      let printOne result =
-        match result.result with
-        | Passed -> config.printer.passed result.name result.duration
-        | Failed message -> config.printer.failed result.name message result.duration
-        | Ignored message -> config.printer.ignored result.name message
-        | Error e -> config.printer.exn result.name e result.duration
+        let printOne result =
+          match result.result with
+          | Passed -> config.printer.passed result.name result.duration
+          | Failed message -> config.printer.failed result.name message result.duration
+          | Ignored message -> config.printer.ignored result.name message
+          | Error e -> config.printer.exn result.name e result.duration
 
-      async {
-        let! beforeAsync = beforeEach test |> Async.StartChild
-        let! result = execTestAsync config.locate test
-        do! beforeAsync
-        do! printOne result
-        return result
+        async {
+          let! beforeAsync = beforeEach test |> Async.StartChild
+          let! result = execTestAsync config.locate test
+          do! beforeAsync
+          do! printOne result
+          return result
+        }
+
+      let tests = Test.toTestCodeList test |> WrappedFocusedState.WrapStates
+
+      if not config.``parallel`` || config.parallelWorkers = 1 then
+        return! List.map evalWrappedFlatTestAsync tests |> Async.synchronous
+      else
+        let sequenced =
+          List.filter (fun t -> t.sequenced) tests
+          |> List.map evalWrappedFlatTestAsync
+
+        let parallel =
+          List.filter (fun t -> not t.sequenced) tests
+          |> List.map evalWrappedFlatTestAsync
+
+        let! parallelResults =
+          let noWorkers =
+            if config.parallelWorkers < 0 then
+              -config.parallelWorkers * Environment.ProcessorCount
+            elif config.parallelWorkers = 0 then
+              Int32.MaxValue
+            else
+              config.parallelWorkers
+
+          if List.isEmpty parallel then
+            async.Return []
+          elif List.length parallel <= noWorkers then
+            Async.Parallel parallel
+            |> Async.map List.ofArray
+          else
+            Async.parallelLimit noWorkers parallel
+
+        if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
+          do! config.printer.info "Starting sequenced tests..."
+
+        let! sequencedResults = Async.synchronous sequenced
+
+        return List.append sequencedResults parallelResults
       }
 
-    let tests =
-      Test.toTestCodeList test
-      |> WrappedFocusedState.WrapStates
-
-    if not config.``parallel`` || config.parallelWorkers = 1 then
-      List.map (evalWrappedFlatTestAsync >> Async.RunSynchronously) tests
-    else
-      let sequenced =
-        List.filter (fun t -> t.sequenced) tests
-        |> List.map evalWrappedFlatTestAsync
-
-      let parallel =
-        List.filter (fun t -> not t.sequenced) tests
-        |> List.map evalWrappedFlatTestAsync
-
-      let parallelResults =
-        let noWorkers =
-          if config.parallelWorkers < 0 then
-            -config.parallelWorkers * Environment.ProcessorCount
-          elif config.parallelWorkers = 0 then
-            Int32.MaxValue
-          else
-            config.parallelWorkers
-
-        if List.isEmpty parallel then
-          []
-        elif List.length parallel <= noWorkers then
-          Async.Parallel parallel
-          |> Async.RunSynchronously
-          |> List.ofArray
-        else
-          Async.parallelLimit noWorkers parallel
-          |> Async.RunSynchronously
-
-      if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
-        config.printer.info "Starting sequenced tests..."
-        |> Async.RunSynchronously
-
-      let sequencedResults =
-        List.map Async.RunSynchronously sequenced
-
-      List.append sequencedResults parallelResults
-
+  let evalTestsSilent test =
+    let config =
+      { ExpectoConfig.Default with
+          parallel = false
+          verbosity = LogLevel.Fatal
+          printer = TestPrinters.silent
+      }
+    evalTests config test
 
   /// Runs tests, returns error code
-  let runEval config (tests: Test) =
-    config.printer.beforeRun tests |> Async.RunSynchronously
+  let runEval config test =
+    async {
+      do! config.printer.beforeRun test
 
-    let w = Stopwatch.StartNew()
-    let results = evalTests config tests
-    w.Stop()
-    let testSummary = { sumTestResults results with duration = w.Elapsed }
-    config.printer.summary testSummary |> Async.RunSynchronously
+      let w = Stopwatch.StartNew()
+      let! results = evalTests config test
+      w.Stop()
+      let testSummary = { sumTestResults results with duration = w.Elapsed }
+      do! config.printer.summary testSummary
 
-    TestResultSummary.errorCode testSummary
+      return TestResultSummary.errorCode testSummary
+    }
 
   let testFromMember (mi: MemberInfo): Test option  =
     let getTestFromMemberInfo focusedState =
@@ -1011,15 +1032,16 @@ module Impl =
   /// focused tests exist.
   ///
   /// Returns true if the check passes, otherwise false.
-  let passesFocusTestCheck tests =
+  let passesFocusTestCheck config tests =
     let isFocused : FlatTest -> _ = function t when t.state = Focused -> true | _ -> false
     let focused = Test.toTestCodeList tests |> List.filter isFocused
     if focused.Length = 0 then true
     else
-      logger.log LogLevel.Error (
-        eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
-        >> setField "count" focused.Length)
-      |> Async.Start
+      if config.verbosity <> LogLevel.Fatal then
+        logger.log LogLevel.Error (
+          eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
+          >> setField "count" focused.Length)
+        |> Async.StartImmediate
       false
 
 [<AutoOpen; Extension>]
@@ -1119,24 +1141,8 @@ module Tests =
   let inline ptest name =
     TestCaseBuilder (name, Pending)
 
-  /// Runs the passed tests
-  let run config tests =
-    runEval config tests
-
   /// The default configuration for Expecto.
-  let defaultConfig =
-    { parallel  = true
-      parallelWorkers = Environment.ProcessorCount
-      stress = None
-      filter    = id
-      failOnFocusedTests = false
-      printer   =
-        if Environment.GetEnvironmentVariable "TEAMCITY_PROJECT_NAME" <> null then
-          TestPrinters.teamCityPrinter TestPrinters.defaultPrinter
-        else
-          TestPrinters.defaultPrinter
-      verbosity = LogLevel.Info
-      locate = fun _ -> SourceLocation.empty }
+  let defaultConfig = ExpectoConfig.Default
 
   // TODO: docs
   type CLIArguments =
@@ -1161,7 +1167,7 @@ module Tests =
         | Sequenced -> "doesn't run the tests in parallel."
         | Parallel -> "runs all tests in parallel (default)."
         | Parallel_Workers _ -> "number of parallel workers (defaults to the number of logical processors)."
-        | Stress _ -> "run the tests randomly for the given time span."
+        | Stress _ -> "run the tests randomly for the given number of minutes."
         | Fail_On_Focused_Tests -> "this will make the test runner fail if focused tests exist."
         | Debug -> "extra verbose printing. Useful to combine with --sequenced."
         | Filter _ -> "filters the list of tests by a hierarchy that's slash (/) separated."
@@ -1219,7 +1225,7 @@ module Tests =
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
         | Parallel -> fun o -> { o with parallel = true }
         | Parallel_Workers n -> fun o -> { o with parallelWorkers = n }
-        | Stress n -> fun o  -> {o with stress = Some n }
+        | Stress n -> fun o  -> {o with stress = TimeSpan.FromMinutes n |> Some }
         | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
         | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
         | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
@@ -1230,8 +1236,6 @@ module Tests =
         | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter}
         | Version -> fun o -> printExpectoVersion(); o
         | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter}
-
-
 
       let parsed =
         try
@@ -1271,14 +1275,14 @@ module Tests =
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
 
-  /// Runs tests with the supplied options.
+  /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
   let runTests config (tests:Test) =
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity, consoleSemaphore = Global.semaphore()) :> Logger }
-    if not config.failOnFocusedTests || passesFocusTestCheck tests then
-      run config tests
+    if not config.failOnFocusedTests || passesFocusTestCheck config tests then
+      runEval config tests |> Async.RunSynchronously
     else
       1
 
