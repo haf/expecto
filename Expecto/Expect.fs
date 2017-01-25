@@ -180,20 +180,20 @@ let inline equal (actual : 'a) (expected : 'a) format =
 /// Expects the two values not to equal each other.
 let notEqual (actual : 'a) (expected : 'a) format =
   if expected = actual then
-    Tests.failtestf "%s. Actual value was equal to %A but had expected it non-equal."
+    Tests.failtestf "%s. Actual value was equal to %A but had expected them to be non-equal."
                     format actual
 
 /// Expects the value to be false.
 let isFalse actual format =
   if not actual then ()
   else
-    Tests.failtest format
+    Tests.failtestf "%s. Actual value was true but had expected it to be false." format
 
 /// Expects the value to be true.
 let isTrue actual format =
   if actual then ()
   else
-    Tests.failtest format
+    Tests.failtestf "%s. Actual value was false but had expected it to be true." format
 
 /// Expects the `sequence` to contain the `element`.
 let contains sequence element format =
