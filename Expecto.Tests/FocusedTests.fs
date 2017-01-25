@@ -1,9 +1,10 @@
 module Expecto.Focused
+
+open System
 open Expecto
 open Expecto.Tests
 open Expecto.Impl
 
-let synth = Impl.sumTestResults
 let failing = fun _ -> 1 ==? 2
 let working = ignore
 
@@ -65,20 +66,26 @@ let focusedTests =
 let all =
   testList "all focused tests" [
     testCaseAsync "pending" <| async {
-      let! result =
-        Impl.evalTestsSilent pendingTests
-        |> Async.map synth
+      let! resultList = Impl.evalTestsSilent pendingTests
+      let result = { results = resultList
+                     duration = TimeSpan.Zero
+                     maxMemory = 0L
+                     memoryLimit = 0L
+                     timedOut = [] }
 
-      result.passed.Length ==? 2
-      result.ignored.Length ==? 5
+      Seq.length result.passed ==? 2
+      Seq.length result.ignored ==? 5
     }
     testCaseAsync "focused" <| async {
-      let! result =
-        Impl.evalTestsSilent focusedTests
-        |> Async.map synth
+      let! result = Impl.evalTestsSilent focusedTests
+      let result = { results = result
+                     duration = TimeSpan.Zero
+                     maxMemory = 0L
+                     memoryLimit = 0L
+                     timedOut = [] }
 
-      result.passed.Length ==? 11
-      result.ignored.Length ==? 19
+      Seq.length result.passed ==? 11
+      Seq.length result.ignored ==? 19
     }
     testCase "can detect focused test" <| fun _ ->
       let localList =
@@ -92,7 +99,8 @@ let all =
       if runTests { defaultConfig with
                       failOnFocusedTests = true
                       printer = TestPrinters.silent
-                      verbosity = Logging.LogLevel.Fatal } localList <> 1 then
+                      verbosity = Logging.LogLevel.Fatal } localList
+         <> 1 then
         failwith "focused test check didn't fail"
     testCase "can run if no focused test was found" <| fun _ ->
       let localList =
@@ -106,7 +114,8 @@ let all =
       if runTests { defaultConfig with
                       failOnFocusedTests = true
                       printer = TestPrinters.silent
-                      verbosity = Logging.LogLevel.Fatal } localList <> 0 then
+                      verbosity = Logging.LogLevel.Fatal } localList
+         <> 0 then
         failwith "focused test check didn't fail"
 ]
 

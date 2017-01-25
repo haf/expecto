@@ -5,19 +5,20 @@ open System
 
 module Seq =
   let (|Empty|Cons|) l =
-      if Seq.isEmpty l
-          then Empty
-          else Cons(Seq.head l, Seq.skip 1 l)
+    if Seq.isEmpty l then
+      Empty
+    else
+      Cons(Seq.head l, Seq.skip 1 l)
 
   let (|One|_|) l =
-      match Seq.toList l with
-      | [x] -> Some x
-      | _ -> None
+    match Seq.toList l with
+    | [x] -> Some x
+    | _ -> None
 
   let (|Two|_|) l =
-      match Seq.toList l with
-      | [x;y] -> Some(x,y)
-      | _ -> None
+    match Seq.toList l with
+    | [x;y] -> Some(x,y)
+    | _ -> None
 
 [<AutoOpen>]
 module TestHelpers =
@@ -38,8 +39,8 @@ module TestHelpers =
     async {
       let! result = Impl.evalTestsSilent test
       match result with
-      | [{ TestRunResult.result = TestResult.Ignored _ }] -> ()
-      | [{ TestRunResult.result = TestResult.Failed _ }] -> ()
+      | [(_,{ result = TestResult.Ignored _ })] -> ()
+      | [(_,{ result = TestResult.Failed _ })] -> ()
       | [x] -> failtestf "Should have failed, but was %A" x
       | _ -> failtestf "Should have one test to assert"
     } |> makeTest test
@@ -48,8 +49,8 @@ module TestHelpers =
     async {
       let! result = Impl.evalTestsSilent test
       match result with
-      | [{ TestRunResult.result = TestResult.Ignored _ }] -> ()
-      | [{ TestRunResult.result = TestResult.Failed x }] ->
+      | [(_,{ result = TestResult.Ignored _ })] -> ()
+      | [(_,{ result = TestResult.Failed x })] ->
         let removeCR = x.Replace("\r","").Trim('\n')
         Expect.stringStarts removeCR msg "Test failure strings should equal"
       | [x] -> failtestf "Should have failed, but was %A" x
@@ -60,78 +61,25 @@ module TestHelpers =
     async {
       let! result = Impl.evalTestsSilent test
       match result with
-      | [{ TestRunResult.result = TestResult.Ignored _ }] -> ()
-      | [{ TestRunResult.result = TestResult.Failed x }] when x.Contains msg -> ()
-      | [{ TestRunResult.result = TestResult.Failed x }] ->
+      | [(_,{ result = TestResult.Ignored _ })] -> ()
+      | [(_,{ result = TestResult.Failed x })] when x.Contains msg -> ()
+      | [(_,{ result = TestResult.Failed x })] ->
         failtestf "Should have failed with message containing: \"%s\" but failed with \"%s\"" msg x
       | [x] -> failtestf "Should have failed, but was %A" x
       | _ -> failtestf "Should have one test to assert"
     } |> makeTest test
 
-  open FsCheck
-
-  let genLimitedTimeSpan =
-      lazy (
-          Arb.generate<TimeSpan>
-          |> Gen.suchThat (fun t -> t.Days = 0)
-      )
-
-  let genTestRunResult =
-    lazy (
-      gen {
-        let! name = Arb.generate<string>
-        let! duration = genLimitedTimeSpan.Value
-
-        return
-          { TestRunResult.name = name
-            location = SourceLocation.empty
-            result = Passed
-            duration = duration }
-      }
-    )
-
-  let genTestResultCounts =
-      lazy (
-          gen {
-              let! passed =  genTestRunResult.Value |> Gen.listOf
-              let! ignored = genTestRunResult.Value |> Gen.listOf
-              let! failed = genTestRunResult.Value |> Gen.listOf
-              let! errored = genTestRunResult.Value |> Gen.listOf
-              let! duration = genLimitedTimeSpan.Value
-              return
-                { TestResultSummary.passed = passed
-                  ignored  = ignored
-                  failed   = failed
-                  errored  = errored
-                  duration = duration }
-          }
-      )
-
-  let shrinkTestResultCounts (c: TestResultSummary) : TestResultSummary seq =
-      seq {
-          for passed in Arb.shrink c.passed do
-          for ignored in Arb.shrink c.ignored do
-          for failed in Arb.shrink c.failed do
-          for errored in Arb.shrink c.errored do
-          for duration in Arb.shrink c.duration ->
-          {
-              TestResultSummary.passed = passed
-              ignored = ignored
-              failed = failed
-              errored = errored
-              duration = duration
-          }
-      }
-
-  let arbTestResultCounts =
-      lazy (
-          Arb.fromGenShrink(genTestResultCounts.Value, shrinkTestResultCounts)
-      )
-
-  let twoTestResultCounts =
-      lazy (
-          Gen.two arbTestResultCounts.Value.Generator |> Arb.fromGen
-      )
+  module Generator =
+    open FsCheck
+    type private Marker = class end
+    let arbs = typeof<Marker>.DeclaringType
+    let exn = Arb.convert exn string Arb.from
+    let testCode = Sync ignore |> Gen.constant |> Arb.fromGen
+    let timespan =
+      Arb.convert
+        (float >> TimeSpan.FromMilliseconds)
+        (fun (t:TimeSpan) -> t.TotalMilliseconds |> uint16)
+        Arb.from
 
   let inline repeat10 f a =
     let mutable v = f a

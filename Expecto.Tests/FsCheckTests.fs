@@ -25,21 +25,29 @@ let runFsCheckTests =
   testCaseAsync "run" <| async {
     let! results = Impl.evalTestsSilent properties
     Expect.equal results.Length 4 "results length"
-    Expect.equal results.[0].result TestResult.Passed "passed count"
 
-    match results.[1].result with
+    let getResult name =
+      results
+      |> Seq.filter (fun (r,_) -> r.name=name)
+      |> Seq.head
+      |> snd
+
+    Expect.equal (getResult "FsCheck/Addition is commutative").result
+                 TestResult.Passed "passed count"
+
+    match (getResult "FsCheck/Deliberately failing test").result with
     | TestResult.Failed _ ->
       ()
     | x ->
       failtestf "Expected Failed, actual %A" x
 
-    match results.[2].result with
+    match (getResult "FsCheck/ignored").result with
     | TestResult.Ignored e ->
       Expect.equal "Because I feel like it." e "It should fail with the right message."
     | x ->
       failtestf "Expected Ignored, actual %A" x
 
-    match results.[3].result with
+    match (getResult "FsCheck/ignored2").result with
     | TestResult.Ignored _ ->
       ()
     | x ->
@@ -62,13 +70,19 @@ let runFsCheckFocusedTests =
     let! results = Impl.evalTestsSilent focused
     Expect.equal results.Length 2 "results length"
 
-    match results.[0].result with
+    let getResult name =
+      results
+      |> Seq.filter (fun (r,_) -> r.name=name)
+      |> Seq.head
+      |> snd
+
+    match (getResult "FsCheck focused/ignore me").result with
     | TestResult.Ignored _ ->
       ()
     | x ->
       failtestf "Expected Ignored, actual %A" x
 
-    match results.[1].result with
+    match (getResult "FsCheck focused/Deliberately failing test").result with
     | TestResult.Failed e ->
       Expect.equal
         "\nFailed after 3 tests. Parameters: -4 0 4 (Shrunk: 1 0 0) Result: False\nFocus on failure: ftestProperty (1,2)"
@@ -82,7 +96,7 @@ let config =
   testList "FsCheck config" [
     testCase "ignore me" <| ignore
 
-    ftestPropertyWithConfig (1,2) FsCheck.Config.Default
+    ftestPropertyWithConfig (1,2) FsCheckConfig.defaultConfig
       "Deliberately failing test" <|
       fun a b c ->
         // wrong on purpose to test failures
@@ -95,13 +109,19 @@ let runFsCheckConfigTests =
     let! results = Impl.evalTestsSilent config
     Expect.equal results.Length 2 "results length"
 
-    match results.[0].result with
+    let getResult name =
+      results
+      |> Seq.filter (fun (r,_) -> r.name=name)
+      |> Seq.head
+      |> snd
+
+    match (getResult "FsCheck config/ignore me").result with
     | TestResult.Ignored _ ->
       ()
     | x ->
       failtestf "Expected Ignored, actual %A" x
 
-    match results.[1].result with
+    match (getResult "FsCheck config/Deliberately failing test").result with
     | TestResult.Failed e ->
       Expect.equal
         "\nFailed after 3 tests. Parameters: -4 0 4 (Shrunk: 1 0 0) Result: False\nFocus on failure: ftestPropertyWithConfig (1,2)"

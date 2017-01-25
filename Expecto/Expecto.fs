@@ -18,10 +18,26 @@ with
     { sourcePath = ""
       lineNumber = 0 }
 
+type FsCheckConfig =
+  { maxTest: int
+    startSize: int
+    endSize: int
+    replay: (int*int) option
+    arbitrary: Type list }
+  static member defaultConfig =
+    { maxTest = 100
+      startSize = 1
+      endSize = 100
+      replay = None
+      arbitrary = [] }
+
 /// Actual test function; either an async one, or a synchronous one.
 type TestCode =
-  | Sync of stest:(unit -> unit)
-  | Async of atest:Async<unit>
+  | Sync of stest: (unit -> unit)
+  | Async of atest: Async<unit>
+  | AsyncFsCheck of testConfig: FsCheckConfig option *
+                    stressConfig: FsCheckConfig option *
+                    test: (FsCheckConfig -> Async<unit>)
 
 /// The parent state (watching the tests as a tree structure) will influence
 /// the child tests state. By following rules, if parent test state is:
@@ -38,8 +54,6 @@ type FocusState =
   /// The state of a test that will be evaluated
   /// All other test marked with Normal or Pending will be ignored
   | Focused
-
-  with static member isFocused = function | Focused -> true | _ -> false
 
 /// Test tree – this is how you compose your tests as values. Since
 /// any of these can act as a test, you can pass any of these DU cases
@@ -82,94 +96,13 @@ type PTestsAttribute() = inherit Attribute()
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
 type FTestsAttribute() = inherit Attribute()
 
-// TODO: make internal
-module Async =
-  // TODO: make internal
-  let map fn a =
-    async {
-      let! v = a
-      return fn v
-    }
 
-  // TODO: make internal
-  let bind fn a =
-    async.Bind(a, fn)
-
-  let synchronous s =
-    async {
-      let a = List.toArray s
-      let r = Array.length a |> Array.zeroCreate
-      for i = 0 to Array.length a-1 do
-        let! ai = a.[i]
-        r.[i] <- ai
-      return List.ofArray r
-    }
-
-  /// Traverses the list of async, spawning them with Async.Start and
-  let parallelLimit maxParallelism s =
-    let workers = List.length s |> min maxParallelism
-    let handle = new ManualResetEventSlim(false)
-    let mutable results = []
-    let mb =
-      MailboxProcessor.Start(fun mb ->
-        let rec loop queue count =
-          async {
-            // by receiving one by one, we ensure we can mutate `results`
-            let! msg = mb.Receive()
-            match msg with
-            // None acts as a kanban card – running another one
-            | None ->
-              match queue with
-              | asyncWork :: newQueue ->
-                async {
-                  try
-                    let! r = asyncWork
-                    Some r |> mb.Post
-                  finally
-                    mb.Post None
-                } |> Async.Start
-                return! loop newQueue count
-
-              | [] ->
-                if count = 1 then
-                  handle.Set()
-                  (mb :> IDisposable).Dispose()
-                else
-                  return! loop queue (count-1)
-
-            // the other side of the coin; receiving results
-            | Some r ->
-              results <- r :: results
-              return! loop queue count
-          }
-        loop s workers)
-
-    let rec start n =
-      if n > 0 then
-        mb.Post None
-        start (n-1)
-
-    start workers
-    Async.AwaitWaitHandle handle.WaitHandle
-    |> map (fun _ -> results)
-
-// TODO: make internal
-module Helpers =
-
-  let inline fst3 (a,_,_) = a
-  let inline snd3 (_,b,_) = b
-  let inline trd3 (_,_,c) = c
-
-  let inline ignore2 _ = ignore
-  let inline ignore3 _ = ignore2
-
-  let bracket setup teardown f () =
-    let v = setup()
-    try
-      f v
-    finally
-      teardown v
-
+[<AutoOpen>]
+module internal Helpers =
+  let inline dispose (d:IDisposable) = d.Dispose()
+  let inline addFst a b = a,b
+  let inline addSnd b a = a,b
+  let inline commaString (i:int) = i.ToString("#,##0")
   open System.Text.RegularExpressions
   let rx = lazy Regex(" at (.*) in (.*):line (\d+)", RegexOptions.Compiled ||| RegexOptions.Multiline)
   let stackTraceToString s = rx.Value.Replace(s, "$2($3,1): $1")
@@ -179,6 +112,8 @@ module Helpers =
     let cons x xs = seq { yield x; yield! xs }
 
   module Option =
+    let orFun fn =
+      function | Some a -> a | None -> fn()
     let orDefault def =
       function | Some a -> a | None -> def
 
@@ -188,6 +123,8 @@ module Helpers =
         Type.GetType(t, true) |> Some
       with _ ->
         None
+
+  type ResizeMap<'k,'v> = Collections.Generic.Dictionary<'k,'v>
 
   let matchFocusAttributes = function
     | "Expecto.FTestsAttribute" -> Some (1, Focused)
@@ -227,12 +164,94 @@ module Helpers =
       |> List.map snd
       |> List.tryFind (fun _ -> true)
 
+
+module internal Async =
+  let map fn a =
+    async {
+      let! v = a
+      return fn v
+    }
+
+  let bind fn a =
+    async.Bind(a, fn)
+
+  let foldSequentiallyWithCancel (ct:CancellationTokenSource)
+                                 folder state (s:_ seq) =
+    let mutable state = state
+    Async.Start(async {
+      use e = s.GetEnumerator()
+      while not ct.IsCancellationRequested && e.MoveNext() do
+        let! item = e.Current
+        state <- folder state item
+      ct.Cancel()
+    }, ct.Token)
+    Async.AwaitWaitHandle ct.Token.WaitHandle |> map (fun _ -> state)
+
+  let foldSequentially folder state (s:_ seq) =
+    foldSequentiallyWithCancel (new CancellationTokenSource())
+                               folder state s
+
+  let foldParallelLimitWithCancel (ct:CancellationTokenSource)
+                                  maxParallelism folder state (s:_ seq) =
+    let mutable state = state
+    let enumerator = s.GetEnumerator()
+    use mb =
+      MailboxProcessor.Start((fun mb ->
+        let rec loop running =
+          async {
+            // by receiving one by one, we ensure we can mutate `results`
+            let! msg = mb.Receive()
+            match msg with
+            // None acts as a kanban card – running another one
+            | None ->
+              if enumerator.MoveNext() then
+                let next = enumerator.Current
+                Async.Start(async {
+                  try
+                    let! r = next
+                    Some r |> mb.Post
+                  finally
+                    mb.Post None
+                }, ct.Token)
+                return! loop (running+1)
+              elif running = 0 then
+                ct.Cancel()
+              else
+                return! loop running
+            // the other side of the coin; receiving results
+            | Some r ->
+              state <- folder state r
+              return! loop (running-1)
+          }
+        loop 0), ct.Token)
+
+    let rec start n =
+      if n > 0 then
+        mb.Post None
+        start (n-1)
+
+    start maxParallelism
+    Async.AwaitWaitHandle ct.Token.WaitHandle
+    |> map (fun _ -> state)
+
+  let foldParallelLimit maxParallelism folder state (s:_ seq) =
+    foldParallelLimitWithCancel (new CancellationTokenSource())
+                                maxParallelism folder state s
+
+
 // TODO: move to internal
+[<ReferenceEquality>]
 type FlatTest =
   { name      : string
     test      : TestCode
     state     : FocusState
+    focusOn   : bool
     sequenced : bool }
+  member x.shouldSkipEvaluation =
+    match x.focusOn, x.state with
+    | _, Pending -> Some "The test or one of his parents is marked as Pending"
+    | true, Normal -> Some "The test is skipped because other tests are Focused"
+    | _ -> None
 
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
@@ -244,8 +263,22 @@ module Test =
     | Focused, _ -> Focused
     | Normal, _ -> childState
 
+  /// Is focused set on at least one test
+  let rec isFocused test =
+    match test with
+    | TestLabel (_,_,Focused)
+    | TestCase (_,Focused)
+    | TestList (_,Focused) -> true
+    | TestLabel (_,_,Pending)
+    | TestList (_,Pending)
+    | TestCase _ -> false
+    | TestLabel (_,test,Normal)
+    | Sequenced test -> isFocused test
+    | TestList (tests,Normal) -> List.exists isFocused tests
+
   /// Flattens a tree of tests
-  let toTestCodeList =
+  let toTestCodeList test =
+    let isFocused = isFocused test
     let rec loop parentName testList parentState sequenced =
       function
       | TestLabel (name, test, state) ->
@@ -254,28 +287,15 @@ module Test =
             then name
             else parentName + "/" + name
         loop fullName testList (computeChildFocusState parentState state) sequenced test
-      | TestCase (test, state) -> {name=parentName; test=test; state=computeChildFocusState parentState state; sequenced=sequenced} :: testList
+      | TestCase (test, state) ->
+        { name=parentName
+          test=test
+          state=computeChildFocusState parentState state
+          focusOn = isFocused
+          sequenced=sequenced } :: testList
       | TestList (tests, state) -> List.collect (loop parentName testList (computeChildFocusState parentState state) sequenced) tests
       | Sequenced test -> loop parentName testList parentState true test
-    loop null [] Normal false
-
-  /// Recursively maps all TestCodes in a Test
-  let rec wrap f =
-    function
-    | TestCase (test, state) -> TestCase ((f test), state)
-    | TestList (testList, state) -> TestList (testList |> List.map (wrap f), state)
-    | TestLabel (label, test, state) -> TestLabel (label, wrap f test, state)
-    | Sequenced test -> Sequenced (wrap f test)
-
-  /// Enforce a FocusState on a test by replacing the current state
-  /// Is not used (against YAGNI), but is here to make it clear for intellisense discovery
-  /// that the translateFocusState is not intended as replacement
-  let rec replaceFocusState newFocusState =
-    function
-    | TestCase (test, _) -> TestCase(test, newFocusState)
-    | TestList (testList, _) -> TestList(testList, newFocusState)
-    | TestLabel (label, test, _) -> TestLabel(label, test, newFocusState)
-    | Sequenced test -> Sequenced (replaceFocusState newFocusState test)
+    loop null [] Normal false test
 
   /// Change the FocusState by appling the old state to a new state
   /// Note: this is not state replacement!!!
@@ -316,19 +336,23 @@ module Test =
 
   /// Applies a timeout to a test.
   let timeout timeout (test: TestCode) : TestCode =
-    async {
-      try
-        let test =
-          match test with
-          | Async test -> test
-          | Sync test -> async { test() }
+    let timeoutAsync testAsync =
+      async {
+        try
+          let! async = Async.StartChild(testAsync, timeout)
+          do! async
+        with :? TimeoutException ->
+          let ts = TimeSpan.FromMilliseconds (float timeout)
+          raise <| AssertException(sprintf "Timeout (%A)" ts)
+      }
 
-        let! async = Async.StartChild(test, timeout)
-        do! async
-      with :? TimeoutException ->
-        let ts = TimeSpan.FromMilliseconds (float timeout)
-        raise <| AssertException(sprintf "Timeout (%A)" ts)
-    } |> Async
+    match test with
+    | Sync test -> async { test() } |> timeoutAsync |> Async
+    | Async test -> timeoutAsync test |> Async
+    | AsyncFsCheck (testConfig, stressConfig, test) ->
+      AsyncFsCheck (testConfig, stressConfig, test >> timeoutAsync)
+
+
 
 // TODO: make internal?
 module Impl =
@@ -351,109 +375,101 @@ module Impl =
       | Ignored reason -> "Ignored: " + reason
       | Failed error -> "Failed: " + error
       | Error e -> "Exception: " + exnToString e
-    static member tag =
-      function
+    member x.tag =
+      match x with
       | Passed -> 0
       | Ignored _ -> 1
       | Failed _ -> 2
       | Error _ -> 3
-    static member isPassed =
-      function
+    member x.isPassed =
+      match x with
       | Passed -> true
       | _ -> false
-    static member isIgnored =
-      function
+    member x.isIgnored =
+      match x with
       | Ignored _ -> true
       | _ -> false
-    static member isFailed =
-      function
+    member x.isFailed =
+      match x with
       | Failed _ -> true
       | _ -> false
-    static member isException =
-      function
+    member x.isException =
+      match x with
       | Error _ -> true
       | _ -> false
+    static member max (a:TestResult) (b:TestResult) =
+      if a.tag>=b.tag then a else b
 
-  [<StructuredFormatDisplay("{description}")>]
-  type TestResultSummary =
-    { passed   : TestRunResult list
-      ignored  : TestRunResult list
-      failed   : TestRunResult list
-      errored  : TestRunResult list
-      duration : TimeSpan }
+  type TestSummary =
+    { result        : TestResult
+      count         : int
+      meanDuration  : float
+      maxDuration   : float
+      totalVariance : float }
+    member x.duration = TimeSpan.FromMilliseconds x.meanDuration
+    static member single result duration =
+      { result        = result
+        count         = 1
+        meanDuration  = duration
+        maxDuration   = duration
+        totalVariance = 0.0 }
+    static member (+)(s:TestSummary,(r,d):TestResult*float) =
+      let n,m,v = Statistics.updateIntermediateStatistics
+                    (s.count,s.meanDuration,s.totalVariance) d
+      { result        = TestResult.max s.result r
+        count         = n
+        meanDuration  = m
+        maxDuration   = max s.maxDuration d
+        totalVariance = v }
 
-      member x.total =
-        x.passed.Length + x.ignored.Length + x.failed.Length
+  type TestRunSummary =
+    { results   : (FlatTest*TestSummary) list
+      duration  : TimeSpan
+      maxMemory : int64
+      memoryLimit : int64
+      timedOut  : FlatTest list
+    }
+    static member fromResults results =
+      { results  = results
+        duration =
+            results
+            |> List.sumBy (fun (_,r:TestSummary) -> r.meanDuration)
+            |> TimeSpan.FromMilliseconds
+        maxMemory = 0L
+        memoryLimit = 0L
+        timedOut = [] }
+    member x.passed = List.filter (fun (_,r) -> r.result.isPassed) x.results
+    member x.ignored = List.filter (fun (_,r) -> r.result.isIgnored) x.results
+    member x.failed = List.filter (fun (_,r) -> r.result.isFailed) x.results
+    member x.errored = List.filter (fun (_,r) -> r.result.isException) x.results
+    member x.errorCode =
+      (if List.isEmpty x.failed then 0 else 1) |||
+      (if List.isEmpty x.errored then 0 else 2) |||
+      (if x.maxMemory <= x.memoryLimit then 0 else 4) |||
+      (if List.isEmpty x.timedOut then 0 else 8)
+    member x.successful = x.errorCode = 0
 
-      override x.ToString() =
-        sprintf "%d tests run: %d passed, %d ignored, %d failed, %d errored (%A)\n"
-                (x.errored.Length + x.failed.Length + x.passed.Length)
-                x.passed.Length x.ignored.Length x.failed.Length x.errored.Length x.duration
-      member x.description =
-        x.ToString()
-      static member (+) (c1: TestResultSummary, c2: TestResultSummary) =
-        { passed = c1.passed @ c2.passed
-          ignored = c1.ignored @ c2.ignored
-          failed = c1.failed @ c2.failed
-          errored = c1.errored @ c2.errored
-          duration = c1.duration + c2.duration }
-
-      static member errorCode (c: TestResultSummary) =
-        (if c.failed.Length > 0 then 1 else 0) ||| (if c.errored.Length > 0 then 2 else 0)
-
-
-  and [<StructuredFormatDisplay("{description}")>] TestRunResult =
-   { name     : string
-     location : SourceLocation
-     result   : TestResult
-     duration : TimeSpan }
-    override x.ToString() =
-     sprintf "%s: %s (%A)" x.name (x.result.ToString()) x.duration
-    member x.description = x.ToString()
-    static member isPassed (r: TestRunResult) = TestResult.isPassed r.result
-    static member isIgnored (r: TestRunResult) = TestResult.isIgnored r.result
-    static member isFailed (r: TestRunResult) = TestResult.isFailed r.result
-    static member isException (r: TestRunResult) = TestResult.isException r.result
-    static member isFailedOrException r = TestRunResult.isFailed r || TestRunResult.isException r
-
-  let sumTestResults (results: #seq<TestRunResult>) =
-    let counts =
-      results
-      |> Seq.groupBy (fun r -> TestResult.tag r.result )
-      |> dict
-
-    let get result =
-      match counts.TryGetValue (TestResult.tag result) with
-      | true, v -> v |> Seq.toList
-      | _ -> List.empty
-
-    { passed   = get TestResult.Passed
-      ignored  = get (TestResult.Ignored "")
-      failed   = get (TestResult.Failed "")
-      errored  = get (TestResult.Error null)
-      duration = results |> Seq.map (fun r -> r.duration) |> Seq.fold (+) TimeSpan.Zero }
-
-  let createSummaryMessage (summary: TestResultSummary) =
-    let handleLineBreaks elements =
+  let createSummaryMessage (summary: TestRunSummary) =
+    let handleLineBreaks (elements:(FlatTest*TestSummary) seq) =
         elements
-        |> List.map (fun n -> "\n\t" + n.name)
-        |> String.concat ""
+        |> Seq.map (fun (n,_) -> "\n\t" + n.name)
+        |> String.Concat
 
     let passed = summary.passed |> handleLineBreaks
-    let passedCount = summary.passed |> List.length
+    let passedCount = List.sumBy (fun (_,r) -> r.count) summary.passed |> commaString
     let ignored = summary.ignored |> handleLineBreaks
-    let ignoredCount = summary.ignored |> List.length
+    let ignoredCount = List.sumBy (fun (_,r) -> r.count) summary.ignored |> commaString
     let failed = summary.failed |> handleLineBreaks
-    let failedCount = summary.failed |> List.length
+    let failedCount = List.sumBy (fun (_,r) -> r.count) summary.failed |> commaString
     let errored = summary.errored |> handleLineBreaks
-    let erroredCount = summary.errored |> List.length
+    let erroredCount = List.sumBy (fun (_,r) -> r.count) summary.errored |> commaString
 
     let digits =
       [passedCount; ignoredCount; failedCount; erroredCount ]
       |> List.map (fun x -> x.ToString().Length)
       |> List.max
 
-    let align (d:int) offset = d.ToString().PadLeft(offset + digits)
+    let align (s:string) offset = s.PadLeft(offset + digits)
 
     eventX "EXPECTO?! Summary...\nPassed: {passedCount}{passed}\nIgnored: {ignoredCount}{ignored}\nFailed: {failedCount}{failed}\nErrored: {erroredCount}{errored}"
     >> setField "passed" passed
@@ -465,36 +481,38 @@ module Impl =
     >> setField "errored" errored
     >> setField "erroredCount" (align erroredCount 0)
 
-  let createSummaryText (summary: TestResultSummary) =
+  let createSummaryText (summary: TestRunSummary) =
     createSummaryMessage summary Info
     |> Expecto.Logging.Formatting.defaultFormatter
 
-  let logSummary (summary: TestResultSummary) =
+  let logSummary (summary: TestRunSummary) =
     createSummaryMessage summary
     |> logger.logWithAck Info
 
-  let logSummaryWithLocation (summary: TestResultSummary) =
-    let handleLineBreaks elements =
-      let format n = sprintf "%s [%s:%d]" n.name n.location.sourcePath n.location.lineNumber
+  let logSummaryWithLocation locate (summary: TestRunSummary) =
+    let handleLineBreaks (elements:(FlatTest*TestSummary) seq) =
+      let format (n:FlatTest,_) =
+        let location = locate n.test
+        sprintf "%s [%s:%d]" n.name location.sourcePath location.lineNumber
 
       let text = elements |> Seq.map format |> String.concat "\n\t"
       if text = "" then text else text + "\n"
 
     let passed = summary.passed |> handleLineBreaks
-    let passedCount = summary.passed |> List.length
+    let passedCount = List.sumBy (fun (_,r) -> r.count) summary.passed |> commaString
     let ignored = summary.ignored |> handleLineBreaks
-    let ignoredCount = summary.ignored |> List.length
+    let ignoredCount = List.sumBy (fun (_,r) -> r.count) summary.ignored |> commaString
     let failed = summary.failed |> handleLineBreaks
-    let failedCount = summary.failed |> List.length
+    let failedCount = List.sumBy (fun (_,r) -> r.count) summary.failed |> commaString
     let errored = summary.errored |> handleLineBreaks
-    let erroredCount = summary.errored |> List.length
+    let erroredCount = List.sumBy (fun (_,r) -> r.count) summary.errored |> commaString
 
     let digits =
       [passedCount; ignoredCount; failedCount; erroredCount ]
       |> List.map (fun x -> x.ToString().Length)
       |> List.max
 
-    let align (d:int) offset = d.ToString().PadLeft(offset + digits)
+    let align (s:string) offset = s.PadLeft(offset + digits)
 
     logger.logWithAck Info (
       eventX "EXPECTO?! Summary...\nPassed: {passedCount}\n\t{passed}Ignored: {ignoredCount}\n\t{ignored}Failed: {failedCount}\n\t{failed}Errored: {erroredCount}\n\t{errored}"
@@ -524,7 +542,14 @@ module Impl =
       /// test name -> exception -> time taken -> unit
       exn: string -> exn -> TimeSpan -> Async<unit>
       /// Prints a summary given the test result counts
-      summary : TestResultSummary -> Async<unit> }
+      summary : ExpectoConfig -> TestRunSummary -> Async<unit> }
+
+    static member printResult config (test:FlatTest) (result:TestSummary) =
+      match result.result with
+      | Passed -> config.printer.passed test.name result.duration
+      | Failed message -> config.printer.failed test.name message result.duration
+      | Ignored message -> config.printer.ignored test.name message
+      | Error e -> config.printer.exn test.name e result.duration
 
     static member silent =
       { beforeRun = fun _ -> async.Zero()
@@ -534,7 +559,7 @@ module Impl =
         ignored = fun _ _ -> async.Zero()
         failed = fun _ _ _ -> async.Zero()
         exn = fun _ _ _ -> async.Zero()
-        summary = fun _ -> async.Zero() }
+        summary = fun _ _ -> async.Zero() }
 
     static member defaultPrinter =
       { beforeRun = fun _tests ->
@@ -574,9 +599,9 @@ module Impl =
             >> setField "duration" d
             >> addExn e)
 
-        summary = fun summary ->
+        summary = fun _ summary ->
           let spirit =
-            if summary.errored.Length + summary.failed.Length = 0 then
+            if summary.successful then
               if Console.OutputEncoding.BodyName = "utf-8" then
                 "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
               else
@@ -588,26 +613,58 @@ module Impl =
                 ""
           logger.logWithAck Info (
             eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
-            >> setField "total" summary.total
+            >> setField "total" (List.sumBy (fun (_,r) -> r.count) summary.results |> commaString)
             >> setField "duration" summary.duration
-            >> setField "passes" summary.passed.Length
-            >> setField "ignores" summary.ignored.Length
-            >> setField "failures" summary.failed.Length
-            >> setField "errors" summary.errored.Length
+            >> setField "passes" (List.sumBy (fun (_,r) -> r.count) summary.passed |> commaString)
+            >> setField "ignores" (List.sumBy (fun (_,r) -> r.count) summary.ignored |> commaString)
+            >> setField "failures" (List.sumBy (fun (_,r) -> r.count) summary.failed |> commaString)
+            >> setField "errors" (List.sumBy (fun (_,r) -> r.count) summary.errored |> commaString)
             >> setField "spirit" spirit)
+          }
+
+    static member stressPrinter =
+      { TestPrinters.defaultPrinter with
+          beforeRun = fun _tests ->
+            logger.logWithAck Info (
+              eventX "EXPECTO? Running stress testing...")
+          summary = fun config summary ->
+            let printResults =
+              List.map (fun (t,r) -> TestPrinters.printResult config t r) summary.results
+              |> Async.foldSequentially (fun _ _ -> ()) ()
+            let result =
+              if summary.maxMemory > summary.memoryLimit then
+                logger.logWithAck LogLevel.Error (
+                  eventX "Maximum memory usage was {memory} KB and exceeded the limit set at {limit} KB.\nRunning tests:\n\t{timeout}"
+                  >> setField "memory" (summary.maxMemory / 1024L |> int |> commaString)
+                  >> setField "limit" (summary.memoryLimit / 1024L |> int |> commaString)
+                  >> setField "timeout" (summary.timedOut |> Seq.map (fun t -> t.name) |> String.concat "\n\t"))
+              elif List.isEmpty summary.timedOut then
+                logger.logWithAck Info (
+                  eventX "Maximum memory usage was {memory} KB (limit set at {limit} KB)."
+                  >> setField "memory" (summary.maxMemory / 1024L |> int |> commaString)
+                  >> setField "limit" (summary.memoryLimit / 1024L |> int |> commaString))
+              else
+                logger.logWithAck LogLevel.Error (
+                  eventX "Deadlock timeout running tests:\n\t{timeout}"
+                  >> setField "timeout" (summary.timedOut |> Seq.map (fun t -> t.name) |> String.concat "\n\t"))
+            async {
+              do! printResults
+              do! result
+              do! TestPrinters.defaultPrinter.summary config summary
+            }
           }
 
     static member summaryPrinter =
       { TestPrinters.defaultPrinter with
-          summary = fun summary ->
-            TestPrinters.defaultPrinter.summary summary |> Async.bind (fun () ->
-            logSummary summary) }
+          summary = fun config summary ->
+            TestPrinters.defaultPrinter.summary config summary
+            |> Async.bind (fun () -> logSummary summary) }
 
     static member summaryWithLocationPrinter =
       { TestPrinters.defaultPrinter with
-          summary = fun summary ->
-            TestPrinters.defaultPrinter.summary summary |> Async.bind (fun () ->
-            logSummaryWithLocation summary) }
+          summary = fun config summary ->
+            TestPrinters.defaultPrinter.summary config summary
+            |> Async.bind (fun () -> logSummaryWithLocation config.locate summary) }
     static member teamCityPrinter innerPrinter =
       // https://confluence.jetbrains.com/display/TCD10/Build+Script+Interaction+with+TeamCity#BuildScriptInteractionwithTeamCity-Escapedvalues
       let escape (msg: string) =
@@ -682,42 +739,13 @@ module Impl =
             "name", n
             "duration", d.TotalMilliseconds |> int |> string ] }
 
-        summary = fun s -> async {
-          do! innerPrinter.summary s
+        summary = fun c s -> async {
+          do! innerPrinter.summary c s
           tcLog "testSuiteFinished" [
             "name", "ExpectoTestSuite" ] } }
 
-    type WrappedFocusedState =
-      | Enabled of state:FocusState
-      | UnFocused of state:FocusState
-
-      with
-        /// Used to check if a test should be run and to generate a proper status messsage
-        member x.ShouldSkipEvaluation =
-          match x with
-          | UnFocused Focused -> failwith "Should never reach this state - this is a bug in Expecto - please let us know"
-          | UnFocused Pending
-          | Enabled Pending -> Some "The test or one of his parents is marked as Pending"
-          | UnFocused _ -> Some "The test is skipped because other tests are Focused"
-          | Enabled _-> None
-
-        /// tests: FlatTest list -> WrappedFlatTest list
-        static member WrapStates (tests:FlatTest list) =
-          let applyFocusedWrapping = function
-            | Focused -> Enabled Focused
-            | a -> UnFocused a
-          let existsFocusedTests = tests |> List.exists (fun t -> FocusState.isFocused t.state)
-          let wrappingMethod = if existsFocusedTests then applyFocusedWrapping else Enabled
-          tests |> List.map (fun t -> {name=t.name; test=t.test; state=wrappingMethod t.state; sequenced=t.sequenced })
-
-    and WrappedFlatTest =
-      { name      : string
-        test      : TestCode
-        state     : WrappedFocusedState
-        sequenced : bool }
-
   // Runner options
-  type ExpectoConfig =
+  and ExpectoConfig =
     { /// Whether to run the tests in parallel. Defaults to
       /// true, because your code should not mutate global
       /// state by default.
@@ -725,8 +753,15 @@ module Impl =
       /// Number of parallel workers. Defaults to the number of
       /// logical processors.
       parallelWorkers : int
-      /// Run the tests randomly for the given TimeSpan.
+      /// Stress test by running tests randomly for the given TimeSpan.
+      /// Can be sequenced or parallel depending on the config.
       stress : TimeSpan option
+      /// Stress test deadlock timeout TimeSpan to wait after stress TimeSpan
+      /// before stopping and reporting as a deadlock (default 5 mins).
+      stressTimeout : TimeSpan
+      /// Stress test memory limit in MB to stop the test and report as
+      /// a memory leak (default 100 MB)
+      stressMemoryLimit : float
       /// Whether to make the test runner fail if focused tests exist.
       /// This can be used from CI servers to ensure no focused tests are
       /// commited and therefor all tests are run.
@@ -736,16 +771,25 @@ module Impl =
       filter   : Test -> Test
       /// Allows the test printer to be parametised to your liking.
       printer : TestPrinters
-      /// Verbosity level (default: Info)
+      /// Verbosity level (default: Info).
       verbosity : LogLevel
       /// Optional function used for finding source code location of test
-      /// Defaults to empty source code
+      /// Defaults to empty source code.
       locate : TestCode -> SourceLocation
+      /// FsCheck maximum number of tests (default: 100).
+      fsCheckMaxTests: int
+      /// FsCheck start size (default: 1).
+      fsCheckStartSize: int
+      /// FsCheck end size (default: 100 for testing and 10,000 for
+      /// stress testing).
+      fsCheckEndSize: int option
     }
-    static member Default =
+    static member defaultConfig =
       { parallel = true
         parallelWorkers = Environment.ProcessorCount
         stress = None
+        stressTimeout = TimeSpan.FromMinutes 5.0
+        stressMemoryLimit = 100.0
         filter = id
         failOnFocusedTests = false
         printer =
@@ -754,29 +798,44 @@ module Impl =
           else
             TestPrinters.defaultPrinter
         verbosity = LogLevel.Info
-        locate = fun _ -> SourceLocation.empty }
+        locate = fun _ -> SourceLocation.empty
+        fsCheckMaxTests = 100
+        fsCheckStartSize = 1
+        fsCheckEndSize = None
+      }
 
-  let execTestAsync locate test =
+  let execTestAsync config (test:FlatTest) : Async<TestSummary> =
     async {
       let w = Stopwatch.StartNew()
       try
-        match test.state.ShouldSkipEvaluation with
+        match test.shouldSkipEvaluation with
         | Some ignoredMessage ->
-          return { name     = test.name
-                   result   = Ignored ignoredMessage
-                   location = locate test.test
-                   duration = TimeSpan.Zero }
+          return TestSummary.single (Ignored ignoredMessage) 0.0
         | None ->
           match test.test with
-          | Async test ->
-            do! test
           | Sync test ->
             test()
+          | Async test ->
+            do! test
+          | AsyncFsCheck (testConfig, stressConfig, test) ->
+            let fsConfig =
+              match config.stress with
+              | None -> testConfig
+              | Some _ -> stressConfig
+              |> Option.orFun (fun () ->
+                  { FsCheckConfig.defaultConfig with
+                      maxTest = config.fsCheckMaxTests
+                      startSize = config.fsCheckStartSize
+                      endSize =
+                        match config.fsCheckEndSize, config.stress with
+                        | Some i, _ -> i
+                        | None, None -> 100
+                        | None, Some _ -> 10000
+                  }
+                )
+            do! test fsConfig
           w.Stop()
-          return { name     = test.name
-                   location = locate test.test
-                   result   = Passed
-                   duration = w.Elapsed }
+          return TestSummary.single Passed (float w.ElapsedMilliseconds)
       with
         | :? AssertException as e ->
           w.Stop()
@@ -785,95 +844,84 @@ module Impl =
             |> Seq.filter (fun q -> q.Contains ",1): ")
             |> Enumerable.FirstOrDefault
             |> sprintf "\n%s\n%s\n" e.Message
-          return { name     = test.name
-                   location = locate test.test
-                   result   = Failed msg
-                   duration = w.Elapsed }
+          return
+            TestSummary.single (Failed msg) (float w.ElapsedMilliseconds)
         | :? FailedException as e ->
           w.Stop()
-          return { name     = test.name
-                   location = locate test.test
-                   result   = Failed ("\n"+e.Message)
-                   duration = w.Elapsed }
+          return
+            TestSummary.single (Failed ("\n"+e.Message)) (float w.ElapsedMilliseconds)
         | :? IgnoreException as e ->
           w.Stop()
-          return { name     = test.name
-                   location = locate test.test
-                   result   = Ignored e.Message
-                   duration = w.Elapsed }
+          return
+            TestSummary.single (Ignored e.Message) (float w.ElapsedMilliseconds)
         | e ->
           w.Stop()
-          return { name     = test.name
-                   location = locate test.test
-                   result   = TestResult.Error e
-                   duration = w.Elapsed }
+          return
+            TestSummary.single (TestResult.Error e) (float w.ElapsedMilliseconds)
     }
+
+  let private numberOfWorkers limit config =
+    if config.parallelWorkers < 0 then
+      -config.parallelWorkers * Environment.ProcessorCount
+    elif config.parallelWorkers = 0 then
+      if limit then
+        Environment.ProcessorCount
+      else
+        Int32.MaxValue
+    else
+      config.parallelWorkers
 
   /// Evaluates tests.
   let evalTests config test =
     async {
 
-      let evalWrappedFlatTestAsync test =
+      let evalTestAsync (test:FlatTest) =
 
-        let beforeEach test =
+        let beforeEach (test:FlatTest) =
           config.printer.beforeEach test.name
-
-        let printOne result =
-          match result.result with
-          | Passed -> config.printer.passed result.name result.duration
-          | Failed message -> config.printer.failed result.name message result.duration
-          | Ignored message -> config.printer.ignored result.name message
-          | Error e -> config.printer.exn result.name e result.duration
 
         async {
           let! beforeAsync = beforeEach test |> Async.StartChild
-          let! result = execTestAsync config.locate test
+          let! result = execTestAsync config test
           do! beforeAsync
-          do! printOne result
-          return result
+          do! TestPrinters.printResult config test result
+          return test,result
         }
 
-      let tests = Test.toTestCodeList test |> WrappedFocusedState.WrapStates
+      let tests = Test.toTestCodeList test
+      let inline cons xs x = x::xs
 
-      if not config.``parallel`` || config.parallelWorkers = 1 then
-        return! List.map evalWrappedFlatTestAsync tests |> Async.synchronous
+      if not config.``parallel`` ||
+         config.parallelWorkers = 1 ||
+         List.forall (fun t -> t.sequenced) tests then
+        return!
+          List.map evalTestAsync tests
+          |> Async.foldSequentially cons []
       else
         let sequenced =
           List.filter (fun t -> t.sequenced) tests
-          |> List.map evalWrappedFlatTestAsync
+          |> List.map evalTestAsync
 
         let parallel =
           List.filter (fun t -> not t.sequenced) tests
-          |> List.map evalWrappedFlatTestAsync
+          |> List.map evalTestAsync
 
         let! parallelResults =
-          let noWorkers =
-            if config.parallelWorkers < 0 then
-              -config.parallelWorkers * Environment.ProcessorCount
-            elif config.parallelWorkers = 0 then
-              Int32.MaxValue
-            else
-              config.parallelWorkers
-
-          if List.isEmpty parallel then
-            async.Return []
-          elif List.length parallel <= noWorkers then
-            Async.Parallel parallel
-            |> Async.map List.ofArray
+          let noWorkers = numberOfWorkers false config
+          if List.length parallel <= noWorkers then
+            Async.Parallel parallel |> Async.map List.ofArray
           else
-            Async.parallelLimit noWorkers parallel
+            Async.foldParallelLimit noWorkers cons [] parallel
 
         if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
           do! config.printer.info "Starting sequenced tests..."
 
-        let! sequencedResults = Async.synchronous sequenced
-
-        return List.append sequencedResults parallelResults
+        return! Async.foldSequentially cons parallelResults sequenced
       }
 
   let evalTestsSilent test =
     let config =
-      { ExpectoConfig.Default with
+      { ExpectoConfig.defaultConfig with
           parallel = false
           verbosity = LogLevel.Fatal
           printer = TestPrinters.silent
@@ -888,10 +936,125 @@ module Impl =
       let w = Stopwatch.StartNew()
       let! results = evalTests config test
       w.Stop()
-      let testSummary = { sumTestResults results with duration = w.Elapsed }
-      do! config.printer.summary testSummary
+      let testSummary = { results = results
+                          duration = w.Elapsed
+                          maxMemory = 0L
+                          memoryLimit = 0L
+                          timedOut = [] }
+      do! config.printer.summary config testSummary
 
-      return TestResultSummary.errorCode testSummary
+      return testSummary.errorCode
+    }
+
+  let runStress config test =
+    async {
+      do! config.printer.beforeRun test
+
+      let tests =
+        Test.toTestCodeList test
+        |> List.filter (fun t -> Option.isNone t.shouldSkipEvaluation)
+
+      let memoryLimit =
+        config.stressMemoryLimit * 1024.0 * 1024.0 |> int64
+
+      let evalTestAsync test =
+        execTestAsync config test |> Async.map (addFst test)
+
+      let rand = Random()
+
+      let randNext tests =
+        List.length tests |> rand.Next |> List.nth tests
+
+      let finishTimestamp =
+        let now = Stopwatch.GetTimestamp()
+        let stressSeconds = config.stress.Value.TotalSeconds
+        now + int64(stressSeconds * float Stopwatch.Frequency)
+
+      let asyncRun foldRunner (runningTests:ResizeArray<_>,
+                               results,
+                               maxMemory) =
+        let cancel = new CancellationTokenSource()
+
+        let folder (runningTests:ResizeArray<_>,
+                    results:ResizeMap<_,_>,
+                    maxMemory) (test,result) =
+
+          runningTests.Remove test |> ignore
+
+          results.[test] <-
+            match results.TryGetValue test with
+            | true, existing ->
+              existing + (result.result,result.meanDuration)
+            | false, _ ->
+              result
+
+          let maxMemory = GC.GetTotalMemory false |> max maxMemory
+
+          if maxMemory > memoryLimit then
+            cancel.Cancel()
+
+          runningTests, results, maxMemory
+
+        Async.Start(async {
+          let finishSeconds =
+            (finishTimestamp - Stopwatch.GetTimestamp()) / Stopwatch.Frequency
+          let timeout =
+            int finishSeconds * 1000 + int config.stressTimeout.TotalMilliseconds
+          if timeout > 0 then
+            do! Async.Sleep timeout
+          cancel.Cancel()
+        }, cancel.Token)
+
+        Seq.takeWhile (fun test ->
+          if Stopwatch.GetTimestamp() < finishTimestamp then
+            runningTests.Add test
+            true
+          else
+            false )
+        >> Seq.map evalTestAsync
+        >> foldRunner cancel folder (runningTests,results,maxMemory)
+
+      let initial = ResizeArray(), ResizeMap(), GC.GetTotalMemory false
+
+      let w = Stopwatch.StartNew()
+
+      let! runningTests,results,maxMemory =
+        if not config.``parallel`` ||
+           config.parallelWorkers = 1 ||
+           List.forall (fun t -> t.sequenced) tests then
+
+          Seq.initInfinite (fun _ -> randNext tests)
+          |> Seq.append tests
+          |> asyncRun Async.foldSequentiallyWithCancel initial
+        else
+          List.filter (fun t -> t.sequenced) tests
+          |> asyncRun Async.foldSequentiallyWithCancel initial
+          |> Async.bind (fun (runningTests,results,maxMemory) ->
+               if maxMemory > memoryLimit ||
+                  Stopwatch.GetTimestamp() > finishTimestamp then
+                 async.Return (runningTests,results,maxMemory)
+               else
+                 let parallel = List.filter (fun t -> not t.sequenced) tests
+                 Seq.initInfinite (fun _ -> randNext parallel)
+                 |> Seq.append parallel
+                 |> asyncRun (fun cancel ->
+                      Async.foldParallelLimitWithCancel cancel
+                                (numberOfWorkers true config)
+                    ) (runningTests,results,maxMemory)
+             )
+
+      w.Stop()
+
+      let testSummary = { results = results
+                                    |> Seq.map (fun kv -> kv.Key,kv.Value)
+                                    |> List.ofSeq
+                          duration = w.Elapsed
+                          maxMemory = maxMemory
+                          memoryLimit = memoryLimit
+                          timedOut = List.ofSeq runningTests }
+      do! config.printer.summary config testSummary
+
+      return testSummary.errorCode
     }
 
   let testFromMember (mi: MemberInfo): Test option  =
@@ -967,7 +1130,7 @@ module Impl =
       let t = getFuncTypeToUse test asm
       let m = t.GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
       (t.FullName, m.Name)
-    | Async _ ->
+    | Async _ | AsyncFsCheck _ ->
       ("Unknown Async", "Unknown Async")
 
   // Ported from
@@ -1142,14 +1305,19 @@ module Tests =
     TestCaseBuilder (name, Pending)
 
   /// The default configuration for Expecto.
-  let defaultConfig = ExpectoConfig.Default
+  let defaultConfig = ExpectoConfig.defaultConfig
 
   // TODO: docs
   type CLIArguments =
     | Sequenced
     | Parallel
     | Parallel_Workers of int
+    | FsCheck_Max_Tests of int
+    | FsCheck_Start_Size of int
+    | FsCheck_End_Size of int
     | Stress of float
+    | Stress_Timeout of float
+    | Stress_Memory_Limit of float
     | Fail_On_Focused_Tests
     | Debug
     | Filter of hiera:string
@@ -1158,8 +1326,8 @@ module Tests =
     | Run of tests:string list
     | List_Tests
     | Summary
-    | Version
     | Summary_Location
+    | Version
 
     interface IArgParserTemplate with
       member s.Usage =
@@ -1168,6 +1336,8 @@ module Tests =
         | Parallel -> "runs all tests in parallel (default)."
         | Parallel_Workers _ -> "number of parallel workers (defaults to the number of logical processors)."
         | Stress _ -> "run the tests randomly for the given number of minutes."
+        | Stress_Timeout _ -> "time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins)."
+        | Stress_Memory_Limit _ -> "stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB)."
         | Fail_On_Focused_Tests -> "this will make the test runner fail if focused tests exist."
         | Debug -> "extra verbose printing. Useful to combine with --sequenced."
         | Filter _ -> "filters the list of tests by a hierarchy that's slash (/) separated."
@@ -1178,6 +1348,9 @@ module Tests =
         | Summary -> "prints out summary after all tests are finished."
         | Version -> "prints out version information."
         | Summary_Location -> "prints out summary after all tests are finished including their source code location."
+        | FsCheck_Max_Tests _ -> "FsCheck maximum number of tests (default: 100)."
+        | FsCheck_Start_Size _ -> "FsCheck start size (default: 1)."
+        | FsCheck_End_Size _ -> "FsCheck end size (default: 100 for testing and 10,000 for stress testing)."
 
   type FillFromArgsResult =
     | ArgsRun of ExpectoConfig
@@ -1225,9 +1398,13 @@ module Tests =
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
         | Parallel -> fun o -> { o with parallel = true }
         | Parallel_Workers n -> fun o -> { o with parallelWorkers = n }
-        | Stress n -> fun o  -> {o with stress = TimeSpan.FromMinutes n |> Some }
+        | Stress n -> fun o  -> {o with
+                                    stress = TimeSpan.FromMinutes n |> Some
+                                    printer = TestPrinters.stressPrinter }
+        | Stress_Timeout n -> fun o -> { o with stressTimeout = TimeSpan.FromMinutes n }
+        | Stress_Memory_Limit n -> fun o -> { o with stressMemoryLimit = n }
         | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
-        | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
+        | Debug -> fun o -> { o with verbosity = LogLevel.Info }
         | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
         | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
         | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}
@@ -1236,6 +1413,9 @@ module Tests =
         | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter}
         | Version -> fun o -> printExpectoVersion(); o
         | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter}
+        | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
+        | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
+        | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
 
       let parsed =
         try
@@ -1281,10 +1461,12 @@ module Tests =
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity, consoleSemaphore = Global.semaphore()) :> Logger }
-    if not config.failOnFocusedTests || passesFocusTestCheck config tests then
-      runEval config tests |> Async.RunSynchronously
-    else
+    if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
       1
+    else
+      match config.stress with
+      | None -> runEval config tests |> Async.RunSynchronously
+      | Some _ -> runStress config tests |> Async.RunSynchronously
 
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
