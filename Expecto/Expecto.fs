@@ -9,6 +9,7 @@ open System.Reflection
 open System.Diagnostics
 open System.Threading
 
+// TODO: move to internal
 type SourceLocation =
   { sourcePath : string
     lineNumber : int }
@@ -54,9 +55,13 @@ type Test =
   /// Require sequenced for a Test (list or test code).
   | Sequenced of Test
 
+// TODO: move to internal namespace
 type ExpectoException(msg) = inherit Exception(msg)
+// TODO: move to internal namespace
 type AssertException(msg) = inherit ExpectoException(msg)
+// TODO: move to internal namespace
 type FailedException(msg) = inherit ExpectoException(msg)
+// TODO: move to internal namespace
 type IgnoreException(msg) = inherit ExpectoException(msg)
 
 /// Marks a top-level test for scanning
@@ -77,13 +82,16 @@ type PTestsAttribute() = inherit Attribute()
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
 type FTestsAttribute() = inherit Attribute()
 
+// TODO: make internal
 module Async =
+  // TODO: make internal
   let map fn a =
     async {
       let! v = a
       return fn v
     }
 
+  // TODO: make internal
   let bind fn a =
     async.Bind(a, fn)
 
@@ -135,6 +143,7 @@ module Async =
     Async.AwaitWaitHandle handle.WaitHandle
     |> map (fun _ -> results)
 
+// TODO: make internal
 module Helpers =
 
   let inline fst3 (a,_,_) = a
@@ -208,6 +217,7 @@ module Helpers =
       |> List.map snd
       |> List.tryFind (fun _ -> true)
 
+// TODO: move to internal
 type FlatTest =
   { name      : string
     test      : TestCode
@@ -310,6 +320,7 @@ module Test =
         raise <| AssertException(sprintf "Timeout (%A)" ts)
     } |> Async
 
+// TODO: make internal?
 module Impl =
   open Expecto.Logging
   open Expecto.Logging.Message
@@ -896,6 +907,7 @@ module Impl =
     | [] -> None
     | x -> Some (TestList (x, Normal))
 
+  // TODO: make internal
   let testFromType =
     let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
     let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
@@ -1079,6 +1091,7 @@ module Tests =
     Seq.map (fun (name, partialTest) ->
       testCase name (partialTest param))
 
+  // TODO: docs
   type TestCaseBuilder(name, focusState) =
     member x.TryFinally(f, compensation) =
       try
@@ -1107,10 +1120,13 @@ module Tests =
       | Focused -> ftestCase name f
       | Pending -> ptestCase name f
 
+  // TODO: docs
   let inline test name =
     TestCaseBuilder (name, Normal)
+  // TODO: docs
   let inline ftest name =
     TestCaseBuilder (name, Focused)
+  // TODO: docs
   let inline ptest name =
     TestCaseBuilder (name, Pending)
 
@@ -1132,6 +1148,7 @@ module Tests =
       verbosity = LogLevel.Info
       locate = fun _ -> SourceLocation.empty }
 
+  // TODO: docs
   type CLIArguments =
     | Sequenced
     | Parallel
@@ -1164,6 +1181,7 @@ module Tests =
         | Version -> "Prints out version information."
         | Summary_Location -> "Prints out summary after all tests are finished including their source code location"
 
+  // TODO: docs
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
 
@@ -1260,19 +1278,23 @@ module Tests =
     |> Option.orDefault (TestList ([], Normal))
     |> runTestsWithArgs config args
 
-
+// TODO: docs
 type Accuracy =
-  {
-    absolute: float
-    relative: float
-  }
-  static member low = {absolute=1e-6; relative=1e-3}
-  static member medium = {absolute=1e-8; relative=1e-5}
-  static member high = {absolute=1e-10; relative=1e-7}
-  static member veryHigh = {absolute=1e-12; relative=1e-9}
+  { absolute: float
+    relative: float }
 
+// TODO: docs
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Accuracy =
   let inline areCloseLhs a b = abs(a-b)
   let inline areCloseRhs m a b = m.absolute + m.relative * max (abs a) (abs b)
   let inline areClose m a b = areCloseLhs a b <= areCloseRhs m a b
+
+  let low =
+    {absolute=1e-6; relative=1e-3}
+  let medium =
+    {absolute=1e-8; relative=1e-5}
+  let high =
+    {absolute=1e-10; relative=1e-7}
+  let veryHigh =
+    {absolute=1e-12; relative=1e-9}

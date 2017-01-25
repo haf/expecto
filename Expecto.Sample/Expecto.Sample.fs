@@ -71,6 +71,16 @@ let tests =
       Expect.equal 1 1 "1=1"
       do! async.Zero ()
     }
+
+    test "Should be close" {
+      let actual, expected = 41.5621, 41.5620
+      Expect.floatClose Accuracy.medium actual expected "Should be close within 5 sig figs (approx)"
+    }
+
+    test "Should not be close enough (should fail)" {
+      let actual, expected = 41.562, 41.563
+      Expect.floatClose Accuracy.medium actual expected "Should be close within 5 sig figs (approx)"
+    }
   ]
 
 [<EntryPoint>]

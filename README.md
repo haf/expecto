@@ -380,8 +380,8 @@ let properties =
     testPropertyWithConfig config "Product is distributive over addition" <|
       fun a b c ->
         a * (b + c) = a * b + a * c
-        
-    // you can also focus on a StdGen seed value (failing test will give you this)   
+
+    // you can also focus on a StdGen seed value (failing test will give you this)
     ftestProperty (12345,67890) "Focused on seed" <| fun a b ->
       a + b = b + a
   ]
@@ -449,7 +449,7 @@ This module is your main entry-point when asserting.
    available are: `Accuracy.low = {absolute=1e-6; relative=1e-3}`,
    `Accuracy.medium = {absolute=1e-8; relative=1e-5}`,
    `Accuracy.high = {absolute=1e-10; relative=1e-7}`,
-   `Accuracy.veryHigh = {absolute=1e-12; relative=1e-9}`.
+   `Accuracy.veryHigh = {absolute=1e-12; relative=1e-9}`. 
  - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If
    it does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
