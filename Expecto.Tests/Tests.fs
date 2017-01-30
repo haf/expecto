@@ -60,7 +60,7 @@ let tests =
           test = Sync ignore
           state = Normal
           focusOn = false
-          sequenced = Syncronous }
+          sequenced = Synchronous }
         [ TestSummary.single Passed 2.
           TestSummary.single (TestResult.Error (ArgumentException())) 3.
           TestSummary.single (Failed "") 4.
@@ -697,21 +697,21 @@ let stress =
         testCase "one" ignore
       ]
 
-    let singleDeadlockTest =
-      testList "single deadlock" [
-        testCaseAsync "deadlock" <| async {
+    let neverEndingTest =
+      testList "never ending" [
+        testCaseAsync "never ending" <| async {
           while true do
             do! Async.Sleep 10
         }
       ]
 
-    let doubleDeadlockTest() =
+    let deadlockTest() =
       let lockOne = obj()
       let lockTwo = obj()
-      testList "double deadlock" [
+      testList "deadlock" [
         testCaseAsync "case A" <| async {
           lock lockOne (fun () ->
-            Thread.Sleep 100
+            Thread.Sleep 10
             lock lockTwo (fun () ->
               ()
             )
@@ -719,12 +719,27 @@ let stress =
         }
         testCaseAsync "case B" <| async {
           lock lockTwo (fun () ->
-            Thread.Sleep 100
+            Thread.Sleep 10
             lock lockOne (fun () ->
               ()
             )
           )
         }
+      ]
+
+    let sequencedGroup() =
+      testList "with other" [
+        singleTest
+        testSequencedGroup "stop deadlock" (deadlockTest())
+        singleTest
+      ]
+
+    let twoSequencedGroups() =
+      testList "with other" [
+        singleTest
+        testSequencedGroup "stop deadlock" (deadlockTest())
+        testSequencedGroup "stop deadlock other" (deadlockTest())
+        singleTest
       ]
 
     yield testCaseAsync "single" <| async {
@@ -746,24 +761,44 @@ let stress =
       Expect.equal (runTests config singleTest &&& 4) 4 "memory"
     }
 
-    yield testCaseAsync "single deadlock" <| async {
+    yield testCaseAsync "never ending" <| async {
       let config =
         { defaultConfig with
-            stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 100.0
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleDeadlockTest) 8 "deadlock"
+      Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
 
-    yield testCaseAsync "double deadlock" <| async {
+    yield testCaseAsync "deadlock" <| async {
       let config =
         { defaultConfig with
-            stress = TimeSpan.FromMilliseconds 200.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 100.0
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config (doubleDeadlockTest())) 8 "deadlock"
+      Expect.equal (runTests config (deadlockTest())) 8 "timeout"
+    }
+
+    yield testCaseAsync "sequenced group" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config (sequencedGroup())) 0 "no timeout"
+    }
+
+    yield testCaseAsync "two sequenced groups" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config (twoSequencedGroups())) 0 "no timeout"
     }
 
     yield testCaseAsync "single sequenced" <| async {
@@ -787,25 +822,25 @@ let stress =
       Expect.equal (runTests config singleTest) 4 "memory"
     }
 
-    yield testCaseAsync "single deadlock sequenced" <| async {
+    yield testCaseAsync "never ending sequenced" <| async {
       let config =
         { defaultConfig with
-            stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 100.0
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
             ``parallel`` = false
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleDeadlockTest) 8 "deadlock"
+      Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
 
-    yield testCaseAsync "double deadlock sequenced" <| async {
+    yield testCaseAsync "deadlock sequenced" <| async {
       let config =
         { defaultConfig with
-            stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 200.0
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
             ``parallel`` = false
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config (doubleDeadlockTest())) 0 "deadlock"
+      Expect.equal (runTests config (deadlockTest())) 0 "no deadlock"
     }
   ]

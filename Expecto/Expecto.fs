@@ -57,8 +57,8 @@ type FocusState =
 
 
 type SequenceMethod =
-  | Syncronous
-  | SyncronousGroup of string
+  | Synchronous
+  | SynchronousGroup of string
   | InParallel
 
 /// Test tree – this is how you compose your tests as values. Since
@@ -906,17 +906,17 @@ module Impl =
 
       if not config.``parallel`` ||
          config.parallelWorkers = 1 ||
-         List.forall (fun t -> t.sequenced=Syncronous) tests then
+         List.forall (fun t -> t.sequenced=Synchronous) tests then
         return!
           List.map evalTestAsync tests
           |> Async.foldSequentially cons []
       else
         let sequenced =
-          List.filter (fun t -> t.sequenced=Syncronous) tests
+          List.filter (fun t -> t.sequenced=Synchronous) tests
           |> List.map evalTestAsync
 
         let parallel =
-          List.filter (fun t -> t.sequenced<>Syncronous) tests
+          List.filter (fun t -> t.sequenced<>Synchronous) tests
           |> Seq.groupBy (fun t -> t.sequenced)
           |> Seq.collect(fun (group,tests) ->
               match group with
@@ -1030,12 +1030,11 @@ module Impl =
 
         Async.Start(async {
           let finishMilliseconds =
-            (finishTimestamp.Value - Stopwatch.GetTimestamp())
+            max (finishTimestamp.Value - Stopwatch.GetTimestamp()) 0L
             * 1000L / Stopwatch.Frequency
           let timeout =
             int finishMilliseconds + int config.stressTimeout.TotalMilliseconds
-          if timeout > 0 then
-            do! Async.Sleep timeout
+          do! Async.Sleep timeout
           cancel.Cancel()
         }, cancel.Token)
 
@@ -1055,13 +1054,13 @@ module Impl =
       let! runningTests,results,maxMemory =
         if not config.``parallel`` ||
            config.parallelWorkers = 1 ||
-           List.forall (fun t -> t.sequenced=Syncronous) tests then
+           List.forall (fun t -> t.sequenced=Synchronous) tests then
 
           Seq.initInfinite (fun _ -> randNext tests)
           |> Seq.append tests
           |> asyncRun Async.foldSequentiallyWithCancel initial
         else
-          List.filter (fun t -> t.sequenced=Syncronous) tests
+          List.filter (fun t -> t.sequenced=Synchronous) tests
           |> asyncRun Async.foldSequentiallyWithCancel initial
           |> Async.bind (fun (runningTests,results,maxMemory) ->
                if maxMemory > memoryLimit ||
@@ -1069,16 +1068,13 @@ module Impl =
                  async.Return (runningTests,results,maxMemory)
                else
                  let parallel =
-                  List.filter (fun t -> t.sequenced<>Syncronous) tests
+                   List.filter (fun t -> t.sequenced<>Synchronous) tests
                  Seq.initInfinite (fun _ -> randNext parallel)
                  |> Seq.append parallel
-                 |> Seq.where (fun test ->
-                      match test.sequenced with
-                      | SyncronousGroup _ as s ->
-                        Seq.exists (fun t -> t.sequenced=s) runningTests
-                        |> not
-                      | _ ->
-                        true
+                 |> Seq.filter (fun test ->
+                      let s = test.sequenced
+                      s=InParallel ||
+                      not(Seq.exists (fun t -> t.sequenced=s) runningTests)
                     )
                  |> asyncRun (fun cancel ->
                       Async.foldParallelLimitWithCancel cancel
@@ -1095,6 +1091,7 @@ module Impl =
                           maxMemory = maxMemory
                           memoryLimit = memoryLimit
                           timedOut = List.ofSeq runningTests }
+
       do! config.printer.summary config testSummary
 
       return testSummary.errorCode
@@ -1296,9 +1293,9 @@ module Tests =
   let inline ptestCaseAsync name test = TestLabel(name, TestCase (Async test, Pending), Pending)
   /// Test case or list needs to run sequenced. Use for any benchmark code or
   /// for tests using `Expect.isFasterThan`
-  let inline testSequenced test = Sequenced (Syncronous,test)
+  let inline testSequenced test = Sequenced (Synchronous,test)
   /// Test case or list needs to run sequenced with other tests in this group.
-  let inline testSequencedGroup name test = Sequenced (SyncronousGroup name,test)
+  let inline testSequencedGroup name test = Sequenced (SynchronousGroup name,test)
 
   /// Applies a function to a list of values to build test cases
   let inline testFixture setup =

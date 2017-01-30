@@ -84,7 +84,7 @@ module Performance =
         Seq.nth 2 seq |> ignore
         Seq.nth 5 seq
 
-      if max s1.mean s2.mean < precision.mean * 10.0 then
+      if max s1.mean s2.mean < precision.mean * 5.0 then
         MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision)
       else
         Seq.zip (stats f1) (stats f2)
