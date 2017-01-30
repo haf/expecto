@@ -32,8 +32,9 @@ module TestHelpers =
       TestCase(Async asyncTestFn, state)
     | TestLabel (label,_,state) ->
       TestLabel (label, TestCase(Async asyncTestFn, state), state)
-    | Test.Sequenced test ->
-      makeTest test asyncTestFn |> testSequenced
+    | Test.Sequenced (sequenced,test) ->
+      Test.Sequenced (sequenced,makeTest test asyncTestFn)
+
 
   let assertTestFails test =
     async {

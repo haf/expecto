@@ -60,7 +60,7 @@ let tests =
           test = Sync ignore
           state = Normal
           focusOn = false
-          sequenced = true }
+          sequenced = Syncronous }
         [ TestSummary.single Passed 2.
           TestSummary.single (TestResult.Error (ArgumentException())) 3.
           TestSummary.single (Failed "") 4.
@@ -701,7 +701,7 @@ let stress =
       testList "single deadlock" [
         testCaseAsync "deadlock" <| async {
           while true do
-            do! Async.Sleep 100
+            do! Async.Sleep 10
         }
       ]
 

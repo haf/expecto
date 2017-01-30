@@ -16,7 +16,7 @@ let testResult name =
       test = Sync ignore
       state = Normal
       focusOn = false
-      sequenced = true }
+      sequenced = Syncronous }
   let result = TestSummary.single Passed 0.0
   test, result
 

@@ -55,6 +55,12 @@ type FocusState =
   /// All other test marked with Normal or Pending will be ignored
   | Focused
 
+
+type SequenceMethod =
+  | Syncronous
+  | SyncronousGroup of string
+  | InParallel
+
 /// Test tree – this is how you compose your tests as values. Since
 /// any of these can act as a test, you can pass any of these DU cases
 /// into a function that takes a Test.
@@ -67,7 +73,7 @@ type Test =
   /// A labelling of a Test (list or test code).
   | TestLabel of label:string * test:Test * state:FocusState
   /// Require sequenced for a Test (list or test code).
-  | Sequenced of Test
+  | Sequenced of SequenceMethod * Test
 
 // TODO: move to internal namespace
 type ExpectoException(msg) = inherit Exception(msg)
@@ -110,6 +116,9 @@ module internal Helpers =
 
   module Seq =
     let cons x xs = seq { yield x; yield! xs }
+
+  module List =
+    let inline singleton x = [x]
 
   module Option =
     let orFun fn =
@@ -238,7 +247,6 @@ module internal Async =
     foldParallelLimitWithCancel (new CancellationTokenSource())
                                 maxParallelism folder state s
 
-
 // TODO: move to internal
 [<ReferenceEquality>]
 type FlatTest =
@@ -246,7 +254,7 @@ type FlatTest =
     test      : TestCode
     state     : FocusState
     focusOn   : bool
-    sequenced : bool }
+    sequenced : SequenceMethod }
   member x.shouldSkipEvaluation =
     match x.focusOn, x.state with
     | _, Pending -> Some "The test or one of his parents is marked as Pending"
@@ -273,7 +281,7 @@ module Test =
     | TestList (_,Pending)
     | TestCase _ -> false
     | TestLabel (_,test,Normal)
-    | Sequenced test -> isFocused test
+    | Sequenced (_,test) -> isFocused test
     | TestList (tests,Normal) -> List.exists isFocused tests
 
   /// Flattens a tree of tests
@@ -294,8 +302,8 @@ module Test =
           focusOn = isFocused
           sequenced=sequenced } :: testList
       | TestList (tests, state) -> List.collect (loop parentName testList (computeChildFocusState parentState state) sequenced) tests
-      | Sequenced test -> loop parentName testList parentState true test
-    loop null [] Normal false test
+      | Sequenced (sequenced,test) -> loop parentName testList parentState sequenced test
+    loop null [] Normal InParallel test
 
   /// Change the FocusState by appling the old state to a new state
   /// Note: this is not state replacement!!!
@@ -309,7 +317,7 @@ module Test =
     | TestCase (test, oldFocusState) -> TestCase(test, computeChildFocusState oldFocusState newFocusState)
     | TestList (testList, oldFocusState) -> TestList(testList, computeChildFocusState oldFocusState newFocusState)
     | TestLabel (label, test, oldFocusState) -> TestLabel(label, test, computeChildFocusState oldFocusState newFocusState)
-    | Sequenced test -> Sequenced (translateFocusState newFocusState test)
+    | Sequenced (sequenced,test) -> Sequenced (sequenced,translateFocusState newFocusState test)
 
   /// Recursively replaces TestCodes in a Test.
   /// Check translateFocusState for focus state behaviour description.
@@ -323,7 +331,7 @@ module Test =
       |> translateFocusState state
     | TestList (testList, state) -> TestList (List.map (replaceTestCode f) testList, state)
     | TestLabel (label, test, state) -> TestLabel (label, replaceTestCode f test, state)
-    | Sequenced test -> Sequenced (replaceTestCode f test)
+    | Sequenced (sequenced,test) -> Sequenced (sequenced,replaceTestCode f test)
 
   /// Filter tests by name.
   let filter pred =
@@ -331,7 +339,12 @@ module Test =
     >> List.filter (fun t -> pred t.name)
     >> List.map (fun t ->
         let test = TestLabel (t.name, TestCase (t.test, t.state), t.state)
-        if t.sequenced then Sequenced test else test)
+        match t.sequenced with
+        | InParallel ->
+          test
+        | s ->
+          Sequenced (s,test)
+      )
     >> (fun x -> TestList (x,Normal))
 
   /// Applies a timeout to a test.
@@ -893,25 +906,44 @@ module Impl =
 
       if not config.``parallel`` ||
          config.parallelWorkers = 1 ||
-         List.forall (fun t -> t.sequenced) tests then
+         List.forall (fun t -> t.sequenced=Syncronous) tests then
         return!
           List.map evalTestAsync tests
           |> Async.foldSequentially cons []
       else
         let sequenced =
-          List.filter (fun t -> t.sequenced) tests
+          List.filter (fun t -> t.sequenced=Syncronous) tests
           |> List.map evalTestAsync
 
         let parallel =
-          List.filter (fun t -> not t.sequenced) tests
-          |> List.map evalTestAsync
+          List.filter (fun t -> t.sequenced<>Syncronous) tests
+          |> Seq.groupBy (fun t -> t.sequenced)
+          |> Seq.collect(fun (group,tests) ->
+              match group with
+              | InParallel ->
+                Seq.map (evalTestAsync >> List.singleton) tests
+              | _ ->
+                Seq.map evalTestAsync tests
+                |> Seq.toList
+                |> Seq.singleton
+            )
+          |> Seq.toList
+          |> List.sortBy (List.length >> (~-))
+          |> List.map (
+              function
+              | [test] ->
+                Async.map List.singleton test
+              | l ->
+                Async.foldSequentially cons [] l
+            )
 
         let! parallelResults =
           let noWorkers = numberOfWorkers false config
           if List.length parallel <= noWorkers then
-            Async.Parallel parallel |> Async.map List.ofArray
+            Async.Parallel parallel
+            |> Async.map (Seq.concat >> Seq.toList)
           else
-            Async.foldParallelLimit noWorkers cons [] parallel
+            Async.foldParallelLimit noWorkers (@) [] parallel
 
         if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
           do! config.printer.info "Starting sequenced tests..."
@@ -966,9 +998,10 @@ module Impl =
         List.length tests |> rand.Next |> List.nth tests
 
       let finishTimestamp =
-        let now = Stopwatch.GetTimestamp()
-        let stressSeconds = config.stress.Value.TotalSeconds
-        now + int64(stressSeconds * float Stopwatch.Frequency)
+        lazy
+        config.stress.Value.TotalSeconds * float Stopwatch.Frequency
+        |> int64
+        |> (+) (Stopwatch.GetTimestamp())
 
       let asyncRun foldRunner (runningTests:ResizeArray<_>,
                                results,
@@ -996,17 +1029,18 @@ module Impl =
           runningTests, results, maxMemory
 
         Async.Start(async {
-          let finishSeconds =
-            (finishTimestamp - Stopwatch.GetTimestamp()) / Stopwatch.Frequency
+          let finishMilliseconds =
+            (finishTimestamp.Value - Stopwatch.GetTimestamp())
+            * 1000L / Stopwatch.Frequency
           let timeout =
-            int finishSeconds * 1000 + int config.stressTimeout.TotalMilliseconds
+            int finishMilliseconds + int config.stressTimeout.TotalMilliseconds
           if timeout > 0 then
             do! Async.Sleep timeout
           cancel.Cancel()
         }, cancel.Token)
 
         Seq.takeWhile (fun test ->
-          if Stopwatch.GetTimestamp() < finishTimestamp then
+          if Stopwatch.GetTimestamp() < finishTimestamp.Value then
             runningTests.Add test
             true
           else
@@ -1021,22 +1055,31 @@ module Impl =
       let! runningTests,results,maxMemory =
         if not config.``parallel`` ||
            config.parallelWorkers = 1 ||
-           List.forall (fun t -> t.sequenced) tests then
+           List.forall (fun t -> t.sequenced=Syncronous) tests then
 
           Seq.initInfinite (fun _ -> randNext tests)
           |> Seq.append tests
           |> asyncRun Async.foldSequentiallyWithCancel initial
         else
-          List.filter (fun t -> t.sequenced) tests
+          List.filter (fun t -> t.sequenced=Syncronous) tests
           |> asyncRun Async.foldSequentiallyWithCancel initial
           |> Async.bind (fun (runningTests,results,maxMemory) ->
                if maxMemory > memoryLimit ||
-                  Stopwatch.GetTimestamp() > finishTimestamp then
+                  Stopwatch.GetTimestamp() > finishTimestamp.Value then
                  async.Return (runningTests,results,maxMemory)
                else
-                 let parallel = List.filter (fun t -> not t.sequenced) tests
+                 let parallel =
+                  List.filter (fun t -> t.sequenced<>Syncronous) tests
                  Seq.initInfinite (fun _ -> randNext parallel)
                  |> Seq.append parallel
+                 |> Seq.where (fun test ->
+                      match test.sequenced with
+                      | SyncronousGroup _ as s ->
+                        Seq.exists (fun t -> t.sequenced=s) runningTests
+                        |> not
+                      | _ ->
+                        true
+                    )
                  |> asyncRun (fun cancel ->
                       Async.foldParallelLimitWithCancel cancel
                                 (numberOfWorkers true config)
@@ -1253,7 +1296,9 @@ module Tests =
   let inline ptestCaseAsync name test = TestLabel(name, TestCase (Async test, Pending), Pending)
   /// Test case or list needs to run sequenced. Use for any benchmark code or
   /// for tests using `Expect.isFasterThan`
-  let inline testSequenced test = Sequenced test
+  let inline testSequenced test = Sequenced (Syncronous,test)
+  /// Test case or list needs to run sequenced with other tests in this group.
+  let inline testSequencedGroup name test = Sequenced (SyncronousGroup name,test)
 
   /// Applies a function to a list of values to build test cases
   let inline testFixture setup =
