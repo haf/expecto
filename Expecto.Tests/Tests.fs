@@ -467,6 +467,10 @@ let expecto =
         testCase "fail - shorter" (fun _ ->
           Expect.sequenceEqual [1] [1;2;3] "Deliberately failing"
         ) |> assertTestFails
+
+        testCase "fail - not equal" (fun _ ->
+          Expect.sequenceEqual [1;3] [1;2] "Deliberately failing"
+        ) |> assertTestFails
       ]
 
       testList "sequence starts" [
