@@ -321,6 +321,12 @@ let distribution (actual : _ seq)
               format (formatInput actual) (formatInput formatedExpected) missingElementsInfo extraElementsInfo
   |> Tests.failtest
 
+let inline private formattedList (sequence) =
+  let formattedElements = 
+    sequence
+    |> Seq.mapi( fun index element -> sprintf "[%d] %A" index element)
+  String.Join("\n\t", formattedElements)
+
 /// Expects the `actual` sequence to equal the `expected` one.
 let sequenceEqual (actual : _ seq) (expected : _ seq) format =
   use ai = actual.GetEnumerator()
@@ -328,10 +334,10 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
   let baseMsg =
     sprintf "%s.
         Expected value was:
-        %A
+        %s
         Actual value was:
-        %A"
-                  format expected actual
+        %s"
+                  format (formattedList expected) (formattedList actual)
   let mutable i = 0
   while ei.MoveNext() do
     if ai.MoveNext() then
