@@ -55,61 +55,70 @@ let tests =
 
     testList "sumTestResults" [
       let sumTestResultsTests =
-        [ { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 2.; location = SourceLocation.empty }
-          { TestRunResult.name = ""; result = TestResult.Error (ArgumentException()); duration = TimeSpan.FromMinutes 3.; location =SourceLocation.empty }
-          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 4.; location = SourceLocation.empty }
-          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 5.; location = SourceLocation.empty }
-          { TestRunResult.name = ""; result = Failed ""; duration = TimeSpan.FromMinutes 6.; location = SourceLocation.empty }
-          { TestRunResult.name = ""; result = Passed; duration = TimeSpan.FromMinutes 7.; location = SourceLocation.empty }
-        ]
-      let r = lazy sumTestResults sumTestResultsTests
+        let dummyTest = {
+          name = String.Empty
+          test = Sync ignore
+          state = Normal
+          focusOn = false
+          sequenced = Synchronous }
+        [ TestSummary.single Passed 2.
+          TestSummary.single (TestResult.Error (ArgumentException())) 3.
+          TestSummary.single (Failed "") 4.
+          TestSummary.single Passed 5.
+          TestSummary.single (Failed "") 6.
+          TestSummary.single Passed 7.
+        ] |> List.map (fun r -> dummyTest,r)
+      let r = lazy TestRunSummary.fromResults sumTestResultsTests
       yield testCase "passed" <| fun _ ->
-          r.Value.passed.Length ==? 3
+          List.length r.Value.passed ==? 3
       yield testCase "failed" <| fun _ ->
-          r.Value.failed.Length ==? 2
+          List.length r.Value.failed ==? 2
       yield testCase "exn" <| fun _ ->
-          r.Value.errored.Length ==? 1
+          List.length r.Value.errored ==? 1
       yield testCase "duration" <| fun _ ->
-          r.Value.duration ==? TimeSpan.FromMinutes 27.
+          r.Value.duration ==? TimeSpan.FromMilliseconds 27.
     ]
 
     testList "TestResultCounts" [
-      testList "plus" [
-        let testResultCountsSum name f =
-          testProperty name
-              (FsCheck.Prop.forAll twoTestResultCounts.Value <|
-                  fun (a,b) ->
-                      let r = a + b
-                      f a b r)
-        yield testResultCountsSum "Passed" <|
-          fun a b r -> r.passed = a.passed @ b.passed
-        yield testResultCountsSum "Ignored" <|
-          fun a b r -> r.ignored = a.ignored @ b.ignored
-        yield testResultCountsSum "Failed" <|
-          fun a b r -> r.failed = a.failed @ b.failed
-        yield testResultCountsSum "Errored" <|
-          fun a b r -> r.errored = a.errored @ b.errored
-        yield testResultCountsSum "Time" <|
-          fun a b r -> r.duration = a.duration + b.duration
-      ]
-      testCase "ToString" <| fun _ ->
-        let tr = {
-          name = ""
-          location = SourceLocation.empty
-          result = Passed
-          duration = TimeSpan.MaxValue
-        }
-        let c1 = { passed = [tr]; ignored = [tr; tr; tr; tr; tr]; failed = [tr; tr]; errored = [tr; tr; tr]; duration = TimeSpan.FromSeconds 20. }
-        c1.ToString() ==? "6 tests run: 1 passed, 5 ignored, 2 failed, 3 errored (00:00:20)\n"
+      let inline testProp fn =
+        let config =
+          {FsCheckConfig.defaultConfig
+            with arbitrary=[Generator.arbs]}
+        testPropertyWithConfig config fn
+      yield testProp "total"
+        (fun (a:TestRunSummary) ->
+           List.length a.passed +
+           List.length a.ignored +
+           List.length a.failed +
+           List.length a.errored = List.length a.results
+        )
+      yield testProp "plus"
+        (fun (a:TestRunSummary) (b:TestRunSummary) ->
+           let ab =
+             { results = List.append a.results b.results
+               duration = a.duration + b.duration
+               maxMemory = if a.maxMemory > a.memoryLimit then a.maxMemory else b.maxMemory
+               memoryLimit = if a.maxMemory > a.memoryLimit then a.memoryLimit else b.memoryLimit
+               timedOut = List.append a.timedOut b.timedOut }
+           let test fn  =
+             List.length (fn a) + List.length (fn b) = List.length (fn ab)
+           Expect.isTrue (test (fun a -> a.passed)) "Passed"
+           Expect.isTrue (test (fun a -> a.ignored)) "Ignored"
+           Expect.isTrue (test (fun a -> a.failed)) "Failed"
+           Expect.isTrue (test (fun a -> a.errored)) "Errored"
+           Expect.equal (a.successful && b.successful) ab.successful "Successful"
+           Expect.equal (a.errorCode ||| b.errorCode) ab.errorCode "ErrorCode"
+           true
+        )
     ]
 
     testList "Exception handling" [
       testCaseAsync "Expecto ignore" <| async {
         let test () = skiptest "b"
         let test = TestCase (Sync test, Normal)
-        let! result = Impl.evalSilentAsync test
+        let! result = Impl.evalTestsSilent test
         match result with
-        | [{ result = Ignored "b" }] -> ()
+        | [(_,{ result = Ignored "b" })] -> ()
         | x -> failtestf "Expected result = Ignored, got\n %A" x
       }
     ]
@@ -181,7 +190,7 @@ let expecto =
           ], Normal)
       yield testCase "with one testcase" <| fun _ ->
         let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
-        t.Length ==? 1 // same as assertEqual "" 1 t.Length
+        t.Length ==? 1
       yield testCase "with nested testcase" <| fun _ ->
         let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
@@ -196,13 +205,23 @@ let expecto =
     testSequenced <| testList "Timeout" [
       testCaseAsync "fail" <| async {
         let test = TestCase(Async.Sleep 100 |> Async |> Test.timeout 10, Normal)
-        let! result = Impl.evalSilentAsync test
-        (sumTestResults result).failed.Length ==? 1
+        let! result = Impl.evalTestsSilent test
+        let summary = { results = result
+                        duration = TimeSpan.Zero
+                        maxMemory = 0L
+                        memoryLimit = 0L
+                        timedOut = [] }
+        Seq.length summary.failed ==? 1
       }
       testCaseAsync "pass" <| async {
         let test = TestCase(Sync ignore |> Test.timeout 1000, Normal)
-        let! result = Impl.evalSilentAsync test
-        (sumTestResults result).passed.Length ==? 1
+        let! result = Impl.evalTestsSilent test
+        let summary = { results = result
+                        duration = TimeSpan.Zero
+                        maxMemory = 0L
+                        memoryLimit = 0L
+                        timedOut = [] }
+        Seq.length summary.passed ==? 1
       }
     ]
 
@@ -233,18 +252,21 @@ let expecto =
 
     testList "parse args" [
       testCase "default" <| fun _ ->
-        let opts, isList = ExpectoConfig.fillFromArgs defaultConfig [||]
-        opts.parallel ==? true
-        isList ==? false
+        match ExpectoConfig.fillFromArgs defaultConfig [||] with
+        | ArgsRun opts ->
+          opts.parallel ==? true
+        | _ -> 0 ==? 1
 
       testCase "sequenced" <| fun _ ->
-        let opts, isList = ExpectoConfig.fillFromArgs defaultConfig [|"--sequenced"|]
-        opts.parallel ==? false
-        isList ==? false
+        match ExpectoConfig.fillFromArgs defaultConfig [|"--sequenced"|] with
+        | ArgsRun opts ->
+          opts.parallel ==? false
+        | _ -> 0 ==? 1
 
       testCase "list" <| fun _ ->
-        let _, isList = ExpectoConfig.fillFromArgs defaultConfig [|"--list-tests"|]
-        isList ==? true
+        match ExpectoConfig.fillFromArgs defaultConfig [|"--list-tests"|] with
+        | ArgsList _ -> ()
+        | _ -> 0 ==? 1
 
       testList "filtering" [
         let dummy =
@@ -263,44 +285,45 @@ let expecto =
               ]
             ], Normal)
 
+        let getArgsConfig = function | ArgsRun c -> c | _ -> failwith "not normal"
 
         yield testCase "filter" <| fun _ ->
-          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c"|]
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c"|] |> getArgsConfig
           let filtered = dummy |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 4
 
         yield testCase "filter deep" <| fun _ ->
-          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c/f"|]
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c/f"|] |> getArgsConfig
           let filtered = dummy |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
         yield testCase "filter wrong" <| fun _ ->
-          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "f"|]
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "f"|] |> getArgsConfig
           let filtered = dummy |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 0
 
         yield testCase "filter test list" <| fun _ ->
-          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-list"; "f"|]
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-list"; "f"|] |> getArgsConfig
           let filtered = dummy |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
         yield testCase "filter test list wrong" <| fun _ ->
-          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-list"; "x"|]
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-list"; "x"|] |> getArgsConfig
           let filtered = dummy |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 0
 
         yield testCase "filter test case" <| fun _ ->
-          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-case"; "a"|]
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-case"; "a"|] |> getArgsConfig
           let filtered = dummy |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
         yield testCase "filter test case wrong" <| fun _ ->
-          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-case"; "y"|]
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-case"; "y"|] |> getArgsConfig
           let filtered = dummy |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 0
 
         yield testCase "run" <| fun _ ->
-          let opts, _ =  ExpectoConfig.fillFromArgs defaultConfig [|"--run"; "a"; "c/d"; "c/f/h"|]
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--run"; "a"; "c/d"; "c/f/h"|] |> getArgsConfig
           let filtered = dummy |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 3
 
@@ -312,21 +335,27 @@ let expecto =
     testList "transformations" [
       testCaseAsync "multiple cultures" <| async {
         let withCulture culture test =
-          fun () ->
+          async {
             let c = Thread.CurrentThread.CurrentCulture
             try
               Thread.CurrentThread.CurrentCulture <- culture
               match test with
-              | Sync test -> test()
-              | Async test -> Async.StartImmediate test
+              | Sync test ->
+                test()
+              | Async test ->
+                do! test
+              | AsyncFsCheck (config, _, test) ->
+                do! Option.getOrElse FsCheckConfig.defaultConfig config
+                    |> test
             finally
               Thread.CurrentThread.CurrentCulture <- c
+          }
 
         let testWithCultures (cultures: #seq<CultureInfo>) =
           Test.replaceTestCode <| fun name test ->
             testList name [
               for c in cultures ->
-                testCase c.Name (withCulture c test)
+                testCaseAsync c.Name (withCulture c test)
             ]
 
         let atest = test "parse" {
@@ -339,18 +368,18 @@ let expecto =
 
         let culturizedTests = testWithCultures cultures atest
 
-        let! results = Impl.evalSilentAsync culturizedTests
+        let! results = Impl.evalTestsSilent culturizedTests
 
         let results =
           results
-          |> Seq.map (fun r -> r.name, r.result)
+          |> Seq.map (fun (t,r) -> t.name, r.result)
           |> Map.ofSeq
 
         Expect.equal 3 results.Count "results count"
 
-        Expect.isTrue (TestResult.isFailed results.["parse/en-US"]) "parse en-US fails"
-        Expect.isTrue (TestResult.isPassed results.["parse/es-AR"]) "parse es-AR passes"
-        Expect.isTrue (TestResult.isPassed results.["parse/fr-FR"]) "parse fr-FR passes"
+        Expect.isTrue (results.["parse/en-US"].isFailed) "parse en-US fails"
+        Expect.isTrue (results.["parse/es-AR"].isPassed) "parse es-AR passes"
+        Expect.isTrue (results.["parse/fr-FR"].isPassed) "parse fr-FR passes"
       }
     ]
 
@@ -522,10 +551,10 @@ let expecto =
         }
       for c in [-5; 1; 6] ->
         testCaseAsync (sprintf "compare comp.exp. and normal with value %d" c) <| async {
-          let! normal = testNormal c |> Impl.evalSilentAsync
-          let! compexp = testCompExp c |> Impl.evalSilentAsync
-          let normalTag = TestResult.tag normal.[0].result
-          let compexpTag = TestResult.tag compexp.[0].result
+          let! normal = testNormal c |> Impl.evalTestsSilent
+          let! compexp = testCompExp c |> Impl.evalTestsSilent
+          let normalTag = (snd normal.[0]).result.tag
+          let compexpTag = (snd compexp.[0]).result.tag
           Expect.equal normalTag compexpTag "result"
         }
     ]
@@ -660,4 +689,162 @@ let close =
       Expect.floatClose Accuracy.low infinity 1.0 "inf fails"
     ) |> assertTestFails
 
+  ]
+
+
+[<Tests>]
+let stress =
+  testList "stress testing" [
+
+    let singleTest =
+      testList "hi" [
+        testCase "one" ignore
+      ]
+
+    let neverEndingTest =
+      testList "never ending" [
+        testCaseAsync "never ending" <| async {
+          while true do
+            do! Async.Sleep 10
+        }
+      ]
+
+    let deadlockTest() =
+      let lockOne = obj()
+      let lockTwo = obj()
+      testList "deadlock" [
+        testCaseAsync "case A" <| async {
+          lock lockOne (fun () ->
+            Thread.Sleep 10
+            lock lockTwo (fun () ->
+              ()
+            )
+          )
+        }
+        testCaseAsync "case B" <| async {
+          lock lockTwo (fun () ->
+            Thread.Sleep 10
+            lock lockOne (fun () ->
+              ()
+            )
+          )
+        }
+      ]
+
+    let sequencedGroup() =
+      testList "with other" [
+        singleTest
+        testSequencedGroup "stop deadlock" (deadlockTest())
+        singleTest
+      ]
+
+    let twoSequencedGroups() =
+      testList "with other" [
+        singleTest
+        testSequencedGroup "stop deadlock" (deadlockTest())
+        testSequencedGroup "stop deadlock other" (deadlockTest())
+        singleTest
+      ]
+
+    yield testCaseAsync "single" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 100.0 |> Some
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config singleTest) 0 "one"
+    }
+
+    yield testCaseAsync "memory" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 100.0 |> Some
+            stressMemoryLimit = 0.001
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config singleTest &&& 4) 4 "memory"
+    }
+
+    yield testCaseAsync "never ending" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config neverEndingTest) 8 "timeout"
+    }
+
+    yield testCaseAsync "deadlock" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config (deadlockTest())) 8 "timeout"
+    }
+
+    yield testCaseAsync "sequenced group" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config (sequencedGroup())) 0 "no timeout"
+    }
+
+    yield testCaseAsync "two sequenced groups" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config (twoSequencedGroups())) 0 "no timeout"
+    }
+
+    yield testCaseAsync "single sequenced" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 100.0 |> Some
+            ``parallel`` = false
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config singleTest) 0 "one"
+    }
+
+    yield testCaseAsync "memory sequenced" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 100.0 |> Some
+            ``parallel`` = false
+            stressMemoryLimit = 0.001
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config singleTest) 4 "memory"
+    }
+
+    yield testCaseAsync "never ending sequenced" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
+            ``parallel`` = false
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config neverEndingTest) 8 "timeout"
+    }
+
+    yield testCaseAsync "deadlock sequenced" <| async {
+      let config =
+        { defaultConfig with
+            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 10000.0
+            ``parallel`` = false
+            printer = TestPrinters.silent
+            verbosity = Logging.LogLevel.Fatal }
+      Expect.equal (runTests config (deadlockTest())) 0 "no deadlock"
+    }
   ]

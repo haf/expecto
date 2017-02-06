@@ -37,13 +37,14 @@ documentation for the project.
       * [runTestsWithArgs](#runtestswithargs)
       * [runTestsInAssembly](#runtestsinassembly)
       * [Filtering with filter](#filtering-with-filter)
+      * [Stress testing](#stress-testing)
     * [Writing tests](#writing-tests)
       * [Normal tests](#normal-tests)
       * [testList for grouping](#testlist-for-grouping)
       * [Test fixtures](#test-fixtures)
       * [Pending tests](#pending-tests)
       * [Focusing tests](#focusing-tests)
-      * [Sequenced tests with testSequenced](#sequenced-tests-with-testsequenced)
+      * [Sequenced tests](#sequenced-tests)
       * [Parametised tests with testParam](#parametised-tests-with-testparam)
       * [Property based tests](#property-based-tests)
       * [Performance tests](#performance-tests)
@@ -161,6 +162,17 @@ integrationTests // from MyLib.Tests
 |> Test.filter (fun s -> s.EndsWith "another test") // the filtering function
 |> runTests defaultConfig
 ```
+### Stress testing
+
+Tests can also be run randomly for a fixed length of time.
+The idea is that this will catch the following types of bugs:
+
+- Memory leaks.
+- Threading bugs running same test at same time.
+- Rare threading bugs.
+- Rare property test fails.
+
+The default config will run FsCheck tests with a higher end size than normal.
 
 ## Writing tests
 
@@ -171,11 +183,11 @@ Expecto supports the following test constructors:
  - test fixtures with `testFixture`
  - pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
  - focused tests (that are the only ones run) with `ftestCase` and `ftestCaseAsync`
- - sequenced tests with `testSequenced`
+ - sequenced tests with `testSequenced` and `testSequencedGroup` 
  - parametised tests with `testParam`
  - testCases with the workflow builder `test`, `ptest`, `ftest` supporting
    deterministic disposal, loops and such
- - property based tests with `testProperty` and `testPropertyWithConfig` from
+ - property based tests with `testProperty`, `testPropertyWithConfig` and `testPropertyWithConfigs` from
    `Expecto.FsCheck`
  - performance tests with `Expecto.BenchmarkDotNet` and
    `benchmark<TBench> : string -> Test`.
@@ -326,7 +338,7 @@ let focusedTests =
 Expecto accepts the command line argument `--fail-on-focused-tests`, which checks if focused tests exist.
 This parameter can be set in build scripts and allows CI servers to reject commits that accidentally included focused tests.
 
-### Sequenced tests with `testSequenced`
+### Sequenced tests
 
 You can mark an individual spec or container as Sequenced.
 This will make sure these tests are run sequentially.
@@ -344,6 +356,34 @@ let timeout =
       let test = TestCase(Test.timeout 1000 ignore, Normal)
       let result = evalSilent test |> sumTestResults
       result.passed.Length ==? 1
+  ]
+```
+
+You can also mark a test list as a Sequenced Group.
+This will make sure the tests in this group are not run at the same time.
+
+```fsharp
+[<Tests>]
+let timeout =
+  let lockOne = obj()
+  let lockTwo = obj()
+  testSequencedGroup "stop deadlock" <| testList "possible deadlock" [
+    testCaseAsync "case A" <| async {
+      lock lockOne (fun () ->
+        Thread.Sleep 10
+        lock lockTwo (fun () ->
+          ()
+        )
+      )
+    }
+    testCaseAsync "case B" <| async {
+      lock lockTwo (fun () ->
+        Thread.Sleep 10
+        lock lockOne (fun () ->
+          ()
+        )
+      )
+    }
   ]
 ```
 
@@ -369,7 +409,8 @@ Reference [FsCheck](https://github.com/fscheck/FsCheck) and Expecto.FsCheck to
 test properties:
 
 ```fsharp
-let config = { FsCheck.Config.Default with MaxTest = 10000 }
+let config = { FsCheck.Config.Default with MaxTest = 100 }
+let stressConfig = { FsCheck.Config.Default with MaxTest = 10000 }
 
 let properties =
   testList "FsCheck" [
@@ -378,6 +419,11 @@ let properties =
 
     // you can also override the FsCheck config
     testPropertyWithConfig config "Product is distributive over addition" <|
+      fun a b c ->
+        a * (b + c) = a * b + a * c
+    
+    // you can apply a different config for stress testing for each test 
+    testPropertyWithConfigs config stressConfig "different config for stress testing" <|
       fun a b c ->
         a * (b + c) = a * b + a * c
 
@@ -614,25 +660,59 @@ Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in
  - `--filter-test-list <substring>`: Filter a specific test list to run.
  - `--filter-test-case <substring>`: Filter a specific test case to run.
  - `--run [<tests1> <test2> ...]`: Run only provided tests.
+ - `--stress`: Run the tests randomly for the given number of minutes.
+ - `--stress-timeout`: Time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).
+ - `--stress-memory-limit`: Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).
+ - `--fscheck-max-tests`: FsCheck maximum number of tests (default: 100).
+ - `--fscheck-start-size`: FsCheck start size (default: 1).
+ - `--fscheck-end-size`: FsCheck end size (default: 100 for testing and 10,000 for stress testing).
  - `--list-tests`: Doesn't run tests, print out list of tests instead.
  - `--summary`: Prints out summary after all tests are finished.
 
 ### The config
 
 If you prefer using F# to configure the tests, you can set the properties of the
-ExpetoConfig record, that looks like:
+ExpectoConfig record, that looks like:
 
 ```fsharp
-{ /// Whether to run the tests in parallel. Defaults to true, because your
-  /// code should not mutate global state by default.
+{ /// Whether to run the tests in parallel. Defaults to
+  /// true, because your code should not mutate global
+  /// state by default.
   parallel : bool
-  /// Number of parallel workers. Defaults to the number of logical processors.
+  /// Number of parallel workers. Defaults to the number of
+  /// logical processors.
   parallelWorkers : int
-  /// An optional filter function. Useful if you only would like to run a
-  /// subset of all the tests defined in your assembly.
+  /// Stress test by running tests randomly for the given TimeSpan.
+  /// Can be sequenced or parallel depending on the config.
+  stress : TimeSpan option
+  /// Stress test deadlock timeout TimeSpan to wait after stress TimeSpan
+  /// before stopping and reporting as a deadlock (default 5 mins).
+  stressTimeout : TimeSpan
+  /// Stress test memory limit in MB to stop the test and report as
+  /// a memory leak (default 100 MB)
+  stressMemoryLimit : float
+  /// Whether to make the test runner fail if focused tests exist.
+  /// This can be used from CI servers to ensure no focused tests are
+  /// commited and therefor all tests are run.
+  failOnFocusedTests : bool
+  /// An optional filter function. Useful if you only would
+  /// like to run a subset of all the tests defined in your assembly.
   filter   : Test -> Test
   /// Allows the test printer to be parametised to your liking.
-  printer : TestPrinters }
+  printer : TestPrinters
+  /// Verbosity level (default: Info).
+  verbosity : LogLevel
+  /// Optional function used for finding source code location of test
+  /// Defaults to empty source code.
+  locate : TestCode -> SourceLocation
+  /// FsCheck maximum number of tests (default: 100).
+  fsCheckMaxTests: int
+  /// FsCheck start size (default: 1).
+  fsCheckStartSize: int
+  /// FsCheck end size (default: 100 for testing and 10,000 for
+  /// stress testing).
+  fsCheckEndSize: int option
+}
 ```
 
 By doing a `let config = { defaultConfig with parallel = true }`, for example.

@@ -1,4 +1,3 @@
-
 module Expecto.BenchmarkDotNetTests
 
 open System
@@ -22,6 +21,8 @@ let benchmarks =
   testSequenced <| testList "some different benchmarks" [
     benchmark<Md5VsSha256> "md5 versus sha256" benchmarkConfig ignore
   ]
+
+
 
 [<Tests>]
 let performance =
