@@ -161,6 +161,15 @@ let isNotEmpty (actual : string) format =
   isNotNull actual format
   if String.IsNullOrWhiteSpace actual then Tests.failtestf "%s. Should not be empty." format
 
+/// Expect the passed string is not whitespace
+let isNotWhitespace (actual : string) format =
+  isNotEmpty actual format
+  let rec checkWhitespace index =
+    if Char.IsWhiteSpace actual.[index] then
+      if index < (actual.Length - 1) then checkWhitespace (index + 1)
+      else Tests.failtestf "%s. Should not be whitespace." format
+  checkWhitespace 0
+
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) format =
   match box actual, box expected with
