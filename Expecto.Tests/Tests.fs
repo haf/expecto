@@ -413,15 +413,15 @@ let expecto =
       testList "double" [
         testList "nan testing" [
           testCase "is not 'NaN'" <| fun _ ->
-            Expect.isNotNan 4.0f "should pass because it's not 'Nan'"
+            Expect.isNotNaN 4.0 "should pass because it's not 'Nan'"
           testCase "is 'NaN'" (fun _ ->
-            Expect.isNotNan Double.NaN "should fail because it's 'NaN'"
+            Expect.isNotNaN Double.NaN "should fail because it's 'NaN'"
            ) |> assertTestFails
         ]
 
         testList "positive infinity testing" [
           testCase "is not a positive infinity" <| fun _ ->
-            Expect.isNotPositiveInfinity 4.0f "should pass because it's not positive infinity"
+            Expect.isNotPositiveInfinity 4.0 "should pass because it's not positive infinity"
           testCase "is a positive infinity" (fun _ ->
             Expect.isNotPositiveInfinity Double.PositiveInfinity "should fail because it's a positive infinity"
            ) |> assertTestFails
@@ -429,7 +429,7 @@ let expecto =
 
         testList "negative infinity testing" [
           testCase "is not a negative infinity" <| fun _ ->
-            Expect.isNotNegativeInfinity 4.0f "should pass because it's not a negative infinity"
+            Expect.isNotNegativeInfinity 4.0 "should pass because it's not a negative infinity"
           testCase "is a negative infinity" (fun _ ->
             Expect.isNotNegativeInfinity Double.NegativeInfinity "should fail because it's negative infinity"
            ) |> assertTestFails
@@ -437,7 +437,7 @@ let expecto =
 
         testList "infinity testing" [
           testCase "is not an infinity" <| fun _ ->
-            Expect.isNotInfinity 4.0f "should pass because it's not an negative infinity nor positive"
+            Expect.isNotInfinity 4.0 "should pass because it's not an negative infinity nor positive"
           
           testCase "is a negative infinity" (fun _ ->
             Expect.isNotInfinity Double.NegativeInfinity "should fail because it's negative infinity"
