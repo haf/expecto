@@ -158,8 +158,8 @@ let isNotInfinity actual format =
 
 /// Expect the passed string not to be empty.
 let isNotEmpty (actual : string) format =
-  Expect.isNotNull actual format
-  if actual.Length = 0 then Tests.failtestf "%s. Should not be empty." format
+  isNotNull actual format
+  if String.IsNullOrWhiteSpace actual then Tests.failtestf "%s. Should not be empty." format
 
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) format =
