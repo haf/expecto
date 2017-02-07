@@ -449,12 +449,25 @@ let expecto =
         ]
       ]
 
-      testList "string isempty" [
+      testList "string isnotempty" [
         testCase "when string is not empty" <| fun _ ->
           Expect.isNotEmpty "dede" "should pass because string is not empty"
         
         testCase "when string is empty" (fun _ ->
           Expect.isNotEmpty "" "should fail because string is empty"
+        ) |> assertTestFails
+      ]
+
+      testList "string isnotwhitespace" [
+        testCase "when string is not whitespace" <| fun _ ->
+          Expect.isNotEmpty "  dede  " "should pass because string is not whitespace"
+        
+        testCase "when string is empty" (fun _ ->
+          Expect.isNotEmpty "" "should fail because string is empty"
+        ) |> assertTestFails
+
+        testCase "when string is whitespace" (fun _ ->
+          Expect.isNotEmpty "             " "should fail because string is whitespace"
         ) |> assertTestFails
       ]
 
