@@ -410,6 +410,67 @@ let expecto =
 
       ]
 
+      testList "double" [
+        testList "nan testing" [
+          testCase "is not 'NaN'" <| fun _ ->
+            Expect.isNotNaN 4.0 "should pass because it's not 'Nan'"
+          testCase "is 'NaN'" (fun _ ->
+            Expect.isNotNaN Double.NaN "should fail because it's 'NaN'"
+           ) |> assertTestFails
+        ]
+
+        testList "positive infinity testing" [
+          testCase "is not a positive infinity" <| fun _ ->
+            Expect.isNotPositiveInfinity 4.0 "should pass because it's not positive infinity"
+          testCase "is a positive infinity" (fun _ ->
+            Expect.isNotPositiveInfinity Double.PositiveInfinity "should fail because it's a positive infinity"
+           ) |> assertTestFails
+        ]
+
+        testList "negative infinity testing" [
+          testCase "is not a negative infinity" <| fun _ ->
+            Expect.isNotNegativeInfinity 4.0 "should pass because it's not a negative infinity"
+          testCase "is a negative infinity" (fun _ ->
+            Expect.isNotNegativeInfinity Double.NegativeInfinity "should fail because it's negative infinity"
+           ) |> assertTestFails
+        ]
+
+        testList "infinity testing" [
+          testCase "is not an infinity" <| fun _ ->
+            Expect.isNotInfinity 4.0 "should pass because it's not an negative infinity nor positive"
+          
+          testCase "is a negative infinity" (fun _ ->
+            Expect.isNotInfinity Double.NegativeInfinity "should fail because it's negative infinity"
+           ) |> assertTestFails
+
+          testCase "is a positive infinity" (fun _ ->
+            Expect.isNotInfinity Double.PositiveInfinity "should fail because it's positive infinity"
+           ) |> assertTestFails
+        ]
+      ]
+
+      testList "string isnotempty" [
+        testCase "when string is not empty" <| fun _ ->
+          Expect.isNotEmpty "dede" "should pass because string is not empty"
+        
+        testCase "when string is empty" (fun _ ->
+          Expect.isNotEmpty "" "should fail because string is empty"
+        ) |> assertTestFails
+      ]
+
+      testList "string isnotwhitespace" [
+        testCase "when string is not whitespace" <| fun _ ->
+          Expect.isNotEmpty "  dede  " "should pass because string is not whitespace"
+        
+        testCase "when string is empty" (fun _ ->
+          Expect.isNotEmpty "" "should fail because string is empty"
+        ) |> assertTestFails
+
+        testCase "when string is whitespace" (fun _ ->
+          Expect.isNotEmpty "             " "should fail because string is whitespace"
+        ) |> assertTestFails
+      ]
+
       testList "string contain" [
         testCase "pass" <| fun _ ->
           Expect.stringContains "hello world" "hello" "String actually contains"

@@ -138,6 +138,38 @@ let floatClose accuracy actual expected format =
       accuracy.absolute accuracy.relative
       (Accuracy.areCloseLhs actual expected)
 
+/// Expect the passed float to be a number.
+let isNotNaN f format =
+  if Double.IsNaN f then Tests.failtestf "%s. Float was the NaN (not a number) value." format
+
+/// Expect the passed float not to be positive infinity.
+let isNotPositiveInfinity actual format =
+  if Double.IsPositiveInfinity actual then Tests.failtestf "%s. Float was positive infinity." format
+
+/// Expect the passed float not to be negative infinity.
+let isNotNegativeInfinity actual format =
+  if Double.IsNegativeInfinity actual then Tests.failtestf "%s. Float was negative infinity." format
+
+/// Expect the passed float not to be infinity.
+let isNotInfinity actual format =
+  isNotNegativeInfinity actual format
+  isNotPositiveInfinity actual format
+  // passed via excluded middle
+
+/// Expect the passed string not to be empty.
+let isNotEmpty (actual : string) format =
+  isNotNull actual format
+  if String.IsNullOrWhiteSpace actual then Tests.failtestf "%s. Should not be empty." format
+
+/// Expect the passed string is not whitespace
+let isNotWhitespace (actual : string) format =
+  isNotEmpty actual format
+  let rec checkWhitespace index =
+    if Char.IsWhiteSpace actual.[index] then
+      if index < (actual.Length - 1) then checkWhitespace (index + 1)
+      else Tests.failtestf "%s. Should not be whitespace." format
+  checkWhitespace 0
+
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) format =
   match box actual, box expected with
