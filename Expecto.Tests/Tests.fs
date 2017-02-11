@@ -772,33 +772,27 @@ let stress =
       ]
 
     let deadlockTest() =
-      let waitOne = new ManualResetEventSlim()
-      let waitTwo = new ManualResetEventSlim()
       let lockOne = new obj()
       let lockTwo = new obj()
       testList "deadlock" [
         testCaseAsync "case A" <| async {
-          lock lockOne (fun () ->
-            waitOne.Set()
-            waitTwo.Wait 300 |> ignore
-            lock lockTwo (fun () ->
-              ()
+          repeat100 (fun () ->
+            lock lockOne (fun () ->
+              Thread.Sleep 1
+              lock lockTwo ignore
             )
-          )
-          waitOne.Reset()
+          ) ()
         }
         testCaseAsync "case B" <| async {
-          lock lockTwo (fun () ->
-            waitTwo.Set()
-            waitOne.Wait 300 |> ignore
-            lock lockOne (fun () ->
-              ()
+          repeat100 (fun () ->
+            lock lockTwo (fun () ->
+              Thread.Sleep 1
+              lock lockOne ignore
             )
-          )
-          waitTwo.Reset()
+          ) ()
         }
       ]
-
+//touch to test in travis
     let sequencedGroup() =
       testList "with other" [
         singleTest
@@ -817,7 +811,7 @@ let stress =
     yield testCaseAsync "single" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
@@ -827,7 +821,7 @@ let stress =
     yield testCaseAsync "memory" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
@@ -838,7 +832,7 @@ let stress =
     yield testCaseAsync "never ending" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
@@ -849,7 +843,7 @@ let stress =
     yield testCaseAsync "deadlock" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
@@ -860,7 +854,7 @@ let stress =
     yield testCaseAsync "sequenced group" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
@@ -871,7 +865,7 @@ let stress =
     yield testCaseAsync "two sequenced groups" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
