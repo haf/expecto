@@ -481,6 +481,10 @@ This module is your main entry-point when asserting.
  - `isChoice2Of2`
  - `isNull`
  - `isNotNull`
+ - `isNotNaN`
+ - `isNotPositiveInfinity`
+ - `isNotNegativeInfinity`
+ - `isNotInfinity`
  - `isLessThan`
  - `isLessThanOrEqual`
  - `isGreaterThan`
@@ -515,6 +519,8 @@ This module is your main entry-point when asserting.
  - `stringHasLength` - Expect the string `subject` to have length equals
    `length`. If it does not then fail with `format` as an error message together
    with a description of `subject` and `length`.
+ - `isNotEmpty` - Expect the string `actual` to be not null nor empty
+ - `isNotWhitespace` - Expect the string `actual` to be not null nor empty nor whitespace
  - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain
    the item.
  - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
