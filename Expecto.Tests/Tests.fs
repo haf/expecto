@@ -438,7 +438,7 @@ let expecto =
         testList "infinity testing" [
           testCase "is not an infinity" <| fun _ ->
             Expect.isNotInfinity 4.0 "should pass because it's not an negative infinity nor positive"
-          
+
           testCase "is a negative infinity" (fun _ ->
             Expect.isNotInfinity Double.NegativeInfinity "should fail because it's negative infinity"
            ) |> assertTestFails
@@ -452,7 +452,7 @@ let expecto =
       testList "string isnotempty" [
         testCase "when string is not empty" <| fun _ ->
           Expect.isNotEmpty "dede" "should pass because string is not empty"
-        
+
         testCase "when string is empty" (fun _ ->
           Expect.isNotEmpty "" "should fail because string is empty"
         ) |> assertTestFails
@@ -461,7 +461,7 @@ let expecto =
       testList "string isnotwhitespace" [
         testCase "when string is not whitespace" <| fun _ ->
           Expect.isNotEmpty "  dede  " "should pass because string is not whitespace"
-        
+
         testCase "when string is empty" (fun _ ->
           Expect.isNotEmpty "" "should fail because string is empty"
         ) |> assertTestFails
@@ -771,24 +771,26 @@ let stress =
       ]
 
     let deadlockTest() =
-      let lockOne = obj()
-      let lockTwo = obj()
+      let waitOne = new System.Threading.ManualResetEventSlim()
+      let waitTwo = new System.Threading.ManualResetEventSlim()
+      let lockOne = new System.Threading.ReaderWriterLockSlim()
+      let lockTwo = new System.Threading.ReaderWriterLockSlim()
       testList "deadlock" [
         testCaseAsync "case A" <| async {
-          lock lockOne (fun () ->
-            Thread.Sleep 10
-            lock lockTwo (fun () ->
-              ()
-            )
-          )
+          lockOne.EnterReadLock()
+          waitTwo.Wait 200 |> ignore
+          waitOne.Set()
+          lockTwo.EnterWriteLock()
+          lockTwo.ExitWriteLock()
+          lockOne.ExitReadLock()
         }
         testCaseAsync "case B" <| async {
-          lock lockTwo (fun () ->
-            Thread.Sleep 10
-            lock lockOne (fun () ->
-              ()
-            )
-          )
+          lockTwo.EnterReadLock()
+          waitOne.Wait 200 |> ignore
+          waitTwo.Set()
+          lockOne.EnterWriteLock()
+          lockOne.ExitWriteLock()
+          lockTwo.ExitReadLock()
         }
       ]
 
