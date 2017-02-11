@@ -773,24 +773,28 @@ let stress =
     let deadlockTest() =
       let waitOne = new System.Threading.ManualResetEventSlim()
       let waitTwo = new System.Threading.ManualResetEventSlim()
-      let lockOne = new System.Threading.ReaderWriterLockSlim()
-      let lockTwo = new System.Threading.ReaderWriterLockSlim()
+      let lockOne = new obj()
+      let lockTwo = new obj()
       testList "deadlock" [
         testCaseAsync "case A" <| async {
-          lockOne.EnterReadLock()
-          waitTwo.Wait 200 |> ignore
-          waitOne.Set()
-          lockTwo.EnterWriteLock()
-          lockTwo.ExitWriteLock()
-          lockOne.ExitReadLock()
+          lock lockOne (fun () ->
+            waitOne.Set()
+            waitTwo.Wait 300 |> ignore
+            lock lockTwo (fun () ->
+              ()
+            )
+          )
+          waitOne.Reset()
         }
         testCaseAsync "case B" <| async {
-          lockTwo.EnterReadLock()
-          waitOne.Wait 200 |> ignore
-          waitTwo.Set()
-          lockOne.EnterWriteLock()
-          lockOne.ExitWriteLock()
-          lockTwo.ExitReadLock()
+          lock lockTwo (fun () ->
+            waitTwo.Set()
+            waitOne.Wait 300 |> ignore
+            lock lockOne (fun () ->
+              ()
+            )
+          )
+          waitTwo.Reset()
         }
       ]
 
