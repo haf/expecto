@@ -792,7 +792,7 @@ let stress =
           ) ()
         }
       ]
-//touch to test in travis
+
     let sequencedGroup() =
       testList "with other" [
         singleTest
@@ -839,17 +839,17 @@ let stress =
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
-
-    yield testCaseAsync "deadlock" <| async {
+    // This test needs to run sequenced to ensure there are enough threads free to deadlock
+    yield testSequenced (testCaseAsync "deadlock" <| async {
       let config =
         { defaultConfig with
             parallelWorkers = 8
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stress = TimeSpan.FromMilliseconds 20000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (deadlockTest())) 8 "timeout"
-    }
+    })
 
     yield testCaseAsync "sequenced group" <| async {
       let config =
@@ -904,15 +904,15 @@ let stress =
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
-
-    yield testCaseAsync "deadlock sequenced" <| async {
+    // This test needs to run sequenced to ensure there are enough threads free to test no deadlock
+    yield testSequenced (testCaseAsync "deadlock sequenced" <| async {
       let config =
         { defaultConfig with
             ``parallel`` = false
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stress = TimeSpan.FromMilliseconds 20000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (deadlockTest())) 0 "no deadlock"
-    }
+    })
   ]
