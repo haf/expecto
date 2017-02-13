@@ -772,30 +772,24 @@ let stress =
       ]
 
     let deadlockTest() =
-      let waitOne = new ManualResetEventSlim()
-      let waitTwo = new ManualResetEventSlim()
       let lockOne = new obj()
       let lockTwo = new obj()
       testList "deadlock" [
         testCaseAsync "case A" <| async {
-          lock lockOne (fun () ->
-            waitOne.Set()
-            waitTwo.Wait 300 |> ignore
-            lock lockTwo (fun () ->
-              ()
+          repeat100 (fun () ->
+            lock lockOne (fun () ->
+              Thread.Sleep 1
+              lock lockTwo ignore
             )
-          )
-          waitOne.Reset()
+          ) ()
         }
         testCaseAsync "case B" <| async {
-          lock lockTwo (fun () ->
-            waitTwo.Set()
-            waitOne.Wait 300 |> ignore
-            lock lockOne (fun () ->
-              ()
+          repeat100 (fun () ->
+            lock lockTwo (fun () ->
+              Thread.Sleep 1
+              lock lockOne ignore
             )
-          )
-          waitTwo.Reset()
+          ) ()
         }
       ]
 
@@ -817,7 +811,7 @@ let stress =
     yield testCaseAsync "single" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
@@ -827,7 +821,7 @@ let stress =
     yield testCaseAsync "memory" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
@@ -838,29 +832,29 @@ let stress =
     yield testCaseAsync "never ending" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
-
-    yield testCaseAsync "deadlock" <| async {
+    // This test needs to run sequenced to ensure there are enough threads free to deadlock
+    yield testSequenced (testCaseAsync "deadlock" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            parallelWorkers = 8
+            stress = TimeSpan.FromMilliseconds 20000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (deadlockTest())) 8 "timeout"
-    }
+    })
 
     yield testCaseAsync "sequenced group" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
@@ -871,7 +865,7 @@ let stress =
     yield testCaseAsync "two sequenced groups" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
@@ -910,15 +904,15 @@ let stress =
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
-
-    yield testCaseAsync "deadlock sequenced" <| async {
+    // This test needs to run sequenced to ensure there are enough threads free to test no deadlock
+    yield testSequenced (testCaseAsync "deadlock sequenced" <| async {
       let config =
         { defaultConfig with
             ``parallel`` = false
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stress = TimeSpan.FromMilliseconds 20000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (deadlockTest())) 0 "no deadlock"
-    }
+    })
   ]
