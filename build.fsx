@@ -73,7 +73,7 @@ Target "DotnetBuild" (fun _ ->
   dotnet "build"   netcoreDir
 )
 
-Target "NuGet" (fun _ ->
+Target "CreateNuGets" (fun _ ->
   let result =
     ExecProcess (fun info ->
       info.FileName <- "cmd"
