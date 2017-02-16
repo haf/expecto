@@ -1397,6 +1397,7 @@ module Tests =
   type FillFromArgsResult =
     | ArgsRun of ExpectoConfig
     | ArgsList of ExpectoConfig
+    | ArgsVersion of ExpectoConfig
     | ArgsUsage of usage:string * optionErrors:string list
     | ArgsException of usage:string * exceptionMessage:string
 
@@ -1408,11 +1409,6 @@ module Tests =
       let assembly = Assembly.GetExecutingAssembly()
       let fileInfoVersion = FileVersionInfo.GetVersionInfo assembly.Location
       fileInfoVersion.ProductVersion
-
-    let printExpectoVersion() =
-      logger.info
-        (eventX "EXPECTO version {version}"
-          >> setField "version" (expectoVersion()))
 
     /// Parses command-line arguments into a config. This allows you to
     /// override the config from the command line, rather than having
@@ -1453,7 +1449,7 @@ module Tests =
         | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
         | List_Tests -> id
         | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter}
-        | Version -> fun o -> printExpectoVersion(); o
+        | Version -> id
         | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter}
         | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
         | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
@@ -1480,6 +1476,8 @@ module Tests =
             |> Seq.fold (flip reduceKnown) baseConfig
           if parsed.Contains <@ List_Tests @> then
             ArgsList config
+          elif parsed.Contains <@ Version @> then
+            ArgsVersion config
           else
             ArgsRun config
       | Choice2Of2 error ->
@@ -1533,6 +1531,11 @@ module Tests =
       listTests tests
       0
     | ArgsRun config ->
+      runTests config tests
+    | ArgsVersion config ->
+      printfn "EXPECTO version %s\n"
+        (ExpectoConfig.expectoVersion())
+
       runTests config tests
 
   /// Runs tests in this assembly with the supplied command-line options.

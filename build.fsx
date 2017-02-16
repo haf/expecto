@@ -73,6 +73,14 @@ Target "DotnetBuild" (fun _ ->
   dotnet "build"   netcoreDir
 )
 
+Target "CreateNuGets" (fun _ ->
+  let result =
+    ExecProcess (fun info ->
+      info.FileName <- "cmd"
+      info.Arguments <- "/c bundle exec rake create_nugets"
+    ) (TimeSpan.FromMinutes 5.0)
+  if result <> 0 then failwithf "NuGet fail"
+)
 
 // --------------------------------------------------------------------------------------
 // Target Dependencies
