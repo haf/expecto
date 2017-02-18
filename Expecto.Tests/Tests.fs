@@ -269,18 +269,18 @@ let expecto =
         | _ -> 0 ==? 1
 
       testList "filtering" [
-        let dummy =
+        let dummy fn =
           TestList (
             [
-              testCase "a" ignore
-              testCase "a_x" ignore
-              testCase "b" ignore
+              testCase "a" fn
+              testCase "a_x" fn
+              testCase "b" fn
               testList "c" [
-                testCase "d" ignore
-                testCase "e" ignore
+                testCase "d" fn
+                testCase "e" fn
                 testList "f" [
-                  testCase "g" ignore
-                  testCase "h" ignore
+                  testCase "g" fn
+                  testCase "h" fn
                 ]
               ]
             ], Normal)
@@ -289,44 +289,67 @@ let expecto =
 
         yield testCase "filter" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 4
 
         yield testCase "filter deep" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c/f"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
         yield testCase "filter wrong" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "f"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 0
 
         yield testCase "filter test list" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-list"; "f"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
         yield testCase "filter test list wrong" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-list"; "x"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 0
 
         yield testCase "filter test case" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-case"; "a"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
         yield testCase "filter test case wrong" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-case"; "y"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 0
 
         yield testCase "run" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--run"; "a"; "c/d"; "c/f/h"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 3
 
+        yield testCase "run with filter" <| fun _ ->
+          let count = ref 0
+          let test = dummy (fun () -> incr count)
+          Tests.runTestsWithArgs defaultConfig [|"--filter"; "c/f"|] test ==? 0
+          !count ==? 2
+
+        yield testCase "run with filter test case" <| fun _ ->
+          let count = ref 0
+          let test = dummy (fun () -> incr count)
+          Tests.runTestsWithArgs defaultConfig [|"--filter-test-case"; "a"|] test ==? 0
+          !count ==? 2
+
+        yield testCase "run with filter test list" <| fun _ ->
+          let count = ref 0
+          let test = dummy (fun () -> incr count)
+          Tests.runTestsWithArgs defaultConfig [|"--filter-test-list"; "f"|] test ==? 0
+          !count ==? 2
+
+        yield testCase "run with run" <| fun _ ->
+          let count = ref 0
+          let test = dummy (fun () -> incr count)
+          Tests.runTestsWithArgs defaultConfig [|"--run"; "a"; "c/d"; "c/f/h"|] test ==? 0
+          !count ==? 3
 
       ]
 

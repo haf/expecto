@@ -1504,6 +1504,7 @@ module Tests =
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
       1
     else
+      let tests = config.filter tests
       match config.stress with
       | None -> runEval config tests |> Async.RunSynchronously
       | Some _ -> runStress config tests |> Async.RunSynchronously
@@ -1514,9 +1515,7 @@ module Tests =
     match ExpectoConfig.fillFromArgs config args with
     | ArgsException (usage,message) ->
       printfn "%s\n" message
-
-      printfn "EXPECTO version %s\n\n%s"
-        (ExpectoConfig.expectoVersion()) usage
+      printfn "EXPECTO version %s\n\n%s" (ExpectoConfig.expectoVersion()) usage
       1
     | ArgsUsage (usage,errors) ->
       if List.isEmpty errors |> not then
