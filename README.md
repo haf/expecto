@@ -1,6 +1,7 @@
 # expecto
 
-[![Build Status](https://travis-ci.org/haf/expecto.svg?branch=master)](https://travis-ci.org/haf/expecto)
+[![Linux Build](https://travis-ci.org/haf/expecto.svg?branch=master)](https://travis-ci.org/haf/expecto)
+[![Windows Build](https://ci.appveyor.com/api/projects/status/mscx44sh1ci3xdlr?svg=true)](https://ci.appveyor.com/project/haf/expecto)
 [![NuGet Badge](https://buildstats.info/nuget/expecto)](https://www.nuget.org/packages/expecto)
 
 Expecto is a smooth testing framework for F#, with **APIs made for humans**,
