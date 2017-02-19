@@ -1,4 +1,4 @@
----
+﻿---
 language: csharp
 
 matrix:
@@ -24,4 +24,4 @@ install:
 
 script:
  - bundle && bundle exec rake
- - ./build.sh
+# - ./build.sh

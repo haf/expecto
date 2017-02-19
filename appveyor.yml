@@ -1,4 +1,4 @@
-os: Visual Studio 2015
+﻿os: Visual Studio 2015
 
 environment:
   matrix:
@@ -19,7 +19,7 @@ install:
  
 build_script:  
   - bundle exec rake
-  - cmd: build.cmd
+#  - cmd: build.cmd
 
 # artifacts:
 #  - path: 'bin'

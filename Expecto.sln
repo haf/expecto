@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26206.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{3786E131-11FB-4606-AFE0-5E6CDA744DD0}"
 	ProjectSection(SolutionItems) = preProject
@@ -18,17 +18,20 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{1870
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
+		.semver = .semver
 		.travis.yml = .travis.yml
 		appveyor.yml = appveyor.yml
 		build.cmd = build.cmd
 		build.fsx = build.fsx
 		build.sh = build.sh
+		DEVGUIDE.md = DEVGUIDE.md
 		docker-build.sh = docker-build.sh
 		Gemfile = Gemfile
-		globals.json = globals.json
+		global.json = global.json
 		paket.dependencies = paket.dependencies
 		Rakefile = Rakefile
 		README.md = README.md
+		Settings.FSharpLint = Settings.FSharpLint
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{5B9D0E5F-378A-4310-B9F3-4ECF67AA5A23}"
