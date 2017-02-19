@@ -1,4 +1,4 @@
-namespace Expecto
+﻿namespace Expecto
 
 #nowarn "46"
 
@@ -373,7 +373,6 @@ module Impl =
   open Expecto.Logging.Message
   open Helpers
   open Mono.Cecil
-  open Mono.Cecil.Rocks
 
   let logger = Log.create "Expecto"
 
@@ -614,15 +613,19 @@ module Impl =
 
         summary = fun _ summary ->
           let spirit =
+#if !NETSTANDARD1_6
             if summary.successful then
               if Console.OutputEncoding.BodyName = "utf-8" then
                 "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
               else
+#endif
                 "Success!"
             else
+#if !NETSTANDARD1_6
               if Console.OutputEncoding.BodyName = "utf-8" then
                 "( ರ Ĺ̯ ರೃ )"
               else
+#endif
                 ""
           logger.logWithAck Info (
             eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
@@ -1129,9 +1132,15 @@ module Impl =
     let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
     let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
     fun (t: Type) ->
+#if NETSTANDARD1_6
+      [ t.GetTypeInfo().GetMethods bindingFlags |> asMembers
+        t.GetTypeInfo().GetProperties bindingFlags |> asMembers
+        t.GetTypeInfo().GetFields bindingFlags |> asMembers ]
+#else
       [ t.GetMethods bindingFlags |> asMembers
         t.GetProperties bindingFlags |> asMembers
         t.GetFields bindingFlags |> asMembers ]
+#endif
       |> Seq.collect id
       |> Seq.choose testFromMember
       |> Seq.toList
@@ -1154,7 +1163,11 @@ module Impl =
 
   let getFuncTypeToUse (testFunc:unit->unit) (asm:Assembly) =
     let t = testFunc.GetType()
-    if t.Assembly.FullName = asm.FullName then
+#if NETSTANDARD1_6
+    if t.GetTypeInfo().Assembly.FullName = asm.FullName then
+#else
+    if t.GetType().Assembly.FullName = asm.FullName then
+#endif
       t
     else
       let nestedFunc =
@@ -1188,7 +1201,7 @@ module Impl =
 
     let getMethods typeName =
       match types.TryFind (getEcma335TypeName typeName) with
-      | Some t -> Some (t.GetMethods())
+      | Some t -> Some (t.Methods)
       | _ -> None
 
     let getFirstOrDefaultSequencePoint (m:MethodDefinition) =
