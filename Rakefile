@@ -43,13 +43,21 @@ task :restore_quick do
   system 'tools/paket.exe', 'restore', clr_command: true
 end
 
+task :restore_dotnetcli do
+  system "dotnet", %W|restore Expecto.netcore/Expecto.netcore.fsproj|
+end
+
 desc 'restore all nugets as per the packages.config files'
-task :restore => [:paket_bootstrap, :restore_quick, :paket_files]
+task :restore => [:paket_bootstrap, :restore_quick, :paket_files, :restore_dotnetcli]
 
 desc 'Perform full build'
-build :compile => [:versioning, :restore, :assembly_info] do |b|
+build :compile => [:versioning, :restore, :assembly_info, :build_dotnetcli] do |b|
   b.prop 'Configuration', Configuration
   b.sln = 'Expecto.Tests/Expecto.Tests.fsproj'
+end
+
+task :build_dotnetcli => [:versioning, :restore_dotnetcli, :assembly_info] do
+  system "dotnet", %W|build -c #{Configuration} -f netstandard1.6 Expecto.netcore/Expecto.netcore.fsproj|
 end
 
 directory 'build/pkg'
