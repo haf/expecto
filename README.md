@@ -48,6 +48,8 @@ documentation for the project.
       * [Sequenced tests](#sequenced-tests)
       * [Parametised tests with testParam](#parametised-tests-with-testparam)
       * [Property based tests](#property-based-tests)
+        * [Link collection](#link-collection)
+        * [Code from FsCheck](#code-from-fscheck)
       * [Performance tests](#performance-tests)
     * [Expectations with Expect](#expectations-with-expect)
       * [Expect module](#expect-module)
@@ -56,9 +58,6 @@ documentation for the project.
     * [main argv – how to run console apps](#main-argv--how-to-run-console-apps)
       * [The config](#the-config)
     * [Contributing](#contributing)
-    * [FsCheck usage](#fscheck-usage)
-      * [Link collection](#link-collection)
-        * [Code from FsCheck](#code-from-fscheck)
     * [BenchmarkDotNet usage](#benchmarkdotnet-usage)
     * [You're not alone\!](#youre-not-alone)
     * [Sending e\-mail on failure – custom printers](#sending-e-mail-on-failure--custom-printers)
@@ -184,7 +183,7 @@ Expecto supports the following test constructors:
  - test fixtures with `testFixture`
  - pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
  - focused tests (that are the only ones run) with `ftestCase` and `ftestCaseAsync`
- - sequenced tests with `testSequenced` and `testSequencedGroup` 
+ - sequenced tests with `testSequenced` and `testSequencedGroup`
  - parametised tests with `testParam`
  - testCases with the workflow builder `test`, `ptest`, `ftest` supporting
    deterministic disposal, loops and such
@@ -422,8 +421,8 @@ let properties =
     testPropertyWithConfig config "Product is distributive over addition" <|
       fun a b c ->
         a * (b + c) = a * b + a * c
-    
-    // you can apply a different config for stress testing for each test 
+
+    // you can apply a different config for stress testing for each test
     testPropertyWithConfigs config stressConfig "different config for stress testing" <|
       fun a b c ->
         a * (b + c) = a * b + a * c
@@ -500,7 +499,7 @@ This module is your main entry-point when asserting.
    available are: `Accuracy.low = {absolute=1e-6; relative=1e-3}`,
    `Accuracy.medium = {absolute=1e-8; relative=1e-5}`,
    `Accuracy.high = {absolute=1e-10; relative=1e-7}`,
-   `Accuracy.veryHigh = {absolute=1e-12; relative=1e-9}`. 
+   `Accuracy.veryHigh = {absolute=1e-12; relative=1e-9}`.
  - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If
    it does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
