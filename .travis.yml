@@ -1,4 +1,4 @@
----
+﻿---
 language: csharp
 
 matrix:
@@ -7,6 +7,9 @@ matrix:
       dist: trusty
       sudo: required
       dotnet: 1.0.0-preview2-003121
+      # Note that travis doesn't support dotnet cli rc4 via 'dotnet' yet,
+      # so we just use the old preview2 support to get things setup
+      # first, then manually add dotnet CLI RC4 during install.
       env:
         - CLI_VERSION=1.0.0-rc4-004771
     - os: osx # OSX 10.11
