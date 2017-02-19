@@ -406,11 +406,17 @@ testList "numberology 101" (
 ### Property based tests
 
 Reference [FsCheck](https://github.com/fscheck/FsCheck) and Expecto.FsCheck to
-test properties:
+test properties.
 
 ```fsharp
-let config = { FsCheck.Config.Default with MaxTest = 100 }
-let stressConfig = { FsCheck.Config.Default with MaxTest = 10000 }
+module MyApp.Tests
+
+// the ExpectoFsCheck module is auto-opened by this
+// the configuration record is in the Expecto namespace in the core library
+open Expecto
+
+let config = { FsCheckConfig.defaultConfig with maxTest = 100 }
+let stressConfig = { FsCheckConfig.defaultConfig with maxTest = 10000 }
 
 let properties =
   testList "FsCheck" [
@@ -435,7 +441,19 @@ let properties =
 run properties
 ```
 
-You can freely mix testProperty with testCase and testList.
+You can freely mix testProperty with testCase and testList. The config looks
+like the following.
+
+```fsharp
+type FsCheckConfig =
+  { maxTest: int
+    startSize: int
+    endSize: int
+    replay: (int*int) option
+    arbitrary: Type list }
+```
+
+It will be translated to the FsCheck-specific configuration at runtime.
 
 #### Link collection
 

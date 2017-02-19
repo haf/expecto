@@ -1349,7 +1349,8 @@ module Tests =
   /// The default configuration for Expecto.
   let defaultConfig = ExpectoConfig.defaultConfig
 
-  // TODO: docs
+  /// The CLI arguments are the parameters that are possible to send to Expecto
+  /// and change the runner's behaviour.
   type CLIArguments =
     | Sequenced
     | Parallel
@@ -1442,7 +1443,7 @@ module Tests =
         | Stress_Timeout n -> fun o -> { o with stressTimeout = TimeSpan.FromMinutes n }
         | Stress_Memory_Limit n -> fun o -> { o with stressMemoryLimit = n }
         | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
-        | Debug -> fun o -> { o with verbosity = LogLevel.Info }
+        | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
         | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
         | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
         | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}

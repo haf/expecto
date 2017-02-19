@@ -20,6 +20,7 @@ module Utils =
 open Utils
 open Expecto
 
+
 [<Tests>]
 let tests =
   testList "samples" [
@@ -81,6 +82,13 @@ let tests =
       let actual, expected = 41.562, 41.563
       Expect.floatClose Accuracy.medium actual expected "Should be close within 5 sig figs (approx)"
     }
+
+    testProperty "addition is commutative" <| fun a b ->
+      a + b = b + a
+
+    testPropertyWithConfig FsCheckConfig.defaultConfig "Product is distributive over addition" <|
+      fun a b c ->
+        a * (b + c) = a * b + a * c
   ]
 
 [<EntryPoint>]
