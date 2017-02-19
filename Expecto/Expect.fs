@@ -174,8 +174,8 @@ let isNotWhitespace (actual : string) format =
 let inline equal (actual : 'a) (expected : 'a) format =
   match box actual, box expected with
   | (:? string as a), (:? string as e) ->
-    use ai = a.GetEnumerator()
-    use ei = e.GetEnumerator()
+    let ai = a.ToCharArray().GetEnumerator()
+    let ei = e.ToCharArray().GetEnumerator()
     let mutable i = 0
     let baseMsg errorIndex =
       let diffString = new String(' ', errorIndex + 1) + "↑"
