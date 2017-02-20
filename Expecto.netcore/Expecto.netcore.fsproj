@@ -6,13 +6,15 @@
     <OutputType>Library</OutputType>
     <TargetFramework>netstandard1.6</TargetFramework>
     <DebugType>portable</DebugType>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'netstandard1.6' ">NETSTANDARD1_6;@(DefineConstants)</DefineConstants>
+    <DefineConstants Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+      NETSTANDARD1_6;RESHAPED_REFLECTION;@(DefineConstants)
+    </DefineConstants>
   </PropertyGroup>
   
   <ItemGroup>
     <Compile Include="..\paket-files\logary\logary\src\Logary.Facade\Facade.fs" />
-    <Compile Include="..\Expecto\Expecto.fs" />
     <Compile Include="..\Expecto\Performance.fs" />
+    <Compile Include="..\Expecto\Expecto.fs" />
     <Compile Include="..\Expecto\Expect.fs" />
   </ItemGroup>
 

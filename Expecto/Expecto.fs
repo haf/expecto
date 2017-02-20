@@ -613,8 +613,8 @@ module Impl =
 
         summary = fun _ summary ->
           let spirit =
-#if !NETSTANDARD1_6
             if summary.successful then
+#if !NETSTANDARD1_6
               if Console.OutputEncoding.BodyName = "utf-8" then
                 "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
               else
@@ -1132,7 +1132,7 @@ module Impl =
     let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
     let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
     fun (t: Type) ->
-#if NETSTANDARD1_6
+#if RESHAPED_REFLECTION
       [ t.GetTypeInfo().GetMethods bindingFlags |> asMembers
         t.GetTypeInfo().GetProperties bindingFlags |> asMembers
         t.GetTypeInfo().GetFields bindingFlags |> asMembers ]
@@ -1152,6 +1152,16 @@ module Impl =
   // might be able to find corresponding source code) is referred to in a field
   // of the function object.
   let isFsharpFuncType t =
+#if RESHAPED_REFLECTION
+    let baseType =
+      let rec findBase (t:Type) =
+        if t.GetTypeInfo().BaseType = null || t.GetTypeInfo().BaseType = typeof<obj> then
+          t
+        else
+          findBase (t.GetTypeInfo().BaseType)
+      findBase t
+    baseType.GetTypeInfo().IsGenericType && baseType.GetTypeInfo().GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
+#else
     let baseType =
       let rec findBase (t:Type) =
         if t.BaseType = null || t.BaseType = typeof<obj> then
@@ -1160,10 +1170,11 @@ module Impl =
           findBase t.BaseType
       findBase t
     baseType.IsGenericType && baseType.GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
+#endif
 
   let getFuncTypeToUse (testFunc:unit->unit) (asm:Assembly) =
     let t = testFunc.GetType()
-#if NETSTANDARD1_6
+#if RESHAPED_REFLECTION
     if t.GetTypeInfo().Assembly.FullName = asm.FullName then
 #else
     if t.GetType().Assembly.FullName = asm.FullName then
@@ -1171,7 +1182,11 @@ module Impl =
       t
     else
       let nestedFunc =
+#if RESHAPED_REFLECTION
+        t.GetTypeInfo().GetFields()
+#else
         t.GetFields()
+#endif
         |> Seq.tryFind (fun f -> isFsharpFuncType f.FieldType)
       match nestedFunc with
       | Some f -> f.GetValue(testFunc).GetType()
@@ -1181,7 +1196,12 @@ module Impl =
     match testCode with
     | Sync test ->
       let t = getFuncTypeToUse test asm
-      let m = t.GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
+#if RESHAPED_REFLECTION
+      let m = t.GetTypeInfo().GetMethods()
+#else
+      let m = t.GetMethods ()
+#endif
+              |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
       (t.FullName, m.Name)
     | Async _ | AsyncFsCheck _ ->
       ("Unknown Async", "Unknown Async")
