@@ -19,11 +19,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
+    <!-- Allow intellisense https://github.com/dotnet/netcorecli-fsc/wiki/.NET-Core-SDK-rc4#ide-support -->
+    <PackageReference Include="FSharp.NET.Sdk" Version="1.0.0-beta-060000" PrivateAssets="All" />
+    <DotNetCliToolReference Include="dotnet-compile-fsc" Version="1.0.0-preview2-020000" />
+    
     <PackageReference Include="FSharp.Core" Version="4.1.*" />
     <PackageReference Include="Argu" Version="3.3.0" />
     <PackageReference Include="Mono.Cecil" Version="0.10.0-beta2" />
     <PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
+    <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />
   </ItemGroup>
 </Project>

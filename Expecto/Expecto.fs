@@ -164,8 +164,8 @@ module internal Helpers =
 
     member m.MatchTestsAttributes () =
       m.GetCustomAttributes true
-      |> Array.map (fun t -> t.GetType().FullName)
-      |> Set.ofArray
+      |> Seq.map (fun t -> t.GetType().FullName)
+      |> Set.ofSeq
       |> Set.intersect allTestAttributes
       |> Set.toList
       |> List.choose matchFocusAttributes
@@ -1440,7 +1440,11 @@ module Tests =
   module ExpectoConfig =
 
     let expectoVersion() =
+#if RESHAPED_REFLECTION
+      let assembly = typeof<ExpectoConfig>.GetTypeInfo().Assembly
+#else
       let assembly = Assembly.GetExecutingAssembly()
+#endif
       let fileInfoVersion = FileVersionInfo.GetVersionInfo assembly.Location
       fileInfoVersion.ProductVersion
 
