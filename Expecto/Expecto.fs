@@ -373,7 +373,7 @@ module Impl =
   open Expecto.Logging.Message
   open Helpers
   open Mono.Cecil
-
+  
   let logger = Log.create "Expecto"
 
   type TestResult =
@@ -1177,7 +1177,7 @@ module Impl =
 #if RESHAPED_REFLECTION
     if t.GetTypeInfo().Assembly.FullName = asm.FullName then
 #else
-    if t.GetType().Assembly.FullName = asm.FullName then
+    if t.Assembly.FullName = asm.FullName then
 #endif
       t
     else
@@ -1226,8 +1226,11 @@ module Impl =
 
     let getFirstOrDefaultSequencePoint (m:MethodDefinition) =
       m.Body.Instructions
-      |> Seq.tryFind (fun i -> (i.SequencePoint <> null && i.SequencePoint.StartLine <> lineNumberIndicatingHiddenLine))
-      |> Option.map (fun i -> i.SequencePoint)
+      |> Seq.tryPick (fun i ->
+        let sp = m.DebugInformation.GetSequencePoint i 
+        if sp <> null && sp.StartLine <> lineNumberIndicatingHiddenLine then
+          Some sp else None)
+      |> Option.map (fun maybeSequencePoint -> maybeSequencePoint)
 
     match getMethods className with
     | None -> SourceLocation.empty

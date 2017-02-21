@@ -121,7 +121,7 @@ NUGET
       System.Runtime.Extensions (>= 4.3) - framework: >= netstandard13
       System.Runtime.Handles (>= 4.3) - framework: >= netstandard13
       System.Runtime.InteropServices (>= 4.3) - framework: >= netstandard13
-    Mono.Cecil (0.9.6.4)
+    Mono.Cecil (0.10.0-beta2) - framework: net40
     NuGet.CommandLine (3.5)
     runtime.native.System (4.3) - framework: >= netstandard15
       Microsoft.NETCore.Platforms (>= 1.1)

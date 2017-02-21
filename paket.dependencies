@@ -1,4 +1,4 @@
-source https://nuget.org/api/v2
+﻿source https://nuget.org/api/v2
 source https://dotnet.myget.org/F/dotnet-core
 source https://www.myget.org/F/fsharp-daily
 source https://www.myget.org/F/netcorecli-fsc-preview3
@@ -13,7 +13,7 @@ nuget BenchmarkDotNet = 0.9.9
 nuget BenchmarkDotNet.Toolchains.Roslyn = 0.9.9
 nuget BenchmarkDotNet.Core = 0.9.9
 nuget NuGet.CommandLine
-nuget Mono.Cecil
+nuget Mono.Cecil = 0.10.0-beta2 framework: net40
 
 group build
     source https://www.nuget.org/api/v2
