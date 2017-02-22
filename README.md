@@ -96,7 +96,7 @@ open Expecto
 
 [<Tests>]
 let tests =
-  testCase "yes" <| fun () ->
+  testCase "A simple test" <| fun () ->
     let subject = "Hello world"
     Expect.equal subject "Hello World"
                  "The strings should equal"
