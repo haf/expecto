@@ -94,7 +94,6 @@ test assembly as a console application. You can run a test directly like this:
 ```fsharp
 open Expecto
 
-[<Tests>]
 let tests =
   testCase "A simple test" <| fun () ->
     let subject = "Hello world"
@@ -103,12 +102,14 @@ let tests =
 
 [<EntryPoint>]
 let main args =
-  runTestsInAssembly defaultConfig args
+  runTestsWithArgs defaultConfig args tests
 ```
 
-The base class is called `Expect`, containing functions you can use to assert
-with. A testing library without a good assertion library is like love without
-kisses.
+No magic is involved here. We just created a single test and hooked it 
+into the assembly entry point.
+
+The `Expect` module contains functions that you can use to assert with. 
+A testing library without a good assertion library is like love without kisses.
 
 Now compile and run! `xbuild Sample.fsproj && mono --debug bin/Debug/Sample.exe`
 
@@ -156,7 +157,7 @@ and also overrides the passed `ExpectoConfig` with the command line parameters.
 
 Signature `ExpectoConfig -> string[] -> int`. Runs the tests in the current
 assembly and also overrides the passed `ExpectoConfig` with the command line
-parameters.
+parameters. All tests need to be marked with the `[<Tests>]` attribute.
 
 ### Filtering with `filter`
 
@@ -216,7 +217,7 @@ they are using `Expecto.BenchmarkDotNet` for performance tests.
 Tests can be grouped (with arbitrary nesting):
 
 ```fsharp
-[<Tests>]
+
 let tests =
   testList "A test group" [
     testCase "one test" <| fun () ->
@@ -233,7 +234,6 @@ let tests =
 
 Also have a look at [the
 samples](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sample.fs).
-
 
 ### Test fixtures
 
