@@ -134,6 +134,14 @@ runTests defaultConfig simpleTest
 which returns 1 if any tests failed, otherwise 0. Useful for returning to the
 operating system as error code.
 
+It's worth noting that `<|` is just a way to change the associativity of the
+language parser. In other words; it's equivalent to:
+
+```fsharp
+testCase "A simple test" (fun () ->
+  Expect.equal 4 (2+2) "2+2 should equal 4")
+```
+
 ### `runTests`
 
 Signature `ExpectoConfig -> Test -> int`. Runs the passed tests with the passed
