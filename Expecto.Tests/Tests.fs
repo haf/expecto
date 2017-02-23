@@ -35,6 +35,15 @@ let tests =
       Expect.equal 4 (2+2) "2+2"
     }
 
+    testAsync "using async computation expression" {
+      Expect.equal 4 (2+2) "2+2"
+    }
+
+    testAsync "using async computation expression with bind" {
+      let! x = async { return 4 }
+      Expect.equal x (2+2) "2+2"
+    }
+
     testList "string comparison" [
       test "string equal" {
         Expect.equal "Test string" "Test string" "Test string"

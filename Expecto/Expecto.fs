@@ -1346,6 +1346,31 @@ module Tests =
   let inline ptest name =
     TestCaseBuilder (name, Pending)
 
+  type TestAsyncBuilder(name, focusState) =
+    member __.Zero() = async.Zero()
+    member __.Delay(f) = async.Delay(f)
+    member __.Return(x) = async.Return(x)
+    member __.ReturnFrom(x) = async.ReturnFrom(x)
+    member __.Bind(p1, p2) = async.Bind(p1, p2)
+    member __.Using(g, p) = async.Using(g, p)
+    member __.While(gd, prog) = async.While(gd, prog)
+    member __.For(e, prog) = async.For(e, prog)
+    member __.Combine(p1, p2) = async.Combine(p1, p2)
+    member __.TryFinally(p, cf) = async.TryFinally(p, cf)
+    member __.TryWith(p, cf) = async.TryWith(p, cf)
+    member __.Run f =
+      match focusState with
+      | Normal -> testCaseAsync name f
+      | Focused -> ftestCaseAsync name f
+      | Pending -> ptestCaseAsync name f
+
+  let inline testAsync name =
+    TestAsyncBuilder (name, Normal)
+  let inline ftestAsync name =
+    TestAsyncBuilder (name, Focused)
+  let inline ptestAsync name =
+    TestAsyncBuilder (name, Pending)
+
   /// The default configuration for Expecto.
   let defaultConfig = ExpectoConfig.defaultConfig
 
