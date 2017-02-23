@@ -49,7 +49,7 @@ task :restore => [:paket_bootstrap, :restore_quick, :paket_files]
 desc 'Perform full build'
 build :compile => [:versioning, :restore, :assembly_info] do |b|
   b.prop 'Configuration', Configuration
-  b.sln = 'Expecto.Tests/Expecto.Tests.fsproj'
+  b.sln = 'Expecto.sln'
 end
 
 directory 'build/pkg'
@@ -76,6 +76,7 @@ end
 namespace :tests do
   task :unit do
     system "Expecto.Tests/bin/#{Configuration}/Expecto.Tests.exe", '--summary', clr_command: true
+    system "Expecto.Tests.CSharp/bin/#{Configuration}/Expecto.Tests.CSharp.exe", '--summary', clr_command: true
   end
 end
 

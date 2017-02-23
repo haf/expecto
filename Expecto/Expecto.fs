@@ -1594,3 +1594,35 @@ module Accuracy =
     {absolute=1e-10; relative=1e-7}
   let veryHigh =
     {absolute=1e-12; relative=1e-9}
+
+namespace Expecto.CSharp
+open System.Runtime.CompilerServices
+
+[<AutoOpen; Extension>]
+module Runner =
+  open Expecto
+  open Expecto.Impl
+  open System.Collections.Generic
+  open System.Threading.Tasks
+
+  type Async with
+    static member AwaitTask(t : Task) = Async.AwaitIAsyncResult(t, -1) |> Async.Ignore
+
+  let RunTests(config, tests) = runEval config tests
+  let RunTestsWithArgs(config, args, tests) = runTestsWithArgs config args tests
+  let RunTestsInAssembly(config, args) = runTestsInAssembly config args
+  let ListTests(tests) = listTests tests
+  let TestList(name, tests: IEnumerable<Test>) = testList name (List.ofSeq tests)
+  [<CompiledName("TestCase")>]
+  let TestCaseA(name, test: System.Action) = testCase name test.Invoke
+  [<CompiledName("TestCase")>]
+  let TestCaseT(name, test: Task) = testCaseAsync name (Async.AwaitTask test)
+  [<CompiledName("PendingTestCase")>]
+  let PendingTestCaseA(name, test: System.Action) = ptestCase name test.Invoke
+  [<CompiledName("PendingTestCase")>]
+  let PendingTestCaseT(name, test: Task) = ptestCaseAsync name (Async.AwaitTask test)
+  [<CompiledName("FocusedTestCase")>]
+  let FocusedTestCaseA(name, test: System.Action) = ftestCase name test.Invoke
+  [<CompiledName("FocusedTestCase")>]
+  let FocusedTestCaseT(name, test: Task) = ftestCaseAsync name (Async.AwaitTask test)
+  let DefaultConfig = defaultConfig

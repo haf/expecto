@@ -43,8 +43,6 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.Focused.Tests", "te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Expecto.Tests.CSharp", "Expecto.Tests.CSharp\Expecto.Tests.CSharp.csproj", "{87E8FA7E-C2C8-488C-9B8F-7B887EDF5E4B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Expecto.CSharp", "Expecto.CSharp\Expecto.CSharp.csproj", "{F4BF5A2F-5C3E-4596-AC72-01D16994BF9C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,10 +77,6 @@ Global
 		{87E8FA7E-C2C8-488C-9B8F-7B887EDF5E4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87E8FA7E-C2C8-488C-9B8F-7B887EDF5E4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87E8FA7E-C2C8-488C-9B8F-7B887EDF5E4B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F4BF5A2F-5C3E-4596-AC72-01D16994BF9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F4BF5A2F-5C3E-4596-AC72-01D16994BF9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F4BF5A2F-5C3E-4596-AC72-01D16994BF9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F4BF5A2F-5C3E-4596-AC72-01D16994BF9C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

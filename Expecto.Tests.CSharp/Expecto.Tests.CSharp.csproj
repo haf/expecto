@@ -50,10 +50,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Expecto.CSharp\Expecto.CSharp.csproj">
-      <Project>{f4bf5a2f-5c3e-4596-ac72-01d16994bf9c}</Project>
-      <Name>Expecto.CSharp</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Expecto\Expecto.fsproj">
       <Project>{c0d55728-10a9-4a7a-9df9-d2f21f663ac2}</Project>
       <Name>Expecto</Name>
@@ -64,7 +60,7 @@
     <None Include="paket.references" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

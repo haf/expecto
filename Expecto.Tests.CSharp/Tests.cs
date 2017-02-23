@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Threading.Tasks;
-using static Expecto.CSharp;
+using static Expecto.CSharp.Runner;
+using Expecto;
 
-namespace Expecto.Tests.CSharp
+namespace Test.CSharp
 {
     public class Samples
     {
         [Tests]
-        public static Test blah =
-            TestList("general groupings", new[] {
+        public static Expecto.Test blah =
+            TestList("general groupings", new Expecto.Test[] {
                 TestCase("standard", () => Console.Write("standard")),
                 TestCase("standard async", async () => {
                     await Task.Delay(100);
@@ -26,6 +27,6 @@ namespace Expecto.Tests.CSharp
                 }),
             });
 
-        public static int Main(string[] argv) => RunTestsInAssembly(DefaultConfig, argv);    
+		public static int Main(string[] argv) => RunTestsInAssembly(DefaultConfig, argv);
     }
 }
