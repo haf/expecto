@@ -57,13 +57,20 @@ build :compile => [:versioning, :restore, :assembly_info, :build_dotnetcli] do |
 end
 
 task :build_dotnetcli => [:versioning, :restore_dotnetcli, :assembly_info] do
-  system "dotnet", %W|build -c #{Configuration} -f netstandard1.6 Expecto.netcore/Expecto.netcore.fsproj|
+  system "dotnet", %W|build -v n -c #{Configuration} -f netstandard1.6 Expecto.netcore/Expecto.netcore.fsproj|
 end
 
+directory 'build/clipkg'
 directory 'build/pkg'
 
+
+task :create_nugets_dotnetcli => ['build/clipkg', :build_dotnetcli] do
+  system "dotnet", %W|pack -v n --no-build -c #{Configuration} -o build/clipkg /p:Version=#{ENV['NUGET_VERSION']} Expecto.netcore/Expecto.netcore.fsproj|
+end
+
+
 desc 'package nugets - finds all projects and package them'
-nugets_pack :create_nugets => ['build/pkg', :versioning, :compile] do |p|
+nugets_pack :create_nugets => ['build/pkg', :versioning, :compile, :create_nugets_dotnetcli] do |p|
   p.configuration = Configuration
   p.files   = FileList['*/*.{csproj,fsproj,nuspec}'].
     exclude(/Tests|Sample|netcore/)
