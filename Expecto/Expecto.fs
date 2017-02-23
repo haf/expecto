@@ -1605,9 +1605,6 @@ module Runner =
   open System.Collections.Generic
   open System.Threading.Tasks
 
-  type Async with
-    static member AwaitTask(t : Task) = Async.AwaitIAsyncResult(t, -1) |> Async.Ignore
-
   let RunTests(config, tests) = runEval config tests
   let RunTestsWithArgs(config, args, tests) = runTestsWithArgs config args tests
   let RunTestsInAssembly(config, args) = runTestsInAssembly config args

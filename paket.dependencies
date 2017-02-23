@@ -9,7 +9,7 @@ github logary/logary src/Logary.Facade/Facade.fs 4b21d888e83d72d1238ab0f36110e2a
 
 nuget Argu
 nuget FsCheck
-nuget FSharp.Core ~> 3
+nuget FSharp.Core 4.0.0.1
 nuget FSharpx.Core
 nuget BenchmarkDotNet = 0.9.9
 nuget BenchmarkDotNet.Toolchains.Roslyn = 0.9.9
