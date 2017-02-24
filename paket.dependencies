@@ -1,4 +1,4 @@
-﻿source https://nuget.org/api/v2
+source https://nuget.org/api/v2
 source https://dotnet.myget.org/F/dotnet-core
 source https://www.myget.org/F/fsharp-daily
 source https://www.myget.org/F/netcorecli-fsc-preview3

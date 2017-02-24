@@ -1,4 +1,4 @@
-﻿namespace Expecto
+namespace Expecto
 
 #nowarn "46"
 
