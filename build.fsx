@@ -7,6 +7,7 @@ open Fake.Testing.Expecto
 
 // Pattern specifying assemblies to be tested using expecto
 let testExecutables = "./Expecto.Tests/**/bin/Release/*Tests*.exe"
+let testFromTestDataExecutables = "./testdata/**/bin/Release/*Tests*.exe"
 
 let run cmd args dir =
   if execProcess( fun info ->
@@ -56,7 +57,7 @@ Target "Build" (fun _ ->
 )
 
 Target "RunTests" (fun _ ->
-    !! testExecutables
+    !! testExecutables ++ testFromTestDataExecutables
     |> Expecto id
     |> ignore
 )
