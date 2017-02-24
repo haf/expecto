@@ -614,18 +614,14 @@ module Impl =
         summary = fun _ summary ->
           let spirit =
             if summary.successful then
-#if !NETSTANDARD1_6
-              if Console.OutputEncoding.BodyName = "utf-8" then
+              if Console.OutputEncoding.WebName = "utf-8" then
                 "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
               else
-#endif
                 "Success!"
             else
-#if !NETSTANDARD1_6
-              if Console.OutputEncoding.BodyName = "utf-8" then
+              if Console.OutputEncoding.WebName = "utf-8" then
                 "( ರ Ĺ̯ ರೃ )"
               else
-#endif
                 ""
           logger.logWithAck Info (
             eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
