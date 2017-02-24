@@ -208,10 +208,10 @@ they are using `Expecto.BenchmarkDotNet` for performance tests.
 
 ### Normal tests
 
- - `test : string -> TestCaseBuilder`
- - `testAsync : string -> TestAsyncBuilder`
- - `testCase : string -> (unit -> unit) -> Test`
- - `testCaseAsync : string -> Async<unit> -> Test`
+ - `test : string -> TestCaseBuilder` -  Builds a test case in a computation expression.
+ - `testAsync : string -> TestAsyncBuilder` - Builds an async test case in a computation expression.
+ - `testCase : string -> (unit -> unit) -> Test` - Builds a test case from a test function.
+ - `testCaseAsync : string -> Async<unit> -> Test` - Builds an async test case from an async expression.
 
 ### `testList` for grouping
 
@@ -560,7 +560,7 @@ This module is your main entry-point when asserting.
    the item.
  - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
    contains all elements from second sequence (not taking into account an order
-   of elements)
+   of elements).
  - `distribution: 'a seq -> Map<'a, uint32> -> string -> unit` - Expect the sequence contains all elements from map (first element in tuple is an item expected to be in sequence, second is a positive number of its occurrences in a sequence). Function is not taking into account an order of elements.
  - `streamsEqual` – Expect the streams to be byte-wise identical.
  - `isFasterThan : (unit -> 'a) -> (unit -> 'a) -> string -> unit` – Expect the

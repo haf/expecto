@@ -1307,7 +1307,7 @@ module Tests =
     Seq.map (fun (name, partialTest) ->
       testCase name (partialTest param))
 
-  // TODO: docs
+  /// Test case computation expression builder
   type TestCaseBuilder(name, focusState) =
     member __.TryFinally(f, compensation) =
       try
@@ -1336,16 +1336,17 @@ module Tests =
       | Focused -> ftestCase name f
       | Pending -> ptestCase name f
 
-  // TODO: docs
+  /// Builds a test case
   let inline test name =
     TestCaseBuilder (name, Normal)
-  // TODO: docs
+  /// Builds a test case that will make Expecto to ignore other unfocused tests
   let inline ftest name =
     TestCaseBuilder (name, Focused)
-  // TODO: docs
+  /// Builds a test case that will be ignored by Expecto
   let inline ptest name =
     TestCaseBuilder (name, Pending)
 
+  /// Async test case computation expression builder
   type TestAsyncBuilder(name, focusState) =
     member __.Zero() = async.Zero()
     member __.Delay(f) = async.Delay(f)
@@ -1364,10 +1365,13 @@ module Tests =
       | Focused -> ftestCaseAsync name f
       | Pending -> ptestCaseAsync name f
 
+  /// Builds an async test case
   let inline testAsync name =
     TestAsyncBuilder (name, Normal)
+  /// Builds an async test case that will make Expecto to ignore other unfocused tests
   let inline ftestAsync name =
     TestAsyncBuilder (name, Focused)
+  /// Builds an async test case that will be ignored by Expecto
   let inline ptestAsync name =
     TestAsyncBuilder (name, Pending)
 
