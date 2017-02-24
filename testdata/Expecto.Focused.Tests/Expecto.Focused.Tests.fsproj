@@ -54,7 +54,6 @@
   <ItemGroup>
     <Compile Include="Main.fs" />
     <None Include="paket.references" />
-    <Content Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
