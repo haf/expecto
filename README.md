@@ -4,7 +4,7 @@
 [![Windows Build](https://ci.appveyor.com/api/projects/status/mscx44sh1ci3xdlr?svg=true)](https://ci.appveyor.com/project/haf/expecto)
 [![NuGet Badge](https://buildstats.info/nuget/expecto)](https://www.nuget.org/packages/expecto)
 
-Expecto is a smooth testing framework for F#, with **APIs made for humans**,
+Expecto is a smooth testing library for F#, with **APIs made for humans**,
 giving **strong testing methodologies to everyone**.
 
 With Expecto you write tests as values. Tests can be composed, reduced,
@@ -94,21 +94,22 @@ test assembly as a console application. You can run a test directly like this:
 ```fsharp
 open Expecto
 
-[<Tests>]
 let tests =
-  testCase "yes" <| fun () ->
+  testCase "A simple test" <| fun () ->
     let subject = "Hello world"
     Expect.equal subject "Hello World"
                  "The strings should equal"
 
 [<EntryPoint>]
 let main args =
-  runTestsInAssembly defaultConfig args
+  runTestsWithArgs defaultConfig args tests
 ```
 
-The base class is called `Expect`, containing functions you can use to assert
-with. A testing library without a good assertion library is like love without
-kisses.
+No magic is involved here. We just created a single test and hooked it 
+into the assembly entry point.
+
+The `Expect` module contains functions that you can use to assert with. 
+A testing library without a good assertion library is like love without kisses.
 
 Now compile and run! `xbuild Sample.fsproj && mono --debug bin/Debug/Sample.exe`
 
@@ -120,7 +121,7 @@ Here's the simplest test possible:
 open Expecto
 
 let simpleTest =
-  testCase "A simple test" <| fun _ ->
+  testCase "A simple test" <| fun () ->
     let expected = 4
     Expect.equal expected (2+2) "2+2 = 4"
 ```
@@ -133,6 +134,14 @@ runTests defaultConfig simpleTest
 
 which returns 1 if any tests failed, otherwise 0. Useful for returning to the
 operating system as error code.
+
+It's worth noting that `<|` is just a way to change the associativity of the
+language parser. In other words; it's equivalent to:
+
+```fsharp
+testCase "A simple test" (fun () ->
+  Expect.equal 4 (2+2) "2+2 should equal 4")
+```
 
 ### `runTests`
 
@@ -148,7 +157,7 @@ and also overrides the passed `ExpectoConfig` with the command line parameters.
 
 Signature `ExpectoConfig -> string[] -> int`. Runs the tests in the current
 assembly and also overrides the passed `ExpectoConfig` with the command line
-parameters.
+parameters. All tests need to be marked with the `[<Tests>]` attribute.
 
 ### Filtering with `filter`
 
@@ -208,13 +217,13 @@ they are using `Expecto.BenchmarkDotNet` for performance tests.
 Tests can be grouped (with arbitrary nesting):
 
 ```fsharp
-[<Tests>]
+
 let tests =
   testList "A test group" [
-    testCase "one test" <| fun _ ->
+    testCase "one test" <| fun () ->
       Expect.equal (2+2) 4 "2+2"
 
-    testCase "another test that fails" <| fun _ ->
+    testCase "another test that fails" <| fun () ->
       Expect.equal (3+3) 5 "3+3"
 
     testCaseAsync "this is an async test" async {
@@ -225,7 +234,6 @@ let tests =
 
 Also have a look at [the
 samples](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sample.fs).
-
 
 ### Test fixtures
 
@@ -266,22 +274,22 @@ tests discovery is used).
 open Expecto
 
 [<PTests>]
-let skippedTestFromReflectionDiscovery = testCase "skipped" <| fun _ ->
+let skippedTestFromReflectionDiscovery = testCase "skipped" <| fun () ->
     Expect.equal (2+2) 4 "2+2"
 
 [<Tests>]
 let myTests =
   testList "normal" [
     testList "unfocused list" [
-      ptestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
-      testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+      ptestCase "skipped" <| fun () -> Expect.equal (2+2) 1 "2+2?"
+      testCase "will run" <| fun () -> Expect.equal (2+2) 4 "2+2"
       ptest "skipped" { Expect.equal (2+2) 1 "2+2?" }
     ]
-    testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
-    ptestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
+    testCase "will run" <| fun () -> Expect.equal (2+2) 4 "2+2"
+    ptestCase "skipped" <| fun () -> Expect.equal (2+2) 1 "2+2?"
     ptestList "skipped list" [
-      testCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
-      ftestCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
+      testCase "skipped" <| fun () -> Expect.equal (2+2) 1 "2+2?"
+      ftestCase "skipped" <| fun () -> Expect.equal (2+2) 1 "2+2?"
     ]
   ]
 ```
@@ -307,7 +315,7 @@ Expecto allows you to focus specific test cases or tests list by putting `f` bef
 open Expecto
 
 [<FTests>]
-let someFocusedTest = testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+let someFocusedTest = testCase "will run" <| fun () -> Expect.equal (2+2) 4 "2+2"
 [<Tests>]
 let someUnfocusedTest = test "skipped" { Expect.equal (2+2) 1 "2+2?" }
 ```
@@ -321,17 +329,17 @@ open Expecto
 let focusedTests =
   testList "unfocused list" [
     ftestList "focused list" [
-      testCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
-      ftestCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+      testCase "will run" <| fun () -> Expect.equal (2+2) 4 "2+2"
+      ftestCase "will run" <| fun () -> Expect.equal (2+2) 4 "2+2"
       test "will run" { Expect.equal (2+2) 4 "2+2" }
     ]
     testList "unfocused list" [
-      testCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
-      ftestCase "will run" <| fun _ -> Expect.equal (2+2) 4 "2+2"
+      testCase "skipped" <| fun () -> Expect.equal (2+2) 1 "2+2?"
+      ftestCase "will run" <| fun () -> Expect.equal (2+2) 4 "2+2"
       test "skipped" { Expect.equal (2+2) 1 "2+2?" }
       ftest "will run" { Expect.equal (2+2) 4 "2+2" }
     ]
-    testCase "skipped" <| fun _ -> Expect.equal (2+2) 1 "2+2?"
+    testCase "skipped" <| fun () -> Expect.equal (2+2) 1 "2+2?"
   ]
 ```
 
@@ -348,11 +356,11 @@ This can be useful for timeout and performance testing.
 [<Tests>]
 let timeout =
   testSequenced <| testList "Timeout" [
-    testCase "fail" <| fun _ ->
-      let test = TestCase(Test.timeout 10 (fun _ -> Thread.Sleep 100), Normal)
+    testCase "fail" <| fun () ->
+      let test = TestCase(Test.timeout 10 (fun () -> Thread.Sleep 100), Normal)
       let result = evalSilent test |> sumTestResults
       result.failed.Length ==? 1
-    testCase "pass" <| fun _ ->
+    testCase "pass" <| fun () ->
       let test = TestCase(Test.timeout 1000 ignore, Normal)
       let result = evalSilent test |> sumTestResults
       result.passed.Length ==? 1
@@ -603,35 +611,35 @@ All of the below tests pass.
 let performance =
   testSequenced <| testList "performance" [
 
-    testCase "1 <> 2" <| fun _ ->
+    testCase "1 <> 2" <| fun () ->
       let test () =
         Expect.isFasterThan (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
       assertTestFailsWithMsgContaining "same" (test, Normal)
 
-    testCase "half is faster" <| fun _ ->
+    testCase "half is faster" <| fun () ->
       Expect.isFasterThan (fun () -> repeat10000 log 76.0)
                           (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
                           "half is faster"
 
-    testCase "double is faster should fail" <| fun _ ->
+    testCase "double is faster should fail" <| fun () ->
       let test () =
         Expect.isFasterThan (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
                             (fun () -> repeat10000 log 76.0)
                             "double is faster should fail"
       assertTestFailsWithMsgContaining "slower" (test, Normal)
 
-    ptestCase "same function is faster should fail" <| fun _ ->
+    ptestCase "same function is faster should fail" <| fun () ->
       let test () =
         Expect.isFasterThan (fun () -> repeat100000 log 76.0)
                             (fun () -> repeat100000 log 76.0)
                             "same function is faster should fail"
       assertTestFailsWithMsgContaining "equal" (test, Normal)
 
-    testCase "matrix" <| fun _ ->
+    testCase "matrix" <| fun () ->
       let n = 100
       let rand = Random 123
-      let a = Array2D.init n n (fun _ _ -> rand.NextDouble())
-      let b = Array2D.init n n (fun _ _ -> rand.NextDouble())
+      let a = Array2D.init n n (fun () _ -> rand.NextDouble())
+      let b = Array2D.init n n (fun () _ -> rand.NextDouble())
       let c = Array2D.zeroCreate n n
 
       let reset() =
@@ -656,7 +664,7 @@ let performance =
                              (fun measurer -> reset(); measurer mulIJK ())
                              "ikj faster than ijk"
 
-    testCase "popcount" <| fun _ ->
+    testCase "popcount" <| fun () ->
       let test () =
         Expect.isFasterThan (fun () -> repeat10000 (popCount16 >> int) 987us)
                             (fun () -> repeat10000 (popCount >> int) 987us)
@@ -888,7 +896,7 @@ let logger = Log.create "MyTests"
 
 // stuff here
 
-testCase "reading prop" <| fun _ ->
+testCase "reading prop" <| fun () ->
   let subject = MyComponent()
   // this will output to the right test context:
   logger.info(
@@ -915,5 +923,5 @@ This expression was expected to have type    'TestCode'    but here has type    
 ```
 
 It means that you have code like `testCase "abc" <| Expect.equal ...`. Instead
-you should create a function like so: `testCase "abc" <| fun _ -> Expect.equal
+you should create a function like so: `testCase "abc" <| fun () -> Expect.equal
 ...`.
