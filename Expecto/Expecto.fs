@@ -1231,6 +1231,9 @@ module Impl =
   /// Scan tests marked with TestsAttribute from entry assembly
   let testFromThisAssembly () = testFromAssembly (Assembly.GetEntryAssembly())
 
+  ///Scan tests marked with TestsAttribute from a specific assembly
+  let testFromDifferentAssembly assembly = testFromAssembly (assembly)
+
   /// When the failOnFocusedTests switch is activated this function that no
   /// focused tests exist.
   ///
@@ -1543,6 +1546,14 @@ module Tests =
   let runTestsInAssembly config args =
     let config = { config with locate = getLocation (Assembly.GetEntryAssembly()) }
     testFromThisAssembly ()
+    |> Option.orDefault (TestList ([], Normal))
+    |> runTestsWithArgs config args
+
+  /// Runs tests in a passed in assembly with the supplied command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsInDifferentAssembly config args (assembly:Assembly) =
+    let config = { config with locate = getLocation (assembly) }
+    testFromDifferentAssembly assembly
     |> Option.orDefault (TestList ([], Normal))
     |> runTestsWithArgs config args
 
