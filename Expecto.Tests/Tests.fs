@@ -269,18 +269,18 @@ let expecto =
         | _ -> 0 ==? 1
 
       testList "filtering" [
-        let dummy =
+        let dummy fn =
           TestList (
             [
-              testCase "a" ignore
-              testCase "a_x" ignore
-              testCase "b" ignore
+              testCase "a" fn
+              testCase "a_x" fn
+              testCase "b" fn
               testList "c" [
-                testCase "d" ignore
-                testCase "e" ignore
+                testCase "d" fn
+                testCase "e" fn
                 testList "f" [
-                  testCase "g" ignore
-                  testCase "h" ignore
+                  testCase "g" fn
+                  testCase "h" fn
                 ]
               ]
             ], Normal)
@@ -289,44 +289,67 @@ let expecto =
 
         yield testCase "filter" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 4
 
         yield testCase "filter deep" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c/f"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
         yield testCase "filter wrong" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "f"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 0
 
         yield testCase "filter test list" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-list"; "f"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
         yield testCase "filter test list wrong" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-list"; "x"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 0
 
         yield testCase "filter test case" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-case"; "a"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
         yield testCase "filter test case wrong" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter-test-case"; "y"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 0
 
         yield testCase "run" <| fun _ ->
           let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--run"; "a"; "c/d"; "c/f/h"|] |> getArgsConfig
-          let filtered = dummy |> opts.filter |> Test.toTestCodeList
+          let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 3
 
+        yield testCase "run with filter" <| fun _ ->
+          let count = ref 0
+          let test = dummy (fun () -> incr count)
+          Tests.runTestsWithArgs defaultConfig [|"--filter"; "c/f"|] test ==? 0
+          !count ==? 2
+
+        yield testCase "run with filter test case" <| fun _ ->
+          let count = ref 0
+          let test = dummy (fun () -> incr count)
+          Tests.runTestsWithArgs defaultConfig [|"--filter-test-case"; "a"|] test ==? 0
+          !count ==? 2
+
+        yield testCase "run with filter test list" <| fun _ ->
+          let count = ref 0
+          let test = dummy (fun () -> incr count)
+          Tests.runTestsWithArgs defaultConfig [|"--filter-test-list"; "f"|] test ==? 0
+          !count ==? 2
+
+        yield testCase "run with run" <| fun _ ->
+          let count = ref 0
+          let test = dummy (fun () -> incr count)
+          Tests.runTestsWithArgs defaultConfig [|"--run"; "a"; "c/d"; "c/f/h"|] test ==? 0
+          !count ==? 3
 
       ]
 
@@ -772,30 +795,24 @@ let stress =
       ]
 
     let deadlockTest() =
-      let waitOne = new ManualResetEventSlim()
-      let waitTwo = new ManualResetEventSlim()
       let lockOne = new obj()
       let lockTwo = new obj()
       testList "deadlock" [
         testCaseAsync "case A" <| async {
-          lock lockOne (fun () ->
-            waitOne.Set()
-            waitTwo.Wait 300 |> ignore
-            lock lockTwo (fun () ->
-              ()
+          repeat100 (fun () ->
+            lock lockOne (fun () ->
+              Thread.Sleep 1
+              lock lockTwo ignore
             )
-          )
-          waitOne.Reset()
+          ) ()
         }
         testCaseAsync "case B" <| async {
-          lock lockTwo (fun () ->
-            waitTwo.Set()
-            waitOne.Wait 300 |> ignore
-            lock lockOne (fun () ->
-              ()
+          repeat100 (fun () ->
+            lock lockTwo (fun () ->
+              Thread.Sleep 1
+              lock lockOne ignore
             )
-          )
-          waitTwo.Reset()
+          ) ()
         }
       ]
 
@@ -817,7 +834,7 @@ let stress =
     yield testCaseAsync "single" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
@@ -827,7 +844,7 @@ let stress =
     yield testCaseAsync "memory" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
@@ -838,29 +855,29 @@ let stress =
     yield testCaseAsync "never ending" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
-
-    yield testCaseAsync "deadlock" <| async {
+    // This test needs to run sequenced to ensure there are enough threads free to deadlock
+    yield testSequenced (testCaseAsync "deadlock" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            parallelWorkers = 8
+            stress = TimeSpan.FromMilliseconds 20000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (deadlockTest())) 8 "timeout"
-    }
+    })
 
     yield testCaseAsync "sequenced group" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
@@ -871,7 +888,7 @@ let stress =
     yield testCaseAsync "two sequenced groups" <| async {
       let config =
         { defaultConfig with
-            parallelWorkers = 32
+            parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
@@ -910,15 +927,15 @@ let stress =
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
-
-    yield testCaseAsync "deadlock sequenced" <| async {
+    // This test needs to run sequenced to ensure there are enough threads free to test no deadlock
+    yield testSequenced (testCaseAsync "deadlock sequenced" <| async {
       let config =
         { defaultConfig with
             ``parallel`` = false
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
+            stress = TimeSpan.FromMilliseconds 20000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (deadlockTest())) 0 "no deadlock"
-    }
+    })
   ]
