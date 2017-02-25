@@ -28,16 +28,16 @@ let inline isNotNull message x = Expecto.Expect.isNotNull x message
 let inline isNull message x = Expecto.Expect.isNull x message
 
 /// Expects `a` to be less than `b`.
-let inline isLessThan message b a = Expecto.Expect.isLessThan a b message
+let inline isLessThan message (a, b) = Expecto.Expect.isLessThan a b message
 
 /// Expects `a` <= `b`.
-let inline isLessThanOrEqual message b a = Expecto.Expect.isLessThanOrEqual a b message
+let inline isLessThanOrEqual message (a, b) = Expecto.Expect.isLessThanOrEqual a b message
 
 /// Expects `a` > `b`.
-let inline isGreaterThan message b a = Expecto.Expect.isGreaterThan a b message
+let inline isGreaterThan message (a, b) = Expecto.Expect.isGreaterThan a b message
 
 /// Expects `a` >= `b`.
-let inline isGreaterThanOrEqual message b a = Expecto.Expect.isGreaterThanOrEqual a b message
+let inline isGreaterThanOrEqual message (a, b) = Expecto.Expect.isGreaterThanOrEqual a b message
 
 /// Expects `actual` and `expected` (that are both floats) to be within a
 /// given `accuracy`.

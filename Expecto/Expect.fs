@@ -9,10 +9,10 @@ open Expecto.Logging
 open Expecto.Logging.Message
 
 /// Expects f to throw an exception.
-let throws f format =
+let throws f message =
   try
     f ()
-    Tests.failtestf "%s. Expected f to throw." format
+    Tests.failtestf "%s. Expected f to throw." message
   with e ->
     ()
 
@@ -25,153 +25,153 @@ let throwsC f cont =
     cont e
 
 /// Expects the passed function to throw `'texn`.
-let throwsT<'texn> f format =
+let throwsT<'texn> f message =
   try
     f ()
-    Tests.failtestf "%s. Expected f to throw." format
+    Tests.failtestf "%s. Expected f to throw." message
   with
   | e when e.GetType() <> typeof<'texn> ->
     Tests.failtestf "%s. Expected f to throw an exn of type %s."
-                    format
+                    message
                     (typeof<'texn>.Name)
   | e ->
     ()
 
 
 /// Expects the value to be a None value.
-let isNone x format =
+let isNone x message =
   match x with
   | None ->
     ()
   | Some x ->
     Tests.failtestf "%s. Expected None, was Some(%A)."
-                    format x
+                    message x
 
 /// Expects the value to be a Some _ value.
-let isSome x format =
+let isSome x message =
   match x with
   | None ->
-    Tests.failtestf "%s. Expected Some _, was None." format
+    Tests.failtestf "%s. Expected Some _, was None." message
   | Some _ ->
     ()
 
 /// Expects the value to be a Choice1Of2 value.
-let isChoice1Of2 x format =
+let isChoice1Of2 x message =
   match x with
   | Choice1Of2 _ -> ()
   | Choice2Of2 x ->
-    Tests.failtestf "%s. Expected Choice1Of2, was Choice2Of2(%A)." format x
+    Tests.failtestf "%s. Expected Choice1Of2, was Choice2Of2(%A)." message x
 
 /// Expects the value to be a Choice2Of2 value.
-let isChoice2Of2 x format =
+let isChoice2Of2 x message =
   match x with
   | Choice1Of2 x ->
     Tests.failtestf "%s. Expected Choice2Of2 _, was Choice1Of2(%A)."
-                    format x
+                    message x
   | Choice2Of2 _ ->
     ()
 
 /// Expects the value not to be null.
-let isNotNull x format =
+let isNotNull x message =
   match x with
   | null ->
-    Tests.failtest format
+    Tests.failtest message
   | x ->
     ()
 
 /// Expects the value to be null.
-let isNull x format =
+let isNull x message =
   match x with
   | null -> ()
   | x ->
     Tests.failtestf "%s. Expected null, but was %A."
-                    format x
+                    message x
 
 /// Expects `a` to be less than `b`.
-let isLessThan a b format =
+let isLessThan a b message =
   if a >= b then
     Tests.failtestf "%s. Expected a (%A) to be less than b (%A)."
-                    format a b
+                    message a b
 
 /// Expects `a` <= `b`.
-let isLessThanOrEqual a b format =
+let isLessThanOrEqual a b message =
   if a > b then
     Tests.failtestf "%s. Expected a (%A) to be less than or equal to b (%A)."
-                    format a b
+                    message a b
 
 /// Expects `a` > `b`.
-let isGreaterThan a b format =
+let isGreaterThan a b message =
   if a > b then ()
   else
     Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)."
-                    format a b
+                    message a b
 
 /// Expects `a` >= `b`.
-let isGreaterThanOrEqual a b format =
+let isGreaterThanOrEqual a b message =
   if a >= b then ()
   else
     Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)."
-                    format a b
+                    message a b
 
 /// Expects `actual` and `expected` (that are both floats) to equal within a
 /// given `epsilon`.
 [<Obsolete "Please use the more general Expect.floatClose">]
-let floatEqual actual expected epsilon format =
+let floatEqual actual expected epsilon message =
   let epsilon = defaultArg epsilon 0.001
   if expected <= actual + epsilon && expected >= actual - epsilon then
     ()
   else
     Tests.failtestf "%s. Actual value was %f but was expected to be %f within %f epsilon."
-                    format actual expected epsilon
+                    message actual expected epsilon
 
 /// Expects `actual` and `expected` (that are both floats) to be within a
 /// given `accuracy`.
-let floatClose accuracy actual expected format =
+let floatClose accuracy actual expected message =
   if Double.IsInfinity actual then
-    Tests.failtestf "%s. Expected actual to not be infinity, but it was." format
+    Tests.failtestf "%s. Expected actual to not be infinity, but it was." message
   elif Double.IsInfinity expected then
-    Tests.failtestf "%s. Expected expected to not be infinity, but it was." format
+    Tests.failtestf "%s. Expected expected to not be infinity, but it was." message
   elif Accuracy.areClose accuracy actual expected |> not then
     Tests.failtestf
       "%s. Expected difference to be less than %g for accuracy {absolute=%g; relative=%g}, but was %g."
-      format (Accuracy.areCloseRhs accuracy actual expected)
+      message (Accuracy.areCloseRhs accuracy actual expected)
       accuracy.absolute accuracy.relative
       (Accuracy.areCloseLhs actual expected)
 
 /// Expect the passed float to be a number.
-let isNotNaN f format =
-  if Double.IsNaN f then Tests.failtestf "%s. Float was the NaN (not a number) value." format
+let isNotNaN f message =
+  if Double.IsNaN f then Tests.failtestf "%s. Float was the NaN (not a number) value." message
 
 /// Expect the passed float not to be positive infinity.
-let isNotPositiveInfinity actual format =
-  if Double.IsPositiveInfinity actual then Tests.failtestf "%s. Float was positive infinity." format
+let isNotPositiveInfinity actual message =
+  if Double.IsPositiveInfinity actual then Tests.failtestf "%s. Float was positive infinity." message
 
 /// Expect the passed float not to be negative infinity.
-let isNotNegativeInfinity actual format =
-  if Double.IsNegativeInfinity actual then Tests.failtestf "%s. Float was negative infinity." format
+let isNotNegativeInfinity actual message =
+  if Double.IsNegativeInfinity actual then Tests.failtestf "%s. Float was negative infinity." message
 
 /// Expect the passed float not to be infinity.
-let isNotInfinity actual format =
-  isNotNegativeInfinity actual format
-  isNotPositiveInfinity actual format
+let isNotInfinity actual message =
+  isNotNegativeInfinity actual message
+  isNotPositiveInfinity actual message
   // passed via excluded middle
 
 /// Expect the passed string not to be empty.
-let isNotEmpty (actual : string) format =
-  isNotNull actual format
-  if String.IsNullOrWhiteSpace actual then Tests.failtestf "%s. Should not be empty." format
+let isNotEmpty (actual : string) message =
+  isNotNull actual message
+  if String.IsNullOrWhiteSpace actual then Tests.failtestf "%s. Should not be empty." message
 
 /// Expect the passed string is not whitespace
-let isNotWhitespace (actual : string) format =
-  isNotEmpty actual format
+let isNotWhitespace (actual : string) message =
+  isNotEmpty actual message
   let rec checkWhitespace index =
     if Char.IsWhiteSpace actual.[index] then
       if index < (actual.Length - 1) then checkWhitespace (index + 1)
-      else Tests.failtestf "%s. Should not be whitespace." format
+      else Tests.failtestf "%s. Should not be whitespace." message
   checkWhitespace 0
 
 /// Expects the two values to equal each other.
-let inline equal (actual : 'a) (expected : 'a) format =
+let inline equal (actual : 'a) (expected : 'a) message =
   match box actual, box expected with
   | (:? string as a), (:? string as e) ->
     use ai = a.GetEnumerator()
@@ -186,7 +186,7 @@ let inline equal (actual : 'a) (expected : 'a) format =
           The string differs at index %d.
           %A
           %s"
-                    format expected diffString errorIndex actual diffString
+                    message expected diffString errorIndex actual diffString
     while ei.MoveNext() do
       if ai.MoveNext() then
         if ai.Current = ei.Current then ()
@@ -205,34 +205,34 @@ let inline equal (actual : 'a) (expected : 'a) format =
                       (baseMsg i) i (ai.Current)
   | _, _ ->
     if actual <> expected then
-      Tests.failtestf "%s. Actual value was %A but had expected it to be %A." format actual expected
+      Tests.failtestf "%s. Actual value was %A but had expected it to be %A." message actual expected
 
 
 
 /// Expects the two values not to equal each other.
-let notEqual (actual : 'a) (expected : 'a) format =
+let notEqual (actual : 'a) (expected : 'a) message =
   if expected = actual then
     Tests.failtestf "%s. Actual value was equal to %A but had expected them to be non-equal."
-                    format actual
+                    message actual
 
 /// Expects the value to be false.
-let isFalse actual format =
+let isFalse actual message =
   if not actual then ()
   else
-    Tests.failtestf "%s. Actual value was true but had expected it to be false." format
+    Tests.failtestf "%s. Actual value was true but had expected it to be false." message
 
 /// Expects the value to be true.
-let isTrue actual format =
+let isTrue actual message =
   if actual then ()
   else
-    Tests.failtestf "%s. Actual value was false but had expected it to be true." format
+    Tests.failtestf "%s. Actual value was false but had expected it to be true." message
 
 /// Expects the `sequence` to contain the `element`.
-let contains sequence element format =
+let contains sequence element message =
   match sequence |> Seq.tryFind ((=) element) with
   | Some _ -> ()
   | None ->
-    Tests.failtestf "%s. Sequence did not contain %A." format element
+    Tests.failtestf "%s. Sequence did not contain %A." message element
 
 let inline private formatSet<'a> (concatBy) (formatResult) (whenEmpty) (ss : 'a seq) : string =
   if Seq.isEmpty ss then
@@ -258,7 +258,7 @@ let inline private formatSet<'a> (concatBy) (formatResult) (whenEmpty) (ss : 'a 
 /// function will enumerate both sequences; they have to be finite.
 let containsAll (actual : _ seq)
                 (expected : _ seq)
-                format =
+                message =
   let axs, exs = List.ofSeq actual, List.ofSeq expected
   let extra, missing =
     let ixs = axs |> List.filter (fun a -> exs |> List.exists ((=) a))
@@ -277,7 +277,7 @@ let containsAll (actual : _ seq)
         %s
         Extra elements in `actual`:
         %s"
-              format (formatResult axs) (formatResult exs) (formatResult missing) (formatResult extra)
+              message (formatResult axs) (formatResult exs) (formatResult missing) (formatResult extra)
   |> Tests.failtest
 
 let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: Map<_,uint32>) (isExcept: bool) =
@@ -316,7 +316,7 @@ let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: M
 /// Calling this function will enumerate both sequences; they have to be finite.
 let distribution (actual : _ seq)
                 (expected : Map<_,uint32>)
-                format =
+                message =
   let groupByOccurances sequence =
     sequence
     |> Seq.groupBy id
@@ -350,7 +350,7 @@ let distribution (actual : _ seq)
         %s
         All elements in `expected` ['item', 'number of expected occurrences']:
         %s%s%s"
-              format (formatInput actual) (formatInput formatedExpected) missingElementsInfo extraElementsInfo
+              message (formatInput actual) (formatInput formatedExpected) missingElementsInfo extraElementsInfo
   |> Tests.failtest
 
 let inline private formattedList (sequence) =
@@ -360,7 +360,7 @@ let inline private formattedList (sequence) =
   String.Join("\n\t", formattedElements)
 
 /// Expects the `actual` sequence to equal the `expected` one.
-let sequenceEqual (actual : _ seq) (expected : _ seq) format =
+let sequenceEqual (actual : _ seq) (expected : _ seq) message =
   use ai = actual.GetEnumerator()
   use ei = expected.GetEnumerator()
   let baseMsg =
@@ -369,7 +369,7 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
         %s
         Actual value was:
         %s"
-                  format (formattedList expected) (formattedList actual)
+                  message (formattedList expected) (formattedList actual)
   let mutable i = 0
   while ei.MoveNext() do
     if ai.MoveNext() then
@@ -389,9 +389,9 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) format =
                       baseMsg i (ai.Current)
 
 /// Expect the sequence `subject` to start with `prefix`. If it does not
-/// then fail with `format` as an error message together with a description
+/// then fail with `message` as an error message together with a description
 /// of `subject` and `prefix`.
-let sequenceStarts (subject : _ seq) (prefix : _ seq) format =
+let sequenceStarts (subject : _ seq) (prefix : _ seq) message =
   use si = subject.GetEnumerator()
   use pi = prefix.GetEnumerator()
   let mutable i = 0
@@ -400,68 +400,68 @@ let sequenceStarts (subject : _ seq) (prefix : _ seq) format =
       if si.Current = pi.Current then ()
       else
         Tests.failtestf "%s. Sequence does not match at position %i. Expected: %A, but got %A."
-                           format i (pi.Current) (si.Current)
+                           message i (pi.Current) (si.Current)
     else
       Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A."
-                      format i (pi.Current)
+                      message i (pi.Current)
     i <- i + 1
 
 /// Expect the sequence `subject` to be ascending. If it does not
-/// then fail with `format` as an error message.
-let isAscending (subject : _ seq) format =
+/// then fail with `message` as an error message.
+let isAscending (subject : _ seq) message =
   if not (subject |> Seq.windowed 2 |> Seq.forall (fun s -> s.[1] >= s.[0])) then
-    Tests.failtestf "%s. Sequence is not ascending" format
+    Tests.failtestf "%s. Sequence is not ascending" message
 
 /// Expect the sequence `subject` to be descending. If it does not
-/// then fail with `format` as an error message.
-let isDescending  (subject : _ seq) format =
+/// then fail with `message` as an error message.
+let isDescending  (subject : _ seq) message =
   if not (subject |> Seq.windowed 2 |> Seq.forall (fun s -> s.[1] <= s.[0])) then
-    Tests.failtestf "%s. Sequence is not descending" format
+    Tests.failtestf "%s. Sequence is not descending" message
 
 /// Expect the string `subject` to contain `substring` as part of itself.
-/// If it does not, then fail with `format` and `subject` and `substring`
+/// If it does not, then fail with `message` and `subject` and `substring`
 /// as part of the error message.
-let stringContains (subject : string) (substring : string) format =
+let stringContains (subject : string) (substring : string) message =
   if not (subject.Contains(substring)) then
     Tests.failtestf "%s. Expected subject string '%s' to contain substring '%s'."
-                    format subject substring
+                    message subject substring
 
 /// Expect the string `subject` to start with `prefix`. If it does not
-/// then fail with `format` as an error message together with a description
+/// then fail with `message` as an error message together with a description
 /// of `subject` and `prefix`.
-let stringStarts (subject : string) (prefix : string) format =
+let stringStarts (subject : string) (prefix : string) message =
   if not (subject.StartsWith prefix) then
     Tests.failtestf "%s. Expected subject string '%s' to start with '%s'."
-                    format subject prefix
+                    message subject prefix
 
 /// Expect the string `subject` to end with `suffix`. If it does not
-/// then fail with `format` as an error message together with a description
+/// then fail with `message` as an error message together with a description
 /// of `subject` and `suffix`.
-let stringEnds (subject : string) (suffix : string) format =
+let stringEnds (subject : string) (suffix : string) message =
   if not (subject.EndsWith suffix) then
     Tests.failtestf "%s. Expected subject string '%s' to end with '%s'."
-                    format subject suffix
+                    message subject suffix
 
 /// Expect the string `subject` to have length equals `length`. If it does not
-/// then fail with `format` as an error message together with a description
+/// then fail with `message` as an error message together with a description
 /// of `subject` and `length`.
-let stringHasLength (subject : string) (length : int) format =
+let stringHasLength (subject : string) (length : int) message =
   if subject.Length <> length then
     Tests.failtestf "%s. Expected subject string '%s' to have length '%d'."
-                    format subject length
+                    message subject length
 
 
 /// Expect the streams to byte-wise equal.
-let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) format =
+let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) message =
   let buf = Array.zeroCreate<byte> 2
   let rec compare pos =
     match s1.Read(buf, 0, 1), s2.Read(buf, 1, 1) with
     | x, y when x <> y ->
-      Tests.failtestf "%s. Not equal at pos %d" format pos
+      Tests.failtestf "%s. Not equal at pos %d" message pos
     | 0, _ ->
       ()
     | _ when buf.[0] <> buf.[1] ->
-      Tests.failtestf "%s. Not equal at pos %d" format pos
+      Tests.failtestf "%s. Not equal at pos %d" message pos
     | _ ->
       compare (pos + 1)
   compare 0
@@ -499,7 +499,7 @@ let isFasterThanSub (f1:Performance.Measurer<_,_>->'a) (f2:Performance.Measurer<
 
 /// Expects function `f1` is faster than `f2`. Statistical test to 99.99%
 /// confidence level.
-let isFasterThan (f1:unit->'a) (f2:unit->'a) format =
+let isFasterThan (f1:unit->'a) (f2:unit->'a) message =
   isFasterThanSub (fun measurer -> measurer f1 ())
                   (fun measurer -> measurer f2 ())
-                  format
+                  message

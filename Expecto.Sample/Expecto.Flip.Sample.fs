@@ -47,6 +47,9 @@ let tests =
        false |> Expect.equal "╰〳 ಠ 益 ಠೃ 〵╯" true
     }
 
+    testCase "is ascending" <| fun _ ->
+      [0..100] |> Expect.isAscending "expected sequence to be ascending"
+
     testCase "You know exns" <| fun _ ->
       failwith "unhandled exception from test code"
 
@@ -77,10 +80,10 @@ let tests =
     }
 
     testCase "1 is > to 0" <| fun () ->
-      1 |> Expect.isGreaterThan "1 > 0" 0
+      (1, 0) |> Expect.isGreaterThan "1 > 0"
     
     testCase "0 is > to 1 (should fail)" <| fun () ->
-      0 |> Expect.isGreaterThan "1 > 0" 1
+      (0, 1) |> Expect.isGreaterThan "1 > 0"
     
     testProperty "addition is commutative" <| fun a b ->
       a + b = b + a
