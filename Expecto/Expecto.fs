@@ -1128,15 +1128,9 @@ module Impl =
     let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
     let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
     fun (t: Type) ->
-#if RESHAPED_REFLECTION
       [ t.GetTypeInfo().GetMethods bindingFlags |> asMembers
         t.GetTypeInfo().GetProperties bindingFlags |> asMembers
         t.GetTypeInfo().GetFields bindingFlags |> asMembers ]
-#else
-      [ t.GetMethods bindingFlags |> asMembers
-        t.GetProperties bindingFlags |> asMembers
-        t.GetFields bindingFlags |> asMembers ]
-#endif
       |> Seq.collect id
       |> Seq.choose testFromMember
       |> Seq.toList
@@ -1148,7 +1142,6 @@ module Impl =
   // might be able to find corresponding source code) is referred to in a field
   // of the function object.
   let isFsharpFuncType t =
-#if RESHAPED_REFLECTION
     let baseType =
       let rec findBase (t:Type) =
         if t.GetTypeInfo().BaseType = null || t.GetTypeInfo().BaseType = typeof<obj> then
@@ -1157,32 +1150,14 @@ module Impl =
           findBase (t.GetTypeInfo().BaseType)
       findBase t
     baseType.GetTypeInfo().IsGenericType && baseType.GetTypeInfo().GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
-#else
-    let baseType =
-      let rec findBase (t:Type) =
-        if t.BaseType = null || t.BaseType = typeof<obj> then
-          t
-        else
-          findBase t.BaseType
-      findBase t
-    baseType.IsGenericType && baseType.GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
-#endif
 
   let getFuncTypeToUse (testFunc:unit->unit) (asm:Assembly) =
     let t = testFunc.GetType()
-#if RESHAPED_REFLECTION
     if t.GetTypeInfo().Assembly.FullName = asm.FullName then
-#else
-    if t.Assembly.FullName = asm.FullName then
-#endif
       t
     else
       let nestedFunc =
-#if RESHAPED_REFLECTION
         t.GetTypeInfo().GetFields()
-#else
-        t.GetFields()
-#endif
         |> Seq.tryFind (fun f -> isFsharpFuncType f.FieldType)
       match nestedFunc with
       | Some f -> f.GetValue(testFunc).GetType()
@@ -1192,11 +1167,7 @@ module Impl =
     match testCode with
     | Sync test ->
       let t = getFuncTypeToUse test asm
-#if RESHAPED_REFLECTION
       let m = t.GetTypeInfo().GetMethods()
-#else
-      let m = t.GetMethods ()
-#endif
               |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
       (t.FullName, m.Name)
     | Async _ | AsyncFsCheck _ ->
@@ -1439,11 +1410,7 @@ module Tests =
   module ExpectoConfig =
 
     let expectoVersion() =
-#if RESHAPED_REFLECTION
       let assembly = typeof<ExpectoConfig>.GetTypeInfo().Assembly
-#else
-      let assembly = Assembly.GetExecutingAssembly()
-#endif
       let fileInfoVersion = FileVersionInfo.GetVersionInfo assembly.Location
       fileInfoVersion.ProductVersion
 

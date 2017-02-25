@@ -3,10 +3,6 @@
   <PropertyGroup>
     <AssemblyName>Expecto</AssemblyName>
     <TargetFramework>netstandard1.6</TargetFramework>
-    <DefineConstants Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-      RESHAPED_REFLECTION;
-      @(DefineConstants);
-    </DefineConstants>
   </PropertyGroup>
   
   <ItemGroup>
