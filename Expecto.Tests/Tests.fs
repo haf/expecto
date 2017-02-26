@@ -18,10 +18,19 @@ module Dummy =
   [<Tests>]
   let testB() = TestLabel ("test B", TestList ([], Normal), Normal)
 
-  let thisModuleType = lazy Type.GetType "Expecto.Tests+Dummy, Expecto.Tests"
+  let thisAssemblyName =
+#if NETCOREAPP1_1
+    "Expecto.netcore.Tests"
+#else
+    "Expecto.Tests"
+#endif
+
+  let thisModuleNameQualified = sprintf "Expecto.Tests+Dummy, %s" thisAssemblyName
+  let thisModuleType = lazy Type.GetType(thisModuleNameQualified, throwOnError=true)
 
 module EmptyModule =
-  let thisModuleType = lazy Type.GetType "Expecto.Tests+EmptyModule, Expecto.Tests"
+  let thisModuleNameQualified = sprintf "Expecto.Tests+EmptyModule, %s" Dummy.thisAssemblyName
+  let thisModuleType = lazy Type.GetType(thisModuleNameQualified, throwOnError=true)
 
 let (==?) actual expected = Expect.equal expected actual ""
 
