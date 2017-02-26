@@ -96,7 +96,7 @@ namespace :tests do
 end
 
 task :tests => :'tests:unit'
-
+task :'tests:unit' => [ :restore_dotnetcli ]
 task :default => [ :compile, :tests, :create_nugets ]
 
 task :ensure_nuget_key do
