@@ -2,15 +2,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Sample",
-            "type": "mono",
+            "name": ".NET Core Debug Tests",
+            "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceRoot}/Expecto.Sample/bin/Debug/Expecto.Sample.exe",
-            "args": ["--debug"],
+            "preLaunchTask": "build_netcore_tests",
+            "program": "${workspaceRoot}/Expecto.netcore.Tests/bin/Debug/netcoreapp1.1/Expecto.netcore.Tests.dll",
+            "args": [
+                "--debug", "--sequenced"
+            ],
             "cwd": "${workspaceRoot}",
-            "runtimeExecutable": null,
-            "env": {},
+            "stopAtEntry": false,
             "externalConsole": false
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command.pickProcess}"
         }
     ]
 }

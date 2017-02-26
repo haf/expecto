@@ -25,8 +25,13 @@ end
 desc 'Perform fast build (warn: doesn\'t d/l deps)'
 build :quick_compile do |b|
   b.prop 'Configuration', Configuration
-  b.logging = 'detailed'
+  b.logging = 'minimal'
   b.sln     = 'Expecto.Tests/Expecto.Tests.fsproj'
+end
+
+desc 'Perform fast netcore build (warn: doesn\'t d/l deps)'
+task :quick_compile_netcore do
+  system "dotnet", %W|build -c #{Configuration} Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj|
 end
 
 task :paket_bootstrap do
