@@ -44,7 +44,7 @@ task :restore_quick do
 end
 
 task :restore_dotnetcli do
-  system "dotnet", %W|restore Expecto.netcore/Expecto.netcore.fsproj|
+  system "dotnet", %W|restore Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj|
 end
 
 desc 'restore all nugets as per the packages.config files'
