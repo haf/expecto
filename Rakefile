@@ -90,6 +90,7 @@ end
 
 namespace :tests do
   task :unit do
+    system "dotnet", %W|run -c #{Configuration} --project Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj --debug --summary|
     system "Expecto.Tests/bin/#{Configuration}/Expecto.Tests.exe", '--summary', clr_command: true
   end
 end
