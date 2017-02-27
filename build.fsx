@@ -97,4 +97,4 @@ Target "All" DoNothing
 "Build"       ==> "All"
 "DotnetBuild" ==> "All"
 
-RunTargetOrDefault "All"
+RunTargetOrDefault "DotnetBuild"

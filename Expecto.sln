@@ -1,7 +1,6 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26206.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{3786E131-11FB-4606-AFE0-5E6CDA744DD0}"
 	ProjectSection(SolutionItems) = preProject
@@ -28,7 +27,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{1870
 		docker-build.sh = docker-build.sh
 		Gemfile = Gemfile
 		global.json = global.json
-		paket.dependencies = paket.dependencies
 		Rakefile = Rakefile
 		README.md = README.md
 		Settings.FSharpLint = Settings.FSharpLint
