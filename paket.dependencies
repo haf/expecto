@@ -1,7 +1,7 @@
 source https://nuget.org/api/v2
 framework: net45
 
-github logary/logary src/Logary.Facade/Facade.fs 4b21d888e83d72d1238ab0f36110e2a3946240e7
+github logary/logary src/Logary.Facade/Facade.fs 0fbb7829b9d4b62f9ffd10d7a4b20d075c6cccc6
 
 nuget Argu = 3.2
 nuget FsCheck = 2.7.1
