@@ -1,4 +1,4 @@
-#I @"packages/build/FAKE/tools/"
+﻿#I @"packages/build/FAKE/tools/"
 #r @"FakeLib.dll"
 System.IO.Directory.SetCurrentDirectory __SOURCE_DIRECTORY__
 open System
@@ -17,6 +17,45 @@ let run cmd args dir =
     info.Arguments <- args
   ) System.TimeSpan.MaxValue = false then
       failwithf "Error while running '%s' with args: %s" cmd args
+
+
+let project = "Expecto"
+let summary = "A smooth unit test framework for F#"
+let description = summary
+
+// List of author names (for NuGet package)
+let authors = [ "Logibit AB" ]
+let copyright = "(c) 2016 by Henrik Feldt, formerly Fuchu by @mausch"
+// Tags for your project (for NuGet package)
+
+let version = { Major = 5; Minor = 0; Patch = 0 }
+
+open Fake.AssemblyInfoFile
+
+let genFSAssemblyInfo (projectPath) =
+    let projectName = System.IO.Path.GetFileNameWithoutExtension(projectPath)
+    let folderName = System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(projectPath))
+    let basePath = folderName
+    let fileName = basePath @@ "AssemblyVersionInfo.fs"
+    CreateFSharpAssemblyInfo fileName [ 
+        Attribute.Title (projectName)
+        Attribute.Product project
+        Attribute.Copyright copyright
+        Attribute.Company (authors |> String.concat ", ")
+        Attribute.Description summary
+        Attribute.Version <| string version
+        // Attribute.Version release.AssemblyVersion
+        // Attribute.FileVersion release.AssemblyVersion
+        // Attribute.InformationalVersion release.NugetVersion 
+    ]
+
+
+// Generate assembly info files with the right version & up-to-date information
+Target "AssemblyInfo" (fun _ ->
+    let fsProjs =  !! "./**/*.fsproj" |> Seq.filter (fun s -> not <| s.Contains "preview")
+    fsProjs |> Seq.iter genFSAssemblyInfo
+)
+
 
 // --------------------------------------------------------------------------------------
 // Rename Logary Facades for Expecto
@@ -88,7 +127,8 @@ Target "CreateNuGets" (fun _ ->
 
 Target "All" DoNothing
 
-"ExpectoChangeo"
+"AssemblyInfo"
+  ==> "ExpectoChangeo"
   ==> "Clean"
   ==> "Build"
   ==> "RunTests"
@@ -97,4 +137,4 @@ Target "All" DoNothing
 "Build"       ==> "All"
 "DotnetBuild" ==> "All"
 
-RunTargetOrDefault "All"
+RunTargetOrDefault "DotnetBuild"

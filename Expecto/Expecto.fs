@@ -164,8 +164,8 @@ module internal Helpers =
 
     member m.MatchTestsAttributes () =
       m.GetCustomAttributes true
-      |> Array.map (fun t -> t.GetType().FullName)
-      |> Set.ofArray
+      |> Seq.map (fun t -> t.GetType().FullName)
+      |> Set.ofSeq
       |> Set.intersect allTestAttributes
       |> Set.toList
       |> List.choose matchFocusAttributes
@@ -373,8 +373,7 @@ module Impl =
   open Expecto.Logging.Message
   open Helpers
   open Mono.Cecil
-  open Mono.Cecil.Rocks
-
+  
   let logger = Log.create "Expecto"
 
   type TestResult =
@@ -615,12 +614,12 @@ module Impl =
         summary = fun _ summary ->
           let spirit =
             if summary.successful then
-              if Console.OutputEncoding.BodyName = "utf-8" then
+              if Console.OutputEncoding.WebName = "utf-8" then
                 "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
               else
                 "Success!"
             else
-              if Console.OutputEncoding.BodyName = "utf-8" then
+              if Console.OutputEncoding.WebName = "utf-8" then
                 "( ರ Ĺ̯ ರೃ )"
               else
                 ""
@@ -1129,9 +1128,9 @@ module Impl =
     let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
     let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
     fun (t: Type) ->
-      [ t.GetMethods bindingFlags |> asMembers
-        t.GetProperties bindingFlags |> asMembers
-        t.GetFields bindingFlags |> asMembers ]
+      [ t.GetTypeInfo().GetMethods bindingFlags |> asMembers
+        t.GetTypeInfo().GetProperties bindingFlags |> asMembers
+        t.GetTypeInfo().GetFields bindingFlags |> asMembers ]
       |> Seq.collect id
       |> Seq.choose testFromMember
       |> Seq.toList
@@ -1145,20 +1144,20 @@ module Impl =
   let isFsharpFuncType t =
     let baseType =
       let rec findBase (t:Type) =
-        if t.BaseType = null || t.BaseType = typeof<obj> then
+        if t.GetTypeInfo().BaseType = null || t.GetTypeInfo().BaseType = typeof<obj> then
           t
         else
-          findBase t.BaseType
+          findBase (t.GetTypeInfo().BaseType)
       findBase t
-    baseType.IsGenericType && baseType.GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
+    baseType.GetTypeInfo().IsGenericType && baseType.GetTypeInfo().GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
 
   let getFuncTypeToUse (testFunc:unit->unit) (asm:Assembly) =
     let t = testFunc.GetType()
-    if t.Assembly.FullName = asm.FullName then
+    if t.GetTypeInfo().Assembly.FullName = asm.FullName then
       t
     else
       let nestedFunc =
-        t.GetFields()
+        t.GetTypeInfo().GetFields()
         |> Seq.tryFind (fun f -> isFsharpFuncType f.FieldType)
       match nestedFunc with
       | Some f -> f.GetValue(testFunc).GetType()
@@ -1168,7 +1167,8 @@ module Impl =
     match testCode with
     | Sync test ->
       let t = getFuncTypeToUse test asm
-      let m = t.GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
+      let m = t.GetTypeInfo().GetMethods()
+              |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
       (t.FullName, m.Name)
     | Async _ | AsyncFsCheck _ ->
       ("Unknown Async", "Unknown Async")
@@ -1188,13 +1188,16 @@ module Impl =
 
     let getMethods typeName =
       match types.TryFind (getEcma335TypeName typeName) with
-      | Some t -> Some (t.GetMethods())
+      | Some t -> Some (t.Methods)
       | _ -> None
 
     let getFirstOrDefaultSequencePoint (m:MethodDefinition) =
       m.Body.Instructions
-      |> Seq.tryFind (fun i -> (i.SequencePoint <> null && i.SequencePoint.StartLine <> lineNumberIndicatingHiddenLine))
-      |> Option.map (fun i -> i.SequencePoint)
+      |> Seq.tryPick (fun i ->
+        let sp = m.DebugInformation.GetSequencePoint i 
+        if sp <> null && sp.StartLine <> lineNumberIndicatingHiddenLine then
+          Some sp else None)
+      |> Option.map (fun maybeSequencePoint -> maybeSequencePoint)
 
     match getMethods className with
     | None -> SourceLocation.empty
@@ -1407,7 +1410,7 @@ module Tests =
   module ExpectoConfig =
 
     let expectoVersion() =
-      let assembly = Assembly.GetExecutingAssembly()
+      let assembly = typeof<ExpectoConfig>.GetTypeInfo().Assembly
       let fileInfoVersion = FileVersionInfo.GetVersionInfo assembly.Location
       fileInfoVersion.ProductVersion
 

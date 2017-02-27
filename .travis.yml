@@ -2,20 +2,41 @@
 language: csharp
 
 mono:
- - 4.6.1
- - 4.8.0
- - latest # => "stable release"
- - weekly # => "latest commits"
+  - 4.6.1
+  - 4.8.0
+  - weekly # => "stable release"
+  - latest # => "latest commits"
 
+os:
+  - osx
+  - linux
+
+dist: trusty
+sudo: required
+
+dotnet: 1.0.0-preview2-003121
+
+env:
+  - CLI_VERSION=1.0.0-rc4-004771
+
+    
 install:
- - rvm install 2.2.3
- - gem install bundler
- - sudo apt-get update -y
+  # See details at https://github.com/NuGet/Home/issues/2163
+  # this may be required because of an underlying bug in mono. It may
+  # also be induced by us because we have an extra nuget.config source.
+  - ulimit -n 2048
+
+  - rvm install 2.2.3
+  - gem install bundler
+  - export DOTNET_INSTALL_DIR="$PWD/.dotnetcli"
+  - curl -sSL https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/dotnet-install.sh | bash /dev/stdin --version "$CLI_VERSION" --install-dir "$DOTNET_INSTALL_DIR"
+  - export PATH="$DOTNET_INSTALL_DIR:$PATH"  
 
 script:
  - bundle && bundle exec rake
 
 matrix:
+  fast_finish: true # just fail immediately if at least one job fails
   allow_failures:
     - mono: latest
     - mono: weekly

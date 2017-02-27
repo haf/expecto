@@ -2,18 +2,47 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "0.1.0",
-    "command": "bundle",
     "isShellCommand": true,
-    "args": [],
-    "showOutput": "always",
-    "tasks": [
+    "tasks": [ 
         {
-            "taskName": "compile",
+            "taskName": "build",
+            "echoCommand": true,
+            "command": "bundle",
+            "isBuildCommand": true,
+            "problemMatcher": "$msCompile",
             "args": [
-                "exec",
-                "rake"
+                "exec", "rake",
+                "Configuration=Debug",
+                "quick_compile",
+                "quick_compile_netcore"
+            ]
+        },
+        {
+            "taskName": "build_netcore_tests",
+            "command": "dotnet",
+            "echoCommand": true,
+            "args": [
+                "build",
+                "-c", "Debug",
+                "Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj"
             ],
-            "isBuildCommand": true
+            "showOutput": "silent",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "taskName": "run_netcore_tests",
+            "echoCommand": true,
+            "command": "dotnet",
+            "args": [
+                "run",
+                "-c", "Debug",
+                "--project", "Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj",
+                "--sequenced",
+                "--debug"
+            ],
+            "showOutput": "silent",
+            "isTestCommand": true,
+            "problemMatcher": "$msCompile"
         }
     ]
 }
