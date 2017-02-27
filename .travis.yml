@@ -22,8 +22,8 @@ env:
     
 install:
   # See details at https://github.com/NuGet/Home/issues/2163
-  # this may be required because of an underlying bug, and the fact that weekly
-  # use an extra nuget.config source.
+  # this may be required because of an underlying bug in mono. It may
+  # also be induced by us because we have an extra nuget.config source.
   - ulimit -n 2048
 
   - rvm install 2.2.3
