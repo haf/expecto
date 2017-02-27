@@ -24,7 +24,7 @@ install:
   # See details at https://github.com/NuGet/Home/issues/2163
   # this may be required because of an underlying bug, and the fact that weekly
   # use an extra nuget.config source.
-  - ulimit -n 512
+  - ulimit -n 2048
 
   - rvm install 2.2.3
   - gem install bundler
