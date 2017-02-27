@@ -10,8 +10,8 @@ nuget BenchmarkDotNet = 0.9.9
 nuget BenchmarkDotNet.Toolchains.Roslyn = 0.9.9
 nuget BenchmarkDotNet.Core = 0.9.9
 nuget Mono.Cecil = 0.10.0-beta2 framework: net40
+nuget NuGet.CommandLine
 
 group build
     source https://www.nuget.org/api/v2
     nuget FAKE
-    nuget NuGet.CommandLine
