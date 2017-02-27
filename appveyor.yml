@@ -18,8 +18,7 @@ install:
   - dotnet --info	
  
 build_script:  
-  - bundle exec rake
-#  - cmd: build.cmd
+  - cmd: build.cmd "All"
 
 # artifacts:
 #  - path: 'bin'
