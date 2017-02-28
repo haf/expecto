@@ -35,6 +35,15 @@ let tests =
       Expect.equal 4 (2+2) "2+2"
     }
 
+    testAsync "using async computation expression" {
+      Expect.equal 4 (2+2) "2+2"
+    }
+
+    testAsync "using async computation expression with bind" {
+      let! x = async { return 4 }
+      Expect.equal x (2+2) "2+2"
+    }
+
     testList "string comparison" [
       test "string equal" {
         Expect.equal "Test string" "Test string" "Test string"
@@ -788,7 +797,7 @@ let stress =
 
     let neverEndingTest =
       testList "never ending" [
-        testCaseAsync "never ending" <| async {
+        testAsync "never ending" {
           while true do
             do! Async.Sleep 10
         }
@@ -798,7 +807,7 @@ let stress =
       let lockOne = new obj()
       let lockTwo = new obj()
       testList "deadlock" [
-        testCaseAsync "case A" <| async {
+        testAsync "case A" {
           repeat100 (fun () ->
             lock lockOne (fun () ->
               Thread.Sleep 1
@@ -806,7 +815,7 @@ let stress =
             )
           ) ()
         }
-        testCaseAsync "case B" <| async {
+        testAsync "case B" {
           repeat100 (fun () ->
             lock lockTwo (fun () ->
               Thread.Sleep 1
@@ -831,7 +840,7 @@ let stress =
         singleTest
       ]
 
-    yield testCaseAsync "single" <| async {
+    yield testAsync "single" {
       let config =
         { defaultConfig with
             parallelWorkers = 8
@@ -841,7 +850,7 @@ let stress =
       Expect.equal (runTests config singleTest) 0 "one"
     }
 
-    yield testCaseAsync "memory" <| async {
+    yield testAsync "memory" {
       let config =
         { defaultConfig with
             parallelWorkers = 8
@@ -852,7 +861,7 @@ let stress =
       Expect.equal (runTests config singleTest &&& 4) 4 "memory"
     }
 
-    yield testCaseAsync "never ending" <| async {
+    yield testAsync "never ending" {
       let config =
         { defaultConfig with
             parallelWorkers = 8
@@ -863,7 +872,7 @@ let stress =
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
     // This test needs to run sequenced to ensure there are enough threads free to deadlock
-    yield testSequenced (testCaseAsync "deadlock" <| async {
+    yield testSequenced (testAsync "deadlock" {
       let config =
         { defaultConfig with
             parallelWorkers = 8
@@ -874,7 +883,7 @@ let stress =
       Expect.equal (runTests config (deadlockTest())) 8 "timeout"
     })
 
-    yield testCaseAsync "sequenced group" <| async {
+    yield testAsync "sequenced group" {
       let config =
         { defaultConfig with
             parallelWorkers = 8
@@ -885,7 +894,7 @@ let stress =
       Expect.equal (runTests config (sequencedGroup())) 0 "no timeout"
     }
 
-    yield testCaseAsync "two sequenced groups" <| async {
+    yield testAsync "two sequenced groups" {
       let config =
         { defaultConfig with
             parallelWorkers = 8
@@ -896,7 +905,7 @@ let stress =
       Expect.equal (runTests config (twoSequencedGroups())) 0 "no timeout"
     }
 
-    yield testCaseAsync "single sequenced" <| async {
+    yield testAsync "single sequenced" {
       let config =
         { defaultConfig with
             ``parallel`` = false
@@ -906,7 +915,7 @@ let stress =
       Expect.equal (runTests config singleTest) 0 "one"
     }
 
-    yield testCaseAsync "memory sequenced" <| async {
+    yield testAsync "memory sequenced" {
       let config =
         { defaultConfig with
             ``parallel`` = false
@@ -917,7 +926,7 @@ let stress =
       Expect.equal (runTests config singleTest) 4 "memory"
     }
 
-    yield testCaseAsync "never ending sequenced" <| async {
+    yield testAsync "never ending sequenced" {
       let config =
         { defaultConfig with
             ``parallel`` = false
@@ -928,7 +937,7 @@ let stress =
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
     // This test needs to run sequenced to ensure there are enough threads free to test no deadlock
-    yield testSequenced (testCaseAsync "deadlock sequenced" <| async {
+    yield testSequenced (testAsync "deadlock sequenced" {
       let config =
         { defaultConfig with
             ``parallel`` = false
