@@ -423,30 +423,23 @@ module MyApp.Tests
 // the configuration record is in the Expecto namespace in the core library
 open Expecto
 
-let config = { FsCheckConfig.defaultConfig with maxTest = 100 }
-let stressConfig = { FsCheckConfig.defaultConfig with maxTest = 10000 }
+let config = { FsCheckConfig.defaultConfig with maxTest = 10000 }
 
 let properties =
-  testList "FsCheck" [
+  testList "FsCheck samples" [
     testProperty "Addition is commutative" <| fun a b ->
       a + b = b + a
+      
+    testProperty "Reverse of reverse of a list is the original list" <|
+      fun (xs:list<int>) -> List.rev (List.rev xs) = xs
 
     // you can also override the FsCheck config
     testPropertyWithConfig config "Product is distributive over addition" <|
       fun a b c ->
         a * (b + c) = a * b + a * c
-
-    // you can apply a different config for stress testing for each test
-    testPropertyWithConfigs config stressConfig "different config for stress testing" <|
-      fun a b c ->
-        a * (b + c) = a * b + a * c
-
-    // you can also focus on a StdGen seed value (failing test will give you this)
-    ftestProperty (12345,67890) "Focused on seed" <| fun a b ->
-      a + b = b + a
   ]
 
-run properties
+Tests.runTests defaultConfig properties
 ```
 
 You can freely mix testProperty with testCase and testList. The config looks
