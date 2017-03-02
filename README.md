@@ -37,6 +37,7 @@ documentation for the project.
       * [runTests](#runtests)
       * [runTestsWithArgs](#runtestswithargs)
       * [runTestsInAssembly](#runtestsinassembly)
+      * [runTestsInThisAssembly](#runtestsinthisassembly)
       * [Filtering with filter](#filtering-with-filter)
       * [Stress testing](#stress-testing)
     * [Writing tests](#writing-tests)
@@ -154,6 +155,12 @@ Signature `ExpectoConfig -> string[] -> Test -> int`. Runs the passed tests
 and also overrides the passed `ExpectoConfig` with the command line parameters.
 
 ### `runTestsInAssembly`
+
+Signature `ExpectoConfig -> string[] -> Assembly -> int`. Runs the tests in the passed in
+assembly and also overrides the passed `ExpectoConfig` with the command line
+parameters. All tests need to be marked with the `[<Tests>]` attribute.
+
+### `runTestsInThisAssembly`
 
 Signature `ExpectoConfig -> string[] -> int`. Runs the tests in the current
 assembly and also overrides the passed `ExpectoConfig` with the command line
@@ -682,7 +689,7 @@ double is faster. Expected f1 (0.3067 ± 0.0123 ms) to be faster than f2 (0.1513
 
 ## `main argv` – how to run console apps
 
-Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in your code:
+Parameters available if you use `Tests.runTestsInThisAssembly defaultConfig argv` in your code:
 
  - `--debug`: Extra verbose output for your tests.
  - `--sequenced`: Run all tests in sequence.
@@ -873,7 +880,7 @@ let main argv =
   LogaryFacadeAdapter.initialise<Expecto.Logging.Logger> logary
 
   // run all tests
-  Tests.runTestsInAssembly defaultConfig args
+  Tests.runTestsInThisAssembly defaultConfig args
 ```
 
 ## About test parallelism
