@@ -1540,11 +1540,14 @@ module Tests =
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
-  let runTestsInAssembly config args =
-    let config = { config with locate = getLocation (Assembly.GetEntryAssembly()) }
-    testFromThisAssembly ()
+  let runTestsInAssembly config args asm =
+    let config = { config with locate = getLocation (asm) }
+    testFromAssembly (asm)
     |> Option.orDefault (TestList ([], Normal))
     |> runTestsWithArgs config args
+
+  let runTestsInThisAssembly config args =
+    runTestsInAssembly config args (Assembly.GetEntryAssembly())
 
 // TODO: docs
 type Accuracy =
