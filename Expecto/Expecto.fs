@@ -1310,7 +1310,7 @@ module Tests =
     Seq.map (fun (name, partialTest) ->
       testCase name (partialTest param))
 
-  // TODO: docs
+  /// Test case computation expression builder
   type TestCaseBuilder(name, focusState) =
     member __.TryFinally(f, compensation) =
       try
@@ -1339,15 +1339,44 @@ module Tests =
       | Focused -> ftestCase name f
       | Pending -> ptestCase name f
 
-  // TODO: docs
+  /// Builds a test case
   let inline test name =
     TestCaseBuilder (name, Normal)
-  // TODO: docs
+  /// Builds a test case that will make Expecto to ignore other unfocused tests
   let inline ftest name =
     TestCaseBuilder (name, Focused)
-  // TODO: docs
+  /// Builds a test case that will be ignored by Expecto
   let inline ptest name =
     TestCaseBuilder (name, Pending)
+
+  /// Async test case computation expression builder
+  type TestAsyncBuilder(name, focusState) =
+    member __.Zero() = async.Zero()
+    member __.Delay(f) = async.Delay(f)
+    member __.Return(x) = async.Return(x)
+    member __.ReturnFrom(x) = async.ReturnFrom(x)
+    member __.Bind(p1, p2) = async.Bind(p1, p2)
+    member __.Using(g, p) = async.Using(g, p)
+    member __.While(gd, prog) = async.While(gd, prog)
+    member __.For(e, prog) = async.For(e, prog)
+    member __.Combine(p1, p2) = async.Combine(p1, p2)
+    member __.TryFinally(p, cf) = async.TryFinally(p, cf)
+    member __.TryWith(p, cf) = async.TryWith(p, cf)
+    member __.Run f =
+      match focusState with
+      | Normal -> testCaseAsync name f
+      | Focused -> ftestCaseAsync name f
+      | Pending -> ptestCaseAsync name f
+
+  /// Builds an async test case
+  let inline testAsync name =
+    TestAsyncBuilder (name, Normal)
+  /// Builds an async test case that will make Expecto to ignore other unfocused tests
+  let inline ftestAsync name =
+    TestAsyncBuilder (name, Focused)
+  /// Builds an async test case that will be ignored by Expecto
+  let inline ptestAsync name =
+    TestAsyncBuilder (name, Pending)
 
   /// The default configuration for Expecto.
   let defaultConfig = ExpectoConfig.defaultConfig

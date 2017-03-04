@@ -53,6 +53,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Expecto.Flip.Sample.fs" />
     <Compile Include="Expecto.Sample.fs" />
     <None Include="App.config" />
     <None Include="paket.references" />

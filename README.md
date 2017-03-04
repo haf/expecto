@@ -95,10 +95,10 @@ test assembly as a console application. You can run a test directly like this:
 open Expecto
 
 let tests =
-  testCase "A simple test" <| fun () ->
+  test "A simple test" {
     let subject = "Hello world"
-    Expect.equal subject "Hello World"
-                 "The strings should equal"
+    Expect.equal subject "Hello World" "The strings should equal"
+  }
 
 [<EntryPoint>]
 let main args =
@@ -115,7 +115,7 @@ Now compile and run! `xbuild Sample.fsproj && mono --debug bin/Debug/Sample.exe`
 
 ## Running tests
 
-Here's the simplest test possible:
+Here's a simple test:
 
 ```fsharp
 open Expecto
@@ -208,9 +208,10 @@ they are using `Expecto.BenchmarkDotNet` for performance tests.
 
 ### Normal tests
 
- - `testCase : string -> (unit -> unit) -> Test`
- - `test : string -> TestCaseBuilder`
- - `testCaseAsync : string -> Async<unit> -> Test`
+ - `test : string -> TestCaseBuilder` -  Builds a test case in a computation expression.
+ - `testAsync : string -> TestAsyncBuilder` - Builds an async test case in a computation expression.
+ - `testCase : string -> (unit -> unit) -> Test` - Builds a test case from a test function.
+ - `testCaseAsync : string -> Async<unit> -> Test` - Builds an async test case from an async expression.
 
 ### `testList` for grouping
 
@@ -220,14 +221,17 @@ Tests can be grouped (with arbitrary nesting):
 
 let tests =
   testList "A test group" [
-    testCase "one test" <| fun () ->
+    test "one test" {
       Expect.equal (2+2) 4 "2+2"
+    }
 
-    testCase "another test that fails" <| fun () ->
+    test "another test that fails" {
       Expect.equal (3+3) 5 "3+3"
+    }
 
-    testCaseAsync "this is an async test" async {
-      do! async.Return()
+    testAsync "this is an async test" {
+      let! x = async { return 4 }
+      Expect.equal x (2+2) "2+2"
     }
   ]
 ```
@@ -263,6 +267,7 @@ testList "Setup & teardown 3" [
 
  - `ptestCase`
  - `ptest`
+ - `ptestAsync`
  - `ptestCaseAsync`
 
 You can mark an individual spec or container as Pending. This will prevent the
@@ -284,12 +289,13 @@ let myTests =
       ptestCase "skipped" <| fun () -> Expect.equal (2+2) 1 "2+2?"
       testCase "will run" <| fun () -> Expect.equal (2+2) 4 "2+2"
       ptest "skipped" { Expect.equal (2+2) 1 "2+2?" }
+      ptestAsync "skipped async" { Expect.equal (2+2) 1 "2+2?" }
     ]
     testCase "will run" <| fun () -> Expect.equal (2+2) 4 "2+2"
     ptestCase "skipped" <| fun () -> Expect.equal (2+2) 1 "2+2?"
     ptestList "skipped list" [
       testCase "skipped" <| fun () -> Expect.equal (2+2) 1 "2+2?"
-      ftestCase "skipped" <| fun () -> Expect.equal (2+2) 1 "2+2?"
+      ftest "skipped" { Expect.equal (2+2) 1 "2+2?" }
     ]
   ]
 ```
@@ -307,6 +313,7 @@ Focusing can be done with
  - `ftestList`
  - `ftestCaseAsync`
  - `ftest`
+ - `ftestAsync`
 
 It is often convenient, when developing to be able to run a subset of specs.
 Expecto allows you to focus specific test cases or tests list by putting `f` before *testCase* or *testList* or `F` before attribute *Tests*(when reflection tests discovery is used).
@@ -315,7 +322,7 @@ Expecto allows you to focus specific test cases or tests list by putting `f` bef
 open Expecto
 
 [<FTests>]
-let someFocusedTest = testCase "will run" <| fun () -> Expect.equal (2+2) 4 "2+2"
+let someFocusedTest = test "will run" { Expect.equal (2+2) 4 "2+2" }
 [<Tests>]
 let someUnfocusedTest = test "skipped" { Expect.equal (2+2) 1 "2+2?" }
 ```
@@ -356,14 +363,16 @@ This can be useful for timeout and performance testing.
 [<Tests>]
 let timeout =
   testSequenced <| testList "Timeout" [
-    testCase "fail" <| fun () ->
+    test "fail" {
       let test = TestCase(Test.timeout 10 (fun () -> Thread.Sleep 100), Normal)
       let result = evalSilent test |> sumTestResults
       result.failed.Length ==? 1
-    testCase "pass" <| fun () ->
+    }
+    test "pass" {
       let test = TestCase(Test.timeout 1000 ignore, Normal)
       let result = evalSilent test |> sumTestResults
       result.passed.Length ==? 1
+    }
   ]
 ```
 
@@ -376,7 +385,7 @@ let timeout =
   let lockOne = obj()
   let lockTwo = obj()
   testSequencedGroup "stop deadlock" <| testList "possible deadlock" [
-    testCaseAsync "case A" <| async {
+    testAsync "case A" {
       lock lockOne (fun () ->
         Thread.Sleep 10
         lock lockTwo (fun () ->
@@ -384,7 +393,7 @@ let timeout =
         )
       )
     }
-    testCaseAsync "case B" <| async {
+    testAsync "case B" {
       lock lockTwo (fun () ->
         Thread.Sleep 10
         lock lockOne (fun () ->
@@ -423,30 +432,23 @@ module MyApp.Tests
 // the configuration record is in the Expecto namespace in the core library
 open Expecto
 
-let config = { FsCheckConfig.defaultConfig with maxTest = 100 }
-let stressConfig = { FsCheckConfig.defaultConfig with maxTest = 10000 }
+let config = { FsCheckConfig.defaultConfig with maxTest = 10000 }
 
 let properties =
-  testList "FsCheck" [
+  testList "FsCheck samples" [
     testProperty "Addition is commutative" <| fun a b ->
       a + b = b + a
+      
+    testProperty "Reverse of reverse of a list is the original list" <|
+      fun (xs:list<int>) -> List.rev (List.rev xs) = xs
 
     // you can also override the FsCheck config
     testPropertyWithConfig config "Product is distributive over addition" <|
       fun a b c ->
         a * (b + c) = a * b + a * c
-
-    // you can apply a different config for stress testing for each test
-    testPropertyWithConfigs config stressConfig "different config for stress testing" <|
-      fun a b c ->
-        a * (b + c) = a * b + a * c
-
-    // you can also focus on a StdGen seed value (failing test will give you this)
-    ftestProperty (12345,67890) "Focused on seed" <| fun a b ->
-      a + b = b + a
   ]
 
-run properties
+Tests.runTests defaultConfig properties
 ```
 
 You can freely mix testProperty with testCase and testList. The config looks
@@ -551,7 +553,7 @@ This module is your main entry-point when asserting.
    the item.
  - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
    contains all elements from second sequence (not taking into account an order
-   of elements)
+   of elements).
  - `distribution: 'a seq -> Map<'a, uint32> -> string -> unit` - Expect the sequence contains all elements from map (first element in tuple is an item expected to be in sequence, second is a positive number of its occurrences in a sequence). Function is not taking into account an order of elements.
  - `streamsEqual` – Expect the streams to be byte-wise identical.
  - `isFasterThan : (unit -> 'a) -> (unit -> 'a) -> string -> unit` – Expect the
