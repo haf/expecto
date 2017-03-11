@@ -36,7 +36,7 @@ end
 
 task :paket_bootstrap do
   system 'tools/paket.bootstrapper.exe',
-      %|4.0.0-alpha030|,
+      %|4.0.0-beta030|,
       clr_command: true unless File.exists? 'tools/paket.exe'
 end
 
@@ -62,7 +62,7 @@ build :compile => [:versioning, :restore, :assembly_info, :build_dotnetcli] do |
 end
 
 task :build_dotnetcli => [:versioning, :restore_dotnetcli, :assembly_info] do
-  system "dotnet", %W|build -v n -c #{Configuration} -f netstandard1.6 Expecto.netcore/Expecto.netcore.fsproj|
+  system "dotnet", %W|build -c #{Configuration} -f netstandard1.6 Expecto.netcore/Expecto.netcore.fsproj|
 end
 
 directory 'build/clipkg'
@@ -95,7 +95,7 @@ end
 
 namespace :tests do
   task :unit do
-    system "dotnet", %W|run -c #{Configuration} --project Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj --debug --summary|
+    system "dotnet", %W|run -c #{Configuration} --project Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj --summary|
     system "Expecto.Tests/bin/#{Configuration}/Expecto.Tests.exe", '--summary', clr_command: true
   end
 end

@@ -57,6 +57,7 @@
     <Compile Include="Expecto.fs" />
     <Compile Include="Expect.fs" />
     <Content Include="paket.references" />
+    <Compile Include="Flip.Expect.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
