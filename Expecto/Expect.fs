@@ -172,17 +172,16 @@ let isNotWhitespace (actual : string) message =
 
 /// Expect the passed sequence to be empty.
 let isEmpty (actual) message =
-  if Seq.isEmpty actual then () else Tests.failtestf "%s. Should be empty." message
+  if not (Seq.isEmpty actual) then Tests.failtestf "%s. Should be empty." message
 
 /// Expect the passed sequence to be not empty.
 let isNonEmpty (actual) message =
-  if Seq.isEmpty actual then Tests.failtestf "%s. Should be empty." message else ()
+  if Seq.isEmpty actual then Tests.failtestf "%s. Should be empty." message
 
 /// Expect that the counts of the found value occurrences in sequence equal the expected.
 let hasCountOf (actual : _ seq) (expected : uint32) (selector : _ -> bool) message =
   let hits = actual |> Seq.filter selector |> Seq.length |> uint32
-  if hits = expected then ()
-  else Tests.failtestf "%s. Should be of count: %s, but was: %s" message expected hits
+  if hits <> expected then Tests.failtestf "%s. Should be of count: %d, but was: %d" message expected hits
 
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) message =
