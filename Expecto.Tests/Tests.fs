@@ -573,10 +573,10 @@ let expecto =
 
       testList "list count" [
         testCase "pass" <| fun _ ->
-          Expect.isNonEmpty [2;3;4] 3 "list contains 3 element"
+          Expect.isNonEmpty [2;2;4] 2 (fun x -> x = 2) "list has 2 occurrences of number 2"
 
         testCase "fail" (fun _ ->
-          Expect.isNonEmpty [2;3] 3 "list contains 2 elements not 3"
+          Expect.isNonEmpty [2;3] 2 (fun x -> x = 2) "list has 1 occurrences of number 2"
         ) |> assertTestFails
       ]
 

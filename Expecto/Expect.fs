@@ -178,10 +178,11 @@ let isEmpty (actual) message =
 let isNonEmpty (actual) message =
   if Seq.isEmpty actual then Tests.failtestf "%s. Should be empty." message else ()
 
-/// Expect the passed sequence to contains expected number of elements.
-let hasCountOf (actual : _ seq) (expectedLength : int32) message =
-  if Seq.length(actual) = expectedLength then ()
-  else Tests.failtestf "%s. Should be of length: %s, but was: %s" message expectedLength actual.Length
+/// Expect that the counts of the found value occurrences in sequence equal the expected.
+let hasCountOf (actual : _ seq) (expected : uint32) (selector : _ -> bool) message =
+  let hits = actual |> Seq.filter selector |> Seq.length |> uint32
+  if hits = expected then ()
+  else Tests.failtestf "%s. Should be of count: %s, but was: %s" message expected hits
 
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) message =
