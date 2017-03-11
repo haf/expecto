@@ -1606,7 +1606,14 @@ module Runner =
   open System.Threading.Tasks
 
   type Async with
-    static member AwaitTask(t : Task) = Async.AwaitIAsyncResult(t, -1) |> Async.Ignore
+    static member AwaitTask(t : Task) =
+      let tcs = TaskCompletionSource<unit>()
+      t.ContinueWith(fun t ->
+        if t.IsCompleted then tcs.SetResult(())
+        else if t.IsFaulted then tcs.SetException(t.Exception)
+        else if t.IsCanceled then tcs.SetCanceled()
+      ) |> ignore
+      Async.AwaitTask tcs.Task
 
   let RunTests(config, tests) = runEval config tests
   let RunTestsWithArgs(config, args, tests) = runTestsWithArgs config args tests
