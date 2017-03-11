@@ -1,4 +1,4 @@
-module Expecto.BenchmarkDotNetTests
+﻿module Expecto.BenchmarkDotNetTests
 
 open System
 open System.Security.Cryptography
@@ -16,10 +16,25 @@ type Md5VsSha256() =
   [<Benchmark>]
   member __.Md5() = md5.ComputeHash data
 
+#if DEBUG
+open BenchmarkDotNet.Jobs
+
+// A benchmark is not so useful in Debug builds, so just make it fast
+let theConfig =
+  { benchmarkConfig with
+      jobs = [ Job.Default
+                .WithLaunchCount(Count 1)
+                .WithIterationTime(Count 50)
+                .WithTargetCount(Count 1)
+                .WithWarmupCount(Count 2) ] }
+#else
+let theConfig = benchmarkConfig
+#endif
+
 [<Tests>]
 let benchmarks =
   testSequenced <| testList "some different benchmarks" [
-    benchmark<Md5VsSha256> "md5 versus sha256" benchmarkConfig ignore
+    benchmark<Md5VsSha256> "md5 versus sha256" theConfig ignore
   ]
 
 
