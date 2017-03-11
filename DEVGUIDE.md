@@ -1,4 +1,4 @@
-# Devguide
+﻿# Devguide
 
 2 space indentation, please.
 
@@ -9,7 +9,7 @@
     conventions and the ones used by this project.
     * Visual Studio - [EditorConfig VS Extension][ec-vs]
     * vscode - [EditorConfig VScode Extension][ec-vsc]
- 1. Install the rc4-004771 version of the [**netcore SDK**][netcore-sdk]
+ 1. Install the `1.0.1` version of the [**netcore SDK**][netcore-sdk]
  1. You need [albacore][ac] installed to build like I do – it needs to build
     with the `Rakefile` or I won't accept the PR.
  1. New features:
@@ -62,5 +62,5 @@
 
  [ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
  [ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
- [netcore-sdk]: https://github.com/dotnet/core/blob/master/release-notes/rc4-download.md
+ [netcore-sdk]: https://github.com/dotnet/core/blob/master/release-notes/download-archives/1.0.4-download.md
  [ac]: https://github.com/albacore/albacore
