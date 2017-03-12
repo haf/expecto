@@ -170,6 +170,20 @@ let isNotWhitespace (actual : string) message =
       else Tests.failtestf "%s. Should not be whitespace." message
   checkWhitespace 0
 
+/// Expect the passed sequence to be empty.
+let isEmpty (actual) message =
+  if not (Seq.isEmpty actual) then Tests.failtestf "%s. Should be empty." message
+
+/// Expect the passed sequence to be not empty.
+let isNonEmpty (actual) message =
+  if Seq.isEmpty actual then Tests.failtestf "%s. Should be empty." message
+
+/// Expect that the counts of the found value occurrences in sequence equal the expected.
+let hasCountOf (actual : _ seq) (expected : uint32) (selector : _ -> bool) message =
+  let hits =
+    actual |> Seq.fold (fun acc element -> if selector element then acc + 1u else acc) 0u
+  if hits <> expected then Tests.failtestf "%s. Should be of count: %d, but was: %d" message expected hits
+
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) message =
   match box actual, box expected with
@@ -354,7 +368,7 @@ let distribution (actual : _ seq)
   |> Tests.failtest
 
 let inline private formattedList (sequence) =
-  let formattedElements = 
+  let formattedElements =
     sequence
     |> Seq.mapi( fun index element -> sprintf "[%d] %A" index element)
   String.Join("\n\t", formattedElements)

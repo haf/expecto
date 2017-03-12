@@ -58,6 +58,15 @@ let inline isNotInfinity message f = Expecto.Expect.isNotInfinity f message
 /// Expect the passed string not to be empty.
 let inline isNotEmpty message actual = Expecto.Expect.isNotEmpty actual message
 
+/// Expect the passed sequence to be empty.
+let inline isEmpty message actual = Expecto.Expect.isEmpty actual message
+
+/// Expect the passed sequence not to be empty.
+let inline isNonEmpty message actual = Expecto.Expect.isNonEmpty actual message
+
+/// Expect that the counts of the found value occurrences in sequence equals the expected.
+let inline hasCountOf message selector expected actual = Expecto.Expect.hasCountOf actual expected selector message
+
 /// Expect the passed string is not whitespace
 let inline isNotWhitespace message actual = Expecto.Expect.isNotWhitespace actual message
 

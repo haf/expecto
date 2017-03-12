@@ -539,6 +539,47 @@ let expecto =
         ) |> assertTestFails
       ]
 
+      testList "list is empty" [
+        testCase "pass" <| fun _ ->
+          Expect.isEmpty [] "list is empty"
+
+        testCase "pass" <| fun _ ->
+          Expect.isEmpty [||] "list is empty"
+
+        testCase "fail" (fun _ ->
+          Expect.isEmpty [5] "list is not empty"
+        ) |> assertTestFails
+
+        testCase "fail" (fun _ ->
+          Expect.isEmpty [|5|] "list is not empty"
+        ) |> assertTestFails
+      ]
+
+      testList "list is non empty" [
+        testCase "pass" <| fun _ ->
+          Expect.isNonEmpty [5] "list is non empty"
+
+        testCase "pass" <| fun _ ->
+          Expect.isNonEmpty [|5|] "list is non empty"
+
+        testCase "fail" (fun _ ->
+          Expect.isNonEmpty [] "list is empty"
+        ) |> assertTestFails
+
+        testCase "fail" (fun _ ->
+          Expect.isNonEmpty [||] "list is empty"
+        ) |> assertTestFails
+      ]
+
+      testList "list count" [
+        testCase "pass" <| fun _ ->
+          Expect.hasCountOf [2;2;4] 2u (fun x -> x = 2) "list has 2 occurrences of number 2"
+
+        testCase "fail" (fun _ ->
+          Expect.hasCountOf [2;3] 2u (fun x -> x = 2) "list has 1 occurrences of number 3"
+        ) |> assertTestFails
+      ]
+
       testList "#containsAll" [
         testCase "identical sequence" <| fun _ ->
           Expect.containsAll [|21;37|] [|21;37|] "Identical"

@@ -549,6 +549,9 @@ This module is your main entry-point when asserting.
    with a description of `subject` and `length`.
  - `isNotEmpty` - Expect the string `actual` to be not null nor empty
  - `isNotWhitespace` - Expect the string `actual` to be not null nor empty nor whitespace
+ - `isEmpty` - Expect the sequence `actual` to be empty
+ - `isNonEmpty` - Expect the sequence `actual` to be not empty
+ - `hasCountOf` - Expect that the counts of the found value occurrences by `selector` in `actual` equals the `expected`.
  - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain
    the item.
  - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
