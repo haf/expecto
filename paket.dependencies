@@ -9,7 +9,7 @@ nuget FSharp.Core ~> 3
 nuget BenchmarkDotNet = 0.9.9
 nuget BenchmarkDotNet.Toolchains.Roslyn = 0.9.9
 nuget BenchmarkDotNet.Core = 0.9.9
-nuget Mono.Cecil = 0.10.0-beta2 framework: net40
+nuget Mono.Cecil = 0.10.0-beta4 framework: net45
 nuget NuGet.CommandLine
 
 group build

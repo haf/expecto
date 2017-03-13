@@ -88,10 +88,17 @@ Target "Clean" (fun _ ->
 // Build library, test project, & sample
 
 let solutionFile = "Expecto"
+MSBuildDefaults <- { MSBuildDefaults with Verbosity = Some Minimal }
 
 Target "Build" (fun _ ->
   !! (solutionFile + ".sln")
-  |> MSBuildRelease "" "Rebuild"
+  |> MSBuildWithDefaults "Rebuild"
+  |> ignore
+)
+
+Target "BuildFast" (fun _ ->
+  !! (solutionFile + ".sln")
+  |> MSBuildWithDefaults "Build"
   |> ignore
 )
 
@@ -105,12 +112,19 @@ Target "RunTests" (fun _ ->
 // Build netcore expecto library
 
 let netcoreDir = "Expecto.netcore"
+let netcoreTestsDir = "Expecto.netcore.Tests"
 let dotnet args dir = run "dotnet" args dir
 
 Target "DotnetBuild" (fun _ ->
   dotnet "--info"  ""
   dotnet "restore" netcoreDir
   dotnet "build"   netcoreDir
+)
+
+Target "DotnetRunTests" (fun _ ->
+  dotnet "--info"  ""
+  dotnet "restore" netcoreTestsDir
+  dotnet "run -c Release --parallel --fail-on-focused-tests --summary --version" netcoreTestsDir
 )
 
 Target "CreateNuGets" (fun _ ->
@@ -127,10 +141,12 @@ Target "CreateNuGets" (fun _ ->
 
 Target "All" DoNothing
 
+
 "AssemblyInfo"
   ==> "ExpectoChangeo"
   ==> "Clean"
   ==> "Build"
+  ==> "DotnetRunTests"
   ==> "RunTests"
   <=> "DotnetBuild"
 

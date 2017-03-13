@@ -36,7 +36,7 @@ end
 
 task :paket_bootstrap do
   system 'tools/paket.bootstrapper.exe',
-      %|4.0.0-beta030|,
+      %|4.0.0-rc4|,
       clr_command: true unless File.exists? 'tools/paket.exe'
 end
 
