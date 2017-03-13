@@ -1,6 +1,6 @@
 @echo off
 
-.paket\paket.bootstrapper.exe 4.0.0-beta030 --max-file-age=120
+.paket\paket.bootstrapper.exe 4.0.0-rc4 --max-file-age=120
 if errorlevel 1 (
   exit /b %errorlevel%
 )

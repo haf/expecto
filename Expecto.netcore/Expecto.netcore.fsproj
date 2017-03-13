@@ -13,7 +13,7 @@
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
     <PackageReference Include="FSharp.Core" Version="4.1.*" />
     <PackageReference Include="Argu" Version="3.3.0" />
-    <PackageReference Include="Mono.Cecil" Version="0.10.0-beta2" />
+    <PackageReference Include="Mono.Cecil" Version="0.10.0-beta4" />
     <PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />
