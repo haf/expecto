@@ -124,7 +124,7 @@ Target "DotnetBuild" (fun _ ->
 Target "DotnetRunTests" (fun _ ->
   dotnet "--info"  ""
   dotnet "restore" netcoreTestsDir
-  dotnet "run -c Release" netcoreTestsDir
+  dotnet "run -c Release --parallel --fail-on-focused-tests --summary --version" netcoreTestsDir
 )
 
 Target "CreateNuGets" (fun _ ->
