@@ -914,14 +914,15 @@ let stress =
     }
     // This test needs to run sequenced to ensure there are enough threads free to deadlock
     yield testSequenced (testAsync "deadlock" {
-      let config =
-        { defaultConfig with
-            parallelWorkers = 8
-            stress = TimeSpan.FromMilliseconds 20000.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config (deadlockTest())) 8 "timeout"
+      if Environment.ProcessorCount > 2 then
+        let config =
+          { defaultConfig with
+              parallelWorkers = 8
+              stress = TimeSpan.FromMilliseconds 20000.0 |> Some
+              stressTimeout = TimeSpan.FromMilliseconds 10000.0
+              printer = TestPrinters.silent
+              verbosity = Logging.LogLevel.Fatal }
+        Expect.equal (runTests config (deadlockTest())) 8 "timeout"
     })
 
     yield testAsync "sequenced group" {
