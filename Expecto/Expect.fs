@@ -103,7 +103,7 @@ let isLessThanOrEqual a b message =
 let isGreaterThan a b message =
   if a > b then ()
   else
-    Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)."
+    Tests.failtestf "%s. Expected a (%A) to be greater than b (%A)."
                     message a b
 
 /// Expects `a` >= `b`.
