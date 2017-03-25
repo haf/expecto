@@ -83,18 +83,24 @@ let runFsCheckFocusedTests =
       failtestf "Expected Ignored, actual %A" x
 
     match (getResult "FsCheck focused/Deliberately failing test").result with
-    | TestResult.Failed e ->
-      Expect.equal
-        "\nFailed after 3 tests. Parameters: -4 0 4 (Shrunk: 1 0 0) Result: False\nFocus on failure: ftestProperty (1,2)"
-        e
-        "It should fail with the right message."
+    | TestResult.Failed actual ->
+      let expected = "
+Failed after 1 test. Parameters:
+	1 0 -1
+Shrunk 2 times to:
+	1 0 0
+Result:
+	False
+Focus on failure:
+	ftestProperty (1, 2) \"Deliberately failing test\""
+      Expect.equal actual expected "It should fail with the right message"
     | x ->
-      failtestf "Expected Failed, actual %A" x
+      failtestf "Expected Failed, actual was: %A" x
   }
 
 let config =
   testList "FsCheck config" [
-    testCase "ignore me" <| ignore
+    testCase "ignore me" ignore
 
     ftestPropertyWithConfig (1,2) FsCheckConfig.defaultConfig
       "Deliberately failing test" <|

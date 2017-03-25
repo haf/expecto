@@ -19,17 +19,45 @@ with
       lineNumber = 0 }
 
 type FsCheckConfig =
+    /// The maximum number of tests that are run.
   { maxTest: int
+    /// The size to use for the first test.
     startSize: int
+    /// The size to use for the last test, when all the tests are passing. The size increases linearly between Start- and EndSize.
     endSize: int
-    replay: (int*int) option
-    arbitrary: Type list }
+    /// If set, the seed to use to start testing. Allows reproduction of previous runs.
+    replay: (int * int) option
+    /// The Arbitrary instances on this class will be merged in back to front order, i.e. instances for the same generated type at the front
+    /// of the list will override those at the back. The instances on Arb.Default are always known, and are at the back (so they can always be
+    /// overridden)
+    arbitrary: Type list
+    /// Callback when the test case had input parameters generated.
+    receivedArgs: FsCheckConfig
+               -> (* test name *) string
+               -> (* test number *) int
+               -> (* generated arguments *) obj list
+               -> Async<unit>
+    /// Callback when the test case was successfully shrunk
+    successfulShrink: FsCheckConfig
+                   -> (* test name *) string
+                   -> (* shrunk new arguments *) obj list
+                   -> Async<unit>
+    /// Callback when the test case has finished
+    finishedTest: FsCheckConfig
+               -> (* test name *) string
+               -> Async<unit>
+  }
+
   static member defaultConfig =
-    { maxTest = 100
+    { maxTest = 200
       startSize = 1
       endSize = 100
       replay = None
-      arbitrary = [] }
+      arbitrary = []
+      receivedArgs = fun _ _ _ _ -> async.Return ()
+      successfulShrink = fun _ _ _ -> async.Return ()
+      finishedTest = fun _ _ -> async.Return ()
+    }
 
 /// Actual test function; either an async one, or a synchronous one.
 type TestCode =
@@ -54,7 +82,6 @@ type FocusState =
   /// The state of a test that will be evaluated
   /// All other test marked with Normal or Pending will be ignored
   | Focused
-
 
 type SequenceMethod =
   | Synchronous

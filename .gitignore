@@ -1,4 +1,5 @@
 AssemblyVersionInfo.fs
+AssemblyVersionInfo.cs
 paket.exe
 *.suo
 *.swp

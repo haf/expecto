@@ -11,53 +11,82 @@ module ExpectoFsCheck =
 
     /// This running plugs into FsCheck and gives us the ability to get called
     /// by the framework on start/finish of fixtures.
-    let runner =
+    let runner (config: FsCheckConfig) =
       { new IRunner with
-          member __.OnStartFixture _ = ()
-          member __.OnArguments(_,_,_) = ()
-          member __.OnShrink(_,_) = ()
-          member __.OnFinished(_, testResult) =
+          /// Called before a group of properties on a type are checked.
+          member __.OnStartFixture typ =
+            ()
+
+          /// Called whenever arguments are generated and after the test is run.
+          member __.OnArguments (testNumber, args, formatOnEvery) =
+            config.receivedArgs config name testNumber args
+            |> Async.RunSynchronously
+
+          /// Called on a succesful shrink.
+          member __.OnShrink (values, formatValues) =
+            config.successfulShrink config name values
+            |> Async.RunSynchronously
+
+          /// Called whenever all tests are done, either True, False or Exhausted.
+          member __.OnFinished (fsCheckTestName, testResult) =
+            config.finishedTest config fsCheckTestName
+            |> Async.RunSynchronously
+
             let numTests i = if i = 1 then "1 test" else sprintf "%i tests" i
+
             match testResult with
             | TestResult.True (_testData,_b) ->
               ()
-            | TestResult.False
-                (_,_,_,Outcome.Exception (:? IgnoreException as e),_) ->
-              raise e
-            | TestResult.False
-              (data, original, shrunk, outcome, Random.StdGen (std,gen)) ->
 
-              sprintf
-                "Failed after %s. Parameters: %s Result: %A\n%s (%i,%i)"
-                (numTests data.NumberOfTests)
-                (String.Join(" ", List.map (sprintf "%A") original) +
-                  if data.NumberOfShrinks>0 then
-                    " (Shrunk: " +
-                        String.Join(" ",List.map (sprintf "%A") shrunk) + ")"
-                  else "")
-                outcome
-                ("Focus on failure: "+methodName)
-                std gen
-              |> FailedException |> raise
+            | TestResult.False (_,_,_, Outcome.Exception (:? IgnoreException as e),_) ->
+              raise e
+
+            | TestResult.False (data, original, shrunk, outcome, Random.StdGen (std,gen)) ->
+              let parameters =
+                original
+                |> List.map (sprintf "%A")
+                |> String.concat " "
+                |> sprintf "Parameters:\n\t%s"
+
+              let shrunk =
+                if data.NumberOfShrinks > 0 then
+                  shrunk
+                  |> List.map (sprintf "%A")
+                  |> String.concat " "
+                  |> sprintf "\nShrunk %i times to:\n\t%s" data.NumberOfShrinks
+                else
+                  ""
+
+              let focus =
+                sprintf "Focus on failure:\n\t%s (%i, %i) \"%s\"" methodName std gen name
+
+              sprintf "Failed after %s. %s%s\nResult:\n\t%A\n%s"
+                      (numTests data.NumberOfTests) parameters shrunk outcome focus
+              |> FailedException
+              |> raise
+
             | TestResult.Exhausted data ->
-              "Exhausted after " + (numTests data.NumberOfTests) + "."
-              |> FailedException |> raise
+              (numTests data.NumberOfTests)
+              |> sprintf "Exhausted after %s."
+              |> FailedException
+              |> raise
       }
 
-    let test config =
-      let config = {
-        MaxTest = config.maxTest
-        MaxFail = 1000
-        Replay = Option.map Random.StdGen config.replay
-        Name = String.Empty
-        StartSize = config.startSize
-        EndSize = config.endSize
-        QuietOnSuccess = true
-        Every = fun _ _ -> String.Empty
-        EveryShrink = fun _ -> String.Empty
-        Arbitrary = config.arbitrary
-        Runner = runner }
-      Check.One(String.Empty, config, property)
+    let test (config: FsCheckConfig) =
+      let config =
+        { MaxTest = config.maxTest
+          MaxFail = 1000
+          Replay = Option.map Random.StdGen config.replay
+          Name = name
+          StartSize = config.startSize
+          EndSize = config.endSize
+          QuietOnSuccess = true
+          Every = fun _ _ -> String.Empty
+          EveryShrink = fun _ -> String.Empty
+          Arbitrary = config.arbitrary
+          Runner = runner config }
+
+      Check.One(config, property)
       |> async.Return
 
     let testCode =
@@ -66,17 +95,18 @@ module ExpectoFsCheck =
         AsyncFsCheck (None, None, test)
       | Some (testConfig, stressConfig) ->
         AsyncFsCheck (Some testConfig, Some stressConfig, test)
+
     TestLabel(name, TestCase (testCode, focusState), focusState)
 
   /// Builds a test property with config
   let testPropertyWithConfigs testConfig stressConfig name =
     propertyTest "ftestPropertyWithConfig" Normal
-                 (Some(testConfig,stressConfig)) name
+                 (Some(testConfig, stressConfig)) name
 
-  /// Builds a test property with config that will be ignored by Expecto.
+  /// Builds an ignored test property with an explicit config.
   let ptestPropertyWithConfigs testConfig stressConfig name =
     propertyTest "ftestPropertyWithConfig" Pending
-                 (Some(testConfig,stressConfig)) name
+                 (Some (testConfig,stressConfig)) name
 
   /// Builds a test property with config that will make Expecto to
   /// ignore other unfocused tests.
@@ -88,7 +118,7 @@ module ExpectoFsCheck =
 
   /// Builds a test property with config
   let testPropertyWithConfig config name =
-    propertyTest "ftestPropertyWithConfig" Normal (Some(config,config)) name
+    propertyTest "ftestPropertyWithConfig" Normal (Some (config,config)) name
 
   /// Builds a test property with config that will be ignored by Expecto.
   let ptestPropertyWithConfig config name =
@@ -116,13 +146,13 @@ module ExpectoFsCheck =
 
 type FsCheck =
   static member Property(name, property: Func<_,bool>) =
-      testProperty name property.Invoke
+    testProperty name property.Invoke
 
   static member Property(name, property: Func<_,_,bool>) =
-      testProperty name (fun a b -> property.Invoke(a,b))
+    testProperty name (fun a b -> property.Invoke(a,b))
 
   static member Property(name, property: Func<_,_,_,bool>) =
-      testProperty name (fun a b c -> property.Invoke(a,b,c))
+    testProperty name (fun a b c -> property.Invoke(a,b,c))
 
   static member Property(name, property: Func<_,_,_,_,bool>) =
-      testProperty name (fun a b c d -> property.Invoke(a,b,c,d))
+    testProperty name (fun a b c d -> property.Invoke(a,b,c,d))
