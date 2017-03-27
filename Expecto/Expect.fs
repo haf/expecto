@@ -31,9 +31,10 @@ let throwsT<'texn> f message =
     Tests.failtestf "%s. Expected f to throw." message
   with
   | e when e.GetType() <> typeof<'texn> ->
-    Tests.failtestf "%s. Expected f to throw an exn of type %s."
+    Tests.failtestf "%s. Expected f to throw an exn of type %s, but one of type %s was thrown."
                     message
-                    (typeof<'texn>.Name)
+                    (typeof<'texn>.FullName)
+                    (e.GetType().FullName)
   | e ->
     ()
 
