@@ -2,6 +2,7 @@ module Expecto.Tests
 #nowarn "46"
 
 open System
+open System.Text.RegularExpressions
 open System.Threading
 open System.IO
 open Expecto
@@ -503,21 +504,43 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches regex pattern" [
+      testList "string matches pattern" [
         testCase "pass" <| fun _ ->
-          Expect.isRegexMatch "{function:45}" "{function:(\\d+)}" "string matches passed pattern"
+          Expect.isMatch "{function:45}" "{function:(\\d+)}" "string matches passed pattern"
 
         testCase "fail" (fun _ ->
-          Expect.isRegexMatch "{function:45d}" "{function:(\\d+)}" "Deliberately failing"
+          Expect.isMatch "{function:45d}" "{function:(\\d+)}" "Deliberately failing"
         ) |> assertTestFails
       ]
 
-      testList "string matches regex pattern" [
+      testList "string matches pattern" [
         testCase "pass" <| fun _ ->
-          Expect.isNotRegexMatch "{function:45d}" "{function:(\\d+)}" "string not matches passed pattern"
+          Expect.isNotMatch "{function:45d}" "{function:(\\d+)}" "string not matches passed pattern"
 
         testCase "fail" (fun _ ->
-          Expect.isNotRegexMatch "{function:45}" "{function:(\\d+)}" "Deliberately failing"
+          Expect.isNotMatch "{function:45}" "{function:(\\d+)}" "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
+      testList "string matches regex" [
+        testCase "pass" <| fun _ ->
+          let regex = Regex("{function:(\\d+)}")
+          Expect.isRegexMatch "{function:45}" regex "string matches passed regex"
+
+        testCase "fail" (fun _ ->
+          let regex = Regex("{function:(\\d+)}")
+          Expect.isRegexMatch "{function:45d}" regex "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
+      testList "string matches regex" [
+        testCase "pass" <| fun _ ->
+          let regex = Regex("{function:(\\d+)}")
+          Expect.isNotRegexMatch "{function:45d}" regex "string not matches passed regex"
+
+        testCase "fail" (fun _ ->
+          let regex = Regex("{function:(\\d+)}")
+          Expect.isNotRegexMatch "{function:45}" regex "Deliberately failing"
         ) |> assertTestFails
       ]
 

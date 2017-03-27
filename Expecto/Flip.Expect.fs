@@ -73,10 +73,16 @@ let inline isNotWhitespace message actual = Expecto.Expect.isNotWhitespace actua
 /// Expects the two values to equal each other.
 let inline equal message expected actual = Expecto.Expect.equal actual expected message
 
-/// Expects that actual match regex pattern.
+/// Expects that actual matches pattern.
+let inline isMatch message pattern actual = Expecto.Expect.isMatch actual pattern message
+
+/// Expects that actual matches regex.
 let inline isRegexMatch message pattern actual = Expecto.Expect.isRegexMatch actual pattern message
 
-/// Expects that actual not match regex pattern.
+/// Expects that actual not matches pattern.
+let inline isNotMatch message pattern actual = Expecto.Expect.isNotMatch actual pattern message
+
+/// Expects that actual not matches regex.
 let inline isNotRegexMatch message pattern actual = Expecto.Expect.isNotRegexMatch actual pattern message
 
 /// Expects the two values not to equal each other.
