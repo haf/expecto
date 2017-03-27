@@ -503,6 +503,24 @@ let expecto =
         ) |> assertTestFails
       ]
 
+      testList "string matches regex pattern" [
+        testCase "pass" <| fun _ ->
+          Expect.isRegexMatch "{function:45}" "{function:(\\d+)}" "string matches passed pattern"
+
+        testCase "fail" (fun _ ->
+          Expect.isRegexMatch "{function:45d}" "{function:(\\d+)}" "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
+      testList "string matches regex pattern" [
+        testCase "pass" <| fun _ ->
+          Expect.isNotRegexMatch "{function:45d}" "{function:(\\d+)}" "string not matches passed pattern"
+
+        testCase "fail" (fun _ ->
+          Expect.isNotRegexMatch "{function:45}" "{function:(\\d+)}" "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
       testList "string contain" [
         testCase "pass" <| fun _ ->
           Expect.stringContains "hello world" "hello" "String actually contains"

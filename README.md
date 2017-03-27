@@ -583,6 +583,8 @@ This module is your main entry-point when asserting.
  - `stringContains` – Expect the string `subject` to contain `substring` as part
    of itself.  If it does not, then fail with `format` and `subject` and
    `substring` as part of the error message.
+ - `isRegexMatch` - Expect the string `actual` to match regex `pattern`
+ - `isNotRegexMatch` - Expect the string `actual` to not match regex `pattern`
  - `stringStarts` – Expect the string `subject` to start with `prefix` and if it
    does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
