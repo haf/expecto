@@ -231,12 +231,12 @@ let notEqual (actual : 'a) (expected : 'a) message =
     Tests.failtestf "%s. Actual value was equal to %A but had expected them to be non-equal."
                     message actual
 
-/// Expects that actual match pattern
+/// Expects that actual match regex pattern.
 let isRegexMatch actual pattern message =
   if Regex.Match(actual, pattern).Success then ()
   else Tests.failtestf "%s. Expected %s to match pattern: /%s/" message actual pattern
 
-/// Expects that actual not match pattern
+/// Expects that actual not match regex pattern.
 let isNotRegexMatch actual pattern message =
   if Regex.Match(actual, pattern).Success then Tests.failtestf "%s. Expected %s to match pattern: /%s/" message actual pattern
 
