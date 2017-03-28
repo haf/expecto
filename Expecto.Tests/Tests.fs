@@ -544,6 +544,38 @@ let expecto =
         ) |> assertTestFails
       ]
 
+      testList "string matches pattern and groups collection operator" [
+        testCase "pass" <| fun _ ->
+          let assertionText = "niceone"
+          let input = sprintf "{function:%s}" assertionText
+          let operation (groups : GroupCollection) =
+            groups.[1].Value = assertionText
+          Expect.isMatchGroups input "{function:(.*)}" operation "string not matches passed regex"
+
+        testCase "fail" (fun _ ->
+          let operation (groups : GroupCollection) =
+            groups.[1].Value = "uga buga"
+          Expect.isMatchGroups "hehhehe" "{function:(.*)}" operation "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
+      testList "string matches regex and groups collection operator" [
+        testCase "pass" <| fun _ ->
+          let assertionText = "niceone"
+          let input = sprintf "{function:%s}" assertionText
+          let regex = Regex("{function:(.*)}")
+          let operation (groups : GroupCollection) =
+            groups.[1].Value = assertionText
+          Expect.isMatchRegexGroups input regex operation "string not matches passed regex"
+
+        testCase "fail" (fun _ ->
+          let regex = Regex("{function:(\\d+)}")
+          let operation (groups : GroupCollection) =
+            groups.[1].Value = "uga buga"
+          Expect.isMatchRegexGroups "hehhehe" regex operation "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
       testList "string contain" [
         testCase "pass" <| fun _ ->
           Expect.stringContains "hello world" "hello" "String actually contains"
