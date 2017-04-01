@@ -62,8 +62,6 @@ nugets_pack :create_nugets => ['build/pkg', :versioning, :compile] do |p|
   p.out     = 'build/pkg'
   p.exe     = 'packages/NuGet.CommandLine/tools/NuGet.exe'
   p.with_metadata do |m|
-    # m.id          = 'MyProj'
-    m.title       = 'Expecto Expecto'
     m.description = 'Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.'
     m.authors     = 'Henrik Feldt, Logibit AB, formerly @mausch'
     m.project_url = 'https://github.com/haf/expecto'
