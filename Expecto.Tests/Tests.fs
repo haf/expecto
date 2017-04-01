@@ -7,7 +7,6 @@ open System.Threading
 open System.IO
 open Expecto
 open Expecto.Impl
-open FSharpx
 open System.Globalization
 
 module Dummy =
@@ -202,10 +201,10 @@ let expecto =
         let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with nested testcase" <| fun _ ->
-        let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (String.contains "d") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with one testlist" <| fun _ ->
-        let t = Test.filter (Strings.contains "c") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (String.contains "c") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 2
       yield testCase "with no results" <| fun _ ->
         let t = Test.filter ((=) "z") tests |> Test.toTestCodeList |> Seq.toList
@@ -378,7 +377,7 @@ let expecto =
               | Async test ->
                 do! test
               | AsyncFsCheck (config, _, test) ->
-                do! Option.getOrElse FsCheckConfig.defaultConfig config
+                do! Option.orDefault FsCheckConfig.defaultConfig config
                     |> test
             finally
               Thread.CurrentThread.CurrentCulture <- c
