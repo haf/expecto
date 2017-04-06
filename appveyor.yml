@@ -5,9 +5,10 @@ environment:
     - CLI_VERSION: 1.0.0-preview3-003857
 
 install:
+  - set PATH=C:\Ruby23-x64\bin;%PATH%
   - bundle install
 
-build_script:  
+build_script:
   - bundle exec rake
 
 #  # .NET Core SDK binaries
@@ -20,11 +21,11 @@ build_script:
 #  - ps: (New-Object System.Net.WebClient).DownloadFile($url, $tempFile)
 #  - ps: Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory($tempFile, $env:DOTNET_INSTALL_DIR)
 #  - ps: $env:Path = "$env:DOTNET_INSTALL_DIR;$env:Path"
-#  - dotnet --info	
+#  - dotnet --info
 #  - cmd: build.cmd
 
 # artifacts:
 #  - path: 'bin'
 
-test: off 
+test: off
 version: 0.0.1.{build}
