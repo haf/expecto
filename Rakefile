@@ -36,7 +36,7 @@ end
 
 task :paket_bootstrap do
   system 'tools/paket.bootstrapper.exe',
-      %|4.0.0-rc4|,
+      %|4.1.7|,
       clr_command: true unless File.exists? 'tools/paket.exe'
 end
 
@@ -58,7 +58,7 @@ task :restore => [:paket_bootstrap, :restore_quick, :paket_files, :restore_dotne
 desc 'Perform full build'
 build :compile => [:versioning, :restore, :assembly_info, :build_dotnetcli] do |b|
   b.prop 'Configuration', Configuration
-  b.sln = 'Expecto.Tests/Expecto.Tests.fsproj'
+  b.sln = 'Expecto.sln'
 end
 
 task :build_dotnetcli => [:versioning, :restore_dotnetcli, :assembly_info] do
@@ -82,8 +82,6 @@ nugets_pack :create_nugets => ['build/pkg', :versioning, :compile, :create_nuget
   p.out     = 'build/pkg'
   p.exe     = 'packages/NuGet.CommandLine/tools/NuGet.exe'
   p.with_metadata do |m|
-    # m.id          = 'MyProj'
-    m.title       = 'Expecto Expecto'
     m.description = 'Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.'
     m.authors     = 'Henrik Feldt, Logibit AB, formerly @mausch'
     m.project_url = 'https://github.com/haf/expecto'
@@ -97,6 +95,7 @@ namespace :tests do
   task :unit do
     system "dotnet", %W|run -c #{Configuration} --project Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj --summary|
     system "Expecto.Tests/bin/#{Configuration}/Expecto.Tests.exe", '--summary', clr_command: true
+    system "Expecto.Tests.CSharp/bin/#{Configuration}/Expecto.Tests.CSharp.exe", '--summary', clr_command: true
   end
 end
 

@@ -1,17 +1,18 @@
 source https://nuget.org/api/v2
-framework: net45
+redirects: on
+framework net461
 
-github logary/logary src/Logary.Facade/Facade.fs 0fbb7829b9d4b62f9ffd10d7a4b20d075c6cccc6
+github logary/logary src/Logary.Facade/Facade.fs
 
-nuget Argu = 3.2
-nuget FsCheck = 2.7.1
+nuget Argu
+nuget FsCheck
 nuget FSharp.Core ~> 3
-nuget BenchmarkDotNet = 0.9.9
-nuget BenchmarkDotNet.Toolchains.Roslyn = 0.9.9
-nuget BenchmarkDotNet.Core = 0.9.9
-nuget Mono.Cecil = 0.10.0-beta4 framework: net45
+nuget BenchmarkDotNet
+nuget BenchmarkDotNet.Toolchains.Roslyn
+nuget BenchmarkDotNet.Core
 nuget NuGet.CommandLine
+nuget Mono.Cecil = 0.10-beta5 framework: net461
 
 group build
-    source https://www.nuget.org/api/v2
-    nuget FAKE
+  source https://www.nuget.org/api/v2
+  nuget FAKE

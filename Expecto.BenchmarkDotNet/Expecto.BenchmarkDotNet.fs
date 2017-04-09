@@ -24,24 +24,24 @@ module BenchmarkDotNet =
   type SetupAttribute = BenchmarkDotNet.Attributes.SetupAttribute
 
   type BenchmarkConfig =
-    { columns : IColumn list
+    { columnProviders: IColumnProvider list
       exporters : IExporter list
       loggers : ILogger list
       diagnosers : IDiagnoser list
       analysers : IAnalyser list
-      jobs : IJob list
+      jobs : Job list
       validators : IValidator list
       orderProvider : IOrderProvider
       unionRule : ConfigUnionRule
       keepFiles : bool }
 
     interface IConfig with
-      member x.GetColumns() = x.columns    :> IColumn seq
+      member x.GetColumnProviders() = x.columnProviders :> seq<IColumnProvider>
       member x.GetExporters()       = x.exporters  :> seq<IExporter>
       member x.GetLoggers()         = x.loggers    :> seq<ILogger>
       member x.GetDiagnosers()      = x.diagnosers :> seq<IDiagnoser>
       member x.GetAnalysers()       = x.analysers  :> seq<IAnalyser>
-      member x.GetJobs()            = x.jobs       :> seq<IJob>
+      member x.GetJobs()            = x.jobs       :> seq<Job>
       member x.GetValidators()      = x.validators :> seq<IValidator>
       member x.GetOrderProvider()   = x.orderProvider : IOrderProvider
       member x.UnionRule            = x.unionRule : ConfigUnionRule
@@ -61,7 +61,7 @@ module BenchmarkDotNet =
 
   let benchmarkConfig =
     let def = DefaultConfig.Instance
-    { columns = def.GetColumns() |> List.ofSeq
+    { columnProviders = def.GetColumnProviders() |> List.ofSeq
       exporters = def.GetExporters() |> List.ofSeq
       loggers = [ synchronisedLogger ]
       diagnosers = def.GetDiagnosers() |> List.ofSeq

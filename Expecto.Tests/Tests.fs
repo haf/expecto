@@ -2,6 +2,7 @@ module Expecto.Tests
 #nowarn "46"
 
 open System
+open System.Text.RegularExpressions
 open System.Threading
 open System.IO
 open System.Reflection
@@ -528,6 +529,46 @@ let expecto =
         ) |> assertTestFails
       ]
 
+      testList "string matches pattern" [
+        testCase "pass" <| fun _ ->
+          Expect.isMatch "{function:45}" "{function:(\\d+)}" "string matches passed pattern"
+
+        testCase "fail" (fun _ ->
+          Expect.isMatch "{function:45d}" "{function:(\\d+)}" "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
+      testList "string matches pattern" [
+        testCase "pass" <| fun _ ->
+          Expect.isNotMatch "{function:45d}" "{function:(\\d+)}" "string not matches passed pattern"
+
+        testCase "fail" (fun _ ->
+          Expect.isNotMatch "{function:45}" "{function:(\\d+)}" "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
+      testList "string matches regex" [
+        testCase "pass" <| fun _ ->
+          let regex = Regex("{function:(\\d+)}")
+          Expect.isRegexMatch "{function:45}" regex "string matches passed regex"
+
+        testCase "fail" (fun _ ->
+          let regex = Regex("{function:(\\d+)}")
+          Expect.isRegexMatch "{function:45d}" regex "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
+      testList "string matches regex" [
+        testCase "pass" <| fun _ ->
+          let regex = Regex("{function:(\\d+)}")
+          Expect.isNotRegexMatch "{function:45d}" regex "string not matches passed regex"
+
+        testCase "fail" (fun _ ->
+          let regex = Regex("{function:(\\d+)}")
+          Expect.isNotRegexMatch "{function:45}" regex "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
       testList "string contain" [
         testCase "pass" <| fun _ ->
           Expect.stringContains "hello world" "hello" "String actually contains"
@@ -561,6 +602,47 @@ let expecto =
 
         testCase "fail" (fun _ ->
           Expect.stringHasLength "hello world" 5 "Deliberately failing"
+        ) |> assertTestFails
+      ]
+
+      testList "list is empty" [
+        testCase "pass" <| fun _ ->
+          Expect.isEmpty [] "list is empty"
+
+        testCase "pass" <| fun _ ->
+          Expect.isEmpty [||] "list is empty"
+
+        testCase "fail" (fun _ ->
+          Expect.isEmpty [5] "list is not empty"
+        ) |> assertTestFails
+
+        testCase "fail" (fun _ ->
+          Expect.isEmpty [|5|] "list is not empty"
+        ) |> assertTestFails
+      ]
+
+      testList "list is non empty" [
+        testCase "pass" <| fun _ ->
+          Expect.isNonEmpty [5] "list is non empty"
+
+        testCase "pass" <| fun _ ->
+          Expect.isNonEmpty [|5|] "list is non empty"
+
+        testCase "fail" (fun _ ->
+          Expect.isNonEmpty [] "list is empty"
+        ) |> assertTestFails
+
+        testCase "fail" (fun _ ->
+          Expect.isNonEmpty [||] "list is empty"
+        ) |> assertTestFails
+      ]
+
+      testList "list count" [
+        testCase "pass" <| fun _ ->
+          Expect.hasCountOf [2;2;4] 2u (fun x -> x = 2) "list has 2 occurrences of number 2"
+
+        testCase "fail" (fun _ ->
+          Expect.hasCountOf [2;3] 2u (fun x -> x = 2) "list has 1 occurrences of number 3"
         ) |> assertTestFails
       ]
 
@@ -900,14 +982,15 @@ let stress =
     }
     // This test needs to run sequenced to ensure there are enough threads free to deadlock
     yield testSequenced (testAsync "deadlock" {
-      let config =
-        { defaultConfig with
-            parallelWorkers = 8
-            stress = TimeSpan.FromMilliseconds 20000.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config (deadlockTest())) 8 "timeout"
+      if Environment.ProcessorCount > 2 then
+        let config =
+          { defaultConfig with
+              parallelWorkers = 8
+              stress = TimeSpan.FromMilliseconds 20000.0 |> Some
+              stressTimeout = TimeSpan.FromMilliseconds 10000.0
+              printer = TestPrinters.silent
+              verbosity = Logging.LogLevel.Fatal }
+        Expect.equal (runTests config (deadlockTest())) 8 "timeout"
     })
 
     yield testAsync "sequenced group" {

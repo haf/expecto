@@ -5,7 +5,7 @@ if test "$OS" = "Windows_NT"
 then
   # use .Net
 
-  .paket/paket.bootstrapper.exe $@ 4.0.0-rc4
+  .paket/paket.bootstrapper.exe $@ 4.1.7
   exit_code=$?
   if [ $exit_code -ne 0 ]; then
     exit $exit_code
@@ -20,7 +20,7 @@ then
   packages/build/FAKE/tools/FAKE.exe $@ --fsiargs -d:MONO build.fsx 
 else
   # use mono
-  mono .paket/paket.bootstrapper.exe 4.0.0-rc4
+  mono .paket/paket.bootstrapper.exe 4.1.7
   exit_code=$?
   if [ $exit_code -ne 0 ]; then
     certificate_count=$(certmgr -list -c Trust | grep X.509 | wc -l)
