@@ -96,7 +96,7 @@ open Expecto
 
 let tests =
   test "A simple test" {
-    let subject = "Hello world"
+    let subject = "Hello World"
     Expect.equal subject "Hello World" "The strings should equal"
   }
 
@@ -105,10 +105,10 @@ let main args =
   runTestsWithArgs defaultConfig args tests
 ```
 
-No magic is involved here. We just created a single test and hooked it 
+No magic is involved here. We just created a single test and hooked it
 into the assembly entry point.
 
-The `Expect` module contains functions that you can use to assert with. 
+The `Expect` module contains functions that you can use to assert with.
 A testing library without a good assertion library is like love without kisses.
 
 Now compile and run! `xbuild Sample.fsproj && mono --debug bin/Debug/Sample.exe`
@@ -191,15 +191,17 @@ Expecto supports the following test constructors:
  - lists of tests with `testList`
  - test fixtures with `testFixture`
  - pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
- - focused tests (that are the only ones run) with `ftestCase` and `ftestCaseAsync`
- - sequenced tests with `testSequenced` and `testSequencedGroup`
+ - focused tests (that are the only ones run) with `ftestCase` and
+   `ftestCaseAsync`
+ - sequenced tests with `testSequenced` and `testSequencedGroup` (tests inside a
+   group are run in sequence w.r.t each other)
  - parametised tests with `testParam`
  - testCases with the workflow builder `test`, `ptest`, `ftest` supporting
    deterministic disposal, loops and such
- - property based tests with `testProperty`, `testPropertyWithConfig` and `testPropertyWithConfigs` from
-   `Expecto.FsCheck`
- - performance tests with `Expecto.BenchmarkDotNet` and
-   `benchmark<TBench> : string -> Test`.
+ - property based tests with `testProperty`, `testPropertyWithConfig` and
+   `testPropertyWithConfigs` from `Expecto.FsCheck`
+ - performance tests with `Expecto.BenchmarkDotNet` and `benchmark<TBench> :
+   string -> Test`.
 
 All of the above compile to a `Test` value that you can compose. For example,
 you can compose a `test` and a `testCaseAsync` in a `testList` which you wrap in
@@ -438,7 +440,7 @@ let properties =
   testList "FsCheck samples" [
     testProperty "Addition is commutative" <| fun a b ->
       a + b = b + a
-      
+
     testProperty "Reverse of reverse of a list is the original list" <|
       fun (xs:list<int>) -> List.rev (List.rev xs) = xs
 
@@ -456,14 +458,57 @@ like the following.
 
 ```fsharp
 type FsCheckConfig =
+    /// The maximum number of tests that are run.
   { maxTest: int
+    /// The size to use for the first test.
     startSize: int
+    /// The size to use for the last test, when all the tests are passing. The size increases linearly between Start- and EndSize.
     endSize: int
-    replay: (int*int) option
-    arbitrary: Type list }
+    /// If set, the seed to use to start testing. Allows reproduction of previous runs.
+    replay: (int * int) option
+    /// The Arbitrary instances on this class will be merged in back to front order, i.e. instances for the same generated type at the front
+    /// of the list will override those at the back. The instances on Arb.Default are always known, and are at the back (so they can always be
+    /// overridden)
+    arbitrary: Type list
+    /// Callback when the test case had input parameters generated.
+    receivedArgs: FsCheckConfig
+               -> (* test name *) string
+               -> (* test number *) int
+               -> (* generated arguments *) obj list
+               -> Async<unit>
+    /// Callback when the test case was successfully shrunk
+    successfulShrink: FsCheckConfig
+                   -> (* test name *) string
+                   -> (* shrunk new arguments *) obj list
+                   -> Async<unit>
+    /// Callback when the test case has finished
+    finishedTest: FsCheckConfig
+               -> (* test name *) string
+               -> Async<unit>
+  }
 ```
 
-It will be translated to the FsCheck-specific configuration at runtime.
+It will be translated to the FsCheck-specific configuration at runtime. You can
+pass your own callbacks and use `Expecto.Logging` like shown in the
+[Sample](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sample.fs#L23)
+to get inputs for tests and tests printed.
+
+If a property fails, the output could look like this.
+
+    [11:06:35 ERR] samples/addition is not commutative (should fail) failed in 00:00:00.0910000.
+    Failed after 1 test. Parameters:
+      2 1
+    Shrunk 2 times to:
+      1 0
+    Result:
+      False
+    Focus on failure:
+      ftestProperty (1865288075, 296281834) "addition is not commutative (should fail)"
+
+The output that Expecto gives you, lets you recreate the exact test (that's from
+the 18..., 29... seed numbers). It's also a good idea to lift inputs and the
+test-case/parameter combination that failed into its *own* test (which isn't a
+property based test).
 
 #### Link collection
 
@@ -538,6 +583,10 @@ This module is your main entry-point when asserting.
  - `stringContains` – Expect the string `subject` to contain `substring` as part
    of itself.  If it does not, then fail with `format` and `subject` and
    `substring` as part of the error message.
+ - `isMatch` - Expect the string `actual` to match `pattern`
+ - `isRegexMatch` - Expect the string `actual` to match `regex`
+ - `isNotMatch` - Expect the string `actual` to not match `pattern`
+ - `isNotRegexMatch` - Expect the string `actual` to not match `regex`
  - `stringStarts` – Expect the string `subject` to start with `prefix` and if it
    does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
@@ -549,6 +598,9 @@ This module is your main entry-point when asserting.
    with a description of `subject` and `length`.
  - `isNotEmpty` - Expect the string `actual` to be not null nor empty
  - `isNotWhitespace` - Expect the string `actual` to be not null nor empty nor whitespace
+ - `isEmpty` - Expect the sequence `actual` to be empty
+ - `isNonEmpty` - Expect the sequence `actual` to be not empty
+ - `hasCountOf` - Expect that the counts of the found value occurrences by `selector` in `actual` equals the `expected`.
  - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain
    the item.
  - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
@@ -829,6 +881,7 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
   Expecto](https://www.nuget.org/packages/Expecto.VisualStudio.TestAdapter/) –
   just add the `nuget Expecto.VisualStudio.TestAdapter version_in_path: true` to
   your paket file and you're off to the races!
+* [FsCheck supports it](https://fscheck.github.io/FsCheck/QuickStart.html#Integration-with-Expecto)
 
 ![Expecto VS Test Plugin](./docs/expecto-vs-addon.jpeg "Easy to get started even for Enterprise Developers").
 

@@ -58,11 +58,32 @@ let inline isNotInfinity message f = Expecto.Expect.isNotInfinity f message
 /// Expect the passed string not to be empty.
 let inline isNotEmpty message actual = Expecto.Expect.isNotEmpty actual message
 
+/// Expect the passed sequence to be empty.
+let inline isEmpty message actual = Expecto.Expect.isEmpty actual message
+
+/// Expect the passed sequence not to be empty.
+let inline isNonEmpty message actual = Expecto.Expect.isNonEmpty actual message
+
+/// Expect that the counts of the found value occurrences in sequence equals the expected.
+let inline hasCountOf message selector expected actual = Expecto.Expect.hasCountOf actual expected selector message
+
 /// Expect the passed string is not whitespace
 let inline isNotWhitespace message actual = Expecto.Expect.isNotWhitespace actual message
 
 /// Expects the two values to equal each other.
 let inline equal message expected actual = Expecto.Expect.equal actual expected message
+
+/// Expects that actual matches pattern.
+let inline isMatch message pattern actual = Expecto.Expect.isMatch actual pattern message
+
+/// Expects that actual matches regex.
+let inline isRegexMatch message pattern actual = Expecto.Expect.isRegexMatch actual pattern message
+
+/// Expects that actual not matches pattern.
+let inline isNotMatch message pattern actual = Expecto.Expect.isNotMatch actual pattern message
+
+/// Expects that actual not matches regex.
+let inline isNotRegexMatch message pattern actual = Expecto.Expect.isNotRegexMatch actual pattern message
 
 /// Expects the two values not to equal each other.
 let inline notEqual message expected actual = Expecto.Expect.notEqual actual expected message

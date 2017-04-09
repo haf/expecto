@@ -5,6 +5,7 @@ module Expecto.Expect
 ()
 
 open System
+open System.Text.RegularExpressions
 open Expecto.Logging
 open Expecto.Logging.Message
 
@@ -31,9 +32,10 @@ let throwsT<'texn> f message =
     Tests.failtestf "%s. Expected f to throw." message
   with
   | e when e.GetType() <> typeof<'texn> ->
-    Tests.failtestf "%s. Expected f to throw an exn of type %s."
+    Tests.failtestf "%s. Expected f to throw an exn of type %s, but one of type %s was thrown."
                     message
-                    (typeof<'texn>.Name)
+                    (typeof<'texn>.FullName)
+                    (e.GetType().FullName)
   | e ->
     ()
 
@@ -103,7 +105,7 @@ let isLessThanOrEqual a b message =
 let isGreaterThan a b message =
   if a > b then ()
   else
-    Tests.failtestf "%s. Expected a (%A) to be greater than or equal to b (%A)."
+    Tests.failtestf "%s. Expected a (%A) to be greater than b (%A)."
                     message a b
 
 /// Expects `a` >= `b`.
@@ -170,6 +172,20 @@ let isNotWhitespace (actual : string) message =
       else Tests.failtestf "%s. Should not be whitespace." message
   checkWhitespace 0
 
+/// Expect the passed sequence to be empty.
+let isEmpty (actual) message =
+  if not (Seq.isEmpty actual) then Tests.failtestf "%s. Should be empty." message
+
+/// Expect the passed sequence to be not empty.
+let isNonEmpty (actual) message =
+  if Seq.isEmpty actual then Tests.failtestf "%s. Should be empty." message
+
+/// Expect that the counts of the found value occurrences in sequence equal the expected.
+let hasCountOf (actual : _ seq) (expected : uint32) (selector : _ -> bool) message =
+  let hits =
+    actual |> Seq.fold (fun acc element -> if selector element then acc + 1u else acc) 0u
+  if hits <> expected then Tests.failtestf "%s. Should be of count: %d, but was: %d" message expected hits
+
 /// Expects the two values to equal each other.
 let inline equal (actual : 'a) (expected : 'a) message =
   match box actual, box expected with
@@ -214,6 +230,24 @@ let notEqual (actual : 'a) (expected : 'a) message =
   if expected = actual then
     Tests.failtestf "%s. Actual value was equal to %A but had expected them to be non-equal."
                     message actual
+
+/// Expects that actual matches pattern.
+let isMatch actual pattern message =
+  if Regex.Match(actual, pattern).Success then ()
+  else Tests.failtestf "%s. Expected %s to match pattern: /%s/" message actual pattern
+
+/// Expects that actual matches regex.
+let isRegexMatch actual (regex: Regex) message =
+  if regex.Match(actual).Success then ()
+  else Tests.failtestf "%s. Expected %s to match regex: /%A/" message actual regex
+
+/// Expects that actual not matches pattern.
+let isNotMatch actual pattern message =
+  if Regex.Match(actual, pattern).Success then Tests.failtestf "%s. Expected %s to match pattern: /%s/" message actual pattern
+
+/// Expects that actual not matches regex.
+let isNotRegexMatch actual (regex: Regex) message =
+  if regex.Match(actual).Success then Tests.failtestf "%s. Expected %s to match regex: /%A/" message actual regex
 
 /// Expects the value to be false.
 let isFalse actual message =
@@ -354,7 +388,7 @@ let distribution (actual : _ seq)
   |> Tests.failtest
 
 let inline private formattedList (sequence) =
-  let formattedElements = 
+  let formattedElements =
     sequence
     |> Seq.mapi( fun index element -> sprintf "[%d] %A" index element)
   String.Join("\n\t", formattedElements)

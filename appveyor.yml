@@ -5,6 +5,7 @@ environment:
     - CLI_VERSION: 1.0.1
 
 install:
+  - set PATH=C:\Ruby23-x64\bin;%PATH%
   - bundle install
   # .NET Core SDK binaries
   - ps: $url = "https://dotnetcli.azureedge.net/dotnet/Sdk/$($env:CLI_VERSION)/dotnet-dev-win-x64.$($env:CLI_VERSION.ToLower()).zip"
