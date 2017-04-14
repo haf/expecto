@@ -883,7 +883,13 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
   your paket file and you're off to the races!
 * [FsCheck supports it](https://fscheck.github.io/FsCheck/QuickStart.html#Integration-with-Expecto)
 
-![Expecto VS Test Plugin](./docs/expecto-vs-addon.jpeg "Easy to get started even for Enterprise Developers").
+![Expecto VS Test Plugin](./docs/expecto-vs-addon.jpeg "Easy to get started even for Enterprise Developers")
+
+### Testing hardware
+
+People have been testing hardware with Expecto.
+
+![Expecto Hardware Testing](./docs/hw-testing.jpg "Testing Hardware with Expecto, photo by Roman Provazník")
 
 ## Sending e-mail on failure – custom printers
 
