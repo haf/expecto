@@ -58,7 +58,7 @@ NUGET
       System.Xml.XPath.XDocument (>= 4.3)
     Microsoft.CodeAnalysis.CSharp (2.0)
       Microsoft.CodeAnalysis.Common (2.0)
-    Mono.Cecil (0.9.6.4)
+    Mono.Cecil (0.10-beta5)
     NuGet.CommandLine (3.5)
     System.AppContext (4.3)
     System.Collections (4.3)

@@ -190,8 +190,8 @@ let hasCountOf (actual : _ seq) (expected : uint32) (selector : _ -> bool) messa
 let inline equal (actual : 'a) (expected : 'a) message =
   match box actual, box expected with
   | (:? string as a), (:? string as e) ->
-    use ai = a.GetEnumerator()
-    use ei = e.GetEnumerator()
+    let ai = a.ToCharArray().GetEnumerator()
+    let ei = e.ToCharArray().GetEnumerator()
     let mutable i = 0
     let baseMsg errorIndex =
       let diffString = new String(' ', errorIndex + 1) + "↑"
