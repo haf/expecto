@@ -5,6 +5,7 @@ open System
 open System.Text.RegularExpressions
 open System.Threading
 open System.IO
+open System.Reflection
 open Expecto
 open Expecto.Impl
 open System.Globalization
@@ -18,10 +19,19 @@ module Dummy =
   [<Tests>]
   let testB() = TestLabel ("test B", TestList ([], Normal), Normal)
 
-  let thisModuleType = lazy Type.GetType "Expecto.Tests+Dummy, Expecto.Tests"
+  let thisAssemblyName =
+#if NETCOREAPP1_1
+    "Expecto.netcore.Tests"
+#else
+    "Expecto.Tests"
+#endif
+
+  let thisModuleNameQualified = sprintf "Expecto.Tests+Dummy, %s" thisAssemblyName
+  let thisModuleType = lazy Type.GetType(thisModuleNameQualified, throwOnError=true)
 
 module EmptyModule =
-  let thisModuleType = lazy Type.GetType "Expecto.Tests+EmptyModule, Expecto.Tests"
+  let thisModuleNameQualified = sprintf "Expecto.Tests+EmptyModule, %s" Dummy.thisAssemblyName
+  let thisModuleType = lazy Type.GetType(thisModuleNameQualified, throwOnError=true)
 
 let (==?) actual expected = Expect.equal expected actual ""
 
@@ -88,6 +98,7 @@ let tests =
           r.Value.duration ==? TimeSpan.FromMilliseconds 27.
     ]
 
+#if FSCHECK_TESTS
     testList "TestResultCounts" [
       let inline testProp fn =
         let config =
@@ -120,6 +131,7 @@ let tests =
            true
         )
     ]
+#endif
 
     testList "Exception handling" [
       testCaseAsync "Expecto ignore" <| async {
@@ -201,10 +213,10 @@ let expecto =
         let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with nested testcase" <| fun _ ->
-        let t = Test.filter (String.contains "d") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (fun (s: string) -> s.Contains "d") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with one testlist" <| fun _ ->
-        let t = Test.filter (String.contains "c") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (fun (s: string) -> s.Contains "c") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 2
       yield testCase "with no results" <| fun _ ->
         let t = Test.filter ((=) "z") tests |> Test.toTestCodeList |> Seq.toList
@@ -236,7 +248,7 @@ let expecto =
 
     testList "Reflection" [
       let getMember name =
-          Dummy.thisModuleType.Value.GetMember name
+          Dummy.thisModuleType.Value.GetTypeInfo().GetMember name
           |> Array.tryFind (fun _ -> true)
       let getTest =
           getMember
@@ -366,21 +378,35 @@ let expecto =
 
     testList "transformations" [
       testCaseAsync "multiple cultures" <| async {
+        let getCurrentCulture () : CultureInfo =
+#if RESHAPED_THREAD_CULTURE
+          System.Globalization.CultureInfo.CurrentCulture
+#else
+          System.Threading.Thread.CurrentThread.CurrentCulture
+#endif
+
+        let setCurrentCulture (culture : CultureInfo) =
+#if RESHAPED_THREAD_CULTURE
+          System.Globalization.CultureInfo.CurrentCulture <- culture
+#else
+          System.Threading.Thread.CurrentThread.CurrentCulture <- culture
+#endif
+
         let withCulture culture test =
           async {
-            let c = Thread.CurrentThread.CurrentCulture
+            let c = getCurrentCulture()
             try
-              Thread.CurrentThread.CurrentCulture <- culture
+              setCurrentCulture culture
               match test with
               | Sync test ->
                 test()
               | Async test ->
                 do! test
               | AsyncFsCheck (config, _, test) ->
-                do! Option.orDefault FsCheckConfig.defaultConfig config
-                    |> test
+                let configOrDefault = match config with | Some c -> c | _ -> FsCheckConfig.defaultConfig
+                do! configOrDefault |> test
             finally
-              Thread.CurrentThread.CurrentCulture <- c
+              setCurrentCulture c
           }
 
         let testWithCultures (cultures: #seq<CultureInfo>) =
@@ -396,7 +422,7 @@ let expecto =
 
         let cultures =
           ["en-US"; "es-AR"; "fr-FR"]
-          |> List.map CultureInfo.GetCultureInfo
+          |> List.map CultureInfo
 
         let culturizedTests = testWithCultures cultures atest
 
@@ -734,6 +760,8 @@ let expecto =
     ]
   ]
 
+#if FSCHECK_TESTS
+
 let inline popCount (i:uint16) =
   let mutable v = uint32 i
   v <- v - ((v >>> 1) &&& 0x55555555u)
@@ -751,6 +779,8 @@ let popcountTest =
     testProperty "popcount same"
       (fun i -> (popCount i |> int) = (popCount16 i |> int))
   ]
+
+#endif
 
 [<Tests>]
 let asyncTests =
@@ -827,11 +857,13 @@ let performance =
                              (fun measurer -> reset(); measurer mulIJK ())
                              "ikj faster than ijk"
 
+#if FSCHECK_TESTS
     testCase "popcount" (fun _ ->
       Expect.isFasterThan (fun () -> repeat10000 (popCount16 >> int) 987us)
                           (fun () -> repeat10000 (popCount >> int) 987us)
                           "popcount 16 faster than 32 fails"
       ) |> assertTestFailsWithMsgContaining "slower"
+#endif
   ]
 
 [<Tests>]
