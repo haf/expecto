@@ -32,3 +32,4 @@ matrix:
   allow_failures:
     - mono: latest
     - mono: weekly
+    - os: osx
