@@ -3,14 +3,27 @@ language: csharp
 
 mono:
  - 4.6.1
- - 4.8.0
+ - 4.8.1
  - latest # => "stable release"
  - weekly # => "latest commits"
 
+os:
+ - osx
+ - linux
+
+dist: trusty
+sudo: required
+
+dotnet: 1.0.1
+
 install:
+ # See details at https://github.com/NuGet/Home/issues/2163
+ # this may be required because of an underlying bug in mono. It may
+ # also be induced by us because we have an extra nuget.config source.
+ - ulimit -n 2048
+
  - rvm install 2.2.3
  - gem install bundler
- - sudo apt-get update -y
 
 script:
  - bundle && bundle exec rake
@@ -19,3 +32,4 @@ matrix:
   allow_failures:
     - mono: latest
     - mono: weekly
+    - os: osx

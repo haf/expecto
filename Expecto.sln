@@ -8,11 +8,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{3786E1
 		paket.dependencies = paket.dependencies
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto", "Expecto\Expecto.fsproj", "{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Expecto", "Expecto\Expecto.fsproj", "{C0D55728-10A9-4A7A-9DF9-D2F21F663AC2}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.BenchmarkDotNet", "Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj", "{0ACABEAA-29BD-4F9F-89DB-0D03B5AFC952}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Expecto.BenchmarkDotNet", "Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj", "{0ACABEAA-29BD-4F9F-89DB-0D03B5AFC952}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.FsCheck", "Expecto.FsCheck\Expecto.FsCheck.fsproj", "{58507646-335A-460E-B283-77A2BAF0D3A8}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Expecto.FsCheck", "Expecto.FsCheck\Expecto.FsCheck.fsproj", "{58507646-335A-460E-B283-77A2BAF0D3A8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{1870B8C4-3943-41D3-AEA3-F8A69AB9E9FE}"
 	ProjectSection(SolutionItems) = preProject
@@ -25,21 +25,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{1870
 		build.sh = build.sh
 		docker-build.sh = docker-build.sh
 		Gemfile = Gemfile
-		globals.json = globals.json
 		paket.dependencies = paket.dependencies
 		Rakefile = Rakefile
 		README.md = README.md
+		global.json = global.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{5B9D0E5F-378A-4310-B9F3-4ECF67AA5A23}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{191A316D-EA59-4BA9-9A70-D2AC46ECC6ED}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.Tests", "Expecto.Tests\Expecto.Tests.fsproj", "{4182E778-F6C2-4BA4-BFC7-19DB54890E18}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Expecto.Tests", "Expecto.Tests\Expecto.Tests.fsproj", "{4182E778-F6C2-4BA4-BFC7-19DB54890E18}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.Sample", "Expecto.Sample\Expecto.Sample.fsproj", "{9996E3A7-F97F-4A6A-AD5F-C6C70858E220}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Expecto.Sample", "Expecto.Sample\Expecto.Sample.fsproj", "{9996E3A7-F97F-4A6A-AD5F-C6C70858E220}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.Focused.Tests", "testdata\Expecto.Focused.Tests\Expecto.Focused.Tests.fsproj", "{2967D1F6-742B-4F3A-8688-A743888FF34B}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Expecto.Focused.Tests", "testdata\Expecto.Focused.Tests\Expecto.Focused.Tests.fsproj", "{2967D1F6-742B-4F3A-8688-A743888FF34B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Expecto.Tests.CSharp", "Expecto.Tests.CSharp\Expecto.Tests.CSharp.csproj", "{87E8FA7E-C2C8-488C-9B8F-7B887EDF5E4B}"
 EndProject
