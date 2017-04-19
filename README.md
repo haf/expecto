@@ -98,6 +98,12 @@ dotnet new -i Expecto.Template::1.0.0-beta1
 dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
 ```
 
+How to run it?
+```
+dotnet restore
+dotnet run
+```
+
 ![How to create expecto template](docs/expecto.gif)
 
 ## Testing "Hello world"
