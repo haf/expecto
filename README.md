@@ -89,7 +89,7 @@ with Expecto:
 
 ## .Net Core support
 
-[Expecto has it's own .net core template!](https://github.com/MNie/Expecto.Template).
+[Expecto has it's own .net core template](https://github.com/MNie/Expecto.Template)!
 You could create a base .net core project with expecto.
 How to do that? Simply write following lines:
 
