@@ -98,6 +98,8 @@ dotnet new -i Expecto.Template::1.0.0-beta1
 dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
 ```
 
+![How to create expecto template](docs/expecto.gif)
+
 ## Testing "Hello world"
 
 The test runner is the test assembly itself. It's recommended to compile your
