@@ -32,6 +32,7 @@ documentation for the project.
 
   * [expecto](#expecto)
     * [Installing](#installing)
+    * [.Net Core Support](#net-core-support)
     * [Testing "Hello world"](#testing-hello-world)
     * [Running tests](#running-tests)
       * [runTests](#runtests)
@@ -85,6 +86,25 @@ Let's have look at what an extensive unit test suite looks like when running
 with Expecto:
 
 ![Sample output from Logary](docs/sample-output-logary.png)
+
+## .Net Core support
+
+[Expecto has it's own .net core template](https://github.com/MNie/Expecto.Template)!
+You could create a base .net core project with expecto.
+How to do that? Simply write following lines:
+
+```
+dotnet new -i Expecto.Template::1.0.0-beta1
+dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
+```
+
+How to run it?
+```
+dotnet restore
+dotnet run
+```
+
+![How to create expecto template](docs/expecto.gif)
 
 ## Testing "Hello world"
 
