@@ -32,7 +32,7 @@ documentation for the project.
 
   * [expecto](#expecto)
     * [Installing](#installing)
-    * [.Net Core Support](#net-core-support)
+    * [\.Net Core support](#net-core-support)
     * [Testing "Hello world"](#testing-hello-world)
     * [Running tests](#running-tests)
       * [runTests](#runtests)
@@ -61,6 +61,7 @@ documentation for the project.
     * [Contributing](#contributing)
     * [BenchmarkDotNet usage](#benchmarkdotnet-usage)
     * [You're not alone\!](#youre-not-alone)
+      * [Testing hardware](#testing-hardware)
     * [Sending e\-mail on failure – custom printers](#sending-e-mail-on-failure--custom-printers)
     * [About test parallelism](#about-test-parallelism)
     * [About upgrading from Fuchu](#about-upgrading-from-fuchu)
@@ -818,10 +819,18 @@ ExpectoConfig record, that looks like:
   /// FsCheck end size (default: 100 for testing and 10,000 for
   /// stress testing).
   fsCheckEndSize: int option
+  /// Turn off spirits.
+  mySpiritIsWeak: bool
 }
 ```
 
 By doing a `let config = { defaultConfig with parallel = true }`, for example.
+
+If you [don't](https://github.com/haf/expecto/pull/43)
+[like](https://github.com/haf/expecto/issues/145#issuecomment-297032723) the
+spirits appearing in the output, you can turn them off by setting
+`mySpiritIsWeak = true` when you run Expecto, or by running with
+`--my-spirit-is-weak` from the command line ( ರ Ĺ̯ ರೃ ).
 
 ## Contributing
 

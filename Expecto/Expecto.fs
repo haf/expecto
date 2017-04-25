@@ -637,15 +637,17 @@ module Impl =
             >> setField "duration" d
             >> addExn e)
 
-        summary = fun _ summary ->
+        summary = fun config summary ->
           let spirit =
             if summary.successful then
-              if Console.OutputEncoding.WebName = "utf-8" then
+              if Console.OutputEncoding.WebName = "utf-8"
+                 && not config.mySpiritIsWeak then
                 "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
               else
                 "Success!"
             else
-              if Console.OutputEncoding.WebName = "utf-8" then
+              if Console.OutputEncoding.WebName = "utf-8"
+                 && not config.mySpiritIsWeak then
                 "( ರ Ĺ̯ ರೃ )"
               else
                 ""
@@ -821,6 +823,8 @@ module Impl =
       /// FsCheck end size (default: 100 for testing and 10,000 for
       /// stress testing).
       fsCheckEndSize: int option
+      /// Turn off spirits
+      mySpiritIsWeak: bool
     }
     static member defaultConfig =
       { parallel = true
@@ -840,6 +844,7 @@ module Impl =
         fsCheckMaxTests = 100
         fsCheckStartSize = 1
         fsCheckEndSize = None
+        mySpiritIsWeak = false
       }
 
   let execTestAsync config (test:FlatTest) : Async<TestSummary> =
@@ -1429,6 +1434,7 @@ module Tests =
     | Summary
     | Summary_Location
     | Version
+    | My_Spirit_Is_Weak
 
     interface IArgParserTemplate with
       member s.Usage =
@@ -1452,6 +1458,7 @@ module Tests =
         | FsCheck_Max_Tests _ -> "FsCheck maximum number of tests (default: 100)."
         | FsCheck_Start_Size _ -> "FsCheck start size (default: 1)."
         | FsCheck_End_Size _ -> "FsCheck end size (default: 100 for testing and 10,000 for stress testing)."
+        | My_Spirit_Is_Weak -> "Removes spirits from the output."
 
   type FillFromArgsResult =
     | ArgsRun of ExpectoConfig
@@ -1513,6 +1520,7 @@ module Tests =
         | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
         | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
         | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
+        | My_Spirit_Is_Weak -> fun o -> { o with mySpiritIsWeak = true }
 
       let parsed =
         try
