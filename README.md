@@ -21,21 +21,21 @@ test project to enable Visual Studio integration.
 Expecto tests are parallel and async by default, so that you can use all your
 cores for testing your software.
 
-
+![Parallel by default](./docs/parallel-testing.png)
 
 Originally, Expecto is a fork of Fuchu aiming to be properly updated and pushed
 to nuget when PRs come in. Expecto is part of the F# suite of libraries I've
 built or am building, to make F# the most approachable language for system
 programming.
 
- - [Suave](https://suave.io)
- - [Logary](https://github.com/logary/)
- - [Http.fs](https://github.com/haf/Http.fs/)
+- [Suave](https://suave.io)
+- [Logary](https://github.com/logary/)
+- [Http.fs](https://github.com/haf/Http.fs/)
 
 What follows is the Table of Contents for this README, which also serves as the
 documentation for the project.
 
-  * [expecto](#expecto)
+* [expecto](#expecto)
     * [Installing](#installing)
     * [\.Net Core support](#net-core-support)
     * [Testing "Hello world"](#testing-hello-world)
@@ -213,20 +213,20 @@ The default config will run FsCheck tests with a higher end size than normal.
 
 Expecto supports the following test constructors:
 
- - normal test cases with `testCase` and `testCaseAsync`
- - lists of tests with `testList`
- - test fixtures with `testFixture`
- - pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
- - focused tests (that are the only ones run) with `ftestCase` and
+- normal test cases with `testCase` and `testCaseAsync`
+- lists of tests with `testList`
+- test fixtures with `testFixture`
+- pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
+- focused tests (that are the only ones run) with `ftestCase` and
    `ftestCaseAsync`
- - sequenced tests with `testSequenced` and `testSequencedGroup` (tests inside a
+- sequenced tests with `testSequenced` and `testSequencedGroup` (tests inside a
    group are run in sequence w.r.t each other)
- - parametised tests with `testParam`
- - testCases with the workflow builder `test`, `ptest`, `ftest` supporting
+- parametised tests with `testParam`
+- testCases with the workflow builder `test`, `ptest`, `ftest` supporting
    deterministic disposal, loops and such
- - property based tests with `testProperty`, `testPropertyWithConfig` and
+- property based tests with `testProperty`, `testPropertyWithConfig` and
    `testPropertyWithConfigs` from `Expecto.FsCheck`
- - performance tests with `Expecto.BenchmarkDotNet` and `benchmark<TBench> :
+- performance tests with `Expecto.BenchmarkDotNet` and `benchmark<TBench> :
    string -> Test`.
 
 All of the above compile to a `Test` value that you can compose. For example,
@@ -236,10 +236,10 @@ they are using `Expecto.BenchmarkDotNet` for performance tests.
 
 ### Normal tests
 
- - `test : string -> TestCaseBuilder` -  Builds a test case in a computation expression.
- - `testAsync : string -> TestAsyncBuilder` - Builds an async test case in a computation expression.
- - `testCase : string -> (unit -> unit) -> Test` - Builds a test case from a test function.
- - `testCaseAsync : string -> Async<unit> -> Test` - Builds an async test case from an async expression.
+- `test : string -> TestCaseBuilder` -  Builds a test case in a computation expression.
+- `testAsync : string -> TestAsyncBuilder` - Builds an async test case in a computation expression.
+- `testCase : string -> (unit -> unit) -> Test` - Builds a test case from a test function.
+- `testCaseAsync : string -> Async<unit> -> Test` - Builds an async test case from an async expression.
 
 ### `testList` for grouping
 
@@ -269,7 +269,7 @@ samples](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sampl
 
 ### Test fixtures
 
- - `testFixture : ('a -> unit -> unit) -> (seq<string * 'a>) -> seq<Test>`
+- `testFixture : ('a -> unit -> unit) -> (seq<string * 'a>) -> seq<Test>`
 
 The test fixture takes a factory and a sequence of partial tests. The `'a`
 parameter will be inferred to the *function type*, such as
@@ -293,10 +293,10 @@ testList "Setup & teardown 3" [
 
 ### Pending tests
 
- - `ptestCase`
- - `ptest`
- - `ptestAsync`
- - `ptestCaseAsync`
+- `ptestCase`
+- `ptest`
+- `ptestAsync`
+- `ptestCaseAsync`
 
 You can mark an individual spec or container as Pending. This will prevent the
 spec (or specs within the list) from running.  You do this by adding a `p`
@@ -330,18 +330,18 @@ let myTests =
 
 Optionally, in the `TestCode` (function body):
 
- - `Tests.skiptest`
- - `Tests.skiptestf`
+- `Tests.skiptest`
+- `Tests.skiptestf`
 
 ### Focusing tests
 
 Focusing can be done with
 
- - `ftestCase`
- - `ftestList`
- - `ftestCaseAsync`
- - `ftest`
- - `ftestAsync`
+- `ftestCase`
+- `ftestList`
+- `ftestCaseAsync`
+- `ftest`
+- `ftestAsync`
 
 It is often convenient, when developing to be able to run a subset of specs.
 Expecto allows you to focus specific test cases or tests list by putting `f` before *testCase* or *testList* or `F` before attribute *Tests*(when reflection tests discovery is used).
@@ -434,7 +434,7 @@ let timeout =
 
 ### Parametised tests with `testParam`
 
- - `testParam`
+- `testParam`
 
 ```fsharp
 testList "numberology 101" (
@@ -541,13 +541,13 @@ property based test).
 These are a few resources that will get you on your way towards fully-specified
 systems with property-based testing.
 
- - [An introduction to property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing/) with [slides and video](http://fsharpforfunandprofit.com/pbt/)
- - [Choosing properties for property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing-2/)
- - [(video) Race conditions, distribution and interactions](https://vimeo.com/68383317)
- - [Test data: generators, schrinkers and instances](https://fscheck.github.io/FsCheck/TestData.html)
- - [Model based testing](https://fscheck.github.io/FsCheck/StatefulTesting.html)
- - [Testing and quality assurance in Haskell](http://book.realworldhaskell.org/read/testing-and-quality-assurance.html)
- - [Property-based testing for better code](https://www.youtube.com/watch?v=shngiiBfD80)
+- [An introduction to property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing/) with [slides and video](http://fsharpforfunandprofit.com/pbt/)
+- [Choosing properties for property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing-2/)
+- [(video) Race conditions, distribution and interactions](https://vimeo.com/68383317)
+- [Test data: generators, schrinkers and instances](https://fscheck.github.io/FsCheck/TestData.html)
+- [Model based testing](https://fscheck.github.io/FsCheck/StatefulTesting.html)
+- [Testing and quality assurance in Haskell](http://book.realworldhaskell.org/read/testing-and-quality-assurance.html)
+- [Property-based testing for better code](https://www.youtube.com/watch?v=shngiiBfD80)
 
 #### Code from FsCheck
 
@@ -555,8 +555,8 @@ These code snippets show a bit of the API usage and how to create Arbitrary
 instances (which encapsulate generation with Gen instances and shrinkage),
 respectively.
 
- - [FsCheck Examples.fs](https://github.com/fscheck/FsCheck/blob/master/examples/FsCheck.Examples/Examples.fs)
- - [FsCheck Arbitrary.fs](https://github.com/fscheck/FsCheck/blob/master/src/FsCheck/Arbitrary.fs#L26)
+- [FsCheck Examples.fs](https://github.com/fscheck/FsCheck/blob/master/examples/FsCheck.Examples/Examples.fs)
+- [FsCheck Arbitrary.fs](https://github.com/fscheck/FsCheck/blob/master/src/FsCheck/Arbitrary.fs#L26)
 
 ### Performance tests
 
@@ -571,74 +571,74 @@ leaving out `expected` when obvious from the function.
 
 This module is your main entry-point when asserting.
 
- - `throws`
- - `throwsC`
- - `throwsT`
- - `isNone`
- - `isSome`
- - `isChoice1Of2`
- - `isChoice2Of2`
- - `isNull`
- - `isNotNull`
- - `isNotNaN`
- - `isNotPositiveInfinity`
- - `isNotNegativeInfinity`
- - `isNotInfinity`
- - `isLessThan`
- - `isLessThanOrEqual`
- - `isGreaterThan`
- - `isGreaterThanOrEqual`
- - `notEqual`
- - `isFalse`
- - `isTrue`
- - `sequenceEqual`
- - `floatClose : Accuracy -> float -> float -> string -> unit` - Expect the
+- `throws`
+- `throwsC`
+- `throwsT`
+- `isNone`
+- `isSome`
+- `isChoice1Of2`
+- `isChoice2Of2`
+- `isNull`
+- `isNotNull`
+- `isNotNaN`
+- `isNotPositiveInfinity`
+- `isNotNegativeInfinity`
+- `isNotInfinity`
+- `isLessThan`
+- `isLessThanOrEqual`
+- `isGreaterThan`
+- `isGreaterThanOrEqual`
+- `notEqual`
+- `isFalse`
+- `isTrue`
+- `sequenceEqual`
+- `floatClose : Accuracy -> float -> float -> string -> unit` - Expect the
    floats to be within the combined absolute and relative accuracy given by
    `abs(a-b) <= absolute + relative * max (abs a) (abs b)`. Default accuracy
    available are: `Accuracy.low = {absolute=1e-6; relative=1e-3}`,
    `Accuracy.medium = {absolute=1e-8; relative=1e-5}`,
    `Accuracy.high = {absolute=1e-10; relative=1e-7}`,
    `Accuracy.veryHigh = {absolute=1e-12; relative=1e-9}`.
- - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If
+- `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If
    it does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
- - `isAscending` - Expect the sequence `subject` to be ascending. If it does not
+- `isAscending` - Expect the sequence `subject` to be ascending. If it does not
    then fail with `format` as an error message.
- - `isDescending` - Expect the sequence `subject` to be descending. If it does
+- `isDescending` - Expect the sequence `subject` to be descending. If it does
    not then fail with `format` as an error message.
- - `stringContains` – Expect the string `subject` to contain `substring` as part
+- `stringContains` – Expect the string `subject` to contain `substring` as part
    of itself.  If it does not, then fail with `format` and `subject` and
    `substring` as part of the error message.
- - `isMatch` - Expect the string `actual` to match `pattern`
- - `isRegexMatch` - Expect the string `actual` to match `regex`
- - `isNotMatch` - Expect the string `actual` to not match `pattern`
- - `isNotRegexMatch` - Expect the string `actual` to not match `regex`
- - `stringStarts` – Expect the string `subject` to start with `prefix` and if it
+- `isMatch` - Expect the string `actual` to match `pattern`
+- `isRegexMatch` - Expect the string `actual` to match `regex`
+- `isNotMatch` - Expect the string `actual` to not match `pattern`
+- `isNotRegexMatch` - Expect the string `actual` to not match `regex`
+- `stringStarts` – Expect the string `subject` to start with `prefix` and if it
    does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
- - `stringEnds` - Expect the string `subject` to end with `suffix`. If it does
+- `stringEnds` - Expect the string `subject` to end with `suffix`. If it does
    not then fail with `format` as an error message together with a description
    of `subject` and `suffix`.
- - `stringHasLength` - Expect the string `subject` to have length equals
+- `stringHasLength` - Expect the string `subject` to have length equals
    `length`. If it does not then fail with `format` as an error message together
    with a description of `subject` and `length`.
- - `isNotEmpty` - Expect the string `actual` to be not null nor empty
- - `isNotWhitespace` - Expect the string `actual` to be not null nor empty nor whitespace
- - `isEmpty` - Expect the sequence `actual` to be empty
- - `isNonEmpty` - Expect the sequence `actual` to be not empty
- - `hasCountOf` - Expect that the counts of the found value occurrences by `selector` in `actual` equals the `expected`.
- - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain
+- `isNotEmpty` - Expect the string `actual` to be not null nor empty
+- `isNotWhitespace` - Expect the string `actual` to be not null nor empty nor whitespace
+- `isEmpty` - Expect the sequence `actual` to be empty
+- `isNonEmpty` - Expect the sequence `actual` to be not empty
+- `hasCountOf` - Expect that the counts of the found value occurrences by `selector` in `actual` equals the `expected`.
+- `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain
    the item.
- - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
+- `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
    contains all elements from second sequence (not taking into account an order
    of elements).
- - `distribution: 'a seq -> Map<'a, uint32> -> string -> unit` - Expect the sequence contains all elements from map (first element in tuple is an item expected to be in sequence, second is a positive number of its occurrences in a sequence). Function is not taking into account an order of elements.
- - `streamsEqual` – Expect the streams to be byte-wise identical.
- - `isFasterThan : (unit -> 'a) -> (unit -> 'a) -> string -> unit` – Expect the
+- `distribution: 'a seq -> Map<'a, uint32> -> string -> unit` - Expect the sequence contains all elements from map (first element in tuple is an item expected to be in sequence, second is a positive number of its occurrences in a sequence). Function is not taking into account an order of elements.
+- `streamsEqual` – Expect the streams to be byte-wise identical.
+- `isFasterThan : (unit -> 'a) -> (unit -> 'a) -> string -> unit` – Expect the
     first function to be faster than the second function with the passed string
     message, printed on failure. See the next section on Performance for example
     usage.
- - `isFasterThanSub` – Like the above but with passed function signature of
+- `isFasterThanSub` – Like the above but with passed function signature of
    `Performance.Measurer<unit,'a> -> 'a`, allowing you to do setup and teardown
    of your subject under test (the function) before calling the Measurer. See
    the next section on Performance for example usage.
@@ -764,22 +764,22 @@ double is faster. Expected f1 (0.3067 ± 0.0123 ms) to be faster than f2 (0.1513
 
 Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in your code:
 
- - `--debug`: Extra verbose output for your tests.
- - `--sequenced`: Run all tests in sequence.
- - `--parallel`: (default) Run all tests in parallel.
- - `--parallel-workers`: Number of parallel workers (defaults to the number of logical processors).
- - `--filter <hiera>`: Filter a specific hierarchy to run.
- - `--filter-test-list <substring>`: Filter a specific test list to run.
- - `--filter-test-case <substring>`: Filter a specific test case to run.
- - `--run [<tests1> <test2> ...]`: Run only provided tests.
- - `--stress`: Run the tests randomly for the given number of minutes.
- - `--stress-timeout`: Time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).
- - `--stress-memory-limit`: Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).
- - `--fscheck-max-tests`: FsCheck maximum number of tests (default: 100).
- - `--fscheck-start-size`: FsCheck start size (default: 1).
- - `--fscheck-end-size`: FsCheck end size (default: 100 for testing and 10,000 for stress testing).
- - `--list-tests`: Doesn't run tests, print out list of tests instead.
- - `--summary`: Prints out summary after all tests are finished.
+- `--debug`: Extra verbose output for your tests.
+- `--sequenced`: Run all tests in sequence.
+- `--parallel`: (default) Run all tests in parallel.
+- `--parallel-workers`: Number of parallel workers (defaults to the number of logical processors).
+- `--filter <hiera>`: Filter a specific hierarchy to run.
+- `--filter-test-list <substring>`: Filter a specific test list to run.
+- `--filter-test-case <substring>`: Filter a specific test case to run.
+- `--run [<tests1> <test2> ...]`: Run only provided tests.
+- `--stress`: Run the tests randomly for the given number of minutes.
+- `--stress-timeout`: Time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).
+- `--stress-memory-limit`: Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).
+- `--fscheck-max-tests`: FsCheck maximum number of tests (default: 100).
+- `--fscheck-start-size`: FsCheck start size (default: 1).
+- `--fscheck-end-size`: FsCheck end size (default: 100 for testing and 10,000 for stress testing).
+- `--list-tests`: Doesn't run tests, print out list of tests instead.
+- `--summary`: Prints out summary after all tests are finished.
 
 ### The config
 
