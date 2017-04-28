@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -88,7 +88,7 @@
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.6.1'">
       <ItemGroup>
         <Reference Include="BenchmarkDotNet">
-          <HintPath>..\packages\BenchmarkDotNet\lib\net45\BenchmarkDotNet.dll</HintPath>
+          <HintPath>..\packages\BenchmarkDotNet\lib\net46\BenchmarkDotNet.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -99,7 +99,7 @@
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.6.1'">
       <ItemGroup>
         <Reference Include="BenchmarkDotNet.Core">
-          <HintPath>..\packages\BenchmarkDotNet.Core\lib\net45\BenchmarkDotNet.Core.dll</HintPath>
+          <HintPath>..\packages\BenchmarkDotNet.Core\lib\net46\BenchmarkDotNet.Core.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -110,7 +110,7 @@
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.6.1'">
       <ItemGroup>
         <Reference Include="BenchmarkDotNet.Toolchains.Roslyn">
-          <HintPath>..\packages\BenchmarkDotNet.Toolchains.Roslyn\lib\net45\BenchmarkDotNet.Toolchains.Roslyn.dll</HintPath>
+          <HintPath>..\packages\BenchmarkDotNet.Toolchains.Roslyn\lib\net46\BenchmarkDotNet.Toolchains.Roslyn.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -155,6 +155,28 @@
       <ItemGroup>
         <Reference Include="Microsoft.CodeAnalysis.CSharp">
           <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp\lib\netstandard1.3\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.6.1'">
+      <ItemGroup>
+        <Reference Include="Microsoft.DotNet.InternalAbstractions">
+          <HintPath>..\packages\Microsoft.DotNet.InternalAbstractions\lib\net451\Microsoft.DotNet.InternalAbstractions.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.6.1'">
+      <ItemGroup>
+        <Reference Include="Microsoft.DotNet.PlatformAbstractions">
+          <HintPath>..\packages\Microsoft.DotNet.PlatformAbstractions\lib\net451\Microsoft.DotNet.PlatformAbstractions.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
