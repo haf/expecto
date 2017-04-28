@@ -119,8 +119,11 @@ task :ensure_nuget_key do
   raise 'missing env NUGET_KEY value' unless ENV['NUGET_KEY']
 end
 
-Albacore::Tasks::Release.new :release,
+Albacore::Tasks::Release.new :release_quick,
                              pkg_dir: 'build/pkg',
-                             depend_on: [:create_nugets, :merge_nupkgs, :ensure_nuget_key],
+                             depend_on: [:versioning],
                              nuget_exe: 'packages/NuGet.CommandLine/tools/NuGet.exe',
                              api_key: ENV['NUGET_KEY']
+
+desc 'Publish new nugets'
+task :release => [:create_nugets, :merge_nupkgs, :ensure_nuget_key, :release_quick]

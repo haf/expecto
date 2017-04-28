@@ -115,7 +115,7 @@ NUGET
       System.Xml.XPath (>= 4.3)
 GITHUB
   remote: logary/logary
-    src/Logary.Facade/Facade.fs (4d0b1e31a994e683a8da15749e47bb09531ff48d)
+    src/Logary.Facade/Facade.fs (bcfc545d6b12d49830ac1efea06d11aa333cfcf6)
 GROUP build
 NUGET
   remote: https://www.nuget.org/api/v2
