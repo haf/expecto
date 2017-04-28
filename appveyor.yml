@@ -9,7 +9,7 @@ install:
   - bundle install
 
 build_script:
-  - cmd: build.cmd "All"
+  - cmd: build.cmd
 
 #  # .NET Core SDK binaries
 #  - ps: $url = "https://dotnetcli.blob.core.windows.net/dotnet/Sdk/rel-1.0.0/dotnet-dev-win-x64.latest.zip"
