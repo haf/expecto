@@ -51,6 +51,12 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
   <ItemGroup>
+    <Content Include="any\netstandard1.6\FSharp.Core.optdata">
+      <Paket>True</Paket>
+    </Content>
+    <Content Include="any\netstandard1.6\FSharp.Core.sigdata">
+      <Paket>True</Paket>
+    </Content>
     <Compile Include="Prelude.fs" />
     <Compile Include="Tests.fs" />
     <Compile Include="SummaryTests.fs" />
@@ -132,7 +138,7 @@
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.6.1'">
       <ItemGroup>
         <Reference Include="FSharp.Core">
-          <HintPath>..\packages\FSharp.Core\lib\net40\FSharp.Core.dll</HintPath>
+          <HintPath>..\packages\FSharp.Core\lib\net45\FSharp.Core.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

@@ -25,6 +25,8 @@ module BenchmarkDotNet =
 
   type BenchmarkConfig =
     { columnProviders: IColumnProvider list
+      hardwareCounters: HardwareCounter list
+      summaryStyle: Reports.ISummaryStyle
       exporters : IExporter list
       loggers : ILogger list
       diagnosers : IDiagnoser list
@@ -37,6 +39,8 @@ module BenchmarkDotNet =
 
     interface IConfig with
       member x.GetColumnProviders() = x.columnProviders :> seq<IColumnProvider>
+      member x.GetHardwareCounters() = x.hardwareCounters :> seq<_>
+      member x.GetSummaryStyle()     = x.summaryStyle
       member x.GetExporters()       = x.exporters  :> seq<IExporter>
       member x.GetLoggers()         = x.loggers    :> seq<ILogger>
       member x.GetDiagnosers()      = x.diagnosers :> seq<IDiagnoser>
@@ -62,6 +66,8 @@ module BenchmarkDotNet =
   let benchmarkConfig =
     let def = DefaultConfig.Instance
     { columnProviders = def.GetColumnProviders() |> List.ofSeq
+      hardwareCounters = def.GetHardwareCounters() |> List.ofSeq
+      summaryStyle = def.GetSummaryStyle()
       exporters = def.GetExporters() |> List.ofSeq
       loggers = [ synchronisedLogger ]
       diagnosers = def.GetDiagnosers() |> List.ofSeq

@@ -17,6 +17,7 @@ packages/*
 project.lock.json
 paket-files/
 BenchmarkDotNet.Artifacts/
+any/
 /.fake/
 /.vs/
 build/
