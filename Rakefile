@@ -62,7 +62,7 @@ build :compile => [:versioning, :restore, :assembly_info, :build_dotnetcli] do |
   b.sln = 'Expecto.sln'
 end
 
-task :build_dotnetcli => [:versioning, :restore_dotnetcli, :assembly_info] do
+task :build_dotnetcli => [:versioning, :restore, :assembly_info] do
   system "dotnet", %W|build -c #{Configuration} -f netstandard1.6 Expecto.netcore/Expecto.netcore.fsproj|
 end
 
