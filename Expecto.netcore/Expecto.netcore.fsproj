@@ -19,6 +19,4 @@
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />
   </ItemGroup>
-  <!--<Import Project="..\.paket\Paket.Restore.targets" />-->
-  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
