@@ -7,6 +7,7 @@ environment:
 install:
   - set PATH=C:\Ruby23-x64\bin;%PATH%
   - bundle install
+  - dotnet --version
 
 build_script:
   - cmd: build.cmd
@@ -24,8 +25,8 @@ build_script:
 #  - dotnet --info
 #  - cmd: build.cmd
 
-# artifacts:
-#  - path: 'bin'
+artifacts:
+ - path: 'build\pkg'
 
 test: off
 version: 0.0.1.{build}
