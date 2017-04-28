@@ -16,6 +16,7 @@ packages/*
 *.sln.ide
 project.lock.json
 paket-files/
+any/
 BenchmarkDotNet.Artifacts/
 /.fake/
 /.vs/
