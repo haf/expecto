@@ -18,6 +18,11 @@ VSCode and Ionide (`ionide-fsharp`) integrate out-of-the-box with Expecto's comm
 There's also a nuget `Expecto.VisualStudio.TestAdapter` that you can add to your
 test project to enable Visual Studio integration.
 
+Expecto tests are parallel and async by default, so that you can use all your
+cores for testing your software.
+
+
+
 Originally, Expecto is a fork of Fuchu aiming to be properly updated and pushed
 to nuget when PRs come in. Expecto is part of the F# suite of libraries I've
 built or am building, to make F# the most approachable language for system
