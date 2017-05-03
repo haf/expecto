@@ -705,9 +705,11 @@ module Impl =
           summary = fun config summary ->
             TestPrinters.defaultPrinter.summary config summary
             |> Async.bind (fun () -> logSummaryWithLocation config.locate summary) }
+
+
     static member teamCityPrinter innerPrinter =
       let formatName (n:string) =
-        n.Replace("/", ".").Replace(" ", "_")
+        n.Replace( "/", "." ).Replace( " ", "_" )
 
       // https://confluence.jetbrains.com/display/TCD10/Build+Script+Interaction+with+TeamCity#BuildScriptInteractionwithTeamCity-Escapedvalues
       let escape (msg: string) =
@@ -739,14 +741,14 @@ module Impl =
         beforeEach = fun n -> async {
           do! innerPrinter.beforeEach n
           tcLog "testStarted" [
-            "flowId", ( formatName n )
-            "name", ( formatName n ) ] }
+            "flowId", formatName n
+            "name", formatName n ] }
 
         passed = fun n d -> async {
           do! innerPrinter.passed n d
           tcLog "testFinished" [
-            "flowId", ( formatName n )
-            "name", ( formatName n )
+            "flowId", formatName n
+            "name", formatName n
             "duration", d.TotalMilliseconds |> int |> string ] }
 
         info = fun s ->
@@ -755,31 +757,31 @@ module Impl =
         ignored = fun n m -> async {
           do! innerPrinter.ignored n m
           tcLog "testIgnored" [
-            "flowId", ( formatName n )
-            "name", ( formatName n )
+            "flowId", formatName n
+            "name", formatName n
             "message", m ] }
 
         failed = fun n m d -> async {
           do! innerPrinter.failed n m d
           tcLog "testFailed" [
-            "flowId", ( formatName n )
-            "name", ( formatName n )
+            "flowId", formatName n
+            "name", formatName n
             "message", m ]
           tcLog "testFinished" [
-            "flowId", ( formatName n )
-            "name", ( formatName n )
+            "flowId", formatName n
+            "name", formatName n
             "duration", d.TotalMilliseconds |> int |> string ] }
 
         exn = fun n e d -> async {
           do! innerPrinter.beforeEach n
           tcLog "testFailed" [
-            "flowId", ( formatName n )
-            "name", ( formatName n )
+            "flowId", formatName n
+            "name", formatName n
             "message", e.Message
             "details", e.StackTrace ]
           tcLog "testFinished" [
-            "flowId", ( formatName n )
-            "name", ( formatName n )
+            "flowId", formatName n
+            "name", formatName n
             "duration", d.TotalMilliseconds |> int |> string ] }
 
         summary = fun c s -> async {
