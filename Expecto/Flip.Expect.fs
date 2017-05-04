@@ -21,6 +21,12 @@ let inline isChoice1Of2 message x = Expecto.Expect.isChoice1Of2 x message
 /// Expects the value to be a Choice2Of2 value.
 let inline isChoice2Of2 message x = Expecto.Expect.isChoice2Of2 x message
 
+/// Expects the value to be a Result.Ok value.
+let inline isOk message x = Expecto.Expect.isOk x message
+
+/// Expects the value to be a Result.Error value.
+let inline isError message x = Expecto.Expect.isError x message
+
 /// Expects the value not to be null.
 let inline isNotNull message x = Expecto.Expect.isNotNull x message
 
