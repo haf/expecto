@@ -73,6 +73,20 @@ let isChoice2Of2 x message =
   | Choice2Of2 _ ->
     ()
 
+/// Expects the value to be a Result.Ok value.
+let isOk x message =
+  match x with
+  | Result.Ok _ -> ()
+  | Result.Error x ->
+    Tests.failtestf "%s. Expected Ok, was Error(%A)." message x
+
+/// Expects the value to be a Result.Error value.
+let isError x message =
+  match x with
+  | Result.Ok x ->
+    Tests.failtestf "%s. Expected Error _, was Ok(%A)." message x
+  | Result.Error _ -> ()
+
 /// Expects the value not to be null.
 let isNotNull x message =
   match x with

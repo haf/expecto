@@ -578,6 +578,8 @@ This module is your main entry-point when asserting.
 - `isSome`
 - `isChoice1Of2`
 - `isChoice2Of2`
+- `isOk` - Expect the value to be a Result.Ok value
+- `isError` - Expect the value to be a Result.Error value
 - `isNull`
 - `isNotNull`
 - `isNotNaN`
