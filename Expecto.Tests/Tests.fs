@@ -659,6 +659,19 @@ let expecto =
         ) |> assertTestFails
       ]
 
+      testList "#all" [
+        testCase "pass" <| fun _ ->
+          Expect.all [2;2] ((=) 2) "should pass"
+
+        testCase "fail" (fun _ ->
+          Expect.all [2;3] ((=) 2) "should fail"
+        ) |> assertTestFails
+
+        testCase "null" (fun _ ->
+          Expect.all null ((=) 5) "should also fail"
+        ) |> assertTestFails
+      ]
+
       testList "#containsAll" [
         testCase "identical sequence" <| fun _ ->
           Expect.containsAll [|21;37|] [|21;37|] "Identical"
