@@ -100,6 +100,9 @@ let inline isFalse message actual = Expecto.Expect.isFalse actual message
 /// Expects the value to be true.
 let inline isTrue message actual = Expecto.Expect.isTrue actual message
 
+/// Expect that some element from `actual` satisfies the given `asserter`
+let inline exists message asserter actual = Expecto.Expect.exists actual asserter message
+
 /// Expects the `sequence` to contain the `element`.
 let inline contains message element sequence = Expecto.Expect.contains sequence element message
 

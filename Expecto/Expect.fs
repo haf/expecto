@@ -275,6 +275,16 @@ let isTrue actual message =
   else
     Tests.failtestf "%s. Actual value was false but had expected it to be true." message
 
+/// Expect that some element from `actual` satisfies the given `asserter`
+let exists ( actual: 'a seq) asserter message =
+  let exist = 
+    match actual with
+    | null -> false
+    | _ -> actual |> Seq.exists asserter
+  if exist then ()
+  else Tests.failtestf "%s. There isn't any element which satisfies given assertion %A." message asserter
+
+
 /// Expects the `sequence` to contain the `element`.
 let contains sequence element message =
   match sequence |> Seq.tryFind ((=) element) with
