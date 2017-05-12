@@ -302,7 +302,7 @@ let all ( actual: 'a seq) asserter message =
   | _ ->
     let checkResult = checkThem
     if checkResult |> Seq.isEmpty then ()
-    else Tests.failtestf "%s. Some elements doesn't satisfy `asserter`.\n%s" message (formatResult checkResult)
+    else Tests.failtestf "%s. Some elements don't satisfy `asserter`.\n%s" message (formatResult checkResult)
 
 /// Expects the `sequence` to contain the `element`.
 let contains sequence element message =
