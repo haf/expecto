@@ -290,27 +290,27 @@ let inline private allEqualTo actual asserter =
             if isDifferent then yield (i, sprintf "%A" (Seq.item i actual))
       }
 
-let inline private formatAllEqualTo actual =
+let private formatAllEqualTo actual =
   actual
   |> Seq.map ( fun x -> sprintf "Element at index: %d which is equal to: %A" (fst x) (snd x))
   |> String.concat "\n"
 
 /// Expect that all elements from `actual` satisfies the given `asserter`
-let all ( actual: 'a seq) asserter message =
+let all (actual: 'a seq) asserter message =
   match actual with
   | null -> Tests.failtestf "%s. Sequence is empty" message
   | _ ->
     let checkResult = allEqualTo actual asserter
-    if checkResult |> Seq.isEmpty then ()
+    if Seq.isEmpty checkResult then ()
     else Tests.failtestf "%s. Some elements don't satisfy `asserter`.\n%s" message (formatAllEqualTo checkResult)
 
 /// Expect that all elements from `actual` are equal to `equalTo`
-let allEqual ( actual: 'a seq) equalTo message =
+let allEqual (actual: 'a seq) equalTo message =
   match actual with
   | null -> Tests.failtestf "%s. Sequence is empty" message
   | _ ->
     let checkResult = allEqualTo actual ((=) equalTo)
-    if checkResult |> Seq.isEmpty then ()
+    if Seq.isEmpty checkResult then ()
     else Tests.failtestf "%s. Some elements don't equal to `equalTo`: %A.\n%s" message equalTo (formatAllEqualTo checkResult)
 
 /// Expects the `sequence` to contain the `element`.
