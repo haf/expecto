@@ -106,6 +106,9 @@ let inline exists message asserter actual = Expecto.Expect.exists actual asserte
 /// Expect that all elements from `actual` satisfies the given `asserter`
 let inline all message asserter actual = Expecto.Expect.all actual asserter message
 
+/// Expect that all elements from `actual` are equal to `equalTo`
+let inline allEqual message equalTo actual = Expecto.Expect.allEqual actual asserter message
+
 /// Expects the `sequence` to contain the `element`.
 let inline contains message element sequence = Expecto.Expect.contains sequence element message
 
