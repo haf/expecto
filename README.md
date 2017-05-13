@@ -593,6 +593,8 @@ This module is your main entry-point when asserting.
 - `notEqual`
 - `isFalse`
 - `isTrue`
+- `exists` - Expect that some element from `actual` sequence satisfies the given `asserter`
+- `all` - Expect that all elements from `actual` satisfies the given `asserter`
 - `sequenceEqual`
 - `floatClose : Accuracy -> float -> float -> string -> unit` - Expect the
    floats to be within the combined absolute and relative accuracy given by

@@ -275,6 +275,35 @@ let isTrue actual message =
   else
     Tests.failtestf "%s. Actual value was false but had expected it to be true." message
 
+/// Expect that some element from `actual` satisfies the given `asserter`
+let exists ( actual: 'a seq) asserter message =
+  let exist = 
+    match actual with
+    | null -> false
+    | _ -> actual |> Seq.exists asserter
+  if exist then ()
+  else Tests.failtestf "%s. There isn't any element which satisfies given assertion %A." message asserter
+
+/// Expect that all elements from `actual` satisfies the given `asserter`
+let all ( actual: 'a seq) asserter message =
+  let checkThem =
+      seq { for i in 0..(actual |> Seq.length) - 1 do
+            let isDifferent = Seq.item i actual |> asserter |> not
+            if isDifferent then yield (i, sprintf "%A" (Seq.item i actual))
+      }
+
+  let formatResult result =
+    result
+    |> Seq.map ( fun x -> sprintf "Element at index: %d which is equal to: %A" (fst x) (snd x))
+    |> String.concat "\n"
+
+  match actual with
+  | null -> Tests.failtestf "%s. Sequence is empty" message
+  | _ ->
+    let checkResult = checkThem
+    if checkResult |> Seq.isEmpty then ()
+    else Tests.failtestf "%s. Some elements don't satisfy `asserter`.\n%s" message (formatResult checkResult)
+
 /// Expects the `sequence` to contain the `element`.
 let contains sequence element message =
   match sequence |> Seq.tryFind ((=) element) with
