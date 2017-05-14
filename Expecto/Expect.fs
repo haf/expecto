@@ -284,7 +284,7 @@ let exists ( actual: 'a seq) asserter message =
   if exist then ()
   else Tests.failtestf "%s. There isn't any element which satisfies given assertion %A." message asserter
 
-let inline private allEqualTo actual asserter =
+let private allEqualTo actual asserter =
   seq { for i in 0..(actual |> Seq.length) - 1 do
             let isDifferent = Seq.item i actual |> asserter |> not
             if isDifferent then yield (i, sprintf "%A" (Seq.item i actual))
