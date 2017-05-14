@@ -1,5 +1,5 @@
 ---
-language: csharp
+language: fsharp
 
 mono:
  - 4.6.1
