@@ -2,7 +2,7 @@ source https://nuget.org/api/v2
 redirects: on
 framework net461
 
-github logary/logary:0fbb7829b9d4b62f9ffd10d7a4b20d075c6cccc6 src/Logary.Facade/Facade.fs
+github logary/logary src/Logary.Facade/Facade.fs
 
 nuget Argu
 nuget FsCheck
@@ -11,7 +11,7 @@ nuget BenchmarkDotNet
 nuget BenchmarkDotNet.Toolchains.Roslyn
 nuget BenchmarkDotNet.Core
 nuget NuGet.CommandLine
-nuget Mono.Cecil = 0.10-beta5
+nuget Mono.Cecil >= 0.10-beta5
 
 group build
   source https://www.nuget.org/api/v2

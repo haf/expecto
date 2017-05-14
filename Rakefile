@@ -37,8 +37,7 @@ end
 
 task :paket_bootstrap do
   system 'tools/paket.bootstrapper.exe',
-      %|prerelease|,
-      clr_command: true unless File.exists? 'tools/paket.exe'
+         clr_command: true unless File.exists? 'tools/paket.exe'
 end
 
 task :paket_files do

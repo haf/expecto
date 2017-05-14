@@ -64,7 +64,7 @@ NUGET
       Microsoft.CodeAnalysis.Common (2.1)
     Microsoft.DotNet.InternalAbstractions (1.0)
     Microsoft.DotNet.PlatformAbstractions (1.1.1)
-    Mono.Cecil (0.10-beta5)
+    Mono.Cecil (0.10.0-beta5)
     NuGet.CommandLine (3.5)
     System.AppContext (4.3)
     System.Collections (4.3)
@@ -115,7 +115,7 @@ NUGET
       System.Xml.XPath (>= 4.3)
 GITHUB
   remote: logary/logary
-    src/Logary.Facade/Facade.fs (bcfc545d6b12d49830ac1efea06d11aa333cfcf6)
+    src/Logary.Facade/Facade.fs (b6daccff98fc0c285925acec884c6f7363d97cf7)
 GROUP build
 NUGET
   remote: https://www.nuget.org/api/v2
