@@ -1,34 +1,38 @@
 ---
 language: fsharp
 
-mono:
- - 4.6.1
- - 4.8.1
- - latest # => "stable release"
- - weekly # => "latest commits"
+dist: trusty
+sudo: required
 
 os:
  - osx
  - linux
-
-dist: trusty
-sudo: required
-
-dotnet: 1.0.1
 
 install:
  # See details at https://github.com/NuGet/Home/issues/2163
  # this may be required because of an underlying bug in mono. It may
  # also be induced by us because we have an extra nuget.config source.
  - ulimit -n 2048
-
  - rvm install 2.2.3
  - gem install bundler
 
 script:
- - bundle && bundle exec rake
+ - bundle
+ - bundle exec rake
 
 matrix:
+  include:
+    - dotnet: 1.0.4
+      mono: none
+    - mono: 4.8.1
+      dotnet: none
+    - mono: 4.6.1
+      dotnet: none
+    - mono: latest # => "stable release"
+      dotnet: none
+    - mono: weekly # => "latest commits"
+      dotnet: none
+
   allow_failures:
     - mono: latest
     - mono: weekly
