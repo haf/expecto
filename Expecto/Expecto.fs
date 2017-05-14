@@ -1031,7 +1031,7 @@ module Impl =
 
       let randNext tests =
         let next = List.length tests |> rand.Next
-        List.nth tests next
+        List.item next tests
 
       let finishTimestamp =
         lazy

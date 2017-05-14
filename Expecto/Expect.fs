@@ -315,7 +315,7 @@ let inline private formatSet<'a> (concatBy) (formatResult) (whenEmpty) (ss : 'a 
   if Seq.isEmpty ss then
     whenEmpty
   else
-    (match box (Seq.nth 0 ss) with
+    (match box (Seq.item 0 ss) with
     | :? IComparable ->
       ss
       |> Seq.cast<IComparable>

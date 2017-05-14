@@ -81,8 +81,8 @@ module Performance =
 
       let s1,s2,precision =
         let seq = Seq.zip3 (stats f1) (stats f2) (stats (fun m -> m (fun () -> Unchecked.defaultof<_>) ()))
-        Seq.nth 2 seq |> ignore
-        Seq.nth 5 seq
+        Seq.item 2 seq |> ignore
+        Seq.item 5 seq
 
       if max s1.mean s2.mean < precision.mean * 5.0 then
         MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision)
