@@ -9,7 +9,7 @@
     conventions and the ones used by this project.
     * Visual Studio - [EditorConfig VS Extension][ec-vs]
     * vscode - [EditorConfig VScode Extension][ec-vsc]
- 1. Install the `1.0.1` version of the [**netcore SDK**][netcore-sdk]
+ 1. Install the `1.0.4` version of the [**netcore SDK**][netcore-sdk]
  1. You need [albacore][ac] installed to build like I do – it needs to build
     with the `Rakefile` or I won't accept the PR.
  1. New features:
