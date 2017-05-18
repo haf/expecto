@@ -4,6 +4,8 @@
 [![Windows Build](https://ci.appveyor.com/api/projects/status/mscx44sh1ci3xdlr?svg=true)](https://ci.appveyor.com/project/haf/expecto)
 [![NuGet Badge](https://buildstats.info/nuget/expecto)](https://www.nuget.org/packages/expecto)
 
+(Builds failing due to [.Net Core](https://github.com/haf/expecto/issues/165) NuGet bugs)
+
 Expecto is a smooth testing library for F#, with **APIs made for humans**,
 giving **strong testing methodologies to everyone**.
 
