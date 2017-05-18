@@ -50,6 +50,7 @@ end
 
 task :restore_dotnetcli do
   system "dotnet", %W|restore Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj|
+  system "dotnet", %W|restore tools/nuget-workaround/nugetclient.proj|
 end
 
 desc 'restore all nugets as per the packages.config files'
@@ -91,7 +92,8 @@ nugets_pack :create_nugets => ['build/pkg', :versioning, :compile, :create_nuget
     p.files   = FileList['*/*.{csproj,fsproj,nuspec}'].
       exclude(/Tests|Sample|netcore/)
     p.out     = 'build/pkg'
-    p.exe     = 'packages/NuGet.CommandLine/tools/NuGet.exe'
+    p.exe     = 'tools/nuget-workaround/nugetclient'
+    #p.leave_nuspec
     p.with_metadata do |m|
       m.description = 'Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.'
       m.authors     = 'Henrik Feldt, Logibit AB, formerly @mausch'

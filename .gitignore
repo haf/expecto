@@ -23,3 +23,4 @@ any/
 /.vs/
 build/
 *.orig
+tools/nuget-workaround/obj/
