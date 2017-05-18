@@ -53,6 +53,7 @@ documentation for the project.
       * [Focusing tests](#focusing-tests)
       * [Sequenced tests](#sequenced-tests)
       * [Parametised tests with testParam](#parametised-tests-with-testparam)
+      * [Setup and teardown](#setup-and-teardown)
       * [Property based tests](#property-based-tests)
         * [Link collection](#link-collection)
         * [Code from FsCheck](#code-from-fscheck)
@@ -446,6 +447,59 @@ testList "numberology 101" (
       fun value () ->
         Expect.isLessThan value 1444 "Should be less than"
 ] |> List.ofSeq)
+```
+
+### Setup and teardown
+
+A simple way to perform setup and teardown is by using `IDisposable` resources:
+
+```fsharp
+let simpleTests =
+    testList "simples" [
+        test "test one" {
+            use resource = new MyDatabase()
+            // test code
+        }
+    ]
+```
+
+For more complex setup and teardown situations we can write one or more setup functions to manage resources:  
+
+```fsharp
+let clientTests setup =
+    [
+        test "test1" {
+            setup (fun client store ->
+                // test code
+            )
+        }
+        test "test2" {
+            setup (fun client store ->
+                // test code
+            )
+        }
+        // other tests
+    ]
+
+let clientMemoryTests =
+    clientTests (fun test ->
+        let client = memoryClient()
+        let store = memoryStore()
+        test client store
+    )
+    |> testList "client memory tests"
+
+let clientIntegrationTests =
+    clientTests (fun test ->
+        // setup code
+        try
+            let client = realTestClient()
+            let store = realTestStore()
+            test client store
+        finally
+            // teardown code
+    )
+    |> testList "client integration tests"
 ```
 
 ### Property based tests
