@@ -570,6 +570,48 @@ type FsCheckConfig =
   }
 ```
 
+Here is another example of testing with custom generated data
+
+```fsharp
+module MyApp.Tests
+
+// the ExpectoFsCheck module is auto-opened by this
+// the configuration record is in the Expecto namespace in the core library
+open Expecto
+open FsCheck
+
+type User = {
+    Id : int
+    FirstName : string
+    LastName : string
+}
+
+type UserGen() =
+   static member User() : Arbitrary<User> =
+       let genFirsName = Gen.elements ["Don"; "Henrik"; null]
+       let genLastName = Gen.elements ["Syme"; "Feldt"; null]
+       let createUser id firstName lastName =
+           {Id = id; FirstName = firstName ; LastName = lastName}
+       let getId = Gen.choose(0,1000)
+       let genUser =
+           createUser <!> getId <*> genFirsName <*> genLastName
+       genUser |> Arb.fromGen
+
+let config = { FsCheckConfig.defaultConfig with arbitrary = [typeof<UserGen>] }
+
+let properties =
+  testList "FsCheck samples" [
+    
+    // you can also override the FsCheck config
+    testPropertyWithConfig config "User with generated User data" <|
+      fun x ->
+        Expect.isNotNull x.FirstName "First Name should not be null"
+  ]
+
+Tests.runTests defaultConfig properties
+```
+
+
 It will be translated to the FsCheck-specific configuration at runtime. You can
 pass your own callbacks and use `Expecto.Logging` like shown in the
 [Sample](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sample.fs#L23)
