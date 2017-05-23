@@ -23,7 +23,7 @@ script:
 matrix:
   include:
     - dotnet: 1.0.4
-      mono: none
+      mono: 4.8.1
     - mono: 4.8.1
       dotnet: none
     - mono: 4.6.1
