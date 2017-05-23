@@ -89,8 +89,8 @@ desc 'Merge standard and dotnetcli nupkgs'
 module Albacore
   module NugetsPack
     class Cmd
-      def self.clr_command
-        false
+      def mono_command
+        #it should no be executed as mono executable
       end
     end
   end
@@ -103,7 +103,6 @@ nugets_pack :create_nugets => ['build/pkg', :versioning, :compile, :create_nuget
       exclude(/Tests|Sample|netcore/)
     p.out     = 'build/pkg'
     p.exe     = 'tools/nuget-workaround/nugetclient'
-    #p.leave_nuspec
     p.with_metadata do |m|
       m.description = 'Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.'
       m.authors     = 'Henrik Feldt, Logibit AB, formerly @mausch'
