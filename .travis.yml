@@ -1,5 +1,5 @@
 ---
-language: fsharp
+language: csharp
 
 dist: trusty
 sudo: required
@@ -20,15 +20,12 @@ script:
  - bundle
  - bundle exec rake
 
-mono:
- - 4.8.1
-
-dotnet:
- - 1.0.4
+mono: 4.8.1
+dotnet: 1.0.1
 
 matrix:
   include:
-    - dotnet: 1.0.4
+    - dotnet: 1.0.1
       mono: 4.8.1
     - mono: 4.8.1
       dotnet: none
