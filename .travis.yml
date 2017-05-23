@@ -20,6 +20,12 @@ script:
  - bundle
  - bundle exec rake
 
+mono:
+ - 4.8.1
+
+dotnet:
+ - 1.0.4
+
 matrix:
   include:
     - dotnet: 1.0.4
