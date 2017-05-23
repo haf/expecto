@@ -86,6 +86,16 @@ desc 'Merge standard and dotnetcli nupkgs'
     end
   end
 
+module Albacore
+  module NugetsPack
+    class Cmd
+      def self.clr_command
+        false
+      end
+    end
+  end
+end
+
 desc 'package nugets - finds all projects and package them'
 nugets_pack :create_nugets => ['build/pkg', :versioning, :compile, :create_nugets_dotnetcli] do |p|
     p.configuration = Configuration
@@ -93,7 +103,6 @@ nugets_pack :create_nugets => ['build/pkg', :versioning, :compile, :create_nuget
       exclude(/Tests|Sample|netcore/)
     p.out     = 'build/pkg'
     p.exe     = 'tools/nuget-workaround/nugetclient'
-    p.clr_command = false
     #p.leave_nuspec
     p.with_metadata do |m|
       m.description = 'Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.'
