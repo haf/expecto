@@ -24,11 +24,11 @@ mono:
  - 4.8.1
 
 dotnet:
- - 1.0.4
+ - 1.0.1
 
 matrix:
   include:
-    - dotnet: 1.0.4
+    - dotnet: 1.0.1
       mono: 4.8.1
     - mono: 4.8.1
       dotnet: none
