@@ -1,5 +1,5 @@
 ---
-language: fsharp
+language: csharp
 
 dist: trusty
 sudo: required
