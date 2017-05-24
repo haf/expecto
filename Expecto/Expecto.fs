@@ -694,16 +694,16 @@ module Impl =
             }
           }
 
-    static member summaryPrinter =
-      { TestPrinters.defaultPrinter with
+    static member summaryPrinter innerPrinter =
+      { innerPrinter with
           summary = fun config summary ->
-            TestPrinters.defaultPrinter.summary config summary
+            innerPrinter.summary config summary
             |> Async.bind (fun () -> logSummary summary) }
 
-    static member summaryWithLocationPrinter =
-      { TestPrinters.defaultPrinter with
+    static member summaryWithLocationPrinter innerPrinter =
+      { innerPrinter with
           summary = fun config summary ->
-            TestPrinters.defaultPrinter.summary config summary
+            innerPrinter.summary config summary
             |> Async.bind (fun () -> logSummaryWithLocation config.locate summary) }
 
 
@@ -1519,9 +1519,9 @@ module Tests =
         | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}
         | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
         | List_Tests -> id
-        | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter}
+        | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
         | Version -> id
-        | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter}
+        | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter o.printer}
         | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
         | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
         | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
