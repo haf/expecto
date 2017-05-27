@@ -800,6 +800,25 @@ This module is your main entry-point when asserting.
    of your subject under test (the function) before calling the Measurer. See
    the next section on Performance for example usage.
 
+Also note, that there's a "fluent" API, with which you can pipe the test-subject
+value into the expectation:
+
+```fsharp
+open Expecto
+open Expecto.Flip
+
+let compute (multiplier: int) = 42 * multiplier
+
+test "yup yup" {
+  compute 1
+    |> Expect.equals 42 "x1 = 42"
+    
+  compute 2
+    |> Expect.equals 84 "x2 = 82"
+}
+|> runTests defaultConfig
+```
+
 ### `Performance` module
 
 Expecto supports testing that an implementation is faster than another. Use it
