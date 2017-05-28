@@ -1,14 +1,11 @@
 source https://api.nuget.org/v3/index.json
 redirects: on
-framework net461, netstandard1.6
+framework net461, netstandard1.6, netcoreapp1.1
 
 github logary/logary src/Logary.Facade/Facade.fs
 
 nuget Argu
 nuget FsCheck
-nuget FSharp.Core
 nuget BenchmarkDotNet
-nuget BenchmarkDotNet.Toolchains.Roslyn
-nuget BenchmarkDotNet.Core
 nuget NuGet.CommandLine
 nuget Mono.Cecil >= 0.10-beta5
