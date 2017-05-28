@@ -9,9 +9,9 @@
       <Paket>True</Paket>
       <Link>paket-files/Facade.fs</Link>
     </Compile>
-    <Compile Include="..\Expecto\Performance.fs" />
-    <Compile Include="..\Expecto\Expecto.fs" />
-    <Compile Include="..\Expecto\Expect.fs" />
+    <Compile Include="Performance.fs" />
+    <Compile Include="Expecto.fs" />
+    <Compile Include="Expect.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
