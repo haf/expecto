@@ -36,7 +36,7 @@ task :quick_compile_netcore do
 end
 
 task :paket_bootstrap do
-  system 'tools/paket.bootstrapper.exe',
+  system 'tools/paket.bootstrapper.exe prerelease',
          clr_command: true unless File.exists? 'tools/paket.exe'
 end
 

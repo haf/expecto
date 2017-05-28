@@ -12,7 +12,3 @@ nuget BenchmarkDotNet.Toolchains.Roslyn
 nuget BenchmarkDotNet.Core
 nuget NuGet.CommandLine
 nuget Mono.Cecil >= 0.10-beta5
-
-group build
-  source https://api.nuget.org/v3/index.json
-  nuget FAKE
