@@ -1,6 +1,6 @@
-source https://nuget.org/api/v2
+source https://api.nuget.org/v3/index.json
 redirects: on
-framework net461
+framework net461, netstandard1.6
 
 github logary/logary src/Logary.Facade/Facade.fs
 
@@ -14,5 +14,5 @@ nuget NuGet.CommandLine
 nuget Mono.Cecil >= 0.10-beta5
 
 group build
-  source https://www.nuget.org/api/v2
+  source https://api.nuget.org/v3/index.json
   nuget FAKE
