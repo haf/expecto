@@ -12,6 +12,7 @@
     <Compile Include="Performance.fs" />
     <Compile Include="Expecto.fs" />
     <Compile Include="Expect.fs" />
+    <Compile Include="Flip.Expect.fs">
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />

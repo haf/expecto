@@ -11,6 +11,8 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.BenchmarkDotNet", "
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.Tests", "Expecto.Tests\Expecto.Tests.fsproj", "{66FC4FA2-26FF-43FB-88DF-3A5E1609F701}"
 EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.Sample", "Expecto.Sample\Expecto.Sample.fsproj", "{529A6DFD-4C24-452B-94D5-908B892AB4EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +74,17 @@ Global
 		{66FC4FA2-26FF-43FB-88DF-3A5E1609F701}.Release|x64.Build.0 = Release|x64
 		{66FC4FA2-26FF-43FB-88DF-3A5E1609F701}.Release|x86.ActiveCfg = Release|x86
 		{66FC4FA2-26FF-43FB-88DF-3A5E1609F701}.Release|x86.Build.0 = Release|x86
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Debug|x64.ActiveCfg = Debug|x64
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Debug|x64.Build.0 = Debug|x64
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Debug|x86.ActiveCfg = Debug|x86
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Debug|x86.Build.0 = Debug|x86
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Release|x64.ActiveCfg = Release|x64
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Release|x64.Build.0 = Release|x64
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Release|x86.ActiveCfg = Release|x86
+		{529A6DFD-4C24-452B-94D5-908B892AB4EE}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal

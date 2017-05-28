@@ -21,7 +21,6 @@
     <Compile Include="Main.fs" />
     <None Include="Tests.fsx" />
     <None Include="paket.references" />
-    <Content Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
