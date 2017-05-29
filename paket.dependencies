@@ -10,3 +10,4 @@ nuget BenchmarkDotNet
 nuget NuGet.CommandLine
 nuget Mono.Cecil >= 0.10-beta5
 nuget System.Diagnostics.FileVersionInfo
+nuget FAKE
