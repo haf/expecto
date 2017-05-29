@@ -1,4 +1,4 @@
-<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+﻿<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- Name and AssemblyName are required because albacore fails without it -->
     <Name>Expecto.netcore.Tests</Name>
@@ -25,6 +25,10 @@
   <ItemGroup>
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
     <ProjectReference Include="../Expecto/Expecto.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Expecto.FsCheck\Expecto.FsCheck.fsproj" />
+    <ProjectReference Include="..\Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
