@@ -1,4 +1,0 @@
-#!/bin/bash
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-dotnet msbuild $DIR/nugetclient.proj /t:Pack /p:NuspecFile=$4 /p:PackageOutputPath=$3
-
