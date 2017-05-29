@@ -1,8 +1,5 @@
 ﻿<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- Name and AssemblyName are required because albacore fails without it -->
-    <Name>Expecto.netcore.Tests</Name>
-    <AssemblyName>Expecto.netcore.Tests</AssemblyName>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461; netcoreapp1.1</TargetFrameworks>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>

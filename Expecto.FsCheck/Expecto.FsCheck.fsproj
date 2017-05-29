@@ -1,4 +1,5 @@
 ﻿<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+  <Import Project="..\tools\version.props" />
   <PropertyGroup>
     <TargetFrameworks>net461; netstandard1.6</TargetFrameworks>
   </PropertyGroup>
