@@ -44,9 +44,9 @@ Target "ApplyVersion" (fun _ ->
 
 Target "FixLogary"
     (fun _ ->
-        let filename = "./paket-files/logary/logary/src/Logary.Facade/Facade.fs"
+        let filename = "paket-files/logary/logary/src/Logary.Facade/Facade.fs"
         let mutable content = File.ReadAllText filename
-        content <- content.Replace("namespace Lagary.Facade", "namespace Expecto.Logging")
+        content <- content.Replace("namespace Logary.Facade", "namespace Expecto.Logging")
         File.WriteAllText(filename, content))
 
 Target "AssemblyInfo"
