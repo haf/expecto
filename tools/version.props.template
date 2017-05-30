@@ -2,13 +2,12 @@
   <PropertyGroup>
     <Version>@Version</Version>
     <Authors>Henrik Feldt, Logibit AB, formerly @mausch</Authors>
-    <Company>Steve Hatchett (Ported to .NET Standard by Theodore Tsirpanis)</Company>
-    <Copyright>Copyright © 2013-2017 SoftWx, Inc.</Copyright>
-    <PackageLicenseUrl>http://opensource.org/licenses/MIT</PackageLicenseUrl>
+    <Company>Logibit AB</Company>
+    <Copyright>(c) 2016 by Henrik Feldt, formerly Fuchu by @mausch</Copyright>
+    <PackageLicenseUrl>https://opensource.org/licenses/Apache-2.0</PackageLicenseUrl>
     <PackageTags>testing fsharp assert expect</PackageTags>
     <PackageIconUrl>https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/haf/expecto</RepositoryUrl>
     <PackageProjectUrl>https://github.com/haf/expecto</PackageProjectUrl>
-    <Description>Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.</Description>
   </PropertyGroup>
 </Project>

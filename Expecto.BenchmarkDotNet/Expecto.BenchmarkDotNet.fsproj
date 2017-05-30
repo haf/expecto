@@ -4,6 +4,7 @@
     <TargetFrameworks>net461; netcoreapp1.1</TargetFrameworks>
     <DebugType>portable</DebugType>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <Description>Integration of Expecto with BenchmarkDotNet.</Description>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Expecto.BenchmarkDotNet.fs" />

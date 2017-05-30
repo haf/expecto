@@ -4,6 +4,7 @@
     <TargetFrameworks>net461; netstandard1.6</TargetFrameworks>
     <DebugType>portable</DebugType>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <Description>Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.</Description>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\paket-files\logary\logary\src\Logary.Facade\Facade.fs">

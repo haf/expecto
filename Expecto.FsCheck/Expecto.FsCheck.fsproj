@@ -4,6 +4,7 @@
     <TargetFrameworks>net461; netstandard1.6</TargetFrameworks>
     <DebugType>portable</DebugType>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <Description>Integration of Expecto with FsCheck.</Description>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FsCheck.fs" />
