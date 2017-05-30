@@ -13,12 +13,9 @@ install:
  # this may be required because of an underlying bug in mono. It may
  # also be induced by us because we have an extra nuget.config source.
  - ulimit -n 2048
- - rvm install 2.2.3
- - gem install bundler
 
 script:
- - bundle
- - bundle exec rake
+ - ./build.sh
 
 mono: 4.8.1
 dotnet: 1.0.4
