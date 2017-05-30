@@ -13,11 +13,11 @@ let AppName = "Expecto"
 let buildVersion = File.ReadAllText ".version"
 
 [<Literal>]
-let BuildDir = "pkg/"
+let BuildDir = "build/pkg/"
 
 // Filesets
 let projectFiles = !!"/**/*.fsproj" ++ "/**.*.csproj"
-let testProjects, codeProjects = projectFiles |> List.ofSeq |> List.partition (fun x -> x.Contains("test"))
+let testProjects, codeProjects = projectFiles |> List.ofSeq |> List.partition (fun x -> x.ToLower().Contains("test"))
 
 let attributes = 
     let buildDate = DateTime.UtcNow.ToString()
