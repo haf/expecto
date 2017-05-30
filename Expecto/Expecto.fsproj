@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net461; netstandard1.6</TargetFrameworks>
     <DebugType>portable</DebugType>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\paket-files\logary\logary\src\Logary.Facade\Facade.fs">

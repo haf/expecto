@@ -1,9 +1,8 @@
 #r "./packages/FAKE/tools/FakeLib.dll"
 
 open Fake
-open Fake.AppVeyor
 open Fake.AssemblyInfoFile
-open Fake.Git
+open Fake.Testing
 open System
 open System.IO
 
@@ -18,6 +17,12 @@ let BuildDir = "build/pkg/"
 // Filesets
 let projectFiles = !!"/**/*.fsproj" ++ "/**.*.csproj"
 let testProjects, codeProjects = projectFiles |> List.ofSeq |> List.partition (fun x -> x.ToLower().Contains("test"))
+let testAssemblies =
+    !!"/**/*.exe"
+    |> Seq.filter
+        (fun x ->
+            let x = x.ToLower()
+            x.Contains("test") && x.Contains("bin"))
 
 let attributes = 
     let buildDate = DateTime.UtcNow.ToString()
@@ -56,27 +61,27 @@ Target "AssemblyInfo"
 
 Target "Restore" (fun _ -> DotNetCli.Restore id)
 
-Target "Build" (fun _ -> DotNetCli.Build id)
+Target "Build" (fun _ -> DotNetCli.Build (fun p -> {p with Configuration = "Release"}))
 
 Target "Pack" (fun _ -> codeProjects
+                           |> List.filter (fun x -> not <| x.Contains("Sample"))
                            |> List.iter
                             (fun x -> DotNetCli.Pack (fun p -> {p with  Project = x;
                                                                         Configuration = "Release";
+                                                                        AdditionalArgs = ["--no-build"]
                                                                         OutputPath = sprintf "./../%s" BuildDir;})))
 
-Target "Test" (fun _ -> testProjects
-                           |> List.iter
-                            (fun x -> DotNetCli.RunCommand (fun p -> {p with WorkingDir = DirectoryName x}) "run -f netcoreapp1.1" ))
+Target "Test" (fun _ -> Expecto.Expecto id testAssemblies)
 
 // Build order
-"CleanBuildOutput" ==> "Clean"
-"CleanBuildOutput"
-    ==> "ApplyVersion"
+"ApplyVersion"
+    ==> "Clean"
     ==> "AssemblyInfo"
     ==> "FixLogary"
     ==> "Restore"
-    // ==> "Build" // Test and Pack do the building.
-    ==> "Test"
+    ==> "Build"
+    ==> "CleanBuildOutput"
     ==> "Pack"
+"Build" ==> "Test"
 // start build
 RunTargetOrDefault "Pack"

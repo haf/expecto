@@ -2,6 +2,8 @@
   <Import Project="..\tools\version.props" />
   <PropertyGroup>
     <TargetFrameworks>net461; netcoreapp1.1</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Expecto.BenchmarkDotNet.fs" />
