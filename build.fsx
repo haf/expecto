@@ -84,12 +84,19 @@ Target "Pack" (fun _ -> codeProjects
 
 Target "Test" (fun _ -> Expecto.Expecto id testAssemblies)
 
+Target "CheckPendingChanges"
+    (fun _ ->
+        if not <| Git.Information.isCleanWorkingCopy currentDirectory then
+            failwith "Repository is not clean."
+        else
+            printfn "Repository is clean.")
+
 // Build order
 "ApplyVersion"
     ==> "Clean"
     ==> "AssemblyInfo"
-    ==> "FixLogary"
     ==> "Restore"
+    ==> "FixLogary"
     ==> "Build"
     ==> "CleanBuildOutput"
     ==> "Pack"
