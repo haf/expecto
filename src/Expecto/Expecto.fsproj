@@ -1,5 +1,5 @@
 <Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
-  <Import Project="..\tools\version.props" />
+  <Import Project="..\..\tools\version.props" />
   <PropertyGroup>
     <TargetFrameworks>net461; netstandard1.6</TargetFrameworks>
     <DebugType>portable</DebugType>
@@ -7,7 +7,7 @@
     <Description>Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.</Description>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\paket-files\logary\logary\src\Logary.Facade\Facade.fs">
+    <Compile Include="..\..\paket-files\logary\logary\src\Logary.Facade\Facade.fs">
       <Paket>True</Paket>
       <Link>paket-files/Facade.fs</Link>
     </Compile>
@@ -19,5 +19,5 @@
   <ItemGroup>
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

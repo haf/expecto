@@ -1,5 +1,5 @@
-﻿<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
-  <Import Project="..\tools\version.props" />
+<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+  <Import Project="..\..\tools\version.props" />
   <PropertyGroup>
     <TargetFrameworks>net461; netstandard1.6</TargetFrameworks>
     <DebugType>portable</DebugType>
@@ -15,5 +15,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

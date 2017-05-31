@@ -1,4 +1,4 @@
-﻿<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461; netcoreapp1.1</TargetFrameworks>
@@ -21,11 +21,11 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
-    <ProjectReference Include="../Expecto/Expecto.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Expecto.FsCheck\Expecto.FsCheck.fsproj" />
-    <ProjectReference Include="..\Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj" />
+    <ProjectReference Include="..\..\src\Expecto\Expecto.fsproj" />
+    <ProjectReference Include="..\..\src\Expecto.FsCheck\Expecto.FsCheck.fsproj" />
+    <ProjectReference Include="..\..\src\Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

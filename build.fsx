@@ -26,14 +26,9 @@ let buildVersion =
 let BuildDir = "build/pkg/"
 
 // Filesets
-let projectFiles = !!"/**/*.fsproj" ++ "/**.*.csproj"
-let testProjects, codeProjects = projectFiles |> List.ofSeq |> List.partition (fun x -> x.ToLower().Contains("test"))
-let testAssemblies =
-    !!"/**/*.exe"
-    |> Seq.filter
-        (fun x ->
-            let x = x.ToLower()
-            x.Contains("test") && x.Contains("bin"))
+let codeProjects = !!"./src/**/*.fsproj"
+let testProjects = !!"./tests/**.*proj"
+let testAssemblies = !!"./test/**/net461/*.exe"
 
 let attributes = 
     let buildDate = DateTime.UtcNow.ToString()
@@ -75,12 +70,11 @@ Target "Restore" (fun _ -> DotNetCli.Restore id)
 Target "Build" (fun _ -> DotNetCli.Build (fun p -> {p with Configuration = "Release"}))
 
 Target "Pack" (fun _ -> codeProjects
-                           |> List.filter (fun x -> not <| x.Contains("Sample"))
-                           |> List.iter
+                           |> Seq.iter
                             (fun x -> DotNetCli.Pack (fun p -> {p with  Project = x;
                                                                         Configuration = "Release";
                                                                         AdditionalArgs = ["--no-build"]
-                                                                        OutputPath = sprintf "./../%s" BuildDir;})))
+                                                                        OutputPath = sprintf "./../../%s" BuildDir;})))
 
 Target "Test" (fun _ -> Expecto.Expecto id testAssemblies)
 

@@ -4,13 +4,18 @@
     <TargetFrameworks>net461; netcoreapp1.1</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Main.fs" />
+    <Compile Include="Expecto.Flip.Sample.fs" />
+    <Compile Include="Expecto.Sample.fs" />
+    <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Expecto\Expecto.fsproj" />
+    <ProjectReference Include="..\..\src\Expecto\Expecto.fsproj" />
+    <ProjectReference Include="..\..\src\Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj" />
+    <ProjectReference Include="..\..\src\Expecto.FsCheck\Expecto.FsCheck.fsproj" />
   </ItemGroup>
+  
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
