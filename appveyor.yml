@@ -19,6 +19,10 @@ build_script:
 #  - dotnet --info
 #  - cmd: build.cmd
 
+environment:
+  nuget_key:
+    secure: vvcRRAmZ3qyDhkTae2A50uf75wycN+BA0QQ6OtTJxYAx2zPPi459C5CG/3Qr7z8J
+
 artifacts:
  - path: 'build\pkg'
 
