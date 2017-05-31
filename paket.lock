@@ -23,7 +23,6 @@ NUGET
       BenchmarkDotNet.Core (>= 0.10.6) - restriction: || (== net461) (&& (== net461) (== netstandard16)) (&& (== net461) (== netcore11)) (&& (== netstandard16) (== netcore11) (>= net46)) (&& (== netstandard16) (>= net46)) (&& (== netcore11) (>= net46))
       Microsoft.CodeAnalysis.CSharp (>= 2.0) - restriction: || (== net461) (&& (== net461) (== netstandard16)) (&& (== net461) (== netcore11)) (&& (== netstandard16) (== netcore11) (>= net46)) (&& (== netstandard16) (>= net46)) (&& (== netcore11) (>= net46))
       System.Threading.Tasks (>= 4.3) - restriction: || (== net461) (&& (== net461) (== netstandard16)) (&& (== net461) (== netcore11)) (&& (== netstandard16) (== netcore11) (>= net46)) (&& (== netstandard16) (>= net46)) (&& (== netcore11) (>= net46))
-    FAKE (4.61.3)
     FsCheck (2.9)
       FSharp.Core (>= 4.1.17)
       NETStandard.Library (>= 1.6.1)
@@ -1052,3 +1051,8 @@ NUGET
 GITHUB
   remote: logary/logary
     src/Logary.Facade/Facade.fs (f1d5a7bd317381f014d50ed693e507505b207616)
+GROUP Build
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    FAKE (4.61.3)
+    FSharp.Configuration (1.2)

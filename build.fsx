@@ -1,15 +1,26 @@
-#r "./packages/FAKE/tools/FakeLib.dll"
+#r "./packages/build/FAKE/tools/FakeLib.dll"
+#r "./packages/build/FSharp.Configuration/lib/net46/FSharp.Configuration.dll"
 
 open Fake
 open Fake.AssemblyInfoFile
 open Fake.Testing
+open FSharp.Configuration
 open System
 open System.IO
+
+type SemVer = YamlConfig<".semver">
 
 [<Literal>]
 let AppName = "Expecto"
 
-let buildVersion = File.ReadAllText ".version"
+let buildVersion =
+    let semverData = SemVer()
+    semverData.Load ".semver"
+    let special =
+        match semverData.``:special`` with
+            | "" -> ""
+            | x -> sprintf ".%s" x
+    sprintf "%d.%d.%d%s" semverData.``:major`` semverData.``:minor`` semverData.``:patch`` special
 
 [<Literal>]
 let BuildDir = "build/pkg/"
