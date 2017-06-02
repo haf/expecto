@@ -27,4 +27,5 @@ artifacts:
  - path: 'build\pkg'
 
 test: off
+skip_tags: true
 version: 0.0.1.{build}

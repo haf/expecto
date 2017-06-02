@@ -30,6 +30,7 @@ let buildVersion =
             | x -> sprintf "-%s" x
     sprintf "%d.%d.%s%s" semverData.``:major`` semverData.``:minor`` patch special
 
+let relNotes = ReleaseNotesHelper.LoadReleaseNotes "RELEASENOTES.md"
 [<Literal>]
 let BuildDir = "build/pkg/"
 
@@ -81,6 +82,7 @@ let packFunc proj (x: DotNetCli.PackParams) =
             [
                 "--no-build"
                 sprintf "/p:Version=%s" buildVersion
+                relNotes.Notes |> String.concat "\n" |> sprintf "/pPackageReleaseNotes=%s"
             ]}
 
 let pushFunc url apiEnv (x: Paket.PaketPushParams) =
