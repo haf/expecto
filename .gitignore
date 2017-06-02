@@ -26,4 +26,3 @@ any/
 build/
 *.orig
 tools/nuget-workaround/obj/
-tools/version.props

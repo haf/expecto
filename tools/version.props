@@ -1,6 +1,5 @@
 <Project>
   <PropertyGroup>
-    <Version>@Version</Version>
     <Authors>Henrik Feldt, Logibit AB, formerly @mausch</Authors>
     <Company>Logibit AB</Company>
     <Copyright>(c) 2016 by Henrik Feldt, formerly Fuchu by @mausch</Copyright>
