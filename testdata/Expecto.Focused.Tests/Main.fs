@@ -24,4 +24,4 @@ let unfocusedAttributeDiscoveredTest =  testCase "Should fail if FTestAttribute 
 let main args =
   args
   |> Array.filter(fun a -> a.ToLower().Trim() <> "--fail-on-focused-tests")
-  |> runTestsInAssembly { defaultConfig with failOnFocusedTests = false }
+  |> runTestsInThisAssembly { defaultConfig with failOnFocusedTests = false }

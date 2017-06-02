@@ -118,4 +118,4 @@ let tests =
 
 [<EntryPoint>]
 let main argv =
-  Tests.runTestsInAssembly defaultConfig argv
+  Tests.runTestsInThisAssembly defaultConfig argv
