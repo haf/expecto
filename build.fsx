@@ -133,7 +133,7 @@ Target "CheckPendingChanges"
         if not <| Git.Information.isCleanWorkingCopy currentDirectory then
             failwith "Repository is not clean."
         else
-            printfn "Repository is clean.")
+            tracefn "Repository is clean.")
 
 Target "PushToNuGet" (fun _ -> Paket.Push (pushFunc "https://api.nuget.org/v3/index.json" "nuget_key"))
 
@@ -154,7 +154,18 @@ Target "AppVeyorPush"
 
 Target "Release" DoNothing
 
+Target "PrintStatus"
+    (fun _ ->
+        tracefn "Current directory: %s." currentDirectory
+        tracefn "Git branch: %s." <| Information.getBranchName currentDirectory
+        tracefn "Author of the last commit: %s." <| environVar "APPVEYOR_REPO_COMMIT_AUTHOR"
+        tracefn "Will the packages be pushed to AppVeyor? %b." shouldPushToAppVeyor
+        tracefn "Will the packages be pushed to GitHub/NuGet? %b." shouldPushToGithub
+        tracefn "Repository author: %s." Author
+        tracefn "Did the author commit? %b." didAuthorCommit)
+
 // Build order
+"PrintStatus" ==>
 "CleanBuildOutput"
     ==> "Clean"
     ==> "AssemblyInfo"
