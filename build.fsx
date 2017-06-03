@@ -57,8 +57,6 @@ let attributes =
       Attribute.FileVersion buildVersion
       Attribute.InformationalVersion buildVersion]
 
-type ReleaseBuildType = | DoNotRelease | TagOnly | FullRelease
-
 let isReleaseCommit =
     // AppVeyor will push a tag first, and then the build for the tag will publish to NuGet.org
     let bumpsVersion =
@@ -131,6 +129,8 @@ Target "GitTag"
         Branches.tag currentDirectory tagName
         Branches.pushTag currentDirectory "origin" tagName)
 
+Target "Release" DoNothing
+
 // Build order
 "CleanBuildOutput"
     ==> "Clean"
@@ -141,8 +141,9 @@ Target "GitTag"
     ==> "Pack"
     ==> "Test"
     ==> "CheckPendingChanges"
-    =?> ("GitTag", isReleaseCommit)
     =?> ("PushToNuGet", isReleaseCommit)
+    =?> ("GitTag", isReleaseCommit)
+    ==> "Release"
 "Build" ==> "Test"
 // start build
-RunTargetOrDefault "Pack"
+RunTargetOrDefault "Release"
