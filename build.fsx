@@ -8,14 +8,17 @@ open Fake.Testing
 open FSharp.Configuration
 open System
 open System.IO
+open System.Diagnostics
 
 type SemVer = YamlConfig<".semver">
 
 [<Literal>]
 let AppName = "Expecto"
 
-[<Literal>]
-let Author = "haf"
+let Author = 
+    match buildServer with
+    | AppVeyor -> environVar "APPVEYOR_REPO_NAME" |> Seq.takeWhile ((<>) '/') |> Array.ofSeq |> String
+    | _ -> "haf"
 
 let buildVersion =
     let semverData = SemVer()
@@ -38,8 +41,9 @@ let BuildDir = "build/pkg/"
 let codeProjects = !!"./src/**/*.fsproj"
 let testProjects = !!"./tests/**.*proj"
 let testAssemblies = !!"./test/**/net461/*.exe"
+let packages = !!"./build/**/*.nupkg"
 
-let isOriginalAuthor =
+let didAuthorCommit =
     match buildServer with
     | AppVeyor -> environVar "APPVEYOR_REPO_COMMIT_AUTHOR" = Author
     | _ -> true
@@ -57,14 +61,18 @@ let attributes =
       Attribute.FileVersion buildVersion
       Attribute.InformationalVersion buildVersion]
 
-let isReleaseCommit =
+let isMasterBranch = Information.getBranchName currentDirectory = "master"
+
+let shouldPushToAppVeyor = isMasterBranch && buildServer = AppVeyor
+
+let shouldPushToGithub =
     // AppVeyor will push a tag first, and then the build for the tag will publish to NuGet.org
     let bumpsVersion =
         CommitMessage.getCommitMessage currentDirectory
         |> toLower
         |> startsWith "bump version"
     match buildServer with
-    | AppVeyor -> bumpsVersion && isOriginalAuthor
+    | AppVeyor -> bumpsVersion && didAuthorCommit
     | LocalBuild ->
         if bumpsVersion then
             tracefn "Running from local build; it is assumed that a GitHub release is intended..."
@@ -88,6 +96,12 @@ let pushFunc url apiEnv (x: Paket.PaketPushParams) =
         ApiKey = environVarOrFail apiEnv
         PublishUrl = url
         WorkingDir = BuildDir}
+
+let makeAppVeyorStartInfo pkg =
+    { defaultParams with
+        Program = "appveyor"
+        CommandLine = sprintf "PushArtifact %s" pkg
+    }
 
 // Targets
 Target "Clean" (fun _ -> DotNetCli.RunCommand id "clean")
@@ -129,6 +143,15 @@ Target "GitTag"
         Branches.tag currentDirectory tagName
         Branches.pushTag currentDirectory "origin" tagName)
 
+Target "AppVeyorPush"
+    (fun _ ->
+        packages
+        |> Seq.map (makeAppVeyorStartInfo >> asyncShellExec)
+        |> Async.Parallel
+        |> Async.RunSynchronously
+        |> Array.filter ((<>) 0)
+        |> Array.iter (failwithf "An AppVeyor package push failed with error code %d."))
+
 Target "Release" DoNothing
 
 // Build order
@@ -141,8 +164,9 @@ Target "Release" DoNothing
     ==> "Pack"
     ==> "Test"
     ==> "CheckPendingChanges"
-    =?> ("PushToNuGet", isReleaseCommit)
-    =?> ("GitTag", isReleaseCommit)
+    =?> ("AppVeyorPush", shouldPushToAppVeyor)
+    =?> ("PushToNuGet", shouldPushToGithub)
+    =?> ("GitTag", shouldPushToGithub)
     ==> "Release"
 "Build" ==> "Test"
 // start build
