@@ -77,12 +77,12 @@ let packFunc proj (x: DotNetCli.PackParams) =
     {x with
         Project = proj
         Configuration = "Release"
-        OutputPath = Directory.GetCurrentDirectory() @@ BuildDir
+        OutputPath = ".." </> Directory.GetCurrentDirectory() @@ BuildDir
         AdditionalArgs =
             [
                 "--no-build"
                 sprintf "/p:Version=%s" buildVersion
-                relNotes.Notes |> String.concat "\n" |> sprintf "/pPackageReleaseNotes=%s"
+                relNotes.Notes |> String.concat "\n" |> sprintf "/p:PackageReleaseNotes=\"%s\""
             ]}
 
 let pushFunc url apiEnv (x: Paket.PaketPushParams) =
