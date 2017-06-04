@@ -36,7 +36,7 @@ let BuildDir = "build/pkg/"
 // Filesets
 let codeProjects = !!"./src/**/*.fsproj"
 let testProjects = !!"./tests/**.*proj"
-let testAssemblies = !!"./test/**/net461/*.exe"
+let testAssemblies = !!"./tests/**/net461/*.exe"
 let packages = !!"./build/**/*.nupkg"
 
 let attributes = 
