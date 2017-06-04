@@ -11,6 +11,13 @@ nuget NuGet.CommandLine
 nuget Mono.Cecil >= 0.10-beta5
 nuget System.Diagnostics.FileVersionInfo
 
+group FsCheckTest
+
+    source https://ci.appveyor.com/nuget/fscheck
+    source https://api.nuget.org/v3/index.json
+
+    nuget FsCheck
+
 group Build
 
     source https://api.nuget.org/v3/index.json

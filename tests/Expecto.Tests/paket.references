@@ -1,2 +1,2 @@
-FsCheck
-BenchmarkDotNet
+group FsCheckTest
+    FsCheck
