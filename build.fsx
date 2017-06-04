@@ -61,9 +61,7 @@ let attributes =
       Attribute.FileVersion buildVersion
       Attribute.InformationalVersion buildVersion]
 
-let isMasterBranch = Information.getBranchName currentDirectory = "master"
-
-let shouldPushToAppVeyor = isMasterBranch && buildServer = AppVeyor
+let shouldPushToAppVeyor = buildServer = AppVeyor
 
 let shouldPushToGithub =
     // AppVeyor will push a tag first, and then the build for the tag will publish to NuGet.org
@@ -77,7 +75,7 @@ let shouldPushToGithub =
         if bumpsVersion then
             tracefn "Running from local build; it is assumed that a GitHub release is intended..."
         bumpsVersion
-    | x -> failwithf "Unknown build environment: %A" x
+    | _ -> false
 
 let packFunc proj (x: DotNetCli.PackParams) =
     {x with

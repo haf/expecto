@@ -15,7 +15,8 @@ install:
  - ulimit -n 2048
 
 script:
- - ./build.sh
+ # AppVeyor releases; Travis will just test.
+ - ./build.sh Test
 
 mono: 4.8.1
 dotnet: 1.0.4
