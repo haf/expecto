@@ -15,11 +15,6 @@ type SemVer = YamlConfig<".semver">
 [<Literal>]
 let AppName = "Expecto"
 
-let Author = 
-    match buildServer with
-    | AppVeyor -> environVar "APPVEYOR_REPO_NAME" |> Seq.takeWhile ((<>) '/') |> Array.ofSeq |> String
-    | _ -> "haf"
-
 let buildVersion =
     let semverData = SemVer()
     semverData.Load ".semver"
@@ -34,6 +29,7 @@ let buildVersion =
     sprintf "%d.%d.%s%s" semverData.``:major`` semverData.``:minor`` patch special
 
 let relNotes = ReleaseNotesHelper.LoadReleaseNotes "RELEASENOTES.md"
+
 [<Literal>]
 let BuildDir = "build/pkg/"
 
@@ -42,11 +38,6 @@ let codeProjects = !!"./src/**/*.fsproj"
 let testProjects = !!"./tests/**.*proj"
 let testAssemblies = !!"./test/**/net461/*.exe"
 let packages = !!"./build/**/*.nupkg"
-
-let didAuthorCommit =
-    match buildServer with
-    | AppVeyor -> environVar "APPVEYOR_REPO_COMMIT_AUTHOR" = Author
-    | _ -> true
 
 let attributes = 
     let buildDate = DateTime.UtcNow.ToString()
@@ -63,6 +54,10 @@ let attributes =
 
 let shouldPushToAppVeyor = buildServer = AppVeyor
 
+let isPullrequest =
+    environVarOrNone "APPVEYOR_PULL_REQUEST_NUMBER"
+    |> Option.isSome
+
 let shouldPushToGithub =
     // AppVeyor will push a tag first, and then the build for the tag will publish to NuGet.org
     let bumpsVersion =
@@ -70,7 +65,7 @@ let shouldPushToGithub =
         |> toLower
         |> startsWith "bump version"
     match buildServer with
-    | AppVeyor -> bumpsVersion && didAuthorCommit
+    | AppVeyor -> bumpsVersion && not isPullrequest
     | LocalBuild ->
         if bumpsVersion then
             tracefn "Running from local build; it is assumed that a GitHub release is intended..."
@@ -157,10 +152,9 @@ Target "PrintStatus"
         tracefn "Current directory: %s." currentDirectory
         tracefn "Git branch: %s." <| Information.getBranchName currentDirectory
         tracefn "Author of the last commit: %s." <| environVar "APPVEYOR_REPO_COMMIT_AUTHOR"
+        tracefn "Is the build from a pull request? %b." isPullrequest
         tracefn "Will the packages be pushed to AppVeyor? %b." shouldPushToAppVeyor
-        tracefn "Will the packages be pushed to GitHub/NuGet? %b." shouldPushToGithub
-        tracefn "Repository author: %s." Author
-        tracefn "Did the author commit? %b." didAuthorCommit)
+        tracefn "Will the packages be pushed to GitHub/NuGet? %b." shouldPushToGithub)
 
 // Build order
 "PrintStatus" ==>
