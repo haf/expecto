@@ -31,7 +31,7 @@ let buildVersion =
 let relNotes = ReleaseNotesHelper.LoadReleaseNotes "RELEASENOTES.md"
 
 [<Literal>]
-let BuildDir = "build/pkg/"
+let BuildDir = "build/"
 
 // Filesets
 let codeProjects = !!"./src/**/*.fsproj"

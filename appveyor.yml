@@ -23,9 +23,6 @@ environment:
   nuget_key:
     secure: vvcRRAmZ3qyDhkTae2A50uf75wycN+BA0QQ6OtTJxYAx2zPPi459C5CG/3Qr7z8J
 
-artifacts:
- - path: 'build\pkg'
-
 test: off
 skip_tags: true
 version: 0.0.1.{build}
