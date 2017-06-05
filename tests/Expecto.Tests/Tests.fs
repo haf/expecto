@@ -19,12 +19,7 @@ module Dummy =
   [<Tests>]
   let testB() = TestLabel ("test B", TestList ([], Normal), Normal)
 
-  let thisAssemblyName =
-#if NETCOREAPP1_1
-    "Expecto.netcore.Tests"
-#else
-    "Expecto.Tests"
-#endif
+  let thisAssemblyName = "Expecto.Tests"
 
   let thisModuleNameQualified = sprintf "Expecto.Tests+Dummy, %s" thisAssemblyName
   let thisModuleType = lazy Type.GetType(thisModuleNameQualified, throwOnError=true)

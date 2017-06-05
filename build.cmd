@@ -1,4 +1,13 @@
 @echo off
 
-call bundle
-call bundle exec rake %*
+.paket\paket.bootstrapper.exe 5.0.0-beta010
+if errorlevel 1 (
+  exit /b %errorlevel%
+)
+
+.paket\paket.exe restore group Build
+if errorlevel 1 (
+  exit /b %errorlevel%
+)
+
+packages\build\FAKE\tools\FAKE.exe build.fsx %*

@@ -1,18 +1,26 @@
-source https://nuget.org/api/v2
+source https://api.nuget.org/v3/index.json
 redirects: on
-framework net461
+framework net461, netstandard1.6, netcoreapp1.1
 
 github logary/logary src/Logary.Facade/Facade.fs
 
 nuget Argu
 nuget FsCheck
-nuget FSharp.Core
 nuget BenchmarkDotNet
-nuget BenchmarkDotNet.Toolchains.Roslyn
-nuget BenchmarkDotNet.Core
 nuget NuGet.CommandLine
 nuget Mono.Cecil >= 0.10-beta5
+nuget System.Diagnostics.FileVersionInfo
 
-group build
-  source https://www.nuget.org/api/v2
-  nuget FAKE
+group FsCheckTest
+
+    source https://ci.appveyor.com/nuget/fscheck
+    source https://api.nuget.org/v3/index.json
+
+    nuget FsCheck
+
+group Build
+
+    source https://api.nuget.org/v3/index.json
+
+    nuget FAKE
+    nuget FSharp.Configuration

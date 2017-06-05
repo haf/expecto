@@ -1,0 +1,19 @@
+<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+  <Import Project="..\..\tools\version.props" />
+  <PropertyGroup>
+    <TargetFrameworks>net461; netstandard1.6</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <Description>Integration of Expecto with FsCheck.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="FsCheck.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Expecto\Expecto.fsproj" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>

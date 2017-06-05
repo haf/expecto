@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <Authors>Henrik Feldt, Logibit AB, formerly @mausch</Authors>
+    <Company>Logibit AB</Company>
+    <Copyright>(c) 2016 by Henrik Feldt, formerly Fuchu by @mausch</Copyright>
+    <PackageLicenseUrl>https://opensource.org/licenses/Apache-2.0</PackageLicenseUrl>
+    <PackageTags>testing fsharp assert expect</PackageTags>
+    <PackageIconUrl>https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/haf/expecto</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/haf/expecto</PackageProjectUrl>
+  </PropertyGroup>
+</Project>

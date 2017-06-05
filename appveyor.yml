@@ -1,12 +1,6 @@
-os: Visual Studio 2015
-
-environment:
-  matrix:
-    - CLI_VERSION: 1.0.1
+os: Visual Studio 2017
 
 install:
-  - set PATH=C:\Ruby23-x64\bin;%PATH%
-  - bundle install
   - dotnet --version
 
 build_script:
@@ -25,8 +19,10 @@ build_script:
 #  - dotnet --info
 #  - cmd: build.cmd
 
-artifacts:
- - path: 'build\pkg'
+environment:
+  nuget_key:
+    secure: vvcRRAmZ3qyDhkTae2A50uf75wycN+BA0QQ6OtTJxYAx2zPPi459C5CG/3Qr7z8J
 
 test: off
+skip_tags: true
 version: 0.0.1.{build}
