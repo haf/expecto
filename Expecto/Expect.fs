@@ -11,19 +11,27 @@ open Expecto.Logging.Message
 
 /// Expects f to throw an exception.
 let throws f message =
-  try
-    f ()
-    Tests.failtestf "%s. Expected f to throw." message
-  with e ->
-    ()
+  let thrown =
+    try
+      f ()
+      false
+    with _ ->
+      true
+
+  if not thrown then Tests.failtestf "%s. Expected f to throw." message
 
 /// Expects f to throw, and calls `cont` with its exception.
 let throwsC f cont =
-  try
-    f ()
-    Tests.failtest "Expected f to throw."
-  with e ->
-    cont e
+  let thrown =
+    try
+      f ()
+      None
+    with e ->
+      Some e
+
+  match thrown with
+  | Some e -> cont e
+  | _ -> Tests.failtestf "Expected f to throw."
 
 /// Expects the passed function to throw `'texn`.
 let throwsT<'texn> f message =
@@ -38,7 +46,6 @@ let throwsT<'texn> f message =
                     (e.GetType().FullName)
   | e ->
     ()
-
 
 /// Expects the value to be a None value.
 let isNone x message =
