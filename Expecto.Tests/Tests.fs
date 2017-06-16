@@ -451,7 +451,45 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "raise" [
+      testList "throws" [
+
+        testCase "pass" <| fun _ ->
+          Expect.throws (fun _ -> nullArg "") "Expected to throw an exception"
+
+        testCase "fail when exception is not raised" (fun _ ->
+          Expect.throws ignore "Should fail because no exception is thrown"
+        ) |> assertTestFails
+      ]
+
+      testList "throwsC" [
+
+        testCase "pass and call 'cont' when exception is raised" <| fun _ ->
+          let mutable contCalled = false
+          let exc = Exception()
+          Expect.throwsC
+            (fun _ -> raise exc)
+            (fun e ->
+              contCalled <- true
+              if e <> exc then failtest "passes different exception"
+            )
+
+          if not contCalled then failtest "'cont' is not called"
+
+        testCase "fail when exception is not raised" (fun _ ->
+          Expect.throwsC ignore ignore
+        ) |> assertTestFails
+
+        testCase "do not call 'cont' if exception is not raised" <| fun _ ->
+          let mutable contCalled = false
+          try
+            Expect.throwsC ignore (fun e -> contCalled <- true)
+          with
+            _ -> ()
+
+          if contCalled then failtest "should not call 'cont'"
+      ]
+
+      testList "throwsT" [
 
         testCase "pass" <| fun _ ->
           Expect.throwsT<ArgumentNullException> (fun _ -> nullArg "")
