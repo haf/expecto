@@ -1020,7 +1020,7 @@ Please see the [Devguide](./DEVGUIDE.md).
 ## BenchmarkDotNet usage
 
 The integration with
-[BenchmarkDotNet](https://perfdotnet.github.io/BenchmarkDotNet/index.htm).
+[BenchmarkDotNet](http://benchmarkdotnet.org/).
 
 ```fsharp
 open Expecto
