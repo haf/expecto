@@ -101,7 +101,7 @@ You could create a base .net core project with expecto.
 How to do that? Simply write following lines:
 
 ```
-dotnet new -i Expecto.Template::1.0.0-beta1
+dotnet new -i Expecto.Template::*
 dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
 ```
 
