@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Expecto.CSharp;
 using Expecto;
@@ -27,6 +27,20 @@ namespace Test.CSharp
                 }),
             });
 
-		public static int Main(string[] argv) => Runner.RunTestsInAssembly(Runner.DefaultConfig, argv);
+        [Tests]
+        public static Expecto.Test failingTests =
+            Runner.TestList("general groupings", new Expecto.Test[] {
+                Runner.TestCase("async Action", async () => {
+                    await Task.FromException(new Exception("FAIL"));
+                }),
+                Runner.PendingTestCase("pending async Action", async () => {
+                    await Task.FromException(new Exception("FAIL"));
+                }),
+                Runner.FocusedTestCase("focused async Action", async () => {
+                    await Task.FromException(new Exception("FAIL"));
+                })
+            });
+
+        public static int Main(string[] argv) => Runner.RunTestsInAssembly(Runner.DefaultConfig, argv);
     }
 }
