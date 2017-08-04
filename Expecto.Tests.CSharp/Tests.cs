@@ -25,19 +25,17 @@ namespace Test.CSharp
                     await Task.Delay(100);
                     Console.Write("standard task");
                 }),
-            });
-
-        [Tests]
-        public static Expecto.Test failingTests =
-            Runner.TestList("general groupings", new Expecto.Test[] {
                 Runner.TestCase("async Action", async () => {
-                    await Task.FromException(new Exception("FAIL"));
+                    await Task.Delay(100);
+                    Console.Write("task");
                 }),
                 Runner.PendingTestCase("pending async Action", async () => {
-                    await Task.FromException(new Exception("FAIL"));
+                    await Task.Delay(100);
+                    Console.Write("task");
                 }),
                 Runner.FocusedTestCase("focused async Action", async () => {
-                    await Task.FromException(new Exception("FAIL"));
+                    await Task.Delay(100);
+                    Console.Write("task");
                 })
             });
 
