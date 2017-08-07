@@ -1667,12 +1667,18 @@ module Runner =
   let TestCaseA(name, test: System.Action) = testCase name test.Invoke
   [<CompiledName("TestCase")>]
   let TestCaseT(name, test: Task) = testCaseAsync name (Async.AwaitTask test)
+  [<CompiledName("TestCase")>]
+  let TestCaseFT(name, test: System.Func<Task>) = testCaseAsync name (async { do! Async.AwaitTask (test.Invoke()) })
   [<CompiledName("PendingTestCase")>]
   let PendingTestCaseA(name, test: System.Action) = ptestCase name test.Invoke
   [<CompiledName("PendingTestCase")>]
   let PendingTestCaseT(name, test: Task) = ptestCaseAsync name (Async.AwaitTask test)
+  [<CompiledName("PendingTestCase")>]
+  let PendingTestCaseFT(name, test: System.Func<Task>) = ptestCaseAsync name (async { do! Async.AwaitTask (test.Invoke()) })
   [<CompiledName("FocusedTestCase")>]
   let FocusedTestCaseA(name, test: System.Action) = ftestCase name test.Invoke
   [<CompiledName("FocusedTestCase")>]
   let FocusedTestCaseT(name, test: Task) = ftestCaseAsync name (Async.AwaitTask test)
+  [<CompiledName("FocusedTestCase")>]
+  let FocusedTestCaseFT(name, test: System.Func<Task>) = ftestCaseAsync name (async { do! Async.AwaitTask (test.Invoke()) })
   let DefaultConfig = defaultConfig

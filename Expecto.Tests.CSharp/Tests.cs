@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Expecto.CSharp;
 using Expecto;
@@ -25,8 +25,20 @@ namespace Test.CSharp
                     await Task.Delay(100);
                     Console.Write("standard task");
                 }),
+                Runner.TestCase("async Action", async () => {
+                    await Task.Delay(100);
+                    Console.Write("task");
+                }),
+                Runner.PendingTestCase("pending async Action", async () => {
+                    await Task.Delay(100);
+                    Console.Write("task");
+                }),
+                Runner.FocusedTestCase("focused async Action", async () => {
+                    await Task.Delay(100);
+                    Console.Write("task");
+                })
             });
 
-		public static int Main(string[] argv) => Runner.RunTestsInAssembly(Runner.DefaultConfig, argv);
+        public static int Main(string[] argv) => Runner.RunTestsInAssembly(Runner.DefaultConfig, argv);
     }
 }
