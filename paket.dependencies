@@ -1,5 +1,6 @@
 source https://api.nuget.org/v3/index.json
 redirects: on
+storage: none
 framework net461, netstandard1.6, netcoreapp1.1
 
 github logary/logary src/Logary.Facade/Facade.fs
@@ -10,4 +11,3 @@ nuget BenchmarkDotNet
 nuget NuGet.CommandLine
 nuget Mono.Cecil >= 0.10-beta5
 nuget System.Diagnostics.FileVersionInfo
-nuget FAKE

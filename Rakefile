@@ -36,7 +36,7 @@ task :quick_compile_netcore do
 end
 
 task :paket_bootstrap do
-  system 'tools/paket.bootstrapper.exe prerelease',
+  system '.paket/paket.bootstrapper.exe',
          clr_command: true unless File.exists? 'tools/paket.exe'
 end
 
@@ -45,7 +45,7 @@ task :paket_files do
 end
 
 task :restore_quick do
-  system 'tools/paket.exe', 'restore', clr_command: true
+  system '.paket/paket.exe', 'restore', clr_command: true
 end
 
 task :restore_dotnetcli do

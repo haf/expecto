@@ -2,17 +2,15 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Sample",
-            "type": "mono",
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceRoot}/Expecto.Sample/bin/Debug/Expecto.Sample.exe",
-            "args": [
-                "--debug"
-            ],
+            "preLaunchTask": "build",
+            "program": "${workspaceRoot}/Expecto.Sample/bin/Debug/netcoreapp1.1/Expecto.Sample.dll",
+            "args": [],
             "cwd": "${workspaceRoot}",
-            "runtimeExecutable": null,
-            "env": {},
-            "console": "externalTerminal"
+            "stopAtEntry": false,
+            "console": "internalConsole"
         }
     ]
 }
