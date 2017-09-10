@@ -1,4 +1,4 @@
-﻿<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- Name and AssemblyName are required because albacore fails without it -->
     <Name>Expecto.netcore.Tests</Name>
