@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Expecto</AssemblyName>
-    <TargetFrameworks>net461; netstandard1.6</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard1.6</TargetFrameworks>
     <DebugType>portable</DebugType>
   </PropertyGroup>
   <ItemGroup>

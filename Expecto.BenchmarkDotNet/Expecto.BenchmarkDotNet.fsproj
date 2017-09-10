@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net461; netcoreapp1.1</TargetFrameworks>
+    <TargetFrameworks>net461;netcoreapp1.1</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Expecto.BenchmarkDotNet.fs" />
