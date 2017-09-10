@@ -1,6 +1,6 @@
 source https://api.nuget.org/v3/index.json
 redirects: on
-framework: net461, netstandard1.6, netcoreapp1.1
+framework: net461, netstandard1.6
 
 github logary/logary src/Logary.Facade/Facade.fs
 
