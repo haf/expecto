@@ -1,5 +1,6 @@
 source https://api.nuget.org/v3/index.json
 redirects: on
+storage: none
 
 github logary/logary src/Logary.Facade/Facade.fs
 
