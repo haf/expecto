@@ -6,9 +6,6 @@
     <Compile Include="Expecto.BenchmarkDotNet.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.NET.Sdk" Version="1.0.*" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
