@@ -983,8 +983,8 @@ open System.Threading
 let stress =
   testList "stress testing" [
 
-    let singleTest =
-      testList "hi" [
+    let singleTest name =
+      testList name [
         testCase "one" ignore
       ]
 
@@ -996,10 +996,10 @@ let stress =
         }
       ]
 
-    let deadlockTest() =
+    let deadlockTest(name) =
       let lockOne = new obj()
       let lockTwo = new obj()
-      testList "deadlock" [
+      testList name [
         testAsync "case A" {
           repeat100 (fun () ->
             lock lockOne (fun () ->
@@ -1020,17 +1020,17 @@ let stress =
 
     let sequencedGroup() =
       testList "with other" [
-        singleTest
-        testSequencedGroup "stop deadlock" (deadlockTest())
-        singleTest
+        singleTest "hi"
+        testSequencedGroup "stop deadlock" (deadlockTest("deadlock"))
+        singleTest "another hi"
       ]
 
     let twoSequencedGroups() =
       testList "with other" [
-        singleTest
-        testSequencedGroup "stop deadlock" (deadlockTest())
-        testSequencedGroup "stop deadlock other" (deadlockTest())
-        singleTest
+        singleTest "hi"
+        testSequencedGroup "stop deadlock" (deadlockTest("deadlock"))
+        testSequencedGroup "stop deadlock other" (deadlockTest("other deadlock"))
+        singleTest "another hi"
       ]
 
     yield testAsync "single" {
@@ -1040,7 +1040,7 @@ let stress =
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest) 0 "one"
+      Expect.equal (runTests config (singleTest "hi")) 0 "one"
     }
 
     yield testAsync "memory" {
@@ -1051,7 +1051,7 @@ let stress =
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest &&& 4) 4 "memory"
+      Expect.equal (runTests config (singleTest "hi") &&& 4) 4 "memory"
     }
 
     yield testAsync "never ending" {
@@ -1074,7 +1074,7 @@ let stress =
               stressTimeout = TimeSpan.FromMilliseconds 10000.0
               printer = TestPrinters.silent
               verbosity = Logging.LogLevel.Fatal }
-        Expect.equal (runTests config (deadlockTest())) 8 "timeout"
+        Expect.equal (runTests config (deadlockTest("deadlock"))) 8 "timeout"
     })
 
     yield testAsync "sequenced group" {
@@ -1106,7 +1106,7 @@ let stress =
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest) 0 "one"
+      Expect.equal (runTests config (singleTest "hi")) 0 "one"
     }
 
     yield testAsync "memory sequenced" {
@@ -1117,7 +1117,7 @@ let stress =
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest) 4 "memory"
+      Expect.equal (runTests config (singleTest "hi")) 4 "memory"
     }
 
     yield testAsync "never ending sequenced" {
@@ -1139,6 +1139,6 @@ let stress =
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config (deadlockTest())) 0 "no deadlock"
+      Expect.equal (runTests config (deadlockTest("deadlock"))) 0 "no deadlock"
     })
   ]
