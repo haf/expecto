@@ -1595,7 +1595,7 @@ module Tests =
         | Some _ -> runStress config tests |> Async.RunSynchronously
       else
         printf "Found duplicated test names, these names are: %A" duplicates
-        0
+        1
 
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
