@@ -41,9 +41,6 @@ let tests =
     testCase "basic" <| fun _ ->
       Expect.equal 4 (2+2) "2+2"
 
-    testCase "basic" <| fun _ ->
-      Expect.equal 4 (2+2) "2+2"
-
     test "using computation expression" {
       Expect.equal 4 (2+2) "2+2"
     }
@@ -74,7 +71,6 @@ let tests =
         Expect.equal "Test" "Tes2" "Failing - string with different content"
       } |> assertTestFailsWithMsgStarting "Failing - string with different content.\n          Expected string to equal:\n          \"Tes2\"\n              ↑\n          The string differs at index 3.\n          \"Test\"\n              ↑\n          String does not match at position 3. Expected char: '2', but got 't'."
     ]
-  ]
 
     testList "sumTestResults" [
       let sumTestResultsTests =
