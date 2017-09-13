@@ -567,7 +567,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches pattern" [
+      testList "string matches pattern for isMatch" [
         testCase "pass" <| fun _ ->
           Expect.isMatch "{function:45}" "{function:(\\d+)}" "string matches passed pattern"
 
@@ -576,7 +576,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches pattern" [
+      testList "string matches pattern for isNotMatch" [
         testCase "pass" <| fun _ ->
           Expect.isNotMatch "{function:45d}" "{function:(\\d+)}" "string not matches passed pattern"
 
@@ -585,7 +585,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches regex" [
+      testList "string matches regex for isRegexMatch" [
         testCase "pass" <| fun _ ->
           let regex = Regex("{function:(\\d+)}")
           Expect.isRegexMatch "{function:45}" regex "string matches passed regex"
@@ -596,7 +596,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches regex" [
+      testList "string matches regex for isNotRegexMatch" [
         testCase "pass" <| fun _ ->
           let regex = Regex("{function:(\\d+)}")
           Expect.isNotRegexMatch "{function:45d}" regex "string not matches passed regex"
@@ -644,33 +644,33 @@ let expecto =
       ]
 
       testList "list is empty" [
-        testCase "pass" <| fun _ ->
+        testCase "list pass" <| fun _ ->
           Expect.isEmpty [] "list is empty"
 
-        testCase "pass" <| fun _ ->
+        testCase "array pass" <| fun _ ->
           Expect.isEmpty [||] "list is empty"
 
-        testCase "fail" (fun _ ->
+        testCase "list fail" (fun _ ->
           Expect.isEmpty [5] "list is not empty"
         ) |> assertTestFails
 
-        testCase "fail" (fun _ ->
+        testCase "array fail" (fun _ ->
           Expect.isEmpty [|5|] "list is not empty"
         ) |> assertTestFails
       ]
 
       testList "list is non empty" [
-        testCase "pass" <| fun _ ->
+        testCase "list pass" <| fun _ ->
           Expect.isNonEmpty [5] "list is non empty"
 
-        testCase "pass" <| fun _ ->
+        testCase "array pass" <| fun _ ->
           Expect.isNonEmpty [|5|] "list is non empty"
 
-        testCase "fail" (fun _ ->
+        testCase "list fail" (fun _ ->
           Expect.isNonEmpty [] "list is empty"
         ) |> assertTestFails
 
-        testCase "fail" (fun _ ->
+        testCase "array fail" (fun _ ->
           Expect.isNonEmpty [||] "list is empty"
         ) |> assertTestFails
       ]
