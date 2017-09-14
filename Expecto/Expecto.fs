@@ -1594,7 +1594,7 @@ module Tests =
         | None -> runEval config tests |> Async.RunSynchronously
         | Some _ -> runStress config tests |> Async.RunSynchronously
       else
-        printf "Found duplicated test names, these names are: %A" duplicates
+        printf "Error found duplicated test names, these names are: %A" duplicates
         1
 
   /// Runs all given tests with the supplied command-line options.
