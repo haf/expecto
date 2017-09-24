@@ -1595,10 +1595,10 @@ module Tests =
         | None -> runEval config tests |> Async.RunSynchronously
         | Some _ -> runStress config tests |> Async.RunSynchronously
       else
-        logger.error (
-          eventX "Error found duplicated test names, these names are: {duplicates}"
-            >> setField "duplicates" (sprintf "%A" duplicates)
-        )
+        logger.errorWithBP (
+          eventX "Found duplicated test names, these names are: {duplicates}"
+          >> setField "duplicates" duplicates
+        ) |> Async.RunSynchronously
         1
 
   /// Runs all given tests with the supplied command-line options.
