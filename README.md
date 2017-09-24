@@ -233,7 +233,8 @@ Expecto supports the following test constructors:
 All of the above compile to a `Test` value that you can compose. For example,
 you can compose a `test` and a `testCaseAsync` in a `testList` which you wrap in
 `testSequenced` because all tests in the list use either `Expect.fasterThan` or
-they are using `Expecto.BenchmarkDotNet` for performance tests.
+they are using `Expecto.BenchmarkDotNet` for performance tests. 
+You have to remember that **the fully qualified names of tests need to be unique across your test project.**
 
 ### Normal tests
 

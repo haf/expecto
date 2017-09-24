@@ -567,7 +567,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches pattern" [
+      testList "string matches pattern for isMatch" [
         testCase "pass" <| fun _ ->
           Expect.isMatch "{function:45}" "{function:(\\d+)}" "string matches passed pattern"
 
@@ -576,7 +576,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches pattern" [
+      testList "string matches pattern for isNotMatch" [
         testCase "pass" <| fun _ ->
           Expect.isNotMatch "{function:45d}" "{function:(\\d+)}" "string not matches passed pattern"
 
@@ -585,7 +585,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches regex" [
+      testList "string matches regex for isRegexMatch" [
         testCase "pass" <| fun _ ->
           let regex = Regex("{function:(\\d+)}")
           Expect.isRegexMatch "{function:45}" regex "string matches passed regex"
@@ -596,7 +596,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches regex" [
+      testList "string matches regex for isNotRegexMatch" [
         testCase "pass" <| fun _ ->
           let regex = Regex("{function:(\\d+)}")
           Expect.isNotRegexMatch "{function:45d}" regex "string not matches passed regex"
@@ -647,15 +647,26 @@ let expecto =
         testCase "pass" <| fun _ ->
           Expect.isEmpty [] "list is empty"
 
+        testCase "fail" (fun _ ->
+          Expect.isEmpty [5] "list is not empty"
+        ) |> assertTestFails
+      ]
+
+      testList "array is empty" [
         testCase "pass" <| fun _ ->
           Expect.isEmpty [||] "list is empty"
 
         testCase "fail" (fun _ ->
-          Expect.isEmpty [5] "list is not empty"
+          Expect.isEmpty [|5|] "list is not empty"
         ) |> assertTestFails
+      ]
+
+      testList "array is non empty" [
+        testCase "pass" <| fun _ ->
+          Expect.isNonEmpty [|5|] "list is non empty"
 
         testCase "fail" (fun _ ->
-          Expect.isEmpty [|5|] "list is not empty"
+          Expect.isNonEmpty [||] "list is empty"
         ) |> assertTestFails
       ]
 
@@ -663,15 +674,8 @@ let expecto =
         testCase "pass" <| fun _ ->
           Expect.isNonEmpty [5] "list is non empty"
 
-        testCase "pass" <| fun _ ->
-          Expect.isNonEmpty [|5|] "list is non empty"
-
         testCase "fail" (fun _ ->
           Expect.isNonEmpty [] "list is empty"
-        ) |> assertTestFails
-
-        testCase "fail" (fun _ ->
-          Expect.isNonEmpty [||] "list is empty"
         ) |> assertTestFails
       ]
 
@@ -983,8 +987,8 @@ open System.Threading
 let stress =
   testList "stress testing" [
 
-    let singleTest =
-      testList "hi" [
+    let singleTest name =
+      testList name [
         testCase "one" ignore
       ]
 
@@ -996,10 +1000,10 @@ let stress =
         }
       ]
 
-    let deadlockTest() =
+    let deadlockTest(name) =
       let lockOne = new obj()
       let lockTwo = new obj()
-      testList "deadlock" [
+      testList name [
         testAsync "case A" {
           repeat100 (fun () ->
             lock lockOne (fun () ->
@@ -1020,17 +1024,17 @@ let stress =
 
     let sequencedGroup() =
       testList "with other" [
-        singleTest
-        testSequencedGroup "stop deadlock" (deadlockTest())
-        singleTest
+        singleTest "first single test"
+        testSequencedGroup "stop deadlock" (deadlockTest "first deadlock test")
+        singleTest "second single test"
       ]
 
     let twoSequencedGroups() =
       testList "with other" [
-        singleTest
-        testSequencedGroup "stop deadlock" (deadlockTest())
-        testSequencedGroup "stop deadlock other" (deadlockTest())
-        singleTest
+        singleTest "first single test"
+        testSequencedGroup "stop deadlock" (deadlockTest "first deadlock test")
+        testSequencedGroup "stop deadlock other" (deadlockTest "second deadlock test")
+        singleTest "second single test"
       ]
 
     yield testAsync "single" {
@@ -1040,7 +1044,7 @@ let stress =
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest) 0 "one"
+      Expect.equal (runTests config (singleTest "single test")) 0 "one"
     }
 
     yield testAsync "memory" {
@@ -1051,7 +1055,7 @@ let stress =
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest &&& 4) 4 "memory"
+      Expect.equal (runTests config (singleTest "single test") &&& 4) 4 "memory"
     }
 
     yield testAsync "never ending" {
@@ -1074,7 +1078,7 @@ let stress =
               stressTimeout = TimeSpan.FromMilliseconds 10000.0
               printer = TestPrinters.silent
               verbosity = Logging.LogLevel.Fatal }
-        Expect.equal (runTests config (deadlockTest())) 8 "timeout"
+        Expect.equal (runTests config (deadlockTest "deadlock")) 8 "timeout"
     })
 
     yield testAsync "sequenced group" {
@@ -1106,7 +1110,7 @@ let stress =
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest) 0 "one"
+      Expect.equal (runTests config (singleTest "single test")) 0 "one"
     }
 
     yield testAsync "memory sequenced" {
@@ -1117,7 +1121,7 @@ let stress =
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest) 4 "memory"
+      Expect.equal (runTests config (singleTest "single test")) 4 "memory"
     }
 
     yield testAsync "never ending sequenced" {
@@ -1139,6 +1143,6 @@ let stress =
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config (deadlockTest())) 0 "no deadlock"
+      Expect.equal (runTests config (deadlockTest "deadlock")) 0 "no deadlock"
     })
   ]

@@ -1566,6 +1566,18 @@ module Tests =
     |> Test.toTestCodeList
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
+  /// Prints out names of all tests for given test suite.
+  let duplicatedNames test =
+    test
+    |> Test.toTestCodeList
+    |> Seq.toList
+    |> List.groupBy (fun t -> t.name)
+    |> List.choose ( function
+      | _, x :: _ :: _ -> 
+        Some x.name
+      | _ -> 
+        None
+    )
 
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
@@ -1577,9 +1589,17 @@ module Tests =
       1
     else
       let tests = config.filter tests
-      match config.stress with
-      | None -> runEval config tests |> Async.RunSynchronously
-      | Some _ -> runStress config tests |> Async.RunSynchronously
+      let duplicates = duplicatedNames tests
+      if List.isEmpty duplicates then
+        match config.stress with
+        | None -> runEval config tests |> Async.RunSynchronously
+        | Some _ -> runStress config tests |> Async.RunSynchronously
+      else
+        logger.errorWithBP (
+          eventX "Found duplicated test names, these names are: {duplicates}"
+          >> setField "duplicates" duplicates
+        ) |> Async.RunSynchronously
+        1
 
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
