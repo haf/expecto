@@ -1,6 +1,4 @@
-# expecto
-
-## Maintainers wanted – ping @haf to talk
+# Expecto
 
 [![Linux Build](https://travis-ci.org/haf/expecto.svg?branch=master)](https://travis-ci.org/haf/expecto)
 [![Windows Build](https://ci.appveyor.com/api/projects/status/mscx44sh1ci3xdlr?svg=true)](https://ci.appveyor.com/project/haf/expecto)
@@ -814,10 +812,10 @@ let compute (multiplier: int) = 42 * multiplier
 
 test "yup yup" {
   compute 1
-    |> Expect.equals 42 "x1 = 42"
+    |> Expect.equal "x1 = 42" 42
     
   compute 2
-    |> Expect.equals 84 "x2 = 82"
+    |> Expect.equal "x2 = 82" 84 
 }
 |> runTests defaultConfig
 ```
