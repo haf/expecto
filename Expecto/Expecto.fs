@@ -110,6 +110,10 @@ type AssertException(msg) = inherit ExpectoException(msg)
 type FailedException(msg) = inherit ExpectoException(msg)
 // TODO: move to internal namespace
 type IgnoreException(msg) = inherit ExpectoException(msg)
+/// Represents an error during test discovery.
+type TestDiscoveryException(msg) = inherit ExpectoException(msg)
+/// Represents a null test value during test discovery.
+type NullTestDiscoveryException(msg) = inherit TestDiscoveryException(msg)
 
 /// Marks a top-level test for scanning
 /// The test will run even if PTest is also present.
@@ -1133,20 +1137,33 @@ module Impl =
       return testSummary.errorCode
     }
 
-  let testFromMember (mi: MemberInfo): Test option  =
+  let testFromMember (mi: MemberInfo) : Test option =
+    let checkValue v =
+      if isNull v then
+        "Test is null. Assembly may not be initialized. Consider adding an [<EntryPoint>] or making it a library/classlib."
+        |> NullTestDiscoveryException |> raise
     let getTestFromMemberInfo focusedState =
       match box mi with
       | :? FieldInfo as m ->
         if m.FieldType = typeof<Test>
-        then Some(focusedState, unbox (m.GetValue(null)))
+        then
+          let v = m.GetValue(null)
+          checkValue v
+          Some(focusedState, unbox v)
         else None
       | :? MethodInfo as m ->
         if m.ReturnType = typeof<Test>
-        then Some(focusedState, unbox (m.Invoke(null, null)))
+        then
+          let v = m.Invoke(null, null)
+          checkValue v
+          Some(focusedState, unbox v)
         else None
       | :? PropertyInfo as m ->
         if m.PropertyType = typeof<Test>
-        then Some(focusedState, unbox (m.GetValue(null, null)))
+        then
+          let v = m.GetValue(null, null)
+          checkValue v
+          Some(focusedState, unbox v)
         else None
       | _ -> None
     mi.MatchTestsAttributes ()
