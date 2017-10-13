@@ -1138,32 +1138,21 @@ module Impl =
     }
 
   let testFromMember (mi: MemberInfo) : Test option =
-    let checkValue v =
+    let unboxTest focusedState v =
       if isNull v then
         "Test is null. Assembly may not be initialized. Consider adding an [<EntryPoint>] or making it a library/classlib."
         |> NullTestDiscoveryException |> raise
+      else unbox v
     let getTestFromMemberInfo focusedState =
       match box mi with
       | :? FieldInfo as m ->
-        if m.FieldType = typeof<Test>
-        then
-          let v = m.GetValue(null)
-          checkValue v
-          Some(focusedState, unbox v)
+        if m.FieldType = typeof<Test> then Some(focusedState, m.GetValue(null) |> unboxTest)
         else None
       | :? MethodInfo as m ->
-        if m.ReturnType = typeof<Test>
-        then
-          let v = m.Invoke(null, null)
-          checkValue v
-          Some(focusedState, unbox v)
+        if m.ReturnType = typeof<Test> then Some(focusedState, m.Invoke(null, null) |> unboxTest)
         else None
       | :? PropertyInfo as m ->
-        if m.PropertyType = typeof<Test>
-        then
-          let v = m.GetValue(null, null)
-          checkValue v
-          Some(focusedState, unbox v)
+        if m.PropertyType = typeof<Test> then Some(focusedState, m.GetValue(null, null) |> unboxTest)
         else None
       | _ -> None
     mi.MatchTestsAttributes ()
