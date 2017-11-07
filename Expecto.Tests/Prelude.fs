@@ -20,6 +20,16 @@ module Seq =
     | [x;y] -> Some(x,y)
     | _ -> None
 
+module String =
+  let contains sub (s: string) =
+    s.Contains(sub)
+module Option =
+  let orDefault def = function
+    | None -> def
+    | Some x -> x
+
+
+
 [<AutoOpen>]
 module TestHelpers =
   open Expecto

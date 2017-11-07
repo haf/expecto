@@ -110,6 +110,10 @@ type AssertException(msg) = inherit ExpectoException(msg)
 type FailedException(msg) = inherit ExpectoException(msg)
 // TODO: move to internal namespace
 type IgnoreException(msg) = inherit ExpectoException(msg)
+/// Represents an error during test discovery.
+type TestDiscoveryException(msg) = inherit ExpectoException(msg)
+/// Represents a null test value during test discovery.
+type NullTestDiscoveryException(msg) = inherit TestDiscoveryException(msg)
 
 /// Marks a top-level test for scanning
 /// The test will run even if PTest is also present.
@@ -190,8 +194,8 @@ module internal Helpers =
 
     member m.MatchTestsAttributes () =
       m.GetCustomAttributes true
-      |> Array.map (fun t -> t.GetType().FullName)
-      |> Set.ofArray
+      |> Seq.map (fun t -> t.GetType().FullName)
+      |> Set.ofSeq
       |> Set.intersect allTestAttributes
       |> Set.toList
       |> List.choose matchFocusAttributes
@@ -399,7 +403,6 @@ module Impl =
   open Expecto.Logging.Message
   open Helpers
   open Mono.Cecil
-  open Mono.Cecil.Rocks
 
   let logger = Log.create "Expecto"
 
@@ -638,15 +641,17 @@ module Impl =
             >> setField "duration" d
             >> addExn e)
 
-        summary = fun _ summary ->
+        summary = fun config summary ->
           let spirit =
             if summary.successful then
-              if Console.OutputEncoding.BodyName = "utf-8" then
+              if Console.OutputEncoding.WebName = "utf-8"
+                 && not config.mySpiritIsWeak then
                 "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
               else
                 "Success!"
             else
-              if Console.OutputEncoding.BodyName = "utf-8" then
+              if Console.OutputEncoding.WebName = "utf-8"
+                 && not config.mySpiritIsWeak then
                 "( ರ Ĺ̯ ರೃ )"
               else
                 ""
@@ -693,18 +698,23 @@ module Impl =
             }
           }
 
-    static member summaryPrinter =
-      { TestPrinters.defaultPrinter with
+    static member summaryPrinter innerPrinter =
+      { innerPrinter with
           summary = fun config summary ->
-            TestPrinters.defaultPrinter.summary config summary
+            innerPrinter.summary config summary
             |> Async.bind (fun () -> logSummary summary) }
 
-    static member summaryWithLocationPrinter =
-      { TestPrinters.defaultPrinter with
+    static member summaryWithLocationPrinter innerPrinter =
+      { innerPrinter with
           summary = fun config summary ->
-            TestPrinters.defaultPrinter.summary config summary
+            innerPrinter.summary config summary
             |> Async.bind (fun () -> logSummaryWithLocation config.locate summary) }
+
+
     static member teamCityPrinter innerPrinter =
+      let formatName (n:string) =
+        n.Replace( "/", "." ).Replace( " ", "_" )
+
       // https://confluence.jetbrains.com/display/TCD10/Build+Script+Interaction+with+TeamCity#BuildScriptInteractionwithTeamCity-Escapedvalues
       let escape (msg: string) =
         let replaced =
@@ -735,14 +745,14 @@ module Impl =
         beforeEach = fun n -> async {
           do! innerPrinter.beforeEach n
           tcLog "testStarted" [
-            "flowId", n
-            "name", n ] }
+            "flowId", formatName n
+            "name", formatName n ] }
 
         passed = fun n d -> async {
           do! innerPrinter.passed n d
           tcLog "testFinished" [
-            "flowId", n
-            "name", n
+            "flowId", formatName n
+            "name", formatName n
             "duration", d.TotalMilliseconds |> int |> string ] }
 
         info = fun s ->
@@ -751,31 +761,31 @@ module Impl =
         ignored = fun n m -> async {
           do! innerPrinter.ignored n m
           tcLog "testIgnored" [
-            "flowId", n
-            "name", n
+            "flowId", formatName n
+            "name", formatName n
             "message", m ] }
 
         failed = fun n m d -> async {
           do! innerPrinter.failed n m d
           tcLog "testFailed" [
-            "flowId", n
-            "name", n
+            "flowId", formatName n
+            "name", formatName n
             "message", m ]
           tcLog "testFinished" [
-            "flowId", n
-            "name", n
+            "flowId", formatName n
+            "name", formatName n
             "duration", d.TotalMilliseconds |> int |> string ] }
 
         exn = fun n e d -> async {
           do! innerPrinter.beforeEach n
           tcLog "testFailed" [
-            "flowId", n
-            "name", n
+            "flowId", formatName n
+            "name", formatName n
             "message", e.Message
             "details", e.StackTrace ]
           tcLog "testFinished" [
-            "flowId", n
-            "name", n
+            "flowId", formatName n
+            "name", formatName n
             "duration", d.TotalMilliseconds |> int |> string ] }
 
         summary = fun c s -> async {
@@ -822,6 +832,8 @@ module Impl =
       /// FsCheck end size (default: 100 for testing and 10,000 for
       /// stress testing).
       fsCheckEndSize: int option
+      /// Turn off spirits
+      mySpiritIsWeak: bool
     }
     static member defaultConfig =
       { parallel = true
@@ -841,6 +853,7 @@ module Impl =
         fsCheckMaxTests = 100
         fsCheckStartSize = 1
         fsCheckEndSize = None
+        mySpiritIsWeak = false
       }
 
   let execTestAsync config (test:FlatTest) : Async<TestSummary> =
@@ -1021,7 +1034,8 @@ module Impl =
       let rand = Random()
 
       let randNext tests =
-        List.length tests |> rand.Next |> List.nth tests
+        let next = List.length tests |> rand.Next
+        List.item next tests
 
       let finishTimestamp =
         lazy
@@ -1123,20 +1137,22 @@ module Impl =
       return testSummary.errorCode
     }
 
-  let testFromMember (mi: MemberInfo): Test option  =
+  let testFromMember (mi: MemberInfo) : Test option =
+    let unboxTest v =
+      if isNull v then
+        "Test is null. Assembly may not be initialized. Consider adding an [<EntryPoint>] or making it a library/classlib."
+        |> NullTestDiscoveryException |> raise
+      else unbox v
     let getTestFromMemberInfo focusedState =
       match box mi with
       | :? FieldInfo as m ->
-        if m.FieldType = typeof<Test>
-        then Some(focusedState, unbox (m.GetValue(null)))
+        if m.FieldType = typeof<Test> then Some(focusedState, m.GetValue(null) |> unboxTest)
         else None
       | :? MethodInfo as m ->
-        if m.ReturnType = typeof<Test>
-        then Some(focusedState, unbox (m.Invoke(null, null)))
+        if m.ReturnType = typeof<Test> then Some(focusedState, m.Invoke(null, null) |> unboxTest)
         else None
       | :? PropertyInfo as m ->
-        if m.PropertyType = typeof<Test>
-        then Some(focusedState, unbox (m.GetValue(null, null)))
+        if m.PropertyType = typeof<Test> then Some(focusedState, m.GetValue(null, null) |> unboxTest)
         else None
       | _ -> None
     mi.MatchTestsAttributes ()
@@ -1155,9 +1171,9 @@ module Impl =
     let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
     let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
     fun (t: Type) ->
-      [ t.GetMethods bindingFlags |> asMembers
-        t.GetProperties bindingFlags |> asMembers
-        t.GetFields bindingFlags |> asMembers ]
+      [ t.GetTypeInfo().GetMethods bindingFlags |> asMembers
+        t.GetTypeInfo().GetProperties bindingFlags |> asMembers
+        t.GetTypeInfo().GetFields bindingFlags |> asMembers ]
       |> Seq.collect id
       |> Seq.choose testFromMember
       |> Seq.toList
@@ -1171,20 +1187,20 @@ module Impl =
   let isFsharpFuncType t =
     let baseType =
       let rec findBase (t:Type) =
-        if t.BaseType = null || t.BaseType = typeof<obj> then
+        if t.GetTypeInfo().BaseType = null || t.GetTypeInfo().BaseType = typeof<obj> then
           t
         else
-          findBase t.BaseType
+          findBase (t.GetTypeInfo().BaseType)
       findBase t
-    baseType.IsGenericType && baseType.GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
+    baseType.GetTypeInfo().IsGenericType && baseType.GetTypeInfo().GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
 
   let getFuncTypeToUse (testFunc:unit->unit) (asm:Assembly) =
     let t = testFunc.GetType()
-    if t.Assembly.FullName = asm.FullName then
+    if t.GetTypeInfo().Assembly.FullName = asm.FullName then
       t
     else
       let nestedFunc =
-        t.GetFields()
+        t.GetTypeInfo().GetFields()
         |> Seq.tryFind (fun f -> isFsharpFuncType f.FieldType)
       match nestedFunc with
       | Some f -> f.GetValue(testFunc).GetType()
@@ -1194,7 +1210,7 @@ module Impl =
     match testCode with
     | Sync test ->
       let t = getFuncTypeToUse test asm
-      let m = t.GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
+      let m = t.GetTypeInfo().GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
       (t.FullName, m.Name)
     | Async _ | AsyncFsCheck _ ->
       ("Unknown Async", "Unknown Async")
@@ -1214,13 +1230,16 @@ module Impl =
 
     let getMethods typeName =
       match types.TryFind (getEcma335TypeName typeName) with
-      | Some t -> Some (t.GetMethods())
+      | Some t -> Some (t.Methods)
       | _ -> None
 
     let getFirstOrDefaultSequencePoint (m:MethodDefinition) =
       m.Body.Instructions
-      |> Seq.tryFind (fun i -> (i.SequencePoint <> null && i.SequencePoint.StartLine <> lineNumberIndicatingHiddenLine))
-      |> Option.map (fun i -> i.SequencePoint)
+      |> Seq.tryPick (fun i ->
+        let sp = m.DebugInformation.GetSequencePoint i
+        if sp <> null && sp.StartLine <> lineNumberIndicatingHiddenLine then
+          Some sp else None)
+      |> Option.map (fun maybeSequencePoint -> maybeSequencePoint)
 
     match getMethods className with
     | None -> SourceLocation.empty
@@ -1426,6 +1445,7 @@ module Tests =
     | Summary
     | Summary_Location
     | Version
+    | My_Spirit_Is_Weak
 
     interface IArgParserTemplate with
       member s.Usage =
@@ -1449,6 +1469,7 @@ module Tests =
         | FsCheck_Max_Tests _ -> "FsCheck maximum number of tests (default: 100)."
         | FsCheck_Start_Size _ -> "FsCheck start size (default: 1)."
         | FsCheck_End_Size _ -> "FsCheck end size (default: 100 for testing and 10,000 for stress testing)."
+        | My_Spirit_Is_Weak -> "Removes spirits from the output."
 
   type FillFromArgsResult =
     | ArgsRun of ExpectoConfig
@@ -1462,7 +1483,7 @@ module Tests =
   module ExpectoConfig =
 
     let expectoVersion() =
-      let assembly = Assembly.GetExecutingAssembly()
+      let assembly = typeof<ExpectoConfig>.GetTypeInfo().Assembly
       let fileInfoVersion = FileVersionInfo.GetVersionInfo assembly.Location
       fileInfoVersion.ProductVersion
 
@@ -1504,12 +1525,13 @@ module Tests =
         | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}
         | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
         | List_Tests -> id
-        | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter}
+        | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
         | Version -> id
-        | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter}
+        | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter o.printer}
         | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
         | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
         | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
+        | My_Spirit_Is_Weak -> fun o -> { o with mySpiritIsWeak = true }
 
       let parsed =
         try
@@ -1550,6 +1572,18 @@ module Tests =
     |> Test.toTestCodeList
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
+  /// Prints out names of all tests for given test suite.
+  let duplicatedNames test =
+    test
+    |> Test.toTestCodeList
+    |> Seq.toList
+    |> List.groupBy (fun t -> t.name)
+    |> List.choose ( function
+      | _, x :: _ :: _ -> 
+        Some x.name
+      | _ -> 
+        None
+    )
 
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
@@ -1561,9 +1595,17 @@ module Tests =
       1
     else
       let tests = config.filter tests
-      match config.stress with
-      | None -> runEval config tests |> Async.RunSynchronously
-      | Some _ -> runStress config tests |> Async.RunSynchronously
+      let duplicates = duplicatedNames tests
+      if List.isEmpty duplicates then
+        match config.stress with
+        | None -> runEval config tests |> Async.RunSynchronously
+        | Some _ -> runStress config tests |> Async.RunSynchronously
+      else
+        logger.errorWithBP (
+          eventX "Found duplicated test names, these names are: {duplicates}"
+          >> setField "duplicates" duplicates
+        ) |> Async.RunSynchronously
+        1
 
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
@@ -1651,12 +1693,18 @@ module Runner =
   let TestCaseA(name, test: System.Action) = testCase name test.Invoke
   [<CompiledName("TestCase")>]
   let TestCaseT(name, test: Task) = testCaseAsync name (Async.AwaitTask test)
+  [<CompiledName("TestCase")>]
+  let TestCaseFT(name, test: System.Func<Task>) = testCaseAsync name (async { do! Async.AwaitTask (test.Invoke()) })
   [<CompiledName("PendingTestCase")>]
   let PendingTestCaseA(name, test: System.Action) = ptestCase name test.Invoke
   [<CompiledName("PendingTestCase")>]
   let PendingTestCaseT(name, test: Task) = ptestCaseAsync name (Async.AwaitTask test)
+  [<CompiledName("PendingTestCase")>]
+  let PendingTestCaseFT(name, test: System.Func<Task>) = ptestCaseAsync name (async { do! Async.AwaitTask (test.Invoke()) })
   [<CompiledName("FocusedTestCase")>]
   let FocusedTestCaseA(name, test: System.Action) = ftestCase name test.Invoke
   [<CompiledName("FocusedTestCase")>]
   let FocusedTestCaseT(name, test: Task) = ftestCaseAsync name (Async.AwaitTask test)
+  [<CompiledName("FocusedTestCase")>]
+  let FocusedTestCaseFT(name, test: System.Func<Task>) = ftestCaseAsync name (async { do! Async.AwaitTask (test.Invoke()) })
   let DefaultConfig = defaultConfig

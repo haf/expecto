@@ -11,19 +11,27 @@ open Expecto.Logging.Message
 
 /// Expects f to throw an exception.
 let throws f message =
-  try
-    f ()
-    Tests.failtestf "%s. Expected f to throw." message
-  with e ->
-    ()
+  let thrown =
+    try
+      f ()
+      false
+    with _ ->
+      true
+
+  if not thrown then Tests.failtestf "%s. Expected f to throw." message
 
 /// Expects f to throw, and calls `cont` with its exception.
 let throwsC f cont =
-  try
-    f ()
-    Tests.failtest "Expected f to throw."
-  with e ->
-    cont e
+  let thrown =
+    try
+      f ()
+      None
+    with e ->
+      Some e
+
+  match thrown with
+  | Some e -> cont e
+  | _ -> Tests.failtestf "Expected f to throw."
 
 /// Expects the passed function to throw `'texn`.
 let throwsT<'texn> f message =
@@ -38,7 +46,6 @@ let throwsT<'texn> f message =
                     (e.GetType().FullName)
   | e ->
     ()
-
 
 /// Expects the value to be a None value.
 let isNone x message =
@@ -72,6 +79,20 @@ let isChoice2Of2 x message =
                     message x
   | Choice2Of2 _ ->
     ()
+
+/// Expects the value to be a Result.Ok value.
+let isOk x message =
+  match x with
+  | Result.Ok _ -> ()
+  | Result.Error x ->
+    Tests.failtestf "%s. Expected Ok, was Error(%A)." message x
+
+/// Expects the value to be a Result.Error value.
+let isError x message =
+  match x with
+  | Result.Ok x ->
+    Tests.failtestf "%s. Expected Error _, was Ok(%A)." message x
+  | Result.Error _ -> ()
 
 /// Expects the value not to be null.
 let isNotNull x message =
@@ -176,9 +197,9 @@ let isNotWhitespace (actual : string) message =
 let isEmpty (actual) message =
   if not (Seq.isEmpty actual) then Tests.failtestf "%s. Should be empty." message
 
-/// Expect the passed sequence to be not empty.
+/// Expect the passed sequence not to be empty.
 let isNonEmpty (actual) message =
-  if Seq.isEmpty actual then Tests.failtestf "%s. Should be empty." message
+  if Seq.isEmpty actual then Tests.failtestf "%s. Should not be empty." message
 
 /// Expect that the counts of the found value occurrences in sequence equal the expected.
 let hasCountOf (actual : _ seq) (expected : uint32) (selector : _ -> bool) message =
@@ -190,8 +211,8 @@ let hasCountOf (actual : _ seq) (expected : uint32) (selector : _ -> bool) messa
 let inline equal (actual : 'a) (expected : 'a) message =
   match box actual, box expected with
   | (:? string as a), (:? string as e) ->
-    use ai = a.GetEnumerator()
-    use ei = e.GetEnumerator()
+    let ai = a.ToCharArray().GetEnumerator()
+    let ei = e.ToCharArray().GetEnumerator()
     let mutable i = 0
     let baseMsg errorIndex =
       let diffString = new String(' ', errorIndex + 1) + "↑"
@@ -273,6 +294,44 @@ let isTrue actual message =
   else
     Tests.failtestf "%s. Actual value was false but had expected it to be true." message
 
+/// Expect that some element from `actual` satisfies the given `asserter`
+let exists ( actual: 'a seq) asserter message =
+  let exist = 
+    match actual with
+    | null -> false
+    | _ -> actual |> Seq.exists asserter
+  if exist then ()
+  else Tests.failtestf "%s. There isn't any element which satisfies given assertion %A." message asserter
+
+let private allEqualTo actual asserter =
+  seq { for i in 0..(actual |> Seq.length) - 1 do
+            let isDifferent = Seq.item i actual |> asserter |> not
+            if isDifferent then yield (i, sprintf "%A" (Seq.item i actual))
+      }
+
+let private formatAllEqualTo actual =
+  actual
+  |> Seq.map ( fun x -> sprintf "Element at index: %d which is equal to: %A" (fst x) (snd x))
+  |> String.concat "\n"
+
+/// Expect that all elements from `actual` satisfies the given `asserter`
+let all (actual: 'a seq) asserter message =
+  match actual with
+  | null -> Tests.failtestf "%s. Sequence is empty" message
+  | _ ->
+    let checkResult = allEqualTo actual asserter
+    if Seq.isEmpty checkResult then ()
+    else Tests.failtestf "%s. Some elements don't satisfy `asserter`.\n%s" message (formatAllEqualTo checkResult)
+
+/// Expect that all elements from `actual` are equal to `equalTo`
+let allEqual (actual: 'a seq) equalTo message =
+  match actual with
+  | null -> Tests.failtestf "%s. Sequence is empty" message
+  | _ ->
+    let checkResult = allEqualTo actual ((=) equalTo)
+    if Seq.isEmpty checkResult then ()
+    else Tests.failtestf "%s. Some elements don't equal to `equalTo`: %A.\n%s" message equalTo (formatAllEqualTo checkResult)
+
 /// Expects the `sequence` to contain the `element`.
 let contains sequence element message =
   match sequence |> Seq.tryFind ((=) element) with
@@ -284,7 +343,7 @@ let inline private formatSet<'a> (concatBy) (formatResult) (whenEmpty) (ss : 'a 
   if Seq.isEmpty ss then
     whenEmpty
   else
-    (match box (Seq.nth 0 ss) with
+    (match box (Seq.item 0 ss) with
     | :? IComparable ->
       ss
       |> Seq.cast<IComparable>

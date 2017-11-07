@@ -1,4 +1,4 @@
-# expecto
+# Expecto
 
 [![Linux Build](https://travis-ci.org/haf/expecto.svg?branch=master)](https://travis-ci.org/haf/expecto)
 [![Windows Build](https://ci.appveyor.com/api/projects/status/mscx44sh1ci3xdlr?svg=true)](https://ci.appveyor.com/project/haf/expecto)
@@ -18,20 +18,26 @@ VSCode and Ionide (`ionide-fsharp`) integrate out-of-the-box with Expecto's comm
 There's also a nuget `Expecto.VisualStudio.TestAdapter` that you can add to your
 test project to enable Visual Studio integration.
 
+Expecto tests are parallel and async by default, so that you can use all your
+cores for testing your software.
+
+![Parallel by default](./docs/parallel-testing.png)
+
 Originally, Expecto is a fork of Fuchu aiming to be properly updated and pushed
 to nuget when PRs come in. Expecto is part of the F# suite of libraries I've
 built or am building, to make F# the most approachable language for system
 programming.
 
- - [Suave](https://suave.io)
- - [Logary](https://github.com/logary/)
- - [Http.fs](https://github.com/haf/Http.fs/)
+- [Suave](https://suave.io)
+- [Logary](https://github.com/logary/)
+- [Http.fs](https://github.com/haf/Http.fs/)
 
 What follows is the Table of Contents for this README, which also serves as the
 documentation for the project.
 
-  * [expecto](#expecto)
+* [expecto](#expecto)
     * [Installing](#installing)
+    * [\.Net Core support](#net-core-support)
     * [Testing "Hello world"](#testing-hello-world)
     * [Running tests](#running-tests)
       * [runTests](#runtests)
@@ -47,6 +53,7 @@ documentation for the project.
       * [Focusing tests](#focusing-tests)
       * [Sequenced tests](#sequenced-tests)
       * [Parametised tests with testParam](#parametised-tests-with-testparam)
+      * [Setup and teardown](#setup-and-teardown)
       * [Property based tests](#property-based-tests)
         * [Link collection](#link-collection)
         * [Code from FsCheck](#code-from-fscheck)
@@ -60,6 +67,7 @@ documentation for the project.
     * [Contributing](#contributing)
     * [BenchmarkDotNet usage](#benchmarkdotnet-usage)
     * [You're not alone\!](#youre-not-alone)
+      * [Testing hardware](#testing-hardware)
     * [Sending e\-mail on failure – custom printers](#sending-e-mail-on-failure--custom-printers)
     * [About test parallelism](#about-test-parallelism)
     * [About upgrading from Fuchu](#about-upgrading-from-fuchu)
@@ -85,6 +93,25 @@ Let's have look at what an extensive unit test suite looks like when running
 with Expecto:
 
 ![Sample output from Logary](docs/sample-output-logary.png)
+
+## .Net Core support
+
+[Expecto has it's own .net core template](https://github.com/MNie/Expecto.Template)!
+You could create a base .net core project with expecto.
+How to do that? Simply write following lines:
+
+```
+dotnet new -i Expecto.Template::*
+dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
+```
+
+How to run it?
+```
+dotnet restore
+dotnet run
+```
+
+![How to create expecto template](docs/expecto.gif)
 
 ## Testing "Hello world"
 
@@ -187,33 +214,34 @@ The default config will run FsCheck tests with a higher end size than normal.
 
 Expecto supports the following test constructors:
 
- - normal test cases with `testCase` and `testCaseAsync`
- - lists of tests with `testList`
- - test fixtures with `testFixture`
- - pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
- - focused tests (that are the only ones run) with `ftestCase` and
+- normal test cases with `testCase` and `testCaseAsync`
+- lists of tests with `testList`
+- test fixtures with `testFixture`
+- pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
+- focused tests (that are the only ones run) with `ftestCase` and
    `ftestCaseAsync`
- - sequenced tests with `testSequenced` and `testSequencedGroup` (tests inside a
+- sequenced tests with `testSequenced` and `testSequencedGroup` (tests inside a
    group are run in sequence w.r.t each other)
- - parametised tests with `testParam`
- - testCases with the workflow builder `test`, `ptest`, `ftest` supporting
+- parametised tests with `testParam`
+- testCases with the workflow builder `test`, `ptest`, `ftest` supporting
    deterministic disposal, loops and such
- - property based tests with `testProperty`, `testPropertyWithConfig` and
+- property based tests with `testProperty`, `testPropertyWithConfig` and
    `testPropertyWithConfigs` from `Expecto.FsCheck`
- - performance tests with `Expecto.BenchmarkDotNet` and `benchmark<TBench> :
+- performance tests with `Expecto.BenchmarkDotNet` and `benchmark<TBench> :
    string -> Test`.
 
 All of the above compile to a `Test` value that you can compose. For example,
 you can compose a `test` and a `testCaseAsync` in a `testList` which you wrap in
 `testSequenced` because all tests in the list use either `Expect.fasterThan` or
-they are using `Expecto.BenchmarkDotNet` for performance tests.
+they are using `Expecto.BenchmarkDotNet` for performance tests. 
+You have to remember that **the fully qualified names of tests need to be unique across your test project.**
 
 ### Normal tests
 
- - `test : string -> TestCaseBuilder` -  Builds a test case in a computation expression.
- - `testAsync : string -> TestAsyncBuilder` - Builds an async test case in a computation expression.
- - `testCase : string -> (unit -> unit) -> Test` - Builds a test case from a test function.
- - `testCaseAsync : string -> Async<unit> -> Test` - Builds an async test case from an async expression.
+- `test : string -> TestCaseBuilder` -  Builds a test case in a computation expression.
+- `testAsync : string -> TestAsyncBuilder` - Builds an async test case in a computation expression.
+- `testCase : string -> (unit -> unit) -> Test` - Builds a test case from a test function.
+- `testCaseAsync : string -> Async<unit> -> Test` - Builds an async test case from an async expression.
 
 ### `testList` for grouping
 
@@ -243,7 +271,7 @@ samples](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sampl
 
 ### Test fixtures
 
- - `testFixture : ('a -> unit -> unit) -> (seq<string * 'a>) -> seq<Test>`
+- `testFixture : ('a -> unit -> unit) -> (seq<string * 'a>) -> seq<Test>`
 
 The test fixture takes a factory and a sequence of partial tests. The `'a`
 parameter will be inferred to the *function type*, such as
@@ -267,10 +295,10 @@ testList "Setup & teardown 3" [
 
 ### Pending tests
 
- - `ptestCase`
- - `ptest`
- - `ptestAsync`
- - `ptestCaseAsync`
+- `ptestCase`
+- `ptest`
+- `ptestAsync`
+- `ptestCaseAsync`
 
 You can mark an individual spec or container as Pending. This will prevent the
 spec (or specs within the list) from running.  You do this by adding a `p`
@@ -304,18 +332,18 @@ let myTests =
 
 Optionally, in the `TestCode` (function body):
 
- - `Tests.skiptest`
- - `Tests.skiptestf`
+- `Tests.skiptest`
+- `Tests.skiptestf`
 
 ### Focusing tests
 
 Focusing can be done with
 
- - `ftestCase`
- - `ftestList`
- - `ftestCaseAsync`
- - `ftest`
- - `ftestAsync`
+- `ftestCase`
+- `ftestList`
+- `ftestCaseAsync`
+- `ftest`
+- `ftestAsync`
 
 It is often convenient, when developing to be able to run a subset of specs.
 Expecto allows you to focus specific test cases or tests list by putting `f` before *testCase* or *testList* or `F` before attribute *Tests*(when reflection tests discovery is used).
@@ -408,7 +436,7 @@ let timeout =
 
 ### Parametised tests with `testParam`
 
- - `testParam`
+- `testParam`
 
 ```fsharp
 testList "numberology 101" (
@@ -420,6 +448,59 @@ testList "numberology 101" (
       fun value () ->
         Expect.isLessThan value 1444 "Should be less than"
 ] |> List.ofSeq)
+```
+
+### Setup and teardown
+
+A simple way to perform setup and teardown is by using `IDisposable` resources:
+
+```fsharp
+let simpleTests =
+    testList "simples" [
+        test "test one" {
+            use resource = new MyDatabase()
+            // test code
+        }
+    ]
+```
+
+For more complex setup and teardown situations we can write one or more setup functions to manage resources:  
+
+```fsharp
+let clientTests setup =
+    [
+        test "test1" {
+            setup (fun client store ->
+                // test code
+            )
+        }
+        test "test2" {
+            setup (fun client store ->
+                // test code
+            )
+        }
+        // other tests
+    ]
+
+let clientMemoryTests =
+    clientTests (fun test ->
+        let client = memoryClient()
+        let store = memoryStore()
+        test client store
+    )
+    |> testList "client memory tests"
+
+let clientIntegrationTests =
+    clientTests (fun test ->
+        // setup code
+        try
+            let client = realTestClient()
+            let store = realTestStore()
+            test client store
+        finally
+            // teardown code
+    )
+    |> testList "client integration tests"
 ```
 
 ### Property based tests
@@ -488,6 +569,104 @@ type FsCheckConfig =
   }
 ```
 
+Here is another example of testing with custom generated data
+
+```fsharp
+module MyApp.Tests
+
+// the ExpectoFsCheck module is auto-opened by this
+// the configuration record is in the Expecto namespace in the core library
+open Expecto
+open FsCheck
+
+type User = {
+    Id : int
+    FirstName : string
+    LastName : string
+}
+
+type UserGen() =
+   static member User() : Arbitrary<User> =
+       let genFirsName = Gen.elements ["Don"; "Henrik"; null]
+       let genLastName = Gen.elements ["Syme"; "Feldt"; null]
+       let createUser id firstName lastName =
+           {Id = id; FirstName = firstName ; LastName = lastName}
+       let getId = Gen.choose(0,1000)
+       let genUser =
+           createUser <!> getId <*> genFirsName <*> genLastName
+       genUser |> Arb.fromGen
+
+let config = { FsCheckConfig.defaultConfig with arbitrary = [typeof<UserGen>] }
+
+let properties =
+  testList "FsCheck samples" [
+    
+    // you can also override the FsCheck config
+    testPropertyWithConfig config "User with generated User data" <|
+      fun x ->
+        Expect.isNotNull x.FirstName "First Name should not be null"
+  ]
+
+Tests.runTests defaultConfig properties
+```
+
+And a further example of creating constraints on generated values
+
+```fsharp
+open System
+open Expecto
+open FsCheck
+
+module Gen =
+    type Float01 = Float01 of float
+    let float01Arb =
+        let maxValue = float UInt64.MaxValue
+        Arb.convert
+            (fun (DoNotSize a) -> float a / maxValue |> Float01)
+            (fun (Float01 f) -> f * maxValue + 0.5 |> uint64 |> DoNotSize)
+            Arb.from
+    type 'a ListOf100 = ListOf100 of 'a list
+    let listOf100Arb() =
+        Gen.listOfLength 100 Arb.generate
+        |> Arb.fromGen
+        |> Arb.convert ListOf100 (fun (ListOf100 l) -> l)
+    type 'a ListOfAtLeast2 = ListOfAtLeast2 of 'a list
+    let listOfAtLeast2Arb() =
+        Arb.convert
+            (fun (h1,h2,t) -> ListOfAtLeast2 (h1::h2::t))
+            (function
+                | ListOfAtLeast2 (h1::h2::t) -> h1,h2,t
+                | e -> failwithf "not possible in listOfAtLeast2Arb: %A" e)
+            Arb.from
+    let addToConfig config =
+        {config with arbitrary = typeof<Float01>.DeclaringType::config.arbitrary}
+    
+[<AutoOpen>]
+module Auto =
+    let private config = Gen.addToConfig FsCheckConfig.defaultConfig
+    let testProp name = testPropertyWithConfig config name
+    let ptestProp name = ptestPropertyWithConfig config name
+    let ftestProp stdgen name = ftestPropertyWithConfig stdgen config name
+
+module Tests =
+    let topicTests =
+        testList "topic" [
+            testProp "float between 0 and 1" (fun (Gen.Float01 f) ->
+                () // test
+            )
+            testProp "list of 100 things" (fun (Gen.ListOf100 l) ->
+                () // test
+            )
+            testProp "list of at least 2 things" (fun (Gen.ListOfAtLeast2 l) ->
+                () // test
+            )
+            testProp "list of at least 2 things without gen" (fun h1 h2 t ->
+                let l = h1::h2::t
+                () // test
+            )
+        ]
+```
+
 It will be translated to the FsCheck-specific configuration at runtime. You can
 pass your own callbacks and use `Expecto.Logging` like shown in the
 [Sample](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sample.fs#L23)
@@ -515,13 +694,13 @@ property based test).
 These are a few resources that will get you on your way towards fully-specified
 systems with property-based testing.
 
- - [An introduction to property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing/) with [slides and video](http://fsharpforfunandprofit.com/pbt/)
- - [Choosing properties for property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing-2/)
- - [(video) Race conditions, distribution and interactions](https://vimeo.com/68383317)
- - [Test data: generators, schrinkers and instances](https://fscheck.github.io/FsCheck/TestData.html)
- - [Model based testing](https://fscheck.github.io/FsCheck/StatefulTesting.html)
- - [Testing and quality assurance in Haskell](http://book.realworldhaskell.org/read/testing-and-quality-assurance.html)
- - [Property-based testing for better code](https://www.youtube.com/watch?v=shngiiBfD80)
+- [An introduction to property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing/) with [slides and video](http://fsharpforfunandprofit.com/pbt/)
+- [Choosing properties for property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing-2/)
+- [(video) Race conditions, distribution and interactions](https://vimeo.com/68383317)
+- [Test data: generators, schrinkers and instances](https://fscheck.github.io/FsCheck/TestData.html)
+- [Model based testing](https://fscheck.github.io/FsCheck/StatefulTesting.html)
+- [Testing and quality assurance in Haskell](http://book.realworldhaskell.org/read/testing-and-quality-assurance.html)
+- [Property-based testing for better code](https://www.youtube.com/watch?v=shngiiBfD80)
 
 #### Code from FsCheck
 
@@ -529,8 +708,8 @@ These code snippets show a bit of the API usage and how to create Arbitrary
 instances (which encapsulate generation with Gen instances and shrinkage),
 respectively.
 
- - [FsCheck Examples.fs](https://github.com/fscheck/FsCheck/blob/master/examples/FsCheck.Examples/Examples.fs)
- - [FsCheck Arbitrary.fs](https://github.com/fscheck/FsCheck/blob/master/src/FsCheck/Arbitrary.fs#L26)
+- [FsCheck Examples.fs](https://github.com/fscheck/FsCheck/blob/master/examples/FsCheck.Examples/Examples.fs)
+- [FsCheck Arbitrary.fs](https://github.com/fscheck/FsCheck/blob/master/src/FsCheck/Arbitrary.fs#L26)
 
 ### Performance tests
 
@@ -545,79 +724,101 @@ leaving out `expected` when obvious from the function.
 
 This module is your main entry-point when asserting.
 
- - `throws`
- - `throwsC`
- - `throwsT`
- - `isNone`
- - `isSome`
- - `isChoice1Of2`
- - `isChoice2Of2`
- - `isNull`
- - `isNotNull`
- - `isNotNaN`
- - `isNotPositiveInfinity`
- - `isNotNegativeInfinity`
- - `isNotInfinity`
- - `isLessThan`
- - `isLessThanOrEqual`
- - `isGreaterThan`
- - `isGreaterThanOrEqual`
- - `notEqual`
- - `isFalse`
- - `isTrue`
- - `sequenceEqual`
- - `floatClose : Accuracy -> float -> float -> string -> unit` - Expect the
+- `throws`
+- `throwsC`
+- `throwsT`
+- `isNone`
+- `isSome`
+- `isChoice1Of2`
+- `isChoice2Of2`
+- `isOk` - Expect the value to be a Result.Ok value
+- `isError` - Expect the value to be a Result.Error value
+- `isNull`
+- `isNotNull`
+- `isNotNaN`
+- `isNotPositiveInfinity`
+- `isNotNegativeInfinity`
+- `isNotInfinity`
+- `isLessThan`
+- `isLessThanOrEqual`
+- `isGreaterThan`
+- `isGreaterThanOrEqual`
+- `notEqual`
+- `isFalse`
+- `isTrue`
+- `exists` - Expect that some element from `actual` sequence satisfies the given `asserter`
+- `all` - Expect that all elements from `actual` satisfies the given `asserter`
+- `allEqual` - Expect that all elements from `actual` are equal to `equalTo`
+- `sequenceEqual`
+- `floatClose : Accuracy -> float -> float -> string -> unit` - Expect the
    floats to be within the combined absolute and relative accuracy given by
    `abs(a-b) <= absolute + relative * max (abs a) (abs b)`. Default accuracy
    available are: `Accuracy.low = {absolute=1e-6; relative=1e-3}`,
    `Accuracy.medium = {absolute=1e-8; relative=1e-5}`,
    `Accuracy.high = {absolute=1e-10; relative=1e-7}`,
    `Accuracy.veryHigh = {absolute=1e-12; relative=1e-9}`.
- - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If
+- `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If
    it does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
- - `isAscending` - Expect the sequence `subject` to be ascending. If it does not
+- `isAscending` - Expect the sequence `subject` to be ascending. If it does not
    then fail with `format` as an error message.
- - `isDescending` - Expect the sequence `subject` to be descending. If it does
+- `isDescending` - Expect the sequence `subject` to be descending. If it does
    not then fail with `format` as an error message.
- - `stringContains` – Expect the string `subject` to contain `substring` as part
+- `stringContains` – Expect the string `subject` to contain `substring` as part
    of itself.  If it does not, then fail with `format` and `subject` and
    `substring` as part of the error message.
  - `isMatch` - Expect the string `actual` to match `pattern`
  - `isRegexMatch` - Expect the string `actual` to match `regex`
- - `isMatchGroups` - Expects the string `actual` that matched groups (from a `pattern` match) match with `matchesOperator`
- - `isMatchRegexGroups` - Expects the string `actual` that matched groups (from a `regex` match) match with `matchesOperator`
  - `isNotMatch` - Expect the string `actual` to not match `pattern`
  - `isNotRegexMatch` - Expect the string `actual` to not match `regex`
  - `stringStarts` – Expect the string `subject` to start with `prefix` and if it
    does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
- - `stringEnds` - Expect the string `subject` to end with `suffix`. If it does
+- `stringEnds` - Expect the string `subject` to end with `suffix`. If it does
    not then fail with `format` as an error message together with a description
    of `subject` and `suffix`.
- - `stringHasLength` - Expect the string `subject` to have length equals
+- `stringHasLength` - Expect the string `subject` to have length equals
    `length`. If it does not then fail with `format` as an error message together
    with a description of `subject` and `length`.
- - `isNotEmpty` - Expect the string `actual` to be not null nor empty
- - `isNotWhitespace` - Expect the string `actual` to be not null nor empty nor whitespace
- - `isEmpty` - Expect the sequence `actual` to be empty
- - `isNonEmpty` - Expect the sequence `actual` to be not empty
- - `hasCountOf` - Expect that the counts of the found value occurrences by `selector` in `actual` equals the `expected`.
- - `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain
+- `isNotEmpty` - Expect the string `actual` to be not null nor empty
+- `isNotWhitespace` - Expect the string `actual` to be not null nor empty nor whitespace
+- `isEmpty` - Expect the sequence `actual` to be empty
+- `isNonEmpty` - Expect the sequence `actual` to be not empty
+- `hasCountOf` - Expect that the counts of the found value occurrences by `selector` in `actual` equals the `expected`.
+- `contains : 'a seq -> 'a -> string -> unit` – Expect the sequence to contain
    the item.
- - `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
+- `containsAll: 'a seq -> 'a seq -> string -> unit` - Expect the sequence
    contains all elements from second sequence (not taking into account an order
    of elements).
- - `distribution: 'a seq -> Map<'a, uint32> -> string -> unit` - Expect the sequence contains all elements from map (first element in tuple is an item expected to be in sequence, second is a positive number of its occurrences in a sequence). Function is not taking into account an order of elements.
- - `streamsEqual` – Expect the streams to be byte-wise identical.
- - `isFasterThan : (unit -> 'a) -> (unit -> 'a) -> string -> unit` – Expect the
+- `distribution: 'a seq -> Map<'a, uint32> -> string -> unit` - Expect the sequence contains all elements from map (first element in tuple is an item expected to be in sequence, second is a positive number of its occurrences in a sequence). Function is not taking into account an order of elements.
+- `streamsEqual` – Expect the streams to be byte-wise identical.
+- `isFasterThan : (unit -> 'a) -> (unit -> 'a) -> string -> unit` – Expect the
     first function to be faster than the second function with the passed string
     message, printed on failure. See the next section on Performance for example
     usage.
- - `isFasterThanSub` – Like the above but with passed function signature of
+- `isFasterThanSub` – Like the above but with passed function signature of
    `Performance.Measurer<unit,'a> -> 'a`, allowing you to do setup and teardown
    of your subject under test (the function) before calling the Measurer. See
    the next section on Performance for example usage.
+
+Also note, that there's a "fluent" API, with which you can pipe the test-subject
+value into the expectation:
+
+```fsharp
+open Expecto
+open Expecto.Flip
+
+let compute (multiplier: int) = 42 * multiplier
+
+test "yup yup" {
+  compute 1
+    |> Expect.equal "x1 = 42" 42
+    
+  compute 2
+    |> Expect.equal "x2 = 82" 84 
+}
+|> runTests defaultConfig
+```
 
 ### `Performance` module
 
@@ -740,22 +941,22 @@ double is faster. Expected f1 (0.3067 ± 0.0123 ms) to be faster than f2 (0.1513
 
 Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in your code:
 
- - `--debug`: Extra verbose output for your tests.
- - `--sequenced`: Run all tests in sequence.
- - `--parallel`: (default) Run all tests in parallel.
- - `--parallel-workers`: Number of parallel workers (defaults to the number of logical processors).
- - `--filter <hiera>`: Filter a specific hierarchy to run.
- - `--filter-test-list <substring>`: Filter a specific test list to run.
- - `--filter-test-case <substring>`: Filter a specific test case to run.
- - `--run [<tests1> <test2> ...]`: Run only provided tests.
- - `--stress`: Run the tests randomly for the given number of minutes.
- - `--stress-timeout`: Time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).
- - `--stress-memory-limit`: Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).
- - `--fscheck-max-tests`: FsCheck maximum number of tests (default: 100).
- - `--fscheck-start-size`: FsCheck start size (default: 1).
- - `--fscheck-end-size`: FsCheck end size (default: 100 for testing and 10,000 for stress testing).
- - `--list-tests`: Doesn't run tests, print out list of tests instead.
- - `--summary`: Prints out summary after all tests are finished.
+- `--debug`: Extra verbose output for your tests.
+- `--sequenced`: Run all tests in sequence.
+- `--parallel`: (default) Run all tests in parallel.
+- `--parallel-workers`: Number of parallel workers (defaults to the number of logical processors).
+- `--filter <hiera>`: Filter a specific hierarchy to run.
+- `--filter-test-list <substring>`: Filter a specific test list to run.
+- `--filter-test-case <substring>`: Filter a specific test case to run.
+- `--run [<tests1> <test2> ...]`: Run only provided tests.
+- `--stress`: Run the tests randomly for the given number of minutes.
+- `--stress-timeout`: Time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).
+- `--stress-memory-limit`: Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).
+- `--fscheck-max-tests`: FsCheck maximum number of tests (default: 100).
+- `--fscheck-start-size`: FsCheck start size (default: 1).
+- `--fscheck-end-size`: FsCheck end size (default: 100 for testing and 10,000 for stress testing).
+- `--list-tests`: Doesn't run tests, print out list of tests instead.
+- `--summary`: Prints out summary after all tests are finished.
 
 ### The config
 
@@ -800,10 +1001,18 @@ ExpectoConfig record, that looks like:
   /// FsCheck end size (default: 100 for testing and 10,000 for
   /// stress testing).
   fsCheckEndSize: int option
+  /// Turn off spirits.
+  mySpiritIsWeak: bool
 }
 ```
 
 By doing a `let config = { defaultConfig with parallel = true }`, for example.
+
+If you [don't](https://github.com/haf/expecto/pull/43)
+[like](https://github.com/haf/expecto/issues/145#issuecomment-297032723) the
+spirits appearing in the output, you can turn them off by setting
+`mySpiritIsWeak = true` when you run Expecto, or by running with
+`--my-spirit-is-weak` from the command line ( ರ Ĺ̯ ರೃ ).
 
 ## Contributing
 
@@ -812,7 +1021,7 @@ Please see the [Devguide](./DEVGUIDE.md).
 ## BenchmarkDotNet usage
 
 The integration with
-[BenchmarkDotNet](https://perfdotnet.github.io/BenchmarkDotNet/index.htm).
+[BenchmarkDotNet](http://benchmarkdotnet.org/).
 
 ```fsharp
 open Expecto
@@ -883,8 +1092,15 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
   Expecto](https://www.nuget.org/packages/Expecto.VisualStudio.TestAdapter/) –
   just add the `nuget Expecto.VisualStudio.TestAdapter version_in_path: true` to
   your paket file and you're off to the races!
+* [FsCheck supports it](https://fscheck.github.io/FsCheck/QuickStart.html#Integration-with-Expecto)
 
-![Expecto VS Test Plugin](./docs/expecto-vs-addon.jpeg "Easy to get started even for Enterprise Developers").
+![Expecto VS Test Plugin](./docs/expecto-vs-addon.jpeg "Easy to get started even for Enterprise Developers")
+
+### Testing hardware
+
+People have been testing hardware with Expecto.
+
+![Expecto Hardware Testing](./docs/hw-testing.jpg "Testing Hardware with Expecto, photo by Roman Provazník")
 
 ## Sending e-mail on failure – custom printers
 

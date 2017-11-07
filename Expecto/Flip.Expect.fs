@@ -21,6 +21,12 @@ let inline isChoice1Of2 message x = Expecto.Expect.isChoice1Of2 x message
 /// Expects the value to be a Choice2Of2 value.
 let inline isChoice2Of2 message x = Expecto.Expect.isChoice2Of2 x message
 
+/// Expects the value to be a Result.Ok value.
+let inline isOk message x = Expecto.Expect.isOk x message
+
+/// Expects the value to be a Result.Error value.
+let inline isError message x = Expecto.Expect.isError x message
+
 /// Expects the value not to be null.
 let inline isNotNull message x = Expecto.Expect.isNotNull x message
 
@@ -99,6 +105,15 @@ let inline isFalse message actual = Expecto.Expect.isFalse actual message
 
 /// Expects the value to be true.
 let inline isTrue message actual = Expecto.Expect.isTrue actual message
+
+/// Expect that some element from `actual` satisfies the given `asserter`
+let inline exists message asserter actual = Expecto.Expect.exists actual asserter message
+
+/// Expect that all elements from `actual` satisfies the given `asserter`
+let inline all message asserter actual = Expecto.Expect.all actual asserter message
+
+/// Expect that all elements from `actual` are equal to `equalTo`
+let allEqual message equalTo actual = Expecto.Expect.allEqual actual equalTo message
 
 /// Expects the `sequence` to contain the `element`.
 let inline contains message element sequence = Expecto.Expect.contains sequence element message

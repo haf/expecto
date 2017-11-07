@@ -5,9 +5,9 @@ open System
 open System.Text.RegularExpressions
 open System.Threading
 open System.IO
+open System.Reflection
 open Expecto
 open Expecto.Impl
-open FSharpx
 open System.Globalization
 
 module Dummy =
@@ -19,10 +19,19 @@ module Dummy =
   [<Tests>]
   let testB() = TestLabel ("test B", TestList ([], Normal), Normal)
 
-  let thisModuleType = lazy Type.GetType "Expecto.Tests+Dummy, Expecto.Tests"
+  let thisAssemblyName =
+#if NETCOREAPP1_1
+    "Expecto.netcore.Tests"
+#else
+    "Expecto.Tests"
+#endif
+
+  let thisModuleNameQualified = sprintf "Expecto.Tests+Dummy, %s" thisAssemblyName
+  let thisModuleType = lazy Type.GetType(thisModuleNameQualified, throwOnError=true)
 
 module EmptyModule =
-  let thisModuleType = lazy Type.GetType "Expecto.Tests+EmptyModule, Expecto.Tests"
+  let thisModuleNameQualified = sprintf "Expecto.Tests+EmptyModule, %s" Dummy.thisAssemblyName
+  let thisModuleType = lazy Type.GetType(thisModuleNameQualified, throwOnError=true)
 
 let (==?) actual expected = Expect.equal expected actual ""
 
@@ -89,6 +98,7 @@ let tests =
           r.Value.duration ==? TimeSpan.FromMilliseconds 27.
     ]
 
+#if FSCHECK_TESTS
     testList "TestResultCounts" [
       let inline testProp fn =
         let config =
@@ -121,6 +131,7 @@ let tests =
            true
         )
     ]
+#endif
 
     testList "Exception handling" [
       testCaseAsync "Expecto ignore" <| async {
@@ -202,10 +213,10 @@ let expecto =
         let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with nested testcase" <| fun _ ->
-        let t = Test.filter (Strings.contains "d") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (fun (s: string) -> s.Contains "d") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with one testlist" <| fun _ ->
-        let t = Test.filter (Strings.contains "c") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (fun (s: string) -> s.Contains "c") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 2
       yield testCase "with no results" <| fun _ ->
         let t = Test.filter ((=) "z") tests |> Test.toTestCodeList |> Seq.toList
@@ -237,7 +248,7 @@ let expecto =
 
     testList "Reflection" [
       let getMember name =
-          Dummy.thisModuleType.Value.GetMember name
+          Dummy.thisModuleType.Value.GetTypeInfo().GetMember name
           |> Array.tryFind (fun _ -> true)
       let getTest =
           getMember
@@ -367,21 +378,35 @@ let expecto =
 
     testList "transformations" [
       testCaseAsync "multiple cultures" <| async {
+        let getCurrentCulture () : CultureInfo =
+#if RESHAPED_THREAD_CULTURE
+          System.Globalization.CultureInfo.CurrentCulture
+#else
+          System.Threading.Thread.CurrentThread.CurrentCulture
+#endif
+
+        let setCurrentCulture (culture : CultureInfo) =
+#if RESHAPED_THREAD_CULTURE
+          System.Globalization.CultureInfo.CurrentCulture <- culture
+#else
+          System.Threading.Thread.CurrentThread.CurrentCulture <- culture
+#endif
+
         let withCulture culture test =
           async {
-            let c = Thread.CurrentThread.CurrentCulture
+            let c = getCurrentCulture()
             try
-              Thread.CurrentThread.CurrentCulture <- culture
+              setCurrentCulture culture
               match test with
               | Sync test ->
                 test()
               | Async test ->
                 do! test
               | AsyncFsCheck (config, _, test) ->
-                do! Option.getOrElse FsCheckConfig.defaultConfig config
-                    |> test
+                let configOrDefault = match config with | Some c -> c | _ -> FsCheckConfig.defaultConfig
+                do! configOrDefault |> test
             finally
-              Thread.CurrentThread.CurrentCulture <- c
+              setCurrentCulture c
           }
 
         let testWithCultures (cultures: #seq<CultureInfo>) =
@@ -397,7 +422,7 @@ let expecto =
 
         let cultures =
           ["en-US"; "es-AR"; "fr-FR"]
-          |> List.map CultureInfo.GetCultureInfo
+          |> List.map CultureInfo
 
         let culturizedTests = testWithCultures cultures atest
 
@@ -426,7 +451,45 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "raise" [
+      testList "throws" [
+
+        testCase "pass" <| fun _ ->
+          Expect.throws (fun _ -> nullArg "") "Expected to throw an exception"
+
+        testCase "fail when exception is not raised" (fun _ ->
+          Expect.throws ignore "Should fail because no exception is thrown"
+        ) |> assertTestFails
+      ]
+
+      testList "throwsC" [
+
+        testCase "pass and call 'cont' when exception is raised" <| fun _ ->
+          let mutable contCalled = false
+          let exc = Exception()
+          Expect.throwsC
+            (fun _ -> raise exc)
+            (fun e ->
+              contCalled <- true
+              if e <> exc then failtest "passes different exception"
+            )
+
+          if not contCalled then failtest "'cont' is not called"
+
+        testCase "fail when exception is not raised" (fun _ ->
+          Expect.throwsC ignore ignore
+        ) |> assertTestFails
+
+        testCase "do not call 'cont' if exception is not raised" <| fun _ ->
+          let mutable contCalled = false
+          try
+            Expect.throwsC ignore (fun e -> contCalled <- true)
+          with
+            _ -> ()
+
+          if contCalled then failtest "should not call 'cont'"
+      ]
+
+      testList "throwsT" [
 
         testCase "pass" <| fun _ ->
           Expect.throwsT<ArgumentNullException> (fun _ -> nullArg "")
@@ -504,7 +567,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches pattern" [
+      testList "string matches pattern for isMatch" [
         testCase "pass" <| fun _ ->
           Expect.isMatch "{function:45}" "{function:(\\d+)}" "string matches passed pattern"
 
@@ -513,7 +576,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches pattern" [
+      testList "string matches pattern for isNotMatch" [
         testCase "pass" <| fun _ ->
           Expect.isNotMatch "{function:45d}" "{function:(\\d+)}" "string not matches passed pattern"
 
@@ -522,7 +585,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches regex" [
+      testList "string matches regex for isRegexMatch" [
         testCase "pass" <| fun _ ->
           let regex = Regex("{function:(\\d+)}")
           Expect.isRegexMatch "{function:45}" regex "string matches passed regex"
@@ -533,7 +596,7 @@ let expecto =
         ) |> assertTestFails
       ]
 
-      testList "string matches regex" [
+      testList "string matches regex for isNotRegexMatch" [
         testCase "pass" <| fun _ ->
           let regex = Regex("{function:(\\d+)}")
           Expect.isNotRegexMatch "{function:45d}" regex "string not matches passed regex"
@@ -616,15 +679,26 @@ let expecto =
         testCase "pass" <| fun _ ->
           Expect.isEmpty [] "list is empty"
 
+        testCase "fail" (fun _ ->
+          Expect.isEmpty [5] "list is not empty"
+        ) |> assertTestFails
+      ]
+
+      testList "array is empty" [
         testCase "pass" <| fun _ ->
           Expect.isEmpty [||] "list is empty"
 
         testCase "fail" (fun _ ->
-          Expect.isEmpty [5] "list is not empty"
+          Expect.isEmpty [|5|] "list is not empty"
         ) |> assertTestFails
+      ]
+
+      testList "array is non empty" [
+        testCase "pass" <| fun _ ->
+          Expect.isNonEmpty [|5|] "list is non empty"
 
         testCase "fail" (fun _ ->
-          Expect.isEmpty [|5|] "list is not empty"
+          Expect.isNonEmpty [||] "list is empty"
         ) |> assertTestFails
       ]
 
@@ -632,15 +706,8 @@ let expecto =
         testCase "pass" <| fun _ ->
           Expect.isNonEmpty [5] "list is non empty"
 
-        testCase "pass" <| fun _ ->
-          Expect.isNonEmpty [|5|] "list is non empty"
-
         testCase "fail" (fun _ ->
           Expect.isNonEmpty [] "list is empty"
-        ) |> assertTestFails
-
-        testCase "fail" (fun _ ->
-          Expect.isNonEmpty [||] "list is empty"
         ) |> assertTestFails
       ]
 
@@ -650,6 +717,48 @@ let expecto =
 
         testCase "fail" (fun _ ->
           Expect.hasCountOf [2;3] 2u (fun x -> x = 2) "list has 1 occurrences of number 3"
+        ) |> assertTestFails
+      ]
+
+      testList "#exists" [
+        testCase "pass" <| fun _ ->
+          Expect.exists [2;2;4] ((=) 2) "should pass"
+
+        testCase "fail" (fun _ ->
+          Expect.exists [2;3] ((=) 5) "should fail"
+        ) |> assertTestFails
+
+        testCase "null" (fun _ ->
+          Expect.exists null ((=) 5) "should also fail"
+        ) |> assertTestFails
+      ]
+
+      testList "#all" [
+        testCase "pass" <| fun _ ->
+          Expect.all [2;2] ((=) 2) "should pass"
+
+        testCase "fail" (fun _ ->
+          Expect.all [2;3] ((=) 2) "should fail"
+        ) |> assertTestFails
+
+        testCase "null" (fun _ ->
+          Expect.all null ((=) 5) "should also fail"
+        ) |> assertTestFails
+      ]
+
+      testList "#allEqual" [
+        testCase "pass - int" <| fun _ ->
+          Expect.allEqual [2;2] 2 "should pass"
+
+        testCase "pass - string" <| fun _ ->
+          Expect.allEqual ["dd";"dd"] "dd" "should pass"
+
+        testCase "fail" (fun _ ->
+          Expect.allEqual [2;3] 2 "should fail"
+        ) |> assertTestFails
+
+        testCase "null" (fun _ ->
+          Expect.allEqual null 5 "should also fail"
         ) |> assertTestFails
       ]
 
@@ -767,6 +876,8 @@ let expecto =
     ]
   ]
 
+#if FSCHECK_TESTS
+
 let inline popCount (i:uint16) =
   let mutable v = uint32 i
   v <- v - ((v >>> 1) &&& 0x55555555u)
@@ -784,6 +895,8 @@ let popcountTest =
     testProperty "popcount same"
       (fun i -> (popCount i |> int) = (popCount16 i |> int))
   ]
+
+#endif
 
 [<Tests>]
 let asyncTests =
@@ -860,11 +973,13 @@ let performance =
                              (fun measurer -> reset(); measurer mulIJK ())
                              "ikj faster than ijk"
 
+#if FSCHECK_TESTS
     testCase "popcount" (fun _ ->
       Expect.isFasterThan (fun () -> repeat10000 (popCount16 >> int) 987us)
                           (fun () -> repeat10000 (popCount >> int) 987us)
                           "popcount 16 faster than 32 fails"
       ) |> assertTestFailsWithMsgContaining "slower"
+#endif
   ]
 
 [<Tests>]
@@ -904,8 +1019,8 @@ open System.Threading
 let stress =
   testList "stress testing" [
 
-    let singleTest =
-      testList "hi" [
+    let singleTest name =
+      testList name [
         testCase "one" ignore
       ]
 
@@ -917,10 +1032,10 @@ let stress =
         }
       ]
 
-    let deadlockTest() =
+    let deadlockTest(name) =
       let lockOne = new obj()
       let lockTwo = new obj()
-      testList "deadlock" [
+      testList name [
         testAsync "case A" {
           repeat100 (fun () ->
             lock lockOne (fun () ->
@@ -941,17 +1056,17 @@ let stress =
 
     let sequencedGroup() =
       testList "with other" [
-        singleTest
-        testSequencedGroup "stop deadlock" (deadlockTest())
-        singleTest
+        singleTest "first single test"
+        testSequencedGroup "stop deadlock" (deadlockTest "first deadlock test")
+        singleTest "second single test"
       ]
 
     let twoSequencedGroups() =
       testList "with other" [
-        singleTest
-        testSequencedGroup "stop deadlock" (deadlockTest())
-        testSequencedGroup "stop deadlock other" (deadlockTest())
-        singleTest
+        singleTest "first single test"
+        testSequencedGroup "stop deadlock" (deadlockTest "first deadlock test")
+        testSequencedGroup "stop deadlock other" (deadlockTest "second deadlock test")
+        singleTest "second single test"
       ]
 
     yield testAsync "single" {
@@ -961,7 +1076,7 @@ let stress =
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest) 0 "one"
+      Expect.equal (runTests config (singleTest "single test")) 0 "one"
     }
 
     yield testAsync "memory" {
@@ -972,7 +1087,7 @@ let stress =
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest &&& 4) 4 "memory"
+      Expect.equal (runTests config (singleTest "single test") &&& 4) 4 "memory"
     }
 
     yield testAsync "never ending" {
@@ -995,7 +1110,7 @@ let stress =
               stressTimeout = TimeSpan.FromMilliseconds 10000.0
               printer = TestPrinters.silent
               verbosity = Logging.LogLevel.Fatal }
-        Expect.equal (runTests config (deadlockTest())) 8 "timeout"
+        Expect.equal (runTests config (deadlockTest "deadlock")) 8 "timeout"
     })
 
     yield testAsync "sequenced group" {
@@ -1027,7 +1142,7 @@ let stress =
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest) 0 "one"
+      Expect.equal (runTests config (singleTest "single test")) 0 "one"
     }
 
     yield testAsync "memory sequenced" {
@@ -1038,7 +1153,7 @@ let stress =
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config singleTest) 4 "memory"
+      Expect.equal (runTests config (singleTest "single test")) 4 "memory"
     }
 
     yield testAsync "never ending sequenced" {
@@ -1060,6 +1175,6 @@ let stress =
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
-      Expect.equal (runTests config (deadlockTest())) 0 "no deadlock"
+      Expect.equal (runTests config (deadlockTest "deadlock")) 0 "no deadlock"
     })
   ]

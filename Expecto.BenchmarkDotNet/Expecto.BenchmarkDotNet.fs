@@ -7,6 +7,7 @@ open BenchmarkDotNet.Analysers
 open BenchmarkDotNet.Columns
 open BenchmarkDotNet.Diagnosers
 open BenchmarkDotNet.Exporters
+open BenchmarkDotNet.Filters
 open BenchmarkDotNet.Jobs
 open BenchmarkDotNet.Loggers
 open BenchmarkDotNet.Order
@@ -24,29 +25,36 @@ module BenchmarkDotNet =
   type SetupAttribute = BenchmarkDotNet.Attributes.SetupAttribute
 
   type BenchmarkConfig =
-    { columns : IColumn list
+    { columnProviders: IColumnProvider list
+      hardwareCounters: HardwareCounter list
+      summaryStyle: Reports.ISummaryStyle
       exporters : IExporter list
       loggers : ILogger list
       diagnosers : IDiagnoser list
       analysers : IAnalyser list
-      jobs : IJob list
+      jobs : Job list
       validators : IValidator list
       orderProvider : IOrderProvider
       unionRule : ConfigUnionRule
-      keepFiles : bool }
+      keepFiles : bool
+      filters : IFilter list
+    }
 
     interface IConfig with
-      member x.GetColumns() = x.columns    :> IColumn seq
+      member x.GetColumnProviders() = x.columnProviders :> seq<IColumnProvider>
+      member x.GetHardwareCounters() = x.hardwareCounters :> seq<_>
+      member x.GetSummaryStyle()     = x.summaryStyle
       member x.GetExporters()       = x.exporters  :> seq<IExporter>
       member x.GetLoggers()         = x.loggers    :> seq<ILogger>
       member x.GetDiagnosers()      = x.diagnosers :> seq<IDiagnoser>
       member x.GetAnalysers()       = x.analysers  :> seq<IAnalyser>
-      member x.GetJobs()            = x.jobs       :> seq<IJob>
+      member x.GetJobs()            = x.jobs       :> seq<Job>
       member x.GetValidators()      = x.validators :> seq<IValidator>
       member x.GetOrderProvider()   = x.orderProvider : IOrderProvider
       member x.UnionRule            = x.unionRule : ConfigUnionRule
       /// Determines if all auto-generated files should be kept or removed after running benchmarks
       member x.KeepBenchmarkFiles = x.keepFiles
+      member x.GetFilters()         = x.filters :> seq<IFilter>
 
   let private synchronisedLogger =
     let cl = ConsoleLogger.Default
@@ -61,7 +69,9 @@ module BenchmarkDotNet =
 
   let benchmarkConfig =
     let def = DefaultConfig.Instance
-    { columns = def.GetColumns() |> List.ofSeq
+    { columnProviders = def.GetColumnProviders() |> List.ofSeq
+      hardwareCounters = def.GetHardwareCounters() |> List.ofSeq
+      summaryStyle = def.GetSummaryStyle()
       exporters = def.GetExporters() |> List.ofSeq
       loggers = [ synchronisedLogger ]
       diagnosers = def.GetDiagnosers() |> List.ofSeq
@@ -70,7 +80,9 @@ module BenchmarkDotNet =
       validators = def.GetValidators() |> List.ofSeq
       orderProvider = def.GetOrderProvider()
       unionRule = def.UnionRule
-      keepFiles = true }
+      keepFiles = true 
+      filters = def.GetFilters() |> List.ofSeq
+    }
 
   /// Create a new performance test: pass the annotated type as a type param
   /// to this function call. Pass 'benchmarkConfig' as the config parameter –
