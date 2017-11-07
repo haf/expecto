@@ -767,13 +767,13 @@ This module is your main entry-point when asserting.
 - `stringContains` – Expect the string `subject` to contain `substring` as part
    of itself.  If it does not, then fail with `format` and `subject` and
    `substring` as part of the error message.
- - `isMatch` - Expect the string `actual` to match `pattern`
- - `isRegexMatch` - Expect the string `actual` to match `regex`
- - `isMatchGroups` - Expects the string `actual` that matched groups (from a `pattern` match) match with `matchesOperator`
- - `isMatchRegexGroups` - Expects the string `actual` that matched groups (from a `regex` match) match with `matchesOperator`
- - `isNotMatch` - Expect the string `actual` to not match `pattern`
- - `isNotRegexMatch` - Expect the string `actual` to not match `regex`
- - `stringStarts` – Expect the string `subject` to start with `prefix` and if it
+- `isMatch` - Expect the string `actual` to match `pattern`
+- `isRegexMatch` - Expect the string `actual` to match `regex`
+- `isMatchGroups` - Expects the string `actual` that matched groups (from a `pattern` match) match with `matchesOperator`
+- `isMatchRegexGroups` - Expects the string `actual` that matched groups (from a `regex` match) match with `matchesOperator`
+- `isNotMatch` - Expect the string `actual` to not match `pattern`
+- `isNotRegexMatch` - Expect the string `actual` to not match `regex`
+- `stringStarts` – Expect the string `subject` to start with `prefix` and if it
    does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
 - `stringEnds` - Expect the string `subject` to end with `suffix`. If it does
