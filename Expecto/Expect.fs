@@ -258,16 +258,28 @@ let isMatch actual pattern message =
   else Tests.failtestf "%s. Expected %s to match pattern: /%s/" message actual pattern
 
 /// Expects that actual matches regex.
-let isRegexMatch actual (regex: Regex) message =
+let isRegexMatch actual (regex : Regex) message =
   if regex.Match(actual).Success then ()
   else Tests.failtestf "%s. Expected %s to match regex: /%A/" message actual regex
+
+/// Expects that matched groups (from a pattern match) match with matches operator
+let isMatchGroups actual pattern (matchesOperator : GroupCollection -> bool) message =
+  let groups = Regex.Match(actual, pattern).Groups
+  if matchesOperator groups then ()
+  else Tests.failtestf "%s. Expected %s to match pattern: /%s/ and apply to operator function: %A" message actual pattern matchesOperator
+
+/// Expects that matched groups (from a regex match) match with matches operator
+let isMatchRegexGroups actual (regex : Regex) (matchesOperator : GroupCollection -> bool) message =
+  let groups = regex.Match(actual).Groups
+  if matchesOperator groups then ()
+  else Tests.failtestf "%s. Expected %s to match regex: /%A/ and apply to operator function: %A" message actual regex matchesOperator
 
 /// Expects that actual not matches pattern.
 let isNotMatch actual pattern message =
   if Regex.Match(actual, pattern).Success then Tests.failtestf "%s. Expected %s to match pattern: /%s/" message actual pattern
 
 /// Expects that actual not matches regex.
-let isNotRegexMatch actual (regex: Regex) message =
+let isNotRegexMatch actual (regex : Regex) message =
   if regex.Match(actual).Success then Tests.failtestf "%s. Expected %s to match regex: /%A/" message actual regex
 
 /// Expects the value to be false.

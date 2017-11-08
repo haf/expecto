@@ -83,13 +83,19 @@ let inline equal message expected actual = Expecto.Expect.equal actual expected 
 let inline isMatch message pattern actual = Expecto.Expect.isMatch actual pattern message
 
 /// Expects that actual matches regex.
-let inline isRegexMatch message pattern actual = Expecto.Expect.isRegexMatch actual pattern message
+let inline isRegexMatch message regex actual = Expecto.Expect.isRegexMatch actual regex message
+
+/// Expects that matched groups (from a pattern match) match with matches operator
+let inline isMatchGroups message matchesOperation pattern actual = Expecto.Expect.isMatchGroups actual pattern matchesOperation message
+
+/// Expects that matched groups (from a regex match) match with matches operator
+let inline isMatchRegexGroups message matchesOperation regex actual = Expecto.Expect.isMatchRegexGroups actual regex matchesOperation message
 
 /// Expects that actual not matches pattern.
 let inline isNotMatch message pattern actual = Expecto.Expect.isNotMatch actual pattern message
 
 /// Expects that actual not matches regex.
-let inline isNotRegexMatch message pattern actual = Expecto.Expect.isNotRegexMatch actual pattern message
+let inline isNotRegexMatch message regex actual = Expecto.Expect.isNotRegexMatch actual regex message
 
 /// Expects the two values not to equal each other.
 let inline notEqual message expected actual = Expecto.Expect.notEqual actual expected message
