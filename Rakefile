@@ -32,12 +32,7 @@ end
 
 desc 'Perform fast netcore build (warn: doesn\'t d/l deps)'
 task :quick_compile_netcore do
-  system "dotnet", %W|build -c #{Configuration} Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj|
-end
-
-task :paket_bootstrap do
-  system 'tools/paket.bootstrapper.exe',
-         clr_command: true unless File.exists? 'tools/paket.exe'
+  system "dotnet", %W|build -c #{Configuration} Expecto.Tests/Expecto.Tests.fsproj|
 end
 
 task :paket_files do
@@ -45,16 +40,16 @@ task :paket_files do
 end
 
 task :restore_quick do
-  system 'tools/paket.exe', 'restore', clr_command: true
+  system '.paket/paket.exe', 'restore', clr_command: true
 end
 
 task :restore_dotnetcli do
-  system "dotnet", %W|restore Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj|
+  system "dotnet", %W|restore Expecto.Tests/Expecto.Tests.fsproj|
   system "dotnet", %W|restore tools/nuget-workaround/nugetclient.proj|
 end
 
 desc 'restore all nugets as per the packages.config files'
-task :restore => [:paket_bootstrap, :restore_quick, :paket_files, :restore_dotnetcli]
+task :restore => [:restore_quick, :paket_files, :restore_dotnetcli]
 
 desc 'Perform full build'
 build :compile => [:versioning, :restore, :assembly_info, :build_dotnetcli] do |b|
@@ -63,14 +58,14 @@ build :compile => [:versioning, :restore, :assembly_info, :build_dotnetcli] do |
 end
 
 task :build_dotnetcli => [:versioning, :restore, :assembly_info] do
-  system "dotnet", %W|build -c #{Configuration} -f netstandard1.6 Expecto.netcore/Expecto.netcore.fsproj|
+  system "dotnet", %W|build -c #{Configuration} -f netstandard1.6 Expecto/Expecto.fsproj|
 end
 
 directory 'build/clipkg'
 directory 'build/pkg'
 
 task :create_nugets_dotnetcli => ['build/clipkg', :build_dotnetcli] do
-  system "dotnet", %W|pack -v n --no-build -c #{Configuration} -o ../build/clipkg /p:Version=#{ENV['NUGET_VERSION']} Expecto.netcore/Expecto.netcore.fsproj|
+  system "dotnet", %W|pack -v n --no-build -c #{Configuration} -o ../build/clipkg /p:Version=#{ENV['NUGET_VERSION']} Expecto/Expecto.fsproj|
 end
 
 desc 'Merge standard and dotnetcli nupkgs'
@@ -106,7 +101,7 @@ end
 
 namespace :tests do
   task :unit do
-    system "dotnet", %W|run -c #{Configuration} --project Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj --summary|
+    system "dotnet", %W|run -c #{Configuration} --project Expecto.Tests/Expecto.Tests.fsproj --summary|
     system "Expecto.Tests/bin/#{Configuration}/Expecto.Tests.exe", '--summary', clr_command: true
     system "Expecto.Tests.CSharp/bin/#{Configuration}/Expecto.Tests.CSharp.exe", '--summary', clr_command: true
   end

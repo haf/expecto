@@ -16,6 +16,8 @@ packages/*
 *.sln.ide
 project.lock.json
 paket-files/
+**/bin/
+**/obj/
 any/
 BenchmarkDotNet.Artifacts/
 any/
