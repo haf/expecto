@@ -984,7 +984,7 @@ let performance =
 
 [<Tests>]
 let close =
-  testList "floatClose" [
+  testList "close" [
 
     testCase "zero" <| fun _ ->
       Expect.floatClose Accuracy.veryHigh 0.0 0.0 "zero"
@@ -1009,6 +1009,26 @@ let close =
 
     testCase "inf fails" (fun _ ->
       Expect.floatClose Accuracy.low infinity 1.0 "inf fails"
+    ) |> assertTestFails
+
+    testCase "less than easy" <| fun _ ->
+      Expect.floatLessThanOrClose Accuracy.low -1.0 0.0 "less"
+
+    testCase "not less than but close" <| fun _ ->
+      Expect.floatLessThanOrClose Accuracy.low 0.000001 0.0 "close"
+
+    testCase "not less than fails" (fun _ ->
+      Expect.floatLessThanOrClose Accuracy.low 1.0 0.0 "fail"
+    ) |> assertTestFails
+
+    testCase "greater than easy" <| fun _ ->
+      Expect.floatGreaterThanOrClose Accuracy.low 1.0 0.0 "greater"
+
+    testCase "not greater than but close" <| fun _ ->
+      Expect.floatGreaterThanOrClose Accuracy.low -0.000001 0.0 "close"
+
+    testCase "not greater than fails" (fun _ ->
+      Expect.floatGreaterThanOrClose Accuracy.low -1.0 0.0 "fail"
     ) |> assertTestFails
 
   ]
