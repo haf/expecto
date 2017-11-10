@@ -1,4 +1,4 @@
-﻿module Expecto.Flip.Expect
+module Expecto.Flip.Expect
 
 /// Expects f to throw an exception.
 let inline throws message f = Expecto.Expect.throws f message
@@ -48,6 +48,14 @@ let inline isGreaterThanOrEqual message (a, b) = Expecto.Expect.isGreaterThanOrE
 /// Expects `actual` and `expected` (that are both floats) to be within a
 /// given `accuracy`.
 let inline floatClose message accuracy expected actual = Expecto.Expect.floatClose accuracy actual expected message
+
+/// Expects `actual` to be less than `expected` or to be within a
+/// given `accuracy`.
+let inline floatLessThanOrClose message accuracy expected actual = Expecto.Expect.floatLessThanOrClose accuracy actual expected message
+
+/// Expects `actual` to be greater than `expected` or to be within a
+/// given `accuracy`.
+let inline floatGreaterThanOrClose message accuracy expected actual = Expecto.Expect.floatGreaterThanOrClose accuracy actual expected message
 
 /// Expect the passed float to be a number.
 let inline isNotNaN message f = Expecto.Expect.isNotNaN f message

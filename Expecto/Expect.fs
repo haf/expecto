@@ -160,6 +160,14 @@ let floatClose accuracy actual expected message =
       message (Accuracy.areCloseRhs accuracy actual expected)
       accuracy.absolute accuracy.relative
       (Accuracy.areCloseLhs actual expected)
+/// Expects `actual` to be less than `expected` or to be within a
+/// given `accuracy`.
+let floatLessThanOrClose accuracy actual expected message =
+    if actual>expected then floatClose accuracy actual expected message
+/// Expects `actual` to be greater than `expected` or to be within a
+/// given `accuracy`.
+let floatGreaterThanOrClose accuracy actual expected message =
+    if actual<expected then floatClose accuracy actual expected message
 
 /// Expect the passed float to be a number.
 let isNotNaN f message =

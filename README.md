@@ -757,6 +757,10 @@ This module is your main entry-point when asserting.
    `Accuracy.medium = {absolute=1e-8; relative=1e-5}`,
    `Accuracy.high = {absolute=1e-10; relative=1e-7}`,
    `Accuracy.veryHigh = {absolute=1e-12; relative=1e-9}`.
+- `floatLessThanOrClose : Accuracy -> float -> float -> string -> unit` - Expect actual
+   to be less than expected or close.
+- `floatGreaterThanOrClose : Accuracy -> float -> float -> string -> unit` - Expect actual
+   to be greater than expected or close.
 - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If
    it does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
