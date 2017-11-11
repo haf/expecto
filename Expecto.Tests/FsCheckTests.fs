@@ -1,9 +1,18 @@
-﻿module Expecto.FsCheckTests
+module Expecto.FsCheckTests
 
+open FsCheck
 open Expecto
 open Expecto.Impl
 
+type FsCheckType = FsCheckType of int
+
+type ArbRegisterType() =
+    member __.Test() = Arb.convert (fun (FsCheckType i) -> i) FsCheckType Arb.from
+
 let properties =
+
+  Arb.register<ArbRegisterType> |> ignore
+
   testList "FsCheck" [
     testProperty "Addition is commutative" <|
       fun a b ->
@@ -18,13 +27,17 @@ let properties =
       skiptest "Because I feel like it."
 
     ptestProperty "ignored2" <| ignore
+
+    testProperty "arb register" <|
+      fun (FsCheckType i) ->
+        Expect.isGreaterThanOrEqual i System.Int32.MinValue "arb"
   ]
 
 [<Tests>]
 let runFsCheckTests =
   testCaseAsync "run" <| async {
     let! results = Impl.evalTestsSilent properties
-    Expect.equal results.Length 4 "results length"
+    Expect.equal results.Length 5 "results length"
 
     let getResult name =
       results
@@ -52,6 +65,9 @@ let runFsCheckTests =
       ()
     | x ->
       failtestf "Expected Ignored, actual %A" x
+
+    Expect.equal (getResult "FsCheck/arb register").result
+                 TestResult.Passed "arb"
   }
 
 let focused =
