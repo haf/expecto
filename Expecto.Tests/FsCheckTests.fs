@@ -7,7 +7,9 @@ open Expecto.Impl
 type FsCheckType = FsCheckType of int
 
 type ArbRegisterType() =
-    member __.Test() = Arb.convert (fun (FsCheckType i) -> i) FsCheckType Arb.from
+    member __.Test() =
+        Gen.constant 7 |> Arb.fromGen
+        |> Arb.convert FsCheckType (fun (FsCheckType i) -> i)
 
 let properties =
 
@@ -30,12 +32,12 @@ let properties =
 
     testProperty "arb register" <|
       fun (FsCheckType i) ->
-        Expect.isGreaterThanOrEqual i System.Int32.MinValue "arb"
+        Expect.equal i 7 "arb"
   ]
 
 [<Tests>]
 let runFsCheckTests =
-  testCaseAsync "run" <| async {
+  ftestCaseAsync "run" <| async {
     let! results = Impl.evalTestsSilent properties
     Expect.equal results.Length 5 "results length"
 
@@ -66,8 +68,8 @@ let runFsCheckTests =
     | x ->
       failtestf "Expected Ignored, actual %A" x
 
-    Expect.equal (getResult "FsCheck/arb register").result
-                 TestResult.Passed "arb"
+    //Expect.equal (getResult "FsCheck/arb register").result
+    //             TestResult.Passed "arb"
   }
 
 let focused =
