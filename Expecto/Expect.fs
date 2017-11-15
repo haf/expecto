@@ -304,7 +304,7 @@ let isTrue actual message =
 
 /// Expect that some element from `actual` satisfies the given `asserter`
 let exists ( actual: 'a seq) asserter message =
-  let exist = 
+  let exist =
     match actual with
     | null -> false
     | _ -> actual |> Seq.exists asserter
@@ -489,7 +489,7 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) message =
       if ai.Current = ei.Current then ()
       else
         Tests.failtestf "%s
-        Sequence does not match at position %i. Expected char: %A, but got %A."
+        Sequence does not match at position %i. Expected item: %A, but got %A."
                            baseMsg i (ei.Current) (ai.Current)
     else
       Tests.failtestf "%s
