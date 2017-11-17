@@ -5,8 +5,6 @@ open Expecto
 open Expecto.Impl
 let properties =
 
-  Arb.register<ArbRegisterType> |> ignore
-
   testList "FsCheck" [
     testProperty "Addition is commutative" <|
       fun a b ->
