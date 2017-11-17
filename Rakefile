@@ -12,8 +12,8 @@ desc 'create assembly infos'
 asmver_files :assembly_info do |a|
   a.attributes assembly_description: 'A smooth unit test framework for F#',
                assembly_configuration: Configuration,
-               assembly_company: 'Logibit AB',
-               assembly_copyright: "(c) 2016 by Henrik Feldt, formerly Fuchu by @mausch",
+               assembly_company: '',
+               assembly_copyright: "(c) 2017 by Anthony Lloyd, formerly Henrik Feldt and cloned from Fuchu by @mausch",
                assembly_version: ENV['LONG_VERSION'],
                assembly_file_version: ENV['LONG_VERSION'],
                assembly_informational_version: ENV['BUILD_VERSION']
@@ -96,7 +96,7 @@ nugets_pack :create_nugets => ['build/pkg', :versioning, :compile, :create_nuget
     p.mono_opt_out
     p.with_metadata do |m|
       m.description = 'Expecto is a smooth test framework for F#, cloned from Fuchu with added functionality for making it easier to use.'
-      m.authors     = 'Henrik Feldt, Logibit AB, formerly @mausch'
+      m.authors     = 'Anthony Lloyd, formerly Henrik Feldt and cloned from Fuchu by @mausch'
       m.project_url = 'https://github.com/haf/expecto'
       m.icon_url    = 'https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png'
       m.tags        = 'testing fsharp assert expect'

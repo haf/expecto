@@ -1188,10 +1188,6 @@ testCase "reading prop" <| fun () ->
 In VsCode, search files for: `Assert.Equal\s*\(\s*((;|.)+?)\s*,\s*(.*?),\s*(.*?)\)`
 and replace with `Expect.equal $4 $3 $1`.
 
-### Why the strange name?
-
-![Expecto expecto](./docs/expecto-patronus-2000x1126.png "This is actually because nuget won't let me publish them with the name 'Expecto', plain and simple.")
-
 ### What does 'expected to have type TestCode' mean?
 
 If you get an error message like this:
@@ -1203,3 +1199,5 @@ This expression was expected to have type    'TestCode'    but here has type    
 It means that you have code like `testCase "abc" <| Expect.equal ...`. Instead
 you should create a function like so: `testCase "abc" <| fun () -> Expect.equal
 ...`.
+
+![Expecto expecto](./docs/expecto-patronus-2000x1126.png)

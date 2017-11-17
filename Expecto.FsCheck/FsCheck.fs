@@ -1,4 +1,4 @@
-﻿namespace Expecto
+namespace Expecto
 
 open System
 open FsCheck
