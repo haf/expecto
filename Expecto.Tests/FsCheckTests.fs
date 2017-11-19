@@ -24,7 +24,7 @@ let properties =
 
 [<Tests>]
 let runFsCheckTests =
-  ftestCaseAsync "run" <| async {
+  testCaseAsync "run" <| async {
     let! results = Impl.evalTestsSilent properties
     Expect.equal results.Length 4 "results length"
 
