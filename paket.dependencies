@@ -6,6 +6,7 @@ github logary/logary src/Logary.Facade/Facade.fs
 
 nuget Argu
 nuget FsCheck
+nuget FSharp.Compiler.Tools
 nuget FSharp.Core
 nuget BenchmarkDotNet
 nuget BenchmarkDotNet.Toolchains.Roslyn
