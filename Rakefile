@@ -13,10 +13,10 @@ asmver_files :assembly_info do |a|
   a.attributes assembly_description: 'A smooth unit test framework for F#',
                assembly_configuration: Configuration,
                assembly_company: '',
-               assembly_copyright: "(c) 2017 by Anthony Lloyd, formerly Henrik Feldt and cloned from Fuchu by @mausch",
+               assembly_copyright: "(C) 2017 by Anthony Lloyd, formerly Henrik Feldt and cloned from Fuchu by @mausch",
                assembly_version: ENV['LONG_VERSION'],
                assembly_file_version: ENV['LONG_VERSION'],
-               assembly_informational_version: ENV['BUILD_VERSION']
+               assembly_informational_version: ENV['LONG_VERSION']
   a.handle_config do |proj, conf|
     conf.namespace = conf.namespace + "AsmVer"
     conf

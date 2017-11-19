@@ -1138,7 +1138,7 @@ module Impl =
     }
 
   let testFromMember (mi: MemberInfo) : Test option =
-    let unboxTest v =
+    let inline unboxTest v =
       if isNull v then
         "Test is null. Assembly may not be initialized. Consider adding an [<EntryPoint>] or making it a library/classlib."
         |> NullTestDiscoveryException |> raise

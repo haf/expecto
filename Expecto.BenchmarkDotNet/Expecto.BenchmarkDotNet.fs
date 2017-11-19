@@ -21,8 +21,8 @@ module BenchmarkDotNet =
   let logger = Log.create "Expecto.BenchmarkDotNet"
 
   type BenchmarkAttribute = BenchmarkDotNet.Attributes.BenchmarkAttribute
-  type CleanupAttribute = BenchmarkDotNet.Attributes.CleanupAttribute
-  type SetupAttribute = BenchmarkDotNet.Attributes.SetupAttribute
+  type CleanupAttribute = BenchmarkDotNet.Attributes.GlobalCleanupAttribute
+  type SetupAttribute = BenchmarkDotNet.Attributes.GlobalSetupAttribute
 
   type BenchmarkConfig =
     { columnProviders: IColumnProvider list
