@@ -28,16 +28,26 @@ Target "PaketFiles" (fun _ ->
         ["paket-files/logary/logary/src/Logary.Facade/Facade.fs"]
 )
 
+let configuration = environVarOrDefault "Configuration" "Release"
+
 Target "Compile" (fun _ ->
     { BaseDirectory = __SOURCE_DIRECTORY__
       Includes = ["Expecto.sln"]
       Excludes = [] } 
-    |> MSBuild "" "Build" ["Configuration", "Release"]
+    |> MSBuild "" "Build" ["Configuration", configuration]
     |> Log "AppBuild-Output: "
+)
+
+Target "Test" (fun _ ->
+    Shell.Exec ("Expecto.Tests/bin/"+configuration+"/Expecto.Tests.exe")
+    |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
+    Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/Expecto.Tests.CSharp.exe")
+    |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
 )
 
 "AssemblyInfo"
 ==> "PaketFiles"
 ==> "Compile"
+==> "Test"
 
-RunTargetOrDefault "Compile"
+RunTargetOrDefault "Test"
