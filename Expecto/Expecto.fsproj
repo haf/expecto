@@ -12,7 +12,6 @@
     <ProjectGuid>c0d55728-10a9-4a7a-9df9-d2f21f663ac2</ProjectGuid>
     <OutputType>Library</OutputType>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FSharpTargetsPath Condition="'$(OS)' == 'Unix'">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
