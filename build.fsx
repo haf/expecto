@@ -19,7 +19,7 @@ Target "AssemblyInfo" (fun _ ->
           Attribute.Description "A smooth unit test framework for F#"
           Attribute.Version release.AssemblyVersion
           Attribute.FileVersion release.AssemblyVersion
-        ] |> CreateFSharpAssemblyInfo ("src/"+product+"/AssemblyVersionInfo.fs")
+        ] |> CreateFSharpAssemblyInfo (product+"/AssemblyVersionInfo.fs")
     )
 )
 
