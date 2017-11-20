@@ -40,4 +40,4 @@ Target "Compile" (fun _ ->
 ==> "PaketFiles"
 ==> "Compile"
 
-RunTargetOrDefault "PaketFiles"
+RunTargetOrDefault "Compile"
