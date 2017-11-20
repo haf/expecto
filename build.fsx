@@ -9,18 +9,18 @@ let release = IO.File.ReadAllLines "RELEASE_NOTES.md" |> ReleaseNotesHelper.pars
 open AssemblyInfoFile
 Target "AssemblyInfo" (fun _ ->
 
-    let create product =
-        [ 
-            Attribute.Product product
-            Attribute.Copyright "\169 Anthony Lloyd (formerly Henrik Feldt and cloned from Fuchu by @mausch)"
-            Attribute.Description "A smooth unit test framework for F#"
-            Attribute.Version release.AssemblyVersion
-            Attribute.FileVersion release.AssemblyVersion
-        ] |> CreateFSharpAssemblyInfo ("src/"+product+"/AssemblyInfo.fs")
-
-    create "Expecto"
-    create "Expecto.BenchmarkDotNet"
-    create "Expecto.FsCheck"
+    [ "Expecto"
+      "Expecto.BenchmarkDotNet"
+      "Expecto.FsCheck"
+    ]
+    |> List.iter (fun product ->
+        [ Attribute.Product product
+          Attribute.Copyright "\169 Anthony Lloyd (formerly Henrik Feldt and cloned from Fuchu by @mausch)"
+          Attribute.Description "A smooth unit test framework for F#"
+          Attribute.Version release.AssemblyVersion
+          Attribute.FileVersion release.AssemblyVersion
+        ] |> CreateFSharpAssemblyInfo ("src/"+product+"/AssemblyVersionInfo.fs")
+    )
 )
 
 Target "PaketFiles" (fun _ ->
@@ -28,6 +28,16 @@ Target "PaketFiles" (fun _ ->
         ["paket-files/logary/logary/src/Logary.Facade/Facade.fs"]
 )
 
-"AssemblyInfo" ==> "PaketFiles"
+Target "Compile" (fun _ ->
+    { BaseDirectory = __SOURCE_DIRECTORY__
+      Includes = ["Expecto.sln"]
+      Excludes = [] } 
+    |> MSBuild "" "Build" ["Configuration", "Release"]
+    |> Log "AppBuild-Output: "
+)
+
+"AssemblyInfo"
+==> "PaketFiles"
+==> "Compile"
 
 RunTargetOrDefault "PaketFiles"
