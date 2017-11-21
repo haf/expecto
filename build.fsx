@@ -32,12 +32,13 @@ Target "InstallDotNetCore" (fun _ ->
     if DotNetCli.isInstalled() then
         DotNetCli.getVersion() |> logf "DotNetCore %s already installed"
     else
-        DotNetCli.InstallDotNetSDK "1.0.1" |> logf "DotNetCore install result: %s"
+        DotNetCli.InstallDotNetSDK "1.0.1" |> logf "DotNetCore installed to: %s"
+        DotNetCli.DotnetSDKPath |> logf "DotnetSDKPath: %s"
 )
 
 Target "Restore" (fun _ ->
     DotNetCli.Restore (fun p ->
-        { p with Project = @"Expecto.netcore\Expecto.netcore.fsproj" })
+        { p with Project = "Expecto.netcore/Expecto.netcore.fsproj" })
 )
 
 let configuration = environVarOrDefault "Configuration" "Release"
