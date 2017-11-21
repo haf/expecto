@@ -40,7 +40,7 @@ Target "Restore" (fun _ ->
     DotNetCli.Restore (fun p ->
         { p with
             WorkingDir = DotNetCli.DotnetSDKPath
-            //ToolPath = DotNetCli.DotnetSDKPath+"/dotnet"
+            ToolPath = DotNetCli.DotnetSDKPath+"/dotnet"
             Project = "Expecto.netcore/Expecto.netcore.fsproj"
         })
 )
