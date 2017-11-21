@@ -28,7 +28,9 @@ Target "PaketFiles" (fun _ ->
         ["paket-files/logary/logary/src/Logary.Facade/Facade.fs"]
 )
 
-Target "Restore" (fun _ -> DotNetCli.Restore id)
+Target "Restore" (fun _ -> DotNetCli.Restore (fun p ->
+    { p with Project = "Expecto.netcore/Expecto.netcore.fsproj" })
+)
 
 let configuration = environVarOrDefault "Configuration" "Release"
 
