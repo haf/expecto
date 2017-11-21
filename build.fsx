@@ -28,6 +28,8 @@ Target "PaketFiles" (fun _ ->
         ["paket-files/logary/logary/src/Logary.Facade/Facade.fs"]
 )
 
+Target "Restore" (fun _ -> DotNetCli.Restore id)
+
 let configuration = environVarOrDefault "Configuration" "Release"
 
 Target "Compile" (fun _ ->
@@ -36,7 +38,17 @@ Target "Compile" (fun _ ->
       Excludes = [] } 
     |> MSBuild "" "Build" ["Configuration", configuration]
     |> Log "AppBuild-Output: "
+
+    // DotNetCli.Build (fun p ->
+    // { p with
+    //     Configuration = configuration
+    //     Project = "Expecto.netcore/Expecto.netcore.fsproj"
+    // })
 )
+
+
+
+// Target "Build" (fun _ -> DotNetCli.Build (fun p -> {p with Configuration = "Release"}))
 
 Target "Test" (fun _ ->
     Shell.Exec ("Expecto.Tests/bin/"+configuration+"/Expecto.Tests.exe")
@@ -47,6 +59,7 @@ Target "Test" (fun _ ->
 
 "AssemblyInfo"
 ==> "PaketFiles"
+==> "Restore"
 ==> "Compile"
 ==> "Test"
 
