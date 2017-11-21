@@ -29,7 +29,7 @@ Target "PaketFiles" (fun _ ->
 )
 
 Target "Restore" (fun _ -> DotNetCli.Restore (fun p ->
-    { p with Project = "Expecto.netcore/Expecto.netcore.fsproj" })
+    { p with Project = @".\Expecto.netcore\Expecto.netcore.fsproj" })
 )
 
 let configuration = environVarOrDefault "Configuration" "Release"
