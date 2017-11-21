@@ -38,7 +38,11 @@ Target "InstallDotNetCore" (fun _ ->
 
 Target "Restore" (fun _ ->
     DotNetCli.Restore (fun p ->
-        { p with Project = "Expecto.netcore/Expecto.netcore.fsproj" })
+        { p with
+            WorkingDir = __SOURCE_DIRECTORY__
+            ToolPath = DotNetCli.DotnetSDKPath+"/dotnet"
+            Project = "Expecto.netcore/Expecto.netcore.fsproj"
+        })
 )
 
 let configuration = environVarOrDefault "Configuration" "Release"
