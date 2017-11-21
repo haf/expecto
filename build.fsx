@@ -28,8 +28,16 @@ Target "PaketFiles" (fun _ ->
         ["paket-files/logary/logary/src/Logary.Facade/Facade.fs"]
 )
 
-Target "Restore" (fun _ -> DotNetCli.Restore (fun p ->
-    { p with Project = @"Expecto.netcore\Expecto.netcore.fsproj" })
+Target "InstallDotNetCore" (fun _ ->
+    if DotNetCli.isInstalled() then
+        DotNetCli.getVersion() |> logf "DotNetCore %s already installed"
+    else
+        DotNetCli.InstallDotNetSDK "1.0.1" |> logf "DotNetCore install result: %s"
+)
+
+Target "Restore" (fun _ ->
+    DotNetCli.Restore (fun p ->
+        { p with Project = @"Expecto.netcore\Expecto.netcore.fsproj" })
 )
 
 let configuration = environVarOrDefault "Configuration" "Release"
@@ -39,7 +47,7 @@ Target "Compile" (fun _ ->
       Includes = ["Expecto.sln"]
       Excludes = [] } 
     |> MSBuild "" "Build" ["Configuration", configuration]
-    |> Log "AppBuild-Output: "
+    |> Log "Compile-Output: "
 
     // DotNetCli.Build (fun p ->
     // { p with
@@ -61,6 +69,7 @@ Target "Test" (fun _ ->
 
 "AssemblyInfo"
 ==> "PaketFiles"
+==> "InstallDotNetCore"
 ==> "Restore"
 ==> "Compile"
 ==> "Test"
