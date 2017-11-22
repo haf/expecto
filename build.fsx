@@ -38,6 +38,16 @@ Target "Compile" (fun _ ->
     |> Log "Compile-Output: "
 )
 
+Target "Test" (fun _ ->
+    Shell.Exec ("Expecto.Tests/bin/"+configuration+"/Expecto.Tests.exe")
+    |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
+)
+
+Target "TestCSharp" (fun _ ->
+    Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/Expecto.Tests.CSharp.exe")
+    |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
+)
+
 Target "DotNetCoreRestore" (fun _ ->
     DotNetCli.Restore (fun p ->
         { p with
@@ -53,14 +63,15 @@ Target "DotNetCoreCompile" (fun _ ->
     })
 )
 
-Target "Test" (fun _ ->
-    Shell.Exec ("Expecto.Tests/bin/"+configuration+"/Expecto.Tests.exe")
-    |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
+Target "DotNetCoreRestoreTest" (fun _ ->
+    DotNetCli.Restore (fun p ->
+        { p with
+            Project = "Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj"
+        })
 )
 
-Target "TestCSharp" (fun _ ->
-    Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/Expecto.Tests.CSharp.exe")
-    |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
+Target "DotNetCoreTest" (fun _ ->
+    DotNetCli.RunCommand id ("-p Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj -c "+configuration)
 )
 
 Target "All" ignore
@@ -68,10 +79,12 @@ Target "All" ignore
 "AssemblyInfo"
 ==> "PaketFiles"
 ==> "Compile"
-==> "DotNetCoreRestore"
-==> "DotNetCoreCompile"
 ==> "Test"
 ==> "TestCSharp"
+==> "DotNetCoreRestore"
+==> "DotNetCoreCompile"
+==> "DotNetCoreRestoreTest"
+==> "DotNetCoreTest"
 ==> "All"
 
 RunTargetOrDefault "All"
