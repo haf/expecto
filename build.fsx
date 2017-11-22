@@ -71,7 +71,7 @@ Target "DotNetCoreRestoreTest" (fun _ ->
 )
 
 Target "DotNetCoreTest" (fun _ ->
-    DotNetCli.RunCommand id ("-p Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj -c "+configuration)
+    DotNetCli.RunCommand id ("./Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp1.6/Expecto.netcore.Tests.dll")
 )
 
 Target "All" ignore
