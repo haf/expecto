@@ -32,8 +32,7 @@ Target "InstallDotNetCore" (fun _ ->
     if DotNetCli.isInstalled() then
         DotNetCli.getVersion() |> logfn "DotNetCore %s already installed"
     else
-        DotNetCli.InstallDotNetSDK "2.0.2" |> logfn "DotNetCore installed to: %s"
-        DotNetCli.InstallDotNetSDK "1.0.1" |> logfn "DotNetCore installed to: %s"
+        DotNetCli.InstallDotNetSDK "1.1.1" |> logfn "DotNetCore installed to: %s"
         DotNetCli.DotnetSDKPath |> logfn "DotnetSDKPath: %s"
 )
 
