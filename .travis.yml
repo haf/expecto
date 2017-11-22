@@ -10,10 +10,11 @@ os:
 script: 
   - ./build.sh
 
+mono: 4.8.1
+dotnet: 1.0.4
+
 matrix:
   include:
-    - mono: 4.8.1
-      dotnet: 1.0.4
     - mono: weekly
       dotnet: 1.0.4
     - mono: latest
