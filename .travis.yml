@@ -13,14 +13,13 @@ mono:
 
 dotnet:
   - 1.0.4
-  - 2.0.0
+  - 2.0.3
 
 matrix:
   allow_failures:
     - os: osx
     - mono: weekly
     - mono: latest
-    - dotnet: 2.0.0
 
 script: 
   - ./build.sh
