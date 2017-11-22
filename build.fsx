@@ -79,8 +79,24 @@ Target "DotNetCoreBuildTest" (fun _ ->
 )
 
 Target "DotNetCoreRunTest" (fun _ ->
-    DotNetCli.RunCommand id ("./Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp1.6/Expecto.netcore.Tests.dll")
+    DotNetCli.RunCommand id (" ./Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.netcore.Tests.dll")
 )
+
+// Target "NuGet" <| fun () ->
+//     NuGet (fun p -> 
+//         { p with
+//             // Authors = authors
+//             // Project = project
+//             // Summary = summary
+//             // Description = description
+//             // Version = nugetVersion
+//             ReleaseNotes = toLines release.Notes
+//             //Tags = tags
+//             OutputPath = "bin"
+//             AccessKey = getBuildParamOrDefault "nugetkey" ""
+//             Publish = hasBuildParam "nugetkey"
+//             Dependencies = [] })
+//         "nuget/Expecto.nuspec"
 
 Target "All" ignore
 
