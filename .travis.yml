@@ -15,11 +15,9 @@ dotnet: 1.0.4
 
 matrix:
   include:
-    - dotnet: 1.0.4
-      mono: 4.8.1
-    - mono: latest # => "stable release"
+    - mono: latest
       dotnet: none
-    - mono: weekly # => "latest commits"
+    - mono: weekly
       dotnet: none
 
   allow_failures:
