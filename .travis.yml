@@ -16,9 +16,6 @@ matrix:
     - os: linux
       mono: latest
       dotnet: 1.0.4
-    - os: linux
-      mono: latest
-      dotnet: 2.0.0
     - os: osx
       mono: 5.4.1
       dotnet: 1.0.4
@@ -27,4 +24,3 @@ matrix:
     - os: osx
     - mono: weekly
     - mono: latest
-    - dotnet: 2.0.0

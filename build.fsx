@@ -82,21 +82,16 @@ Target "DotNetCoreRunTest" (fun _ ->
     DotNetCli.RunCommand id (" ./Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.netcore.Tests.dll")
 )
 
-// Target "NuGet" <| fun () ->
-//     NuGet (fun p -> 
-//         { p with
-//             // Authors = authors
-//             // Project = project
-//             // Summary = summary
-//             // Description = description
-//             // Version = nugetVersion
-//             ReleaseNotes = toLines release.Notes
-//             //Tags = tags
-//             OutputPath = "bin"
-//             AccessKey = getBuildParamOrDefault "nugetkey" ""
-//             Publish = hasBuildParam "nugetkey"
-//             Dependencies = [] })
-//         "nuget/Expecto.nuspec"
+Target "DotNetCorePack" (fun _ ->
+    DotNetCli.Pack (fun p ->
+        { p with
+            Project = "Expecto"
+            VersionSuffix = release.NugetVersion
+            Configuration = configuration
+            OutputPath = "bin"
+        }
+    )
+)
 
 Target "All" ignore
 
@@ -110,6 +105,7 @@ Target "All" ignore
 ==> "DotNetCoreRestoreTest"
 ==> "DotNetCoreBuildTest"
 ==> "DotNetCoreRunTest"
+==> "DotNetCorePack"
 ==> "All"
 
 RunTargetOrDefault "All"
