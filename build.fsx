@@ -30,7 +30,7 @@ Target "PaketFiles" (fun _ ->
 
 let configuration = environVarOrDefault "Configuration" "Release"
 
-Target "Compile" (fun _ ->
+Target "Build" (fun _ ->
     { BaseDirectory = __SOURCE_DIRECTORY__
       Includes = ["Expecto.sln"]
       Excludes = [] } 
@@ -55,7 +55,7 @@ Target "DotNetCoreRestore" (fun _ ->
         })
 )
 
-Target "DotNetCoreCompile" (fun _ ->
+Target "DotNetCoreBuild" (fun _ ->
     DotNetCli.Build (fun p ->
     { p with
         Configuration = configuration
@@ -70,7 +70,15 @@ Target "DotNetCoreRestoreTest" (fun _ ->
         })
 )
 
-Target "DotNetCoreTest" (fun _ ->
+Target "DotNetCoreBuildTest" (fun _ ->
+    DotNetCli.Build (fun p ->
+    { p with
+        Configuration = configuration
+        Project = "Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj"
+    })
+)
+
+Target "DotNetCoreRunTest" (fun _ ->
     DotNetCli.RunCommand id ("./Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp1.6/Expecto.netcore.Tests.dll")
 )
 
@@ -78,13 +86,14 @@ Target "All" ignore
 
 "AssemblyInfo"
 ==> "PaketFiles"
-==> "Compile"
+==> "Build"
 ==> "Test"
 ==> "TestCSharp"
 ==> "DotNetCoreRestore"
-==> "DotNetCoreCompile"
+==> "DotNetCoreBuild"
 ==> "DotNetCoreRestoreTest"
-==> "DotNetCoreTest"
+==> "DotNetCoreBuildTest"
+==> "DotNetCoreRunTest"
 ==> "All"
 
 RunTargetOrDefault "All"
