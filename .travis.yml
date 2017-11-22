@@ -1,6 +1,28 @@
 language: csharp
+dist: trusty
 
 sudo: false
 
+os:
+ - osx
+ - linux
+
 script: 
   - ./build.sh
+
+mono: 4.8.1
+dotnet: 1.0.4
+
+matrix:
+  include:
+    - dotnet: 1.0.4
+      mono: 4.8.1
+    - mono: latest # => "stable release"
+      dotnet: none
+    - mono: weekly # => "latest commits"
+      dotnet: none
+
+  allow_failures:
+    - mono: latest
+    - mono: weekly
+    - os: osx
