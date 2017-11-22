@@ -6,6 +6,8 @@ script:
   - ./build.sh
 
 matrix:
+  fast_finish: true
+  
   include:
     - os: linux
       mono: 5.4.1
