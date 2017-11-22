@@ -79,4 +79,4 @@ Target "Test" (fun _ ->
 ==> "Compile"
 ==> "Test"
 
-RunTargetOrDefault "Test"
+RunTargetOrDefault "InstallDotNetCore"
