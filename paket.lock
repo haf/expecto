@@ -127,4 +127,4 @@ GITHUB
 GROUP build
 NUGET
   remote: https://api.nuget.org/v3/index.json
-    FAKE (4.60)
+    FAKE (4.63.2)
