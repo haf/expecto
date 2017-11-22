@@ -51,6 +51,7 @@ Target "TestCSharp" (fun _ ->
 Target "Pack" (fun _ ->
     Paket.Pack (fun p ->
       { p with
+          OutputPath = "bin"
           Version = release.AssemblyVersion
           ReleaseNotes = toLines release.Notes
       })

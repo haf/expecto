@@ -23,5 +23,3 @@ description
     Expecto is an advanced testing library for F# covering unit testing, property based testing, performance testing and stress testing.
 files
     bin/Release/Expecto.FsCheck.dll ==> lib/net461
-    bin/Release/Expecto.FsCheck.pdb ==> lib/net461
-    bin/Release/Expecto.FsCheck.xml ==> lib/net461
