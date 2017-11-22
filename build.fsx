@@ -103,7 +103,7 @@ Target "DotNetCorePack" (fun _ ->
 )
 
 Target "Initialize" ignore
-Target "Framwwork" ignore
+Target "Framework" ignore
 Target "DotNetCore" ignore
 Target "All" ignore
 
