@@ -4,25 +4,24 @@ dist: trusty
 sudo: false
 
 os:
- - osx
  - linux
+ - osx
+
+ mono:
+  - 4.8.1
+  - weekly
+  - latest
+
+dotnet:
+  - 1.0.4
+  - 2.0.0
+
+matrix:
+  allow_failures:
+    - os: osx
+    - mono: weekly
+    - mono: latest
+    - dotnet: 2.0.0
 
 script: 
   - ./build.sh
-
-mono: 4.8.1
-dotnet: 1.0.4
-
-matrix:
-  include:
-    - mono: weekly
-      dotnet: 1.0.4
-    - mono: latest
-      dotnet: 1.0.4
-    - mono: weekly
-      dotnet: 2.0.0
-
-  allow_failures:
-    - mono: latest
-    - mono: weekly
-    - os: osx
