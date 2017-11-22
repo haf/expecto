@@ -28,13 +28,6 @@ Target "PaketFiles" (fun _ ->
         ["paket-files/logary/logary/src/Logary.Facade/Facade.fs"]
 )
 
-Target "Restore" (fun _ ->
-    DotNetCli.Restore (fun p ->
-        { p with
-            Project = "Expecto.netcore/Expecto.netcore.fsproj"
-        })
-)
-
 let configuration = environVarOrDefault "Configuration" "Release"
 
 Target "Compile" (fun _ ->
@@ -43,29 +36,42 @@ Target "Compile" (fun _ ->
       Excludes = [] } 
     |> MSBuild "" "Build" ["Configuration", configuration]
     |> Log "Compile-Output: "
-
-    // DotNetCli.Build (fun p ->
-    // { p with
-    //     Configuration = configuration
-    //     Project = "Expecto.netcore/Expecto.netcore.fsproj"
-    // })
 )
 
+Target "DotNetCoreRestore" (fun _ ->
+    DotNetCli.Restore (fun p ->
+        { p with
+            Project = "Expecto.netcore/Expecto.netcore.fsproj"
+        })
+)
 
-
-// Target "Build" (fun _ -> DotNetCli.Build (fun p -> {p with Configuration = "Release"}))
+Target "DotNetCoreCompile" (fun _ ->
+    DotNetCli.Build (fun p ->
+    { p with
+        Configuration = configuration
+        Project = "Expecto.netcore/Expecto.netcore.fsproj"
+    })
+)
 
 Target "Test" (fun _ ->
     Shell.Exec ("Expecto.Tests/bin/"+configuration+"/Expecto.Tests.exe")
     |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
+)
+
+Target "TestCSharp" (fun _ ->
     Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/Expecto.Tests.CSharp.exe")
     |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
 )
 
+Target "All" ignore
+
 "AssemblyInfo"
 ==> "PaketFiles"
-==> "Restore"
 ==> "Compile"
+==> "DotNetCoreRestore"
+==> "DotNetCoreCompile"
 ==> "Test"
+==> "TestCSharp"
+==> "All"
 
-RunTargetOrDefault "Restore"
+RunTargetOrDefault "All"
