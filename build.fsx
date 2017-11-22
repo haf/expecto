@@ -48,6 +48,15 @@ Target "TestCSharp" (fun _ ->
     |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
 )
 
+Target "Pack" (fun _ ->
+    Paket.Pack (fun p ->
+      { p with
+          OutputPath = "bin"
+          Version = release.AssemblyVersion
+          ReleaseNotes = toLines release.Notes
+      })
+)
+
 Target "DotNetCoreRestore" (fun _ ->
     DotNetCli.Restore (fun p ->
         { p with
@@ -79,7 +88,7 @@ Target "DotNetCoreBuildTest" (fun _ ->
 )
 
 Target "DotNetCoreRunTest" (fun _ ->
-    DotNetCli.RunCommand id (" ./Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.netcore.Tests.dll")
+    DotNetCli.RunCommand id ("Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.netcore.Tests.dll")
 )
 
 Target "DotNetCorePack" (fun _ ->
@@ -93,19 +102,33 @@ Target "DotNetCorePack" (fun _ ->
     )
 )
 
+Target "Initialize" ignore
+Target "Framwwork" ignore
+Target "DotNetCore" ignore
 Target "All" ignore
 
 "AssemblyInfo"
 ==> "PaketFiles"
+==> "Initialize"
+
+"Initialize"
 ==> "Build"
 ==> "Test"
 ==> "TestCSharp"
+==> "Pack"
+==> "Framework"
+
+"Initialize"
 ==> "DotNetCoreRestore"
 ==> "DotNetCoreBuild"
 ==> "DotNetCoreRestoreTest"
 ==> "DotNetCoreBuildTest"
 ==> "DotNetCoreRunTest"
 ==> "DotNetCorePack"
+==> "DotNetCore"
+
+"Framework"
+==> "DotNetCore"
 ==> "All"
 
 RunTargetOrDefault "All"
