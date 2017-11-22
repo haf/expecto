@@ -85,7 +85,7 @@ Target "DotNetCoreRunTest" (fun _ ->
 Target "DotNetCorePack" (fun _ ->
     DotNetCli.Pack (fun p ->
         { p with
-            Project = "Expecto"
+            Project = "Expecto.netcore/Expecto.netcore.fsproj"
             VersionSuffix = release.NugetVersion
             Configuration = configuration
             OutputPath = "bin"
