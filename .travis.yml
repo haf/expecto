@@ -1,13 +1,12 @@
 language: csharp
 dist: trusty
-
 sudo: false
 
 os:
  - linux
  - osx
 
- mono:
+mono:
   - 4.8.1
   - weekly
   - latest
