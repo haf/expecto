@@ -1,20 +1,16 @@
 source https://api.nuget.org/v3/index.json
 redirects: on
-framework net461
 
 github logary/logary src/Logary.Facade/Facade.fs
 
+nuget FSharp.Core >= 4.1.18
 nuget Argu >= 3.7
 nuget FsCheck >= 2.8
-nuget FSharp.Compiler.Tools
-nuget FSharp.Core >= 4.1.12
 nuget BenchmarkDotNet >= 0.10.9
-nuget BenchmarkDotNet.Toolchains.Roslyn
-nuget BenchmarkDotNet.Core
-nuget NuGet.CommandLine
 nuget Mono.Cecil >= 0.10-beta5
 
 group build
   source https://api.nuget.org/v3/index.json
   nuget FAKE
+  nuget FSharp.Compiler.Tools
   github fsharp/FAKE modules/Octokit/Octokit.fsx

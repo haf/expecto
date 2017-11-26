@@ -3,9 +3,6 @@
     <AssemblyName>Expecto.netcore.Tests</AssemblyName>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
-    <DefineConstants>
-      RESHAPED_THREAD_CULTURE
-    </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Expecto.Tests/Prelude.fs" />
@@ -22,7 +19,7 @@
     <Content Include="../Expecto.Tests/app.config" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="4.1.12" />
+    <PackageReference Include="FSharp.Core" Version="4.1.18" />
     <ProjectReference Include="../Expecto.netcore/Expecto.netcore.fsproj" />
     <PackageReference Include="FsCheck" Version="3.0.0-alpha-b752" />
   </ItemGroup>
