@@ -20,7 +20,7 @@ module Dummy =
   let testB() = TestLabel ("test B", TestList ([], Normal), Normal)
 
   let thisAssemblyName =
-#if NETCOREAPP1_1
+#if NETCOREAPP1_1 || NETCOREAPP2_0
     "Expecto.netcore.Tests"
 #else
     "Expecto.Tests"
@@ -379,14 +379,14 @@ let expecto =
     testList "transformations" [
       testCaseAsync "multiple cultures" <| async {
         let getCurrentCulture () : CultureInfo =
-#if RESHAPED_THREAD_CULTURE
+#if NETCOREAPP1_1 || NETCOREAPP2_0
           System.Globalization.CultureInfo.CurrentCulture
 #else
           System.Threading.Thread.CurrentThread.CurrentCulture
 #endif
 
         let setCurrentCulture (culture : CultureInfo) =
-#if RESHAPED_THREAD_CULTURE
+#if NETCOREAPP1_1 || NETCOREAPP2_0
           System.Globalization.CultureInfo.CurrentCulture <- culture
 #else
           System.Threading.Thread.CurrentThread.CurrentCulture <- culture

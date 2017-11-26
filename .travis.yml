@@ -2,27 +2,37 @@ language: csharp
 dist: trusty
 sudo: false
 
-script: 
-  - ./build.sh
-
 matrix:
   fast_finish: true
   
   include:
     - os: linux
       mono: 5.4.1
-      dotnet: 1.0.4
     - os: linux
       mono: weekly
-      dotnet: 1.0.4
     - os: linux
       mono: latest
-      dotnet: 1.0.4
     - os: osx
+      osx_image: xcode9.1
       mono: 5.4.1
-      dotnet: 1.0.4
+    - os: osx
+      osx_image: xcode9.1
+      mono: latest
 
   allow_failures:
     - os: osx
     - mono: weekly
     - mono: latest
+
+addons:
+  apt:
+    packages:
+    - libunwind8
+
+script:
+  - curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version 2.0.3 --install-dir .dotnet --no-path
+  - curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version 1.1.5 --install-dir .dotnet --no-path  --shared-runtime
+  - PATH="$PWD/.dotnet":$PATH
+  - DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+  - DOTNET_CLI_TELEMETRY_OPTOUT=1
+  - ./build.sh

@@ -1,4 +1,3 @@
 @echo off
-
-call bundle
-call bundle exec rake %*
+.paket\paket.exe restore
+packages\build\FAKE\tools\FAKE.exe build.fsx %*

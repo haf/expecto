@@ -1,12 +1,10 @@
-AssemblyVersionInfo.fs
-AssemblyVersionInfo.cs
 *.suo
 *.swp
 *.user
 *.userprefs
 *.pidb
-*/bin
-*/obj
+bin
+obj
 _ReSharper.*
 packages/*
 **/packages/*

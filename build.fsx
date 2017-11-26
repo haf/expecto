@@ -6,6 +6,10 @@ open Fake
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 let release = IO.File.ReadAllLines "RELEASE_NOTES.md" |> ReleaseNotesHelper.parseReleaseNotes
 
+Target "Clean" (fun _ ->
+    !!"./**/bin/" ++ "./**/obj/" |> CleanDirs
+)
+
 open AssemblyInfoFile
 Target "AssemblyInfo" (fun _ ->
 
@@ -14,12 +18,13 @@ Target "AssemblyInfo" (fun _ ->
       "Expecto.FsCheck"
     ]
     |> List.iter (fun product ->
-        [ Attribute.Product product
-          Attribute.Copyright "\169 Anthony Lloyd (formerly Henrik Feldt and cloned from Fuchu by @mausch)"
-          Attribute.Description "A smooth unit test framework for F#"
+        [ Attribute.Title product
+          Attribute.Product product
+          Attribute.Copyright "Copyright \169 2017"
+          Attribute.Description "Advanced testing library for F#"
           Attribute.Version release.AssemblyVersion
           Attribute.FileVersion release.AssemblyVersion
-        ] |> CreateFSharpAssemblyInfo (product+"/AssemblyVersionInfo.fs")
+        ] |> CreateFSharpAssemblyInfo (product+"/AssemblyInfo.fs")
     )
 )
 
@@ -39,12 +44,12 @@ Target "Build" (fun _ ->
 )
 
 Target "Test" (fun _ ->
-    Shell.Exec ("Expecto.Tests/bin/"+configuration+"/Expecto.Tests.exe")
+    Shell.Exec ("Expecto.Tests/bin/"+configuration+"/Expecto.Tests.exe","--summary")
     |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
 )
 
 Target "TestCSharp" (fun _ ->
-    Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/Expecto.Tests.CSharp.exe")
+    Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/Expecto.Tests.CSharp.exe","--summary")
     |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
 )
 
@@ -59,9 +64,9 @@ Target "Pack" (fun _ ->
 
 Target "DotNetCoreRestore" (fun _ ->
     DotNetCli.Restore (fun p ->
-        { p with
-            Project = "Expecto.netcore/Expecto.netcore.fsproj"
-        })
+    { p with
+        Project = "Expecto.netcore/Expecto.netcore.fsproj"
+    })
 )
 
 Target "DotNetCoreBuild" (fun _ ->
@@ -74,9 +79,9 @@ Target "DotNetCoreBuild" (fun _ ->
 
 Target "DotNetCoreRestoreTest" (fun _ ->
     DotNetCli.Restore (fun p ->
-        { p with
-            Project = "Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj"
-        })
+    { p with
+        Project = "Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj"
+    })
 )
 
 Target "DotNetCoreBuildTest" (fun _ ->
@@ -87,19 +92,58 @@ Target "DotNetCoreBuildTest" (fun _ ->
     })
 )
 
-Target "DotNetCoreRunTest" (fun _ ->
-    DotNetCli.RunCommand id ("Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.netcore.Tests.dll")
+Target "DotNetCoreRunTest11" (fun _ ->
+    DotNetCli.RunCommand id ("Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.netcore.Tests.dll --summary")
+)
+
+Target "DotNetCoreRunTest20" (fun _ ->
+    DotNetCli.RunCommand id ("Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.netcore.Tests.dll --summary")
 )
 
 Target "DotNetCorePack" (fun _ ->
     DotNetCli.Pack (fun p ->
-        { p with
-            Project = "Expecto.netcore/Expecto.netcore.fsproj"
-            VersionSuffix = release.NugetVersion
-            Configuration = configuration
-            OutputPath = "bin"
-        }
-    )
+    { p with
+        Project = "Expecto.netcore/Expecto.netcore.fsproj"
+        Configuration = configuration
+        OutputPath = "bin"
+    })
+)
+
+Target "Merge" (fun _ ->
+    DotNetCli.Restore (fun p -> { p with Project = "tools/tools.proj" })
+    DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
+        ("mergenupkg --source ../bin/Expecto."+release.NugetVersion+".nupkg --other ../Expecto.netcore/bin/Expecto.1.0.0.nupkg --framework netstandard1.6")
+    DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
+        ("mergenupkg --source ../bin/Expecto."+release.NugetVersion+".nupkg --other ../Expecto.netcore/bin/Expecto.1.0.0.nupkg --framework netstandard2.0")    
+)
+
+Target "Push" (fun _ -> Paket.Push (fun p -> { p with WorkingDir = "bin" }))
+
+#load "paket-files/build/fsharp/FAKE/modules/Octokit/Octokit.fsx"
+Target "Release" (fun _ ->
+    let gitOwner = "haf"
+    let gitName = "expecto"
+    let gitOwnerName = gitOwner + "/" + gitName
+    let remote =
+        Git.CommandHelper.getGitResult "" "remote -v"
+        |> Seq.tryFind (fun s -> s.EndsWith "(push)" && s.Contains gitOwnerName)
+        |> function None -> ("ssh://github.com/"+gitOwnerName) | Some s -> s.Split().[0]
+
+    Git.Staging.StageAll ""
+    Git.Commit.Commit "" (sprintf "Bump version to %s" release.NugetVersion)
+    Git.Branches.pushBranch "" remote (Git.Information.getBranchName "")
+
+    Git.Branches.tag "" release.NugetVersion
+    Git.Branches.pushTag "" remote release.NugetVersion
+
+    let user = getUserInput "Github Username: "
+    let pw = getUserPassword "Github Password: "
+
+    Octokit.createClient user pw
+    |> Octokit.createDraft gitOwner gitName release.NugetVersion
+        (Option.isSome release.SemVer.PreRelease) release.Notes
+    |> Octokit.releaseDraft
+    |> Async.RunSynchronously
 )
 
 Target "Initialize" ignore
@@ -107,7 +151,8 @@ Target "Framework" ignore
 Target "DotNetCore" ignore
 Target "All" ignore
 
-"AssemblyInfo"
+"Clean"
+==> "AssemblyInfo"
 ==> "PaketFiles"
 ==> "Initialize"
 
@@ -123,12 +168,17 @@ Target "All" ignore
 ==> "DotNetCoreBuild"
 ==> "DotNetCoreRestoreTest"
 ==> "DotNetCoreBuildTest"
-==> "DotNetCoreRunTest"
+==> "DotNetCoreRunTest11"
+==> "DotNetCoreRunTest20"
 ==> "DotNetCorePack"
 ==> "DotNetCore"
 
-"Framework"
-==> "DotNetCore"
-==> "All"
+"Framework" ==> "Merge"
+"DotNetCore" ==> "Merge"
+"Merge" ==> "All"
+
+"All"
+==> "Push"
+==> "Release"
 
 RunTargetOrDefault "All"
