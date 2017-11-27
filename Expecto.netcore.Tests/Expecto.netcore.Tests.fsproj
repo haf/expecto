@@ -21,6 +21,6 @@
   <ItemGroup>
     <PackageReference Include="FSharp.Core" Version="4.1.18" />
     <ProjectReference Include="../Expecto.netcore/Expecto.netcore.fsproj" />
-    <PackageReference Include="FsCheck" Version="3.0.0-alpha1" />
+    <PackageReference Include="FsCheck" Version="2.10.4" />
   </ItemGroup>
 </Project>
