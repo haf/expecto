@@ -689,6 +689,12 @@ the 18..., 29... seed numbers). It's also a good idea to lift inputs and the
 test-case/parameter combination that failed into its *own* test (which isn't a
 property based test).
 
+FsCheck `Arb.Register` can't be used with Expecto because it is thread local and Expecto runs
+multithreaded by default. This could be worked around but `Arb.Register` is being depricated
+by FsCheck. The recommended way to register and use custom generators is to define `testPropertyWithConfig`
+functions like `testProp` above for each area with common generator use. This ensures the library will
+always be used in a thread safe way.
+
 #### Link collection
 
 These are a few resources that will get you on your way towards fully-specified
