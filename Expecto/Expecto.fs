@@ -893,8 +893,10 @@ module Impl =
           w.Stop()
           let msg =
             (stackTraceToString e.StackTrace).Split('\n')
-            |> Seq.filter (fun q -> q.Contains ",1): ")
-            |> Enumerable.FirstOrDefault
+            |> Seq.tryFind (fun q -> q.Contains ",1): ")
+            |> Option.defaultWith (fun () -> e.StackTrace.Split('\n')
+                                             |> Seq.truncate 10
+                                             |> String.concat "\n")
             |> sprintf "\n%s\n%s\n" e.Message
           return
             TestSummary.single (Failed msg) (float w.ElapsedMilliseconds)
