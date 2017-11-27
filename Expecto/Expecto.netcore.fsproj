@@ -1,19 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Expecto</AssemblyName>
     <TargetFrameworks>netstandard1.6;netstandard2.0</TargetFrameworks>
-    <DebugType>portable</DebugType>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\paket-files\logary\logary\src\Logary.Facade\Facade.fs" />
-    <Compile Include="..\Expecto\AssemblyInfo.fs" />
-    <Compile Include="..\Expecto\Performance.fs" />
-    <Compile Include="..\Expecto\Expecto.fs" />
-    <Compile Include="..\Expecto\Expect.fs" />
-    <Compile Include="..\Expecto\Flip.Expect.fs" />
-  </ItemGroup>
-  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Performance.fs" />
+    <Compile Include="Expecto.fs" />
+    <Compile Include="Expect.fs" />
+    <Compile Include="Flip.Expect.fs" />
     <PackageReference Include="FSharp.Core" Version="4.1.18" />
     <PackageReference Include="Argu" Version="3.7.0" />
     <PackageReference Include="Mono.Cecil" Version="0.10.0-beta5" />
