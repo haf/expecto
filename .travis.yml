@@ -1,6 +1,7 @@
 language: csharp
 dist: trusty
 sudo: false
+dotnet: 2.0.3
 
 matrix:
   fast_finish: true
@@ -27,12 +28,7 @@ matrix:
 addons:
   apt:
     packages:
-    - libunwind8
+    - dotnet-sharedframework-microsoft.netcore.app-1.1.5
 
 script:
-  - curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version 2.0.3 --install-dir .dotnet --no-path
-  - curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version 1.1.5 --install-dir .dotnet --no-path  --shared-runtime
-  - export PATH="$PWD/.dotnet":$PATH
-  - export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
-  - export DOTNET_CLI_TELEMETRY_OPTOUT=1
   - ./build.sh
