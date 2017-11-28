@@ -159,9 +159,9 @@ Target "Merge" (fun _ ->
     DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
         ("mergenupkg --source ../bin/Expecto."+release.NugetVersion+".nupkg --other ../Expecto/bin/Expecto.netcore.1.0.0.nupkg --framework netstandard2.0")
     DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
-        ("mergenupkg --source ../bin/Expecto.FsCheck."+release.NugetVersion+".nupkg --other ../Expecto.FsCheck/bin/Expecto.FsCheck.netcore.1.0.0.nupkg --framework netstandard1.6")
+        ("mergenupkg --source ../bin/Expecto.FsCheck."+release.NugetVersion+".nupkg --other ../Expecto.FsCheck/bin/Expecto.FsCheck.1.0.0.nupkg --framework netstandard1.6")
     DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
-        ("mergenupkg --source ../bin/Expecto.FsCheck."+release.NugetVersion+".nupkg --other ../Expecto.FsCheck/bin/Expecto.FsCheck.netcore.1.0.0.nupkg --framework netstandard2.0")
+        ("mergenupkg --source ../bin/Expecto.FsCheck."+release.NugetVersion+".nupkg --other ../Expecto.FsCheck/bin/Expecto.FsCheck.1.0.0.nupkg --framework netstandard2.0")
 )
 
 Target "Push" (fun _ -> Paket.Push (fun p -> { p with WorkingDir = "bin" }))

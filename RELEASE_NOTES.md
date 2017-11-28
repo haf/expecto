@@ -10,6 +10,5 @@
 * Move to FAKE, support netstandard2.0, simplify. @AnthonyLloyd https://github.com/haf/expecto/commit/fa2ead7f5b40e991ea1e6aafc36a5de052e9d7f2
 * sequenceEqual for items. Thanks @haf https://github.com/haf/expecto/issues/206
 * Exceptions lose their stack trace when no line numbers. @AnthonyLloyd https://github.com/haf/expecto/issues/205
-
-
 * Update FsCheck and BenchmarkDotNet. @AnthonyLloyd
+* add Expecto.findFastest
