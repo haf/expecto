@@ -48,15 +48,6 @@
       </PropertyGroup>
     </When>
   </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp' And $(TargetFrameworkVersion) == 'v2.0'">
-      <PropertyGroup>
-        <__paket__Microsoft_NETCore_App_props>netcoreapp2.0\Microsoft.NETCore.App</__paket__Microsoft_NETCore_App_props>
-        <__paket__Microsoft_NETCore_App_targets>netcoreapp2.0\Microsoft.NETCore.App</__paket__Microsoft_NETCore_App_targets>
-      </PropertyGroup>
-    </When>
-  </Choose>
-  <Import Project="..\packages\Microsoft.NETCore.App\build\$(__paket__Microsoft_NETCore_App_props).props" Condition="Exists('..\packages\Microsoft.NETCore.App\build\$(__paket__Microsoft_NETCore_App_props).props')" Label="Paket" />
   <ItemGroup>
     <Compile Include="Prelude.fs" />
     <Compile Include="Tests.fs" />
@@ -101,10 +92,19 @@
         </Reference>
       </ItemGroup>
     </When>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp' And ($(TargetFrameworkVersion) == 'v1.1' Or $(TargetFrameworkVersion) == 'v2.0')">
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp' And $(TargetFrameworkVersion) == 'v1.1'">
       <ItemGroup>
         <Reference Include="BenchmarkDotNet">
           <HintPath>..\packages\BenchmarkDotNet\lib\netcoreapp1.1\BenchmarkDotNet.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp' And $(TargetFrameworkVersion) == 'v2.0'">
+      <ItemGroup>
+        <Reference Include="BenchmarkDotNet">
+          <HintPath>..\packages\BenchmarkDotNet\lib\netcoreapp2.0\BenchmarkDotNet.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -114,6 +114,12 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1')">
       <ItemGroup>
+        <Reference Include="Microsoft.CSharp">
+          <Paket>True</Paket>
+        </Reference>
+        <Reference Include="System.Management">
+          <Paket>True</Paket>
+        </Reference>
         <Reference Include="BenchmarkDotNet.Core">
           <HintPath>..\packages\BenchmarkDotNet.Core\lib\net46\BenchmarkDotNet.Core.dll</HintPath>
           <Private>True</Private>
@@ -121,10 +127,19 @@
         </Reference>
       </ItemGroup>
     </When>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp' And ($(TargetFrameworkVersion) == 'v1.1' Or $(TargetFrameworkVersion) == 'v2.0')">
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp' And $(TargetFrameworkVersion) == 'v1.1'">
       <ItemGroup>
         <Reference Include="BenchmarkDotNet.Core">
           <HintPath>..\packages\BenchmarkDotNet.Core\lib\netcoreapp1.1\BenchmarkDotNet.Core.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp' And $(TargetFrameworkVersion) == 'v2.0'">
+      <ItemGroup>
+        <Reference Include="BenchmarkDotNet.Core">
+          <HintPath>..\packages\BenchmarkDotNet.Core\lib\netcoreapp2.0\BenchmarkDotNet.Core.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -360,722 +375,6 @@
         <Reference Include="Microsoft.DotNet.PlatformAbstractions">
           <HintPath>..\packages\Microsoft.DotNet.PlatformAbstractions\lib\netstandard1.3\Microsoft.DotNet.PlatformAbstractions.dll</HintPath>
           <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp' And $(TargetFrameworkVersion) == 'v2.0'">
-      <ItemGroup>
-        <Reference Include="Microsoft.CSharp">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\Microsoft.CSharp.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="Microsoft.VisualBasic">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\Microsoft.VisualBasic.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="Microsoft.Win32.Primitives">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\Microsoft.Win32.Primitives.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.AppContext">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.AppContext.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Buffers">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Buffers.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Collections">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Collections.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Collections.Concurrent">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Collections.Concurrent.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Collections.Immutable">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Collections.Immutable.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Collections.NonGeneric">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Collections.NonGeneric.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Collections.Specialized">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Collections.Specialized.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ComponentModel">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ComponentModel.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ComponentModel.Annotations">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ComponentModel.Annotations.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ComponentModel.Composition">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ComponentModel.Composition.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ComponentModel.DataAnnotations">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ComponentModel.DataAnnotations.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ComponentModel.EventBasedAsync">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ComponentModel.EventBasedAsync.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ComponentModel.Primitives">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ComponentModel.Primitives.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ComponentModel.TypeConverter">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ComponentModel.TypeConverter.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Configuration">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Configuration.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Console">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Console.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Core">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Core.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Data">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Data.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Data.Common">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Data.Common.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Diagnostics.Contracts">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Diagnostics.Contracts.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Diagnostics.Debug">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Diagnostics.Debug.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Diagnostics.DiagnosticSource">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Diagnostics.DiagnosticSource.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Diagnostics.FileVersionInfo">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Diagnostics.FileVersionInfo.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Diagnostics.Process">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Diagnostics.Process.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Diagnostics.StackTrace">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Diagnostics.StackTrace.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Diagnostics.TextWriterTraceListener">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Diagnostics.TextWriterTraceListener.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Diagnostics.Tools">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Diagnostics.Tools.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Diagnostics.TraceSource">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Diagnostics.TraceSource.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Diagnostics.Tracing">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Diagnostics.Tracing.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Drawing">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Drawing.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Drawing.Primitives">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Drawing.Primitives.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Dynamic.Runtime">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Dynamic.Runtime.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Globalization">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Globalization.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Globalization.Calendars">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Globalization.Calendars.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Globalization.Extensions">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Globalization.Extensions.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.Compression">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.Compression.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.Compression.FileSystem">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.Compression.FileSystem.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.Compression.ZipFile">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.Compression.ZipFile.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.FileSystem">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.FileSystem.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.FileSystem.DriveInfo">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.FileSystem.DriveInfo.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.FileSystem.Primitives">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.FileSystem.Primitives.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.FileSystem.Watcher">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.FileSystem.Watcher.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.IsolatedStorage">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.IsolatedStorage.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.MemoryMappedFiles">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.MemoryMappedFiles.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.Pipes">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.Pipes.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.IO.UnmanagedMemoryStream">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.IO.UnmanagedMemoryStream.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Linq">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Linq.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Linq.Expressions">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Linq.Expressions.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Linq.Parallel">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Linq.Parallel.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Linq.Queryable">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Linq.Queryable.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.Http">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.Http.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.HttpListener">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.HttpListener.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.Mail">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.Mail.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.NameResolution">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.NameResolution.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.NetworkInformation">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.NetworkInformation.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.Ping">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.Ping.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.Primitives">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.Primitives.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.Requests">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.Requests.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.Security">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.Security.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.ServicePoint">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.ServicePoint.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.Sockets">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.Sockets.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.WebClient">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.WebClient.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.WebHeaderCollection">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.WebHeaderCollection.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.WebProxy">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.WebProxy.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.WebSockets">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.WebSockets.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Net.WebSockets.Client">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Net.WebSockets.Client.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Numerics">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Numerics.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Numerics.Vectors">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Numerics.Vectors.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ObjectModel">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ObjectModel.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Reflection">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Reflection.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Reflection.DispatchProxy">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Reflection.DispatchProxy.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Reflection.Emit">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Reflection.Emit.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Reflection.Emit.ILGeneration">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Reflection.Emit.ILGeneration.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Reflection.Emit.Lightweight">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Reflection.Emit.Lightweight.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Reflection.Extensions">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Reflection.Extensions.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Reflection.Metadata">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Reflection.Metadata.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Reflection.Primitives">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Reflection.Primitives.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Reflection.TypeExtensions">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Reflection.TypeExtensions.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Resources.Reader">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Resources.Reader.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Resources.ResourceManager">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Resources.ResourceManager.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Resources.Writer">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Resources.Writer.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.CompilerServices.VisualC">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.CompilerServices.VisualC.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.Extensions">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.Extensions.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.Handles">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.Handles.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.InteropServices">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.InteropServices.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.InteropServices.RuntimeInformation">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.InteropServices.WindowsRuntime">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.InteropServices.WindowsRuntime.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.Loader">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.Loader.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.Numerics">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.Numerics.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.Serialization">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.Serialization.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.Serialization.Formatters">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.Serialization.Formatters.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.Serialization.Json">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.Serialization.Json.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.Serialization.Primitives">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.Serialization.Primitives.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Runtime.Serialization.Xml">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Runtime.Serialization.Xml.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Security">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Security.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Security.Claims">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Security.Claims.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Security.Cryptography.Algorithms">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Security.Cryptography.Algorithms.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Security.Cryptography.Csp">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Security.Cryptography.Csp.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Security.Cryptography.Encoding">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Security.Cryptography.Encoding.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Security.Cryptography.Primitives">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Security.Cryptography.Primitives.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Security.Cryptography.X509Certificates">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Security.Cryptography.X509Certificates.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Security.Principal">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Security.Principal.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Security.SecureString">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Security.SecureString.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ServiceModel.Web">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ServiceModel.Web.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ServiceProcess">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ServiceProcess.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Text.Encoding">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Text.Encoding.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Text.Encoding.Extensions">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Text.Encoding.Extensions.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Text.RegularExpressions">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Text.RegularExpressions.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Threading">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Threading.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Threading.Overlapped">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Threading.Overlapped.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Threading.Tasks">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Threading.Tasks.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Threading.Tasks.Dataflow">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Threading.Tasks.Dataflow.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Threading.Tasks.Extensions">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Threading.Tasks.Extensions.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Threading.Tasks.Parallel">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Threading.Tasks.Parallel.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Threading.Thread">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Threading.Thread.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Threading.ThreadPool">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Threading.ThreadPool.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Threading.Timer">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Threading.Timer.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Transactions">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Transactions.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Transactions.Local">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Transactions.Local.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.ValueTuple">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.ValueTuple.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Web">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Web.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Web.HttpUtility">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Web.HttpUtility.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Windows">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Windows.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Xml">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Xml.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Xml.Linq">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Xml.Linq.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Xml.ReaderWriter">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Xml.ReaderWriter.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Xml.Serialization">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Xml.Serialization.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Xml.XDocument">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Xml.XDocument.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Xml.XPath">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Xml.XPath.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Xml.XPath.XDocument">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Xml.XPath.XDocument.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Xml.XmlDocument">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Xml.XmlDocument.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="System.Xml.XmlSerializer">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\System.Xml.XmlSerializer.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="WindowsBase">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\WindowsBase.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="mscorlib">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\mscorlib.dll</HintPath>
-          <Private>False</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="netstandard">
-          <HintPath>..\packages\Microsoft.NETCore.App\ref\netcoreapp2.0\netstandard.dll</HintPath>
-          <Private>False</Private>
           <Paket>True</Paket>
         </Reference>
       </ItemGroup>
@@ -2988,6 +2287,26 @@
     </When>
   </Choose>
   <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp' And ($(TargetFrameworkVersion) == 'v1.1' Or $(TargetFrameworkVersion) == 'v2.0')">
+      <ItemGroup>
+        <Reference Include="System.Xml.XmlSerializer">
+          <HintPath>..\packages\System.Xml.XmlSerializer\lib\netstandard1.3\System.Xml.XmlSerializer.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp' And ($(TargetFrameworkVersion) == 'v1.1' Or $(TargetFrameworkVersion) == 'v2.0')">
+      <ItemGroup>
+        <Reference Include="System.Xml.XmlSerializer">
+          <HintPath>..\packages\System.Xml.XmlSerializer\ref\netstandard1.3\System.Xml.XmlSerializer.dll</HintPath>
+          <Private>False</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1')">
       <ItemGroup>
         <Reference Include="System.Xml.XPath">
@@ -3065,7 +2384,6 @@
       </ItemGroup>
     </When>
   </Choose>
-  <Import Project="..\packages\Microsoft.NETCore.App\build\$(__paket__Microsoft_NETCore_App_targets).targets" Condition="Exists('..\packages\Microsoft.NETCore.App\build\$(__paket__Microsoft_NETCore_App_targets).targets')" Label="Paket" />
   <Import Project="..\packages\NETStandard.Library\build\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library\build\NETStandard.Library.targets')" Label="Paket" />
   <Import Project="..\packages\NETStandard.Library\build\$(__paket__NETStandard_Library_targets).targets" Condition="Exists('..\packages\NETStandard.Library\build\$(__paket__NETStandard_Library_targets).targets')" Label="Paket" />
 </Project>

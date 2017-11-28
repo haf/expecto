@@ -1,8 +1,8 @@
-﻿/// The logging namespace, which contains the logging abstraction for this
+/// The logging namespace, which contains the logging abstraction for this
 /// library. See https://github.com/logary/logary for details. This module is
 /// completely stand-alone in that it has no external references and its adapter
 /// in Logary has been well tested.
-namespace Logary.Facade
+namespace Expecto.Logging
 
 open System
 open System.Runtime.CompilerServices
@@ -968,7 +968,7 @@ module Message =
       timestamp = Global.timestamp ()
       level     = level }
 
-  /// Create a new event log message – like `event` but with parameters flipped.
+  /// Create a new event log message � like `event` but with parameters flipped.
   /// Useful to use with `Logger.log` with point-free style, to reduce the
   /// noise. E.g. `logger.logVerbose (eventX "Returned {code}" >> setField "code" 24)`
   let eventX template level =

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Expecto.Tests</AssemblyName>
@@ -22,4 +23,5 @@
     <PackageReference Include="FsCheck" Version="2.10.4" />
     <!-- <PackageReference Include="BenchmarkDotNet" Version="0.10.10" /> -->
   </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
