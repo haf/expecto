@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Expecto.BenchmarkDotNet</AssemblyName>
+    <TargetFrameworks>net461;netstandard1.6;netstandard2.0</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Expecto.BenchmarkDotNet.fs" />
+    <None Include="paket.references" />
+    <PackageReference Include="FSharp.Core" Version="4.1.18" />
+    <ProjectReference Include="../Expecto/Expecto.netcore.fsproj" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.10.10" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>

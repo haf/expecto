@@ -65,7 +65,7 @@ Target "Pack" (fun _ ->
 Target "DotNetCoreRestore" (fun _ ->
     DotNetCli.Restore (fun p ->
     { p with
-        Project = "Expecto.netcore/Expecto.netcore.fsproj"
+        Project = "Expecto/Expecto.netcore.fsproj"
     })
 )
 
@@ -73,14 +73,44 @@ Target "DotNetCoreBuild" (fun _ ->
     DotNetCli.Build (fun p ->
     { p with
         Configuration = configuration
-        Project = "Expecto.netcore/Expecto.netcore.fsproj"
+        Project = "Expecto/Expecto.netcore.fsproj"
+    })
+)
+
+Target "DotNetCoreRestoreFsCheck" (fun _ ->
+    DotNetCli.Restore (fun p ->
+    { p with
+        Project = "Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj"
+    })
+)
+
+Target "DotNetCoreBuildFsCheck" (fun _ ->
+    DotNetCli.Build (fun p ->
+    { p with
+        Configuration = configuration
+        Project = "Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj"
+    })
+)
+
+Target "DotNetCoreRestoreBenchmarkDotNet" (fun _ ->
+    DotNetCli.Restore (fun p ->
+    { p with
+        Project = "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj"
+    })
+)
+
+Target "DotNetCoreBuildBenchmarkDotNet" (fun _ ->
+    DotNetCli.Build (fun p ->
+    { p with
+        Configuration = configuration
+        Project = "Expecto.FsCheck/Expecto.BenchmarkDotNet.netcore.fsproj"
     })
 )
 
 Target "DotNetCoreRestoreTest" (fun _ ->
     DotNetCli.Restore (fun p ->
     { p with
-        Project = "Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj"
+        Project = "Expecto.Tests/Expecto.Tests.netcore.fsproj"
     })
 )
 
@@ -88,22 +118,35 @@ Target "DotNetCoreBuildTest" (fun _ ->
     DotNetCli.Build (fun p ->
     { p with
         Configuration = configuration
-        Project = "Expecto.netcore.Tests/Expecto.netcore.Tests.fsproj"
+        Project = "Expecto.Tests/Expecto.Tests.netcore.fsproj"
     })
 )
 
+Target "DotNetCoreRunTestNet461" (fun _ ->
+    DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/net461/Expecto.Tests.exe --summary")
+)
+
 Target "DotNetCoreRunTest11" (fun _ ->
-    DotNetCli.RunCommand id ("Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.netcore.Tests.dll --summary")
+    DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.Tests.dll --summary")
 )
 
 Target "DotNetCoreRunTest20" (fun _ ->
-    DotNetCli.RunCommand id ("Expecto.netcore.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.netcore.Tests.dll --summary")
+    DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.dll --summary")
 )
 
 Target "DotNetCorePack" (fun _ ->
     DotNetCli.Pack (fun p ->
     { p with
-        Project = "Expecto.netcore/Expecto.netcore.fsproj"
+        Project = "Expecto/Expecto.netcore.fsproj"
+        Configuration = configuration
+        OutputPath = "bin"
+    })
+)
+
+Target "DotNetCorePackFsCheck" (fun _ ->
+    DotNetCli.Pack (fun p ->
+    { p with
+        Project = "Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj"
         Configuration = configuration
         OutputPath = "bin"
     })
@@ -112,9 +155,13 @@ Target "DotNetCorePack" (fun _ ->
 Target "Merge" (fun _ ->
     DotNetCli.Restore (fun p -> { p with Project = "tools/tools.proj" })
     DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
-        ("mergenupkg --source ../bin/Expecto."+release.NugetVersion+".nupkg --other ../Expecto.netcore/bin/Expecto.1.0.0.nupkg --framework netstandard1.6")
+        ("mergenupkg --source ../bin/Expecto."+release.NugetVersion+".nupkg --other ../Expecto/bin/Expecto.netcore.1.0.0.nupkg --framework netstandard1.6")
     DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
-        ("mergenupkg --source ../bin/Expecto."+release.NugetVersion+".nupkg --other ../Expecto.netcore/bin/Expecto.1.0.0.nupkg --framework netstandard2.0")    
+        ("mergenupkg --source ../bin/Expecto."+release.NugetVersion+".nupkg --other ../Expecto/bin/Expecto.netcore.1.0.0.nupkg --framework netstandard2.0")
+    DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
+        ("mergenupkg --source ../bin/Expecto.FsCheck."+release.NugetVersion+".nupkg --other ../Expecto.FsCheck/bin/Expecto.FsCheck.netcore.1.0.0.nupkg --framework netstandard1.6")
+    DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
+        ("mergenupkg --source ../bin/Expecto.FsCheck."+release.NugetVersion+".nupkg --other ../Expecto.FsCheck/bin/Expecto.FsCheck.netcore.1.0.0.nupkg --framework netstandard2.0")
 )
 
 Target "Push" (fun _ -> Paket.Push (fun p -> { p with WorkingDir = "bin" }))
@@ -166,11 +213,18 @@ Target "All" ignore
 "Initialize"
 ==> "DotNetCoreRestore"
 ==> "DotNetCoreBuild"
+==> "DotNetCoreRestoreFsCheck"
+==> "DotNetCoreBuildFsCheck"
+//==> "DotNetCoreRestoreBenchmarkDotNet"
+//==> "DotNetCoreBuildBenchmarkDotNet"
 ==> "DotNetCoreRestoreTest"
 ==> "DotNetCoreBuildTest"
+//==> "DotNetCoreRunTestNet461"
 ==> "DotNetCoreRunTest11"
 ==> "DotNetCoreRunTest20"
 ==> "DotNetCorePack"
+==> "DotNetCorePackFsCheck"
+//==> "DotNetCorePackBenchmarkDotNet"
 ==> "DotNetCore"
 
 "Framework" ==> "Merge"
