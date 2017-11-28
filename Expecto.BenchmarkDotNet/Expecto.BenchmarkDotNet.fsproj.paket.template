@@ -1,0 +1,26 @@
+type project
+id
+    Expecto.BenchmarkDotNet
+authors
+    Anthony Lloyd and contributors
+owners
+    Anthony Lloyd (formerly Henrik Feldt and cloned from Fuchu by @mausch)
+projectUrl
+    https://github.com/haf/expecto
+iconUrl
+    https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png
+licenseUrl
+    https://github.com/haf/expecto/blob/master/LICENSE
+requireLicenseAcceptance
+    false
+copyright
+    © 2017
+tags
+    test testing fsharp assert expect stress performance unit random property
+summary
+    Advanced testing library for F#
+description
+    Expecto is an advanced testing library for F# covering unit testing, property based testing, performance testing and stress testing.
+files
+    bin/Release/Expecto.BenchmarkDotNet.dll ==> lib/net461
+    bin/Release/Expecto.BenchmarkDotNet.xml ==> lib/net461
