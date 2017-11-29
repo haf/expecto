@@ -1,14 +1,25 @@
 #r @"packages/build/FAKE/tools/FakeLib.dll"
+#r "System.Xml.Linq"
 
 open System
 open Fake
 
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
+let configuration = environVarOrDefault "Configuration" "Release"
 let release = IO.File.ReadAllLines "RELEASE_NOTES.md" |> ReleaseNotesHelper.parseReleaseNotes
+let description = "Advanced testing library for F#"
+let tags = "test testing fsharp assert expect stress performance unit random property"
+let authors = "Anthony Lloyd and contributors"
+let owners = "Anthony Lloyd (formerly Henrik Feldt and cloned from Fuchu by @mausch)"
+let projectUrl = "https://github.com/haf/expecto"
+let iconUrl = "https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png"
+let licenceUrl = "https://github.com/haf/expecto/blob/master/LICENSE"
 
-Target "Clean" (fun _ ->
-    !!"./**/bin/" ++ "./**/obj/" |> CleanDirs
-)
+let copyright = "Copyright \169 2017"
+
+
+
+Target "Clean" (fun _ -> !!"./**/bin/" ++ "./**/obj/" |> CleanDirs)
 
 open AssemblyInfoFile
 Target "AssemblyInfo" (fun _ ->
@@ -20,8 +31,8 @@ Target "AssemblyInfo" (fun _ ->
     |> List.iter (fun product ->
         [ Attribute.Title product
           Attribute.Product product
-          Attribute.Copyright "Copyright \169 2017"
-          Attribute.Description "Advanced testing library for F#"
+          Attribute.Copyright copyright
+          Attribute.Description description
           Attribute.Version release.AssemblyVersion
           Attribute.FileVersion release.AssemblyVersion
         ] |> CreateFSharpAssemblyInfo (product+"/AssemblyInfo.fs")
@@ -33,9 +44,7 @@ Target "PaketFiles" (fun _ ->
         ["paket-files/logary/logary/src/Logary.Facade/Facade.fs"]
 )
 
-let configuration = environVarOrDefault "Configuration" "Release"
-
-Target "Build" (fun _ ->
+Target "FrameworkBuild" (fun _ ->
     { BaseDirectory = __SOURCE_DIRECTORY__
       Includes = ["Expecto.sln"]
       Excludes = [] } 
@@ -43,125 +52,70 @@ Target "Build" (fun _ ->
     |> Log "Compile-Output: "
 )
 
-Target "Test" (fun _ ->
+Target "FrameworkTest" (fun _ ->
     Shell.Exec ("Expecto.Tests/bin/"+configuration+"/Expecto.Tests.exe","--summary")
     |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
 )
 
-Target "TestCSharp" (fun _ ->
+Target "FrameworkTestCSharp" (fun _ ->
     Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/Expecto.Tests.CSharp.exe","--summary")
     |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
 )
 
-Target "Pack" (fun _ ->
+Target "FrameworkPack" (fun _ ->
     Paket.Pack (fun p ->
       { p with
+          BuildConfig = configuration
           OutputPath = "bin"
           Version = release.AssemblyVersion
           ReleaseNotes = toLines release.Notes
       })
 )
 
-Target "DotNetCoreRestore" (fun _ ->
-    DotNetCli.Restore (fun p ->
-    { p with
-        Project = "Expecto/Expecto.netcore.fsproj"
-    })
-)
-
-Target "DotNetCoreBuild" (fun _ ->
-    DotNetCli.Build (fun p ->
-    { p with
-        Configuration = configuration
-        Project = "Expecto/Expecto.netcore.fsproj"
-    })
-)
-
-Target "DotNetCoreRestoreFsCheck" (fun _ ->
-    DotNetCli.Restore (fun p ->
-    { p with
-        Project = "Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj"
-    })
-)
-
-Target "DotNetCoreBuildFsCheck" (fun _ ->
-    DotNetCli.Build (fun p ->
-    { p with
-        Configuration = configuration
-        Project = "Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj"
-    })
-)
-
-Target "DotNetCoreRestoreBenchmarkDotNet" (fun _ ->
-    DotNetCli.Restore (fun p ->
-    { p with
-        Project = "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj"
-    })
-)
-
-Target "DotNetCoreBuildBenchmarkDotNet" (fun _ ->
-    DotNetCli.Build (fun p ->
-    { p with
-        Configuration = configuration
-        Project = "Expecto.FsCheck/Expecto.BenchmarkDotNet.netcore.fsproj"
-    })
-)
-
-Target "DotNetCoreRestoreTest" (fun _ ->
-    DotNetCli.Restore (fun p ->
-    { p with
-        Project = "Expecto.Tests/Expecto.Tests.netcore.fsproj"
-    })
-)
-
 Target "DotNetCoreBuildTest" (fun _ ->
-    DotNetCli.Build (fun p ->
-    { p with
-        Configuration = configuration
-        Project = "Expecto.Tests/Expecto.Tests.netcore.fsproj"
-    })
+    let run framework =
+        DotNetCli.Build (fun p ->
+        { p with
+            Configuration = configuration
+            Framework = framework
+            Project = "Expecto.Tests/Expecto.Tests.netcore.fsproj"
+        })
+    run "netcoreapp1.1"
+    run "netcoreapp2.0"
+    if EnvironmentHelper.isWindows then run "net461"
 )
 
-Target "DotNetCoreRunTestNet461" (fun _ ->
-    DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/net461/Expecto.Tests.exe --summary")
-)
-
-Target "DotNetCoreRunTest11" (fun _ ->
+Target "DotNetCoreRunTest" (fun _ ->
     DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.Tests.dll --summary")
-)
-
-Target "DotNetCoreRunTest20" (fun _ ->
     DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.dll --summary")
+    if EnvironmentHelper.isWindows then
+        Shell.Exec ("Expecto.Tests/bin/"+configuration+"/net461/Expecto.Tests.exe","--summary")
+        |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
 )
 
 Target "DotNetCorePack" (fun _ ->
-    DotNetCli.Pack (fun p ->
-    { p with
-        Project = "Expecto/Expecto.netcore.fsproj"
-        Configuration = configuration
-        OutputPath = "bin"
-    })
-)
-
-Target "DotNetCorePackFsCheck" (fun _ ->
-    DotNetCli.Pack (fun p ->
-    { p with
-        Project = "Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj"
-        Configuration = configuration
-        OutputPath = "bin"
-    })
-)
-
-Target "Merge" (fun _ ->
-    DotNetCli.Restore (fun p -> { p with Project = "tools/tools.proj" })
-    DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
-        ("mergenupkg --source ../bin/Expecto."+release.NugetVersion+".nupkg --other ../Expecto/bin/Expecto.1.0.0.nupkg --framework netstandard1.6")
-    DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
-        ("mergenupkg --source ../bin/Expecto."+release.NugetVersion+".nupkg --other ../Expecto/bin/Expecto.1.0.0.nupkg --framework netstandard2.0")
-    DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
-        ("mergenupkg --source ../bin/Expecto.FsCheck."+release.NugetVersion+".nupkg --other ../Expecto.FsCheck/bin/Expecto.FsCheck.1.0.0.nupkg --framework netstandard1.6")
-    DotNetCli.RunCommand (fun p -> { p with WorkingDir = "tools" })
-        ("mergenupkg --source ../bin/Expecto.FsCheck."+release.NugetVersion+".nupkg --other ../Expecto.FsCheck/bin/Expecto.FsCheck.1.0.0.nupkg --framework netstandard2.0")
+    let packParameters name =
+        [
+            "--no-build"
+            "--no-restore"
+            sprintf "/p:Title=\"%s\"" name
+            "/p:PackageVersion=" + release.NugetVersion
+            sprintf "/p:Authors=\"%s\"" authors
+            sprintf "/p:Owners=\"%s\"" owners
+            "/p:PackageRequireLicenseAcceptance=false"
+            sprintf "/p:Description=\"%s\"" description
+            sprintf "/p:PackageReleaseNotes=\"%O\"" ((toLines release.Notes).Replace(",",""))
+            sprintf "/p:Copyright=\"%s\"" copyright
+            sprintf "/p:PackageTags=\"%s\"" tags
+            sprintf "/p:PackageProjectUrl=\"%s\"" projectUrl
+            sprintf "/p:PackageIconUrl=\"%s\"" iconUrl
+            sprintf "/p:PackageLicenseUrl=\"%s\"" licenceUrl
+        ] |> String.concat " "
+    if EnvironmentHelper.isWindows then
+        DotNetCli.RunCommand id
+            ("pack Expecto/Expecto.netcore.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto"))
+        DotNetCli.RunCommand id
+            ("pack Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.FsCheck"))
 )
 
 Target "Push" (fun _ -> Paket.Push (fun p -> { p with WorkingDir = "bin" }))
@@ -204,32 +158,20 @@ Target "All" ignore
 ==> "Initialize"
 
 "Initialize"
-==> "Build"
-==> "Test"
-==> "TestCSharp"
-==> "Pack"
+==> "FrameworkBuild"
+==> "FrameworkTest"
+==> "FrameworkTestCSharp"
+==> "FrameworkPack"
 ==> "Framework"
 
 "Initialize"
-==> "DotNetCoreRestore"
-==> "DotNetCoreBuild"
-==> "DotNetCoreRestoreFsCheck"
-==> "DotNetCoreBuildFsCheck"
-//==> "DotNetCoreRestoreBenchmarkDotNet"
-//==> "DotNetCoreBuildBenchmarkDotNet"
-==> "DotNetCoreRestoreTest"
 ==> "DotNetCoreBuildTest"
-//==> "DotNetCoreRunTestNet461"
-==> "DotNetCoreRunTest11"
-==> "DotNetCoreRunTest20"
+==> "DotNetCoreRunTest"
 ==> "DotNetCorePack"
-==> "DotNetCorePackFsCheck"
-//==> "DotNetCorePackBenchmarkDotNet"
 ==> "DotNetCore"
 
-"Framework" ==> "Merge"
-"DotNetCore" ==> "Merge"
-"Merge" ==> "All"
+"Framework" ==> "All"
+"DotNetCore" ==> "All"
 
 "All"
 ==> "Push"

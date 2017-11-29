@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <DotNetCliToolReference Include="dotnet-mergenupkg" Version="2.1.0" />
-  </ItemGroup>
-
-</Project>

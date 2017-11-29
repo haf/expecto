@@ -44,10 +44,6 @@
       <Name>Expecto.fsproj</Name>
       <Project>{c0d55728-10a9-4a7a-9df9-d2f21f663ac2}</Project>
     </ProjectReference>
-    <ProjectReference Include="../Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj">
-      <Name>Expecto.BenchmarkDotNet.fsproj</Name>
-      <Project>{0acabeaa-29bd-4f9f-89db-0d03b5afc952}</Project>
-    </ProjectReference>
     <ProjectReference Include="../Expecto.FsCheck/Expecto.FsCheck.fsproj">
       <Name>Expecto.FsCheck.fsproj</Name>
       <Project>{58507646-335a-460e-b283-77a2baf0d3a8}</Project>
@@ -75,11 +71,6 @@
           <Paket>True</Paket>
         </Reference>
         <Reference Include="System.Management">
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="BenchmarkDotNet.Core">
-          <HintPath>..\packages\BenchmarkDotNet.Core\lib\net46\BenchmarkDotNet.Core.dll</HintPath>
-          <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
       </ItemGroup>

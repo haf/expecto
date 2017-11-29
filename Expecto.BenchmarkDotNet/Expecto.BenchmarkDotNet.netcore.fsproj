@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Expecto.BenchmarkDotNet</AssemblyName>
-    <TargetFrameworks>netstandard1.6;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net461;netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
@@ -11,5 +11,4 @@
     <ProjectReference Include="../Expecto/Expecto.netcore.fsproj" />
     <PackageReference Include="BenchmarkDotNet" Version="0.10.10" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

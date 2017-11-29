@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Expecto.FsCheck</AssemblyName>
-    <TargetFrameworks>netstandard1.6;netstandard2.0</TargetFrameworks>
+    <PackageId>Expecto.FsCheck</PackageId>
+    <TargetFrameworks>net461;netstandard1.6;netstandard2.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
@@ -11,5 +12,4 @@
     <PackageReference Include="FsCheck" Version="2.10.4" />
     <ProjectReference Include="../Expecto/Expecto.netcore.fsproj" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

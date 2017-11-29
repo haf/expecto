@@ -14,7 +14,7 @@ licenseUrl
 requireLicenseAcceptance
     false
 copyright
-    © 2017
+    Copyright © 2017
 tags
     test testing fsharp assert expect stress performance unit random property
 summary

@@ -2,7 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Expecto</AssemblyName>
-    <TargetFrameworks>netstandard1.6;netstandard2.0</TargetFrameworks>
+    <PackageId>Expecto</PackageId>
+    <TargetFrameworks>net461;netstandard1.6;netstandard2.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\paket-files\logary\logary\src\Logary.Facade\Facade.fs">
@@ -19,5 +20,4 @@
     <PackageReference Include="Mono.Cecil" Version="0.10.0-beta5" />
     <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

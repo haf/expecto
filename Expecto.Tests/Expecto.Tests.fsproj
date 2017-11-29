@@ -54,7 +54,7 @@
     <Compile Include="SummaryTests.fs" />
     <Compile Include="FocusedTests.fs" />
     <Compile Include="FsCheckTests.fs" />
-    <Compile Include="BenchmarkDotNetTests.fs" />
+    <Compile Include="PerformanceTests.fs" />
     <Compile Include="Main.fs" />
     <None Include="Tests.fsx" />
     <None Include="paket.references" />
@@ -67,11 +67,6 @@
     <ProjectReference Include="..\Expecto.FsCheck\Expecto.FsCheck.fsproj">
       <Name>Expecto.FsCheck</Name>
       <Project>{58507646-335a-460e-b283-77a2baf0d3a8}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj">
-      <Name>Expecto.BenchmarkDotNet</Name>
-      <Project>{0acabeaa-29bd-4f9f-89db-0d03b5afc952}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\Expecto\Expecto.fsproj">

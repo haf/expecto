@@ -46,7 +46,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Expecto.BenchmarkDotNet.fs" />
-    <None Include="Script.fsx" />
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
@@ -54,10 +53,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="../Expecto/Expecto.fsproj">
-      <Name>Expecto.fsproj</Name>
-      <Project>{c0d55728-10a9-4a7a-9df9-d2f21f663ac2}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1')">

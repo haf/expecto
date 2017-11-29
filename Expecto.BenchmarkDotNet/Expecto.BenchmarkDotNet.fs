@@ -12,13 +12,9 @@ open BenchmarkDotNet.Jobs
 open BenchmarkDotNet.Loggers
 open BenchmarkDotNet.Order
 open BenchmarkDotNet.Validators
-open Expecto
-open Expecto.Logging
-open Expecto.Logging.Message
 
 [<AutoOpen; CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module BenchmarkDotNet =
-  let logger = Log.create "Expecto.BenchmarkDotNet"
 
   type BenchmarkAttribute = BenchmarkDotNet.Attributes.BenchmarkAttribute
   type CleanupAttribute = BenchmarkDotNet.Attributes.GlobalCleanupAttribute
@@ -60,11 +56,11 @@ module BenchmarkDotNet =
     let cl = ConsoleLogger.Default
     { new ILogger with
         member x.Write(kind, text) =
-          Global.lockSem <| fun _ -> cl.Write(kind, text)
+          cl.Write(kind, text)
         member x.WriteLine(kind, text) =
-          Global.lockSem <| fun _ -> cl.WriteLine (kind, text)
+          cl.WriteLine (kind, text)
         member x.WriteLine () =
-          Global.lockSem <| fun _ -> cl.WriteLine()
+          cl.WriteLine()
     }
 
   let benchmarkConfig =
@@ -84,10 +80,9 @@ module BenchmarkDotNet =
       filters = def.GetFilters() |> List.ofSeq
     }
 
-  /// Create a new performance test: pass the annotated type as a type param
+  /// Run a performance test: pass the annotated type as a type param
   /// to this function call. Pass 'benchmarkConfig' as the config parameter –
   /// because this is a record, you can change it to suit your liking.
-  let benchmark<'typ> testName config onSummary =
-    testCase testName <| fun _ ->
-      BenchmarkRunner.Run<'typ>(config)
-      |> onSummary
+  /// NOTE: Now needs to be manually put in a testCase.
+  let benchmark<'typ> config onSummary =
+    BenchmarkRunner.Run<'typ>(config) |> onSummary
