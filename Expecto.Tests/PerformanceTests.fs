@@ -31,3 +31,30 @@ let performance =
     testCase "md5 versus sha256" <| fun _ ->
       Expect.isFasterThan (runMD5 >> ignore) (runSHA256 >> ignore) "MD5 is faster than SHA256"
     ]
+
+[<Tests>]
+let findFastest =
+  testSequenced <| ptestList "findFastest tests" [
+
+    testCase "different values gives an exception" (fun _ ->
+      Expect.findFastest id 10 20 |> ignore
+    ) |> assertTestFailsWithMsgStarting "findFastest results not the same"
+
+    testCase "find fastest sleep" (fun _ ->
+      let f i = Threading.Thread.Sleep((i-65)*(i-65)+100)
+      let result = Expect.findFastest f 0 100
+      Expect.equal result 65 "find min"
+    )
+
+    testCase "find fastest hi" (fun _ ->
+      let f i = Threading.Thread.Sleep((i-110)*(i-110)+100)
+      let result = Expect.findFastest f 0 100
+      Expect.equal result 100 "find min"
+    )
+
+    testCase "find fastest lo" (fun _ ->
+      let f i = Threading.Thread.Sleep((i+10)*(i+10)+100)
+      let result = Expect.findFastest f 0 100
+      Expect.equal result 0 "find min"
+    )
+  ]

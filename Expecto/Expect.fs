@@ -616,3 +616,18 @@ let isFasterThan (f1:unit->'a) (f2:unit->'a) message =
   isFasterThanSub (fun measurer -> measurer f1 ())
                   (fun measurer -> measurer f2 ())
                   message
+
+/// Find the int input of the funtion f between lo and hi that gives the
+/// fastest execution time. Statistical test to 99.99% confidence level
+/// using a golden search.
+let findFastest (f:int->'a) lo hi : int =
+  let f (a,b) =
+    let r = Performance.timeCompare (fun measurer -> measurer (fun () -> f a) ())
+                                    (fun measurer -> measurer (fun () -> f b) ())
+    match r with
+    | Performance.ResultNotTheSame (_r1,_r2) -> failwithf "findFastest results not the same"
+    | Performance.MetricTooShort (_s,_p) -> failwithf "metric too short"
+    | Performance.MetricEqual (s1,s2) -> s1.mean,s2.mean
+    | Performance.MetricMoreThan (s1,s2) -> s1.mean,s2.mean
+    | Performance.MetricLessThan (s1,s2) -> s1.mean,s2.mean
+  Performance.goldenSearch f lo hi

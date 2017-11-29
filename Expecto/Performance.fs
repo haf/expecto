@@ -1,4 +1,4 @@
-﻿namespace Expecto
+namespace Expecto
 
 open System
 
@@ -60,6 +60,7 @@ module internal Statistics =
 module Performance =
   open Statistics
   open System.Diagnostics
+  open Logging.Log
 
   let inline private measureStatistics metric relativeError f =
     Seq.initInfinite (fun _ -> metric f) |> sampleStatistics
@@ -136,3 +137,22 @@ module Performance =
     | MetricEqual (s1,s2) -> MetricEqual (toMilliseconds s1,toMilliseconds s2)
     | MetricMoreThan (s1,s2) -> MetricMoreThan (toMilliseconds s1,toMilliseconds s2)
     | MetricLessThan (s1,s2) -> MetricLessThan (toMilliseconds s1,toMilliseconds s2)
+
+  [<Literal>]
+  let private gold = 1.618033988 (*(1.0+sqrt(5.0))*0.5*)
+
+  /// not right yet
+  let goldenSearch (f:int*int->float*float) lo hi =
+    let flo,fhi = f(lo,hi)
+    let calcMid lo flo hi fhi =
+      if flo<fhi then float lo + (float hi - float lo) * gold |> int
+      else float hi - (float hi - float lo) * gold |> int
+    let rec goldenSearch lo flo hi fhi =
+      if lo=hi then lo
+      else
+        let m = (float hi-float lo)/gold
+        let c = float hi - m |> int
+        let d = float lo + m |> int
+        let fc,fd = f(c,d)
+        if fc<fd then goldenSearch lo flo d fd else goldenSearch c fc hi fhi
+    goldenSearch lo flo hi fhi
