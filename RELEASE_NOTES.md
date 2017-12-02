@@ -11,4 +11,4 @@
 * Add sequenceEqual for items. #206 thanks @haf
 * Exceptions lose their stack trace when no line numbers. #205 thanks @AnthonyLloyd
 * Update FsCheck and BenchmarkDotNet. thanks @AnthonyLloyd
-* Add findFastest. thanks @AnthonyLloyd
+* Add Performance.findFastest. thanks @AnthonyLloyd

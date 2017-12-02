@@ -1,6 +1,8 @@
 namespace Expecto
 
 open System
+open Expecto.Logging
+open Expecto.Logging.Message
 
 module Performance =
   open Statistics
@@ -86,26 +88,40 @@ module Performance =
   /// fastest execution time. Statistical test to 99.99% confidence level
   /// using a trisect search.
   let findFastest (f:int->'a) lo hi : int =
+
     let search (f:int*int->float*float) lo hi =
       let rec search lo flo hi fhi =
+        Impl.logger.log Info (
+              eventX "findFastest: seaching range {lo} {hi}"
+              >> setField "lo" (string lo)
+              >> setField "hi" (string hi))
+        |> Async.StartImmediate
+
         if lo=hi then lo
-        elif lo+1=hi then if flo<fhi then lo else hi
+        elif lo+1=hi then
+          let flo,fhi = f(lo,hi)
+          if flo<fhi then lo else hi
         elif lo+2=hi then
-            if flo<fhi then
-                let flo,fm = f(lo,lo+1)
-                if flo<fm then lo else lo+1
+          if flo<fhi then
+            let flo,fm = f(lo,lo+1)
+            if flo<fm then lo
             else
-                let fm,fhi = f(lo+1,hi)
-                if fm<fhi then lo+1 else hi
+              let fm,fhi = f(lo+1,hi)
+              if fm<fhi then lo+1 else hi
+          else
+            let fm,fhi = f(lo+1,hi)
+            if fhi<fm then hi
+            else
+              let flo,fm = f(lo,lo+1)
+              if flo<fm then lo else lo+1
         else
           let a,b =
             if lo+3=hi then lo+1,hi-1
             else
               let m = float(hi-lo)/3.0
-              let a = float lo + m |> (+) 0.5 |> int
-              let b = float hi - m |> (+) 0.5 |> int
+              let a = float lo + m |> round |> int
+              let b = float hi - m |> round |> int
               a,b
-          let a,b = if a=lo && b=hi then printfn "not converging"; lo+1,hi-1 else a,b
           let fa,fb = f(a,b)
           if fa<fb then search lo flo b fb else search a fa hi fhi
       let flo,fhi = f(lo,hi)

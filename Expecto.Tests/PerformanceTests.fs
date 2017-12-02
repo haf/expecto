@@ -34,7 +34,7 @@ let performance =
 
 [<Tests>]
 let findFastest =
-  testSequenced <| ftestList "findFastest" [
+  testSequenced <| testList "findFastest" [
 
     testCase "different values gives an error" (fun _ ->
       Performance.findFastest id 10 20 |> ignore
