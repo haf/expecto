@@ -175,6 +175,6 @@ Target "All" ignore
 
 "All"
 ==> "Push"
-//==> "Release"
+==> "Release"
 
 RunTargetOrDefault "All"
