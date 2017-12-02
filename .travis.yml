@@ -28,7 +28,7 @@ matrix:
 addons:
   apt:
     packages:
-    - dotnet-sharedframework-microsoft.netcore.app-1.1.5
+    - dotnet-sharedframework-microsoft.netcore.app-1.1.2
 
 script:
   - ./build.sh

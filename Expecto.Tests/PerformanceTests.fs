@@ -46,13 +46,13 @@ let findFastest =
       Expect.equal result 65 "find min"
     )
 
-    testCase "find fastest hi" (fun _ ->
+    ptestCase "find fastest hi" (fun _ ->
       let f i = Threading.Thread.Sleep(abs(i-110)*10)
       let result = Performance.findFastest f 0 100
       Expect.equal result 100 "find min"
     )
 
-    testCase "find fastest lo" (fun _ ->
+    ptestCase "find fastest lo" (fun _ ->
       let f i = Threading.Thread.Sleep(abs(i+10)*10)
       let result = Performance.findFastest f 0 100
       Expect.equal result 0 "find min"
