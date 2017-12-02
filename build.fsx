@@ -1,5 +1,4 @@
 #r @"packages/build/FAKE/tools/FakeLib.dll"
-#r "System.Xml.Linq"
 
 open System
 open Fake
@@ -14,7 +13,6 @@ let owners = "Anthony Lloyd (formerly Henrik Feldt and cloned from Fuchu by @mau
 let projectUrl = "https://github.com/haf/expecto"
 let iconUrl = "https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png"
 let licenceUrl = "https://github.com/haf/expecto/blob/master/LICENSE"
-
 let copyright = "Copyright \169 2017"
 
 
@@ -42,6 +40,15 @@ Target "AssemblyInfo" (fun _ ->
 Target "PaketFiles" (fun _ ->
     FileHelper.ReplaceInFiles ["namespace Logary.Facade","namespace Expecto.Logging"]
         ["paket-files/logary/logary/src/Logary.Facade/Facade.fs"]
+)
+
+Target "ProjectVersion" (fun _ ->
+    [
+        "Expecto/Expecto.netcore.fsproj"
+        "Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj"
+    ]
+    |> List.iter (fun file ->
+        XMLHelper.XmlPoke file "Project/PropertyGroup/Version/text()" release.NugetVersion)
 )
 
 Target "FrameworkBuild" (fun _ ->
@@ -155,6 +162,7 @@ Target "All" ignore
 "Clean"
 ==> "AssemblyInfo"
 ==> "PaketFiles"
+==> "ProjectVersion"
 ==> "Initialize"
 
 "Initialize"
