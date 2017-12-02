@@ -105,6 +105,7 @@ module Performance =
               let a = float lo + m |> (+) 0.5 |> int
               let b = float hi - m |> (+) 0.5 |> int
               a,b
+          let a,b = if a=lo && b=hi then printfn "not converging"; lo+1,hi-1 else a,b
           let fa,fb = f(a,b)
           if fa<fb then search lo flo b fb else search a fa hi fhi
       let flo,fhi = f(lo,hi)
