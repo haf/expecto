@@ -57,7 +57,6 @@ documentation for the project.
       * [Property based tests](#property-based-tests)
         * [Link collection](#link-collection)
         * [Code from FsCheck](#code-from-fscheck)
-      * [Performance tests](#performance-tests)
     * [Expectations with Expect](#expectations-with-expect)
       * [Expect module](#expect-module)
       * [Performance module](#performance-module)
@@ -717,10 +716,6 @@ respectively.
 - [FsCheck Examples.fs](https://github.com/fscheck/FsCheck/blob/master/examples/FsCheck.Examples/Examples.fs)
 - [FsCheck Arbitrary.fs](https://github.com/fscheck/FsCheck/blob/master/src/FsCheck/Arbitrary.fs#L26)
 
-### Performance tests
-
-See the BenchmarkDotNet section below.
-
 ## Expectations with `Expect`
 
 All expect-functions have the signature `actual -> expected -> string -> unit`,
@@ -947,6 +942,40 @@ A failure would look like this:
 ```
 [13:23:19 ERR] performance/double is faster failed in 00:00:00.0981990.
 double is faster. Expected f1 (0.3067 ± 0.0123 ms) to be faster than f2 (0.1513 ± 0.0019 ms) but is ~103% slower.
+```
+
+### Performance.findFastest
+
+Expecto can use `isFasterThan` to find the fastest version of a function for a given int input.
+This can be useful for optimising algorithm constants such as buffer size.
+
+```fsharp
+[<Tests>]
+let findFastest =
+  testSequenced <| testList "findFastest" [
+
+    testCase "different values gives an error" (fun _ ->
+      Performance.findFastest id 10 20 |> ignore
+    ) |> assertTestFailsWithMsgStarting "Expected results to be the same."
+
+    testCase "find fastest sleep" (fun _ ->
+      let f i = Threading.Thread.Sleep(abs(i-65)*10)
+      let result = Performance.findFastest f 0 100
+      Expect.equal result 65 "find min"
+    )
+
+    testCase "find fastest hi" (fun _ ->
+      let f i = Threading.Thread.Sleep(abs(i-110)*10)
+      let result = Performance.findFastest f 0 100
+      Expect.equal result 100 "find min"
+    )
+
+    testCase "find fastest lo" (fun _ ->
+      let f i = Threading.Thread.Sleep(abs(i+10)*10)
+      let result = Performance.findFastest f 0 100
+      Expect.equal result 0 "find min"
+    )
+  ]
 ```
 
 ## `main argv` – how to run console apps
