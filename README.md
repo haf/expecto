@@ -1057,7 +1057,7 @@ spirits appearing in the output, you can turn them off by setting
 
 ## Contributing
 
-Please see the [Devguide](./DEVGUIDE.md).
+Please review the [guidelines for contributing](./CONTRIBUTING.md) to Expecto.
 
 ## BenchmarkDotNet usage
 
