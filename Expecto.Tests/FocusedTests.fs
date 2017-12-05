@@ -4,6 +4,7 @@ open System
 open Expecto
 open Expecto.Tests
 open Expecto.Impl
+open Expecto.Logging
 
 let failing = fun _ -> 1 ==? 2
 let working = ignore
@@ -131,17 +132,47 @@ let configTests =
       testCase "2nd" ignore |> testSequenced
     ]
 
+  let nonDuplicateNamesTests =
+    testList "same root" [
+      testList "path one" [
+        testCase "same name" ignore
+      ]
+      testList "path two" [
+        testCase "same name" ignore
+      ]
+    ]
+
+  let duplicateNamesTests =
+    testList "same path" [
+      testCase "same name" ignore
+      testCase "same name" ignore
+    ]
+
+  let silentConfig = { defaultConfig with
+                          verbosity = Fatal
+                          printer = TestPrinters.silent }
+
   testList "config tests" [
     testCase "parallel config works" <| fun _ ->
-      let retCode = runTests { defaultConfig with
-                                ``parallel`` = false
-                                printer = TestPrinters.silent } dummyTests
+      let retCode = runTests { silentConfig with ``parallel`` = false } dummyTests
       Expect.equal retCode 0 "return code zero"
 
     testCase "parallel config overrides" <| fun _ ->
-      let retCode = runTests { defaultConfig with
+      let retCode = runTests { silentConfig with
                                 ``parallel`` = false
-                                parallelWorkers = 8
-                                printer = TestPrinters.silent } dummyTests
+                                parallelWorkers = 8 } dummyTests
+      Expect.equal retCode 0 "return code zero"
+
+    testCase "none duplicate names are fine" <| fun _ ->
+      let retCode = runTests silentConfig nonDuplicateNamesTests
+      Expect.equal retCode 0 "return code zero"
+
+    testCase "duplicate names fails by default" <| fun _ ->
+      let retCode = runTests silentConfig duplicateNamesTests
+      Expect.equal retCode 1 "return code one"
+
+    testCase "duplicate names ok if set in config" <| fun _ ->
+      let retCode = runTests { silentConfig with allowDuplicateNames = true }
+                      duplicateNamesTests
       Expect.equal retCode 0 "return code zero"
   ]

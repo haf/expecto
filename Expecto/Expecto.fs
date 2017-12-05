@@ -834,6 +834,8 @@ module Impl =
       fsCheckEndSize: int option
       /// Turn off spirits
       mySpiritIsWeak: bool
+      /// Allows duplicate test names
+      allowDuplicateNames: bool
     }
     static member defaultConfig =
       { parallel = true
@@ -848,12 +850,13 @@ module Impl =
             TestPrinters.teamCityPrinter TestPrinters.defaultPrinter
           else
             TestPrinters.defaultPrinter
-        verbosity = LogLevel.Info
+        verbosity = Info
         locate = fun _ -> SourceLocation.empty
         fsCheckMaxTests = 100
         fsCheckStartSize = 1
         fsCheckEndSize = None
         mySpiritIsWeak = false
+        allowDuplicateNames = false
       }
 
   let execTestAsync config (test:FlatTest) : Async<TestSummary> =
@@ -1448,6 +1451,7 @@ module Tests =
     | Summary_Location
     | Version
     | My_Spirit_Is_Weak
+    | Allow_Duplicate_Names
 
     interface IArgParserTemplate with
       member s.Usage =
@@ -1471,7 +1475,8 @@ module Tests =
         | FsCheck_Max_Tests _ -> "FsCheck maximum number of tests (default: 100)."
         | FsCheck_Start_Size _ -> "FsCheck start size (default: 1)."
         | FsCheck_End_Size _ -> "FsCheck end size (default: 100 for testing and 10,000 for stress testing)."
-        | My_Spirit_Is_Weak -> "Removes spirits from the output."
+        | My_Spirit_Is_Weak -> "removes spirits from the output."
+        | Allow_Duplicate_Names -> "allow duplicate test names."
 
   type FillFromArgsResult =
     | ArgsRun of ExpectoConfig
@@ -1534,6 +1539,7 @@ module Tests =
         | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
         | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
         | My_Spirit_Is_Weak -> fun o -> { o with mySpiritIsWeak = true }
+        | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
 
       let parsed =
         try
@@ -1597,15 +1603,15 @@ module Tests =
       1
     else
       let tests = config.filter tests
-      let duplicates = duplicatedNames tests
-      if List.isEmpty duplicates then
+      let duplicates = lazy duplicatedNames tests
+      if config.allowDuplicateNames || List.isEmpty duplicates.Value then
         match config.stress with
         | None -> runEval config tests |> Async.RunSynchronously
         | Some _ -> runStress config tests |> Async.RunSynchronously
       else
         logger.errorWithBP (
           eventX "Found duplicated test names, these names are: {duplicates}"
-          >> setField "duplicates" duplicates
+          >> setField "duplicates" duplicates.Value
         ) |> Async.RunSynchronously
         1
 
