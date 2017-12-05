@@ -133,6 +133,14 @@ type PTestsAttribute() = inherit Attribute()
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
 type FTestsAttribute() = inherit Attribute()
 
+type private TestNameHolder() =
+  [<ThreadStatic;DefaultValue>]
+  static val mutable private name : string
+  static member Name
+      with get () = TestNameHolder.name
+      and  set name = TestNameHolder.name <- name
+
+
 [<AutoOpen>]
 module internal Helpers =
   let inline dispose (d:IDisposable) = d.Dispose()
@@ -867,6 +875,7 @@ module Impl =
         | Some ignoredMessage ->
           return TestSummary.single (Ignored ignoredMessage) 0.0
         | None ->
+          TestNameHolder.Name <- test.name
           match test.test with
           | Sync test ->
             test()
@@ -1304,6 +1313,9 @@ module Tests =
   open Argu
   open Expecto.Logging
   open Expecto.Logging.Message
+
+  /// The full name of the currently running test
+  let testName() = TestNameHolder.Name
 
   /// Fail this test
   let inline failtest msg = raise <| AssertException msg

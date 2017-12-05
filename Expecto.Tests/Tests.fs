@@ -48,6 +48,13 @@ let tests =
       Expect.equal x (2+2) "2+2"
     }
 
+    testList "testName tests" [
+      testCase "one test" <| fun _ ->
+        Expect.equal (testName()) "all/testName tests/one test" "one name"
+      testCase "two test" <| fun _ ->
+        Expect.equal (testName()) "all/testName tests/two test" "two name"
+    ]
+
     testList "string comparison" [
       test "string equal" {
         Expect.equal "Test string" "Test string" "Test string"
@@ -842,7 +849,6 @@ let expecto =
           Expect.isDescending [3;1;2] "Deliberately failing"
         ) |> assertTestFails
       ]
-
     ]
 
     testList "computation expression" [
