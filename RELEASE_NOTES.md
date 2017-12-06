@@ -1,3 +1,8 @@
+#### 5.1.1 - 2017-12-06
+* Framework condition fileversioninfo. #210 thanks @AnthonyLloyd
+* Add allow duplicate names config, #211 thanks @AnthonyLloyd
+* Add testName function. #199 thanks @AnthonyLloyd
+
 #### 5.1.0 - 2017-12-01
 * Changes that are needed to Expecto.BenchmarkDotNet. #196 thanks @MNie
 * Feature/duplicated name. #198 thanks @MNie

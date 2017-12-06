@@ -40,7 +40,7 @@ let findFastest =
       Performance.findFastest id 10 20 |> ignore
     ) |> assertTestFailsWithMsgStarting "Expected results to be the same."
 
-    testCase "find fastest sleep" (fun _ ->
+    ptestCase "find fastest sleep" (fun _ ->
       let f i = Threading.Thread.Sleep(abs(i-65)*10)
       let result = Performance.findFastest f 0 100
       Expect.equal result 65 "find min"
