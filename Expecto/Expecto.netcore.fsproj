@@ -22,6 +22,6 @@
     <PackageReference Include="Mono.Cecil" Version="0.10.0-beta5" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'!='net461'">
-      <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />
-    </ItemGroup>
+    <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />
+  </ItemGroup>
 </Project>

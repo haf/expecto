@@ -1,0 +1,20 @@
+# These files are text and should be normalized (convert crlf to lf)
+*.config text eol=lf crlf=input
+*.cs text eol=lf crlf=input
+*.fs text eol=lf crlf=input
+*.fsx text eol=lf crlf=input
+*.md text eol=lf crlf=input
+*.yml text eol=lf crlf=input
+*.sh text eol=lf crlf=input
+*.cmd text eol=lf crlf=input
+*.csproj text eol=lf crlf=input
+*.fsproj text eol=lf crlf=input
+*.sln text eol=lf crlf=input
+
+# These files should be treated as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ai binary
+*.psd binary
