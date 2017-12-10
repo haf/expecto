@@ -11,6 +11,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>c0d55728-10a9-4a7a-9df9-d2f21f663ac2</ProjectGuid>
     <OutputType>Library</OutputType>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
