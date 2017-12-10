@@ -1010,8 +1010,8 @@ Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in
 - `--fscheck-end-size`: FsCheck end size (default: 100 for testing and 10,000 for stress testing).
 - `--list-tests`: Doesn't run tests, print out list of tests instead.
 - `--summary`: Prints out summary after all tests are finished.
-- `--allow-duplicate-names`: Allow duplicate test names
-- `--my-spirit-is-weak`: Don't print UTF8 emojis in the output
+- `--allow-duplicate-names`: Allow duplicate test names.
+- `--my-spirit-is-weak`: Don't print UTF8 emojis in the output.
 
 ### The config
 
@@ -1033,7 +1033,7 @@ ExpectoConfig record, that looks like:
   /// before stopping and reporting as a deadlock (default 5 mins).
   stressTimeout : TimeSpan
   /// Stress test memory limit in MB to stop the test and report as
-  /// a memory leak (default 100 MB)
+  /// a memory leak (default 100 MB).
   stressMemoryLimit : float
   /// Whether to make the test runner fail if focused tests exist.
   /// This can be used from CI servers to ensure no focused tests are
@@ -1058,6 +1058,8 @@ ExpectoConfig record, that looks like:
   fsCheckEndSize: int option
   /// Turn off spirits.
   mySpiritIsWeak: bool
+  /// Allows duplicate test names.
+  allowDuplicateNames: bool
 }
 ```
 

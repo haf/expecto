@@ -8,15 +8,21 @@
     extension to prevent any conflicts between your default F# formatting
     conventions and the ones used by this project.
     * Visual Studio - [EditorConfig VS Extension][ec-vs]
-    * vscode - [EditorConfig VScode Extension][ec-vsc]
- 1. Install the version of the [**netcore SDK**][netcore-sdk] and [Mono][mono-dl] specified [here in .travis.yml][travis]
- 1. Install 
+    * VS Code - [EditorConfig VScode Extension][ec-vsc]
+
+ 1. The build is in two part, one called `Framework` and the other `DotNetCore`. The full build will run      both of these. 
+    * For `Framework` on Windows you will need either Visual Studio 2015, Visual Studio 2017 or VS Code with the Ionide Extensions. On Linux or OSX you will also need to install Mono. 
+    * For `DotNetCore` you will need [**DotNetCore**][netcore-sdk] v2.x SDK and also v1.x runtime installed. The versions of Mono and DotNetCore currently tested in CI can be found [here in .travis.yml][travis]
+
+ 1. Example ways to build from the command line:
+      * Windows:  `./build.cmd`, `./build.cmd Framework`, `./build.cmd DotNetCore`
+      * Linux/OSX: `./build.sh`, `./build.sh Framework`, `./build.sh DotNetCore`
+
  1. New features:
-   - Make your test for your change
-   - Make your change
-   - If appropriate, write docs in README.md.
-   
- 
+      * Make your test for your change
+      * Make your change
+      * If appropriate, write docs in README.md.
+
 ## Code style
 
  1. For variables: prefer `test` over `t`. Prefer `test` over
@@ -65,6 +71,6 @@ Futhermore, in no particular order;
 
  [ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
  [ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
- [netcore-sdk]: https://github.com/dotnet/core/blob/master/release-notes/download-archives/1.0.4-download.md
+ [netcore-sdk]: https://www.microsoft.com/net/download
  [travis]: https://github.com/haf/expecto/blob/master/.travis.yml
  [mono-dl]: http://www.mono-project.com/download/

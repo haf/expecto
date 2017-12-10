@@ -817,7 +817,7 @@ module Impl =
       /// before stopping and reporting as a deadlock (default 5 mins).
       stressTimeout : TimeSpan
       /// Stress test memory limit in MB to stop the test and report as
-      /// a memory leak (default 100 MB)
+      /// a memory leak (default 100 MB).
       stressMemoryLimit : float
       /// Whether to make the test runner fail if focused tests exist.
       /// This can be used from CI servers to ensure no focused tests are
@@ -840,9 +840,9 @@ module Impl =
       /// FsCheck end size (default: 100 for testing and 10,000 for
       /// stress testing).
       fsCheckEndSize: int option
-      /// Turn off spirits
+      /// Turn off spirits.
       mySpiritIsWeak: bool
-      /// Allows duplicate test names
+      /// Allows duplicate test names.
       allowDuplicateNames: bool
     }
     static member defaultConfig =
