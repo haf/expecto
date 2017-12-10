@@ -232,8 +232,9 @@ Expecto supports the following test constructors:
 All of the above compile to a `Test` value that you can compose. For example,
 you can compose a `test` and a `testCaseAsync` in a `testList` which you wrap in
 `testSequenced` because all tests in the list use either `Expect.fasterThan` or
-they are using `Expecto.BenchmarkDotNet` for performance tests. 
-You have to remember that **the fully qualified names of tests need to be unique across your test project.**
+they are using `Expecto.BenchmarkDotNet` for performance tests.  You have to
+remember that **the fully qualified names of tests need to be unique across your
+test project.**
 
 ### Normal tests
 
@@ -345,7 +346,9 @@ Focusing can be done with
 - `ftestAsync`
 
 It is often convenient, when developing to be able to run a subset of specs.
-Expecto allows you to focus specific test cases or tests list by putting `f` before *testCase* or *testList* or `F` before attribute *Tests*(when reflection tests discovery is used).
+Expecto allows you to focus specific test cases or tests list by putting `f`
+before *testCase* or *testList* or `F` before attribute *Tests*(when reflection
+tests discovery is used).
 
 ```fsharp
 open Expecto
@@ -379,8 +382,9 @@ let focusedTests =
   ]
 ```
 
-Expecto accepts the command line argument `--fail-on-focused-tests`, which checks if focused tests exist.
-This parameter can be set in build scripts and allows CI servers to reject commits that accidentally included focused tests.
+Expecto accepts the command line argument `--fail-on-focused-tests`, which
+checks if focused tests exist.  This parameter can be set in build scripts and
+allows CI servers to reject commits that accidentally included focused tests.
 
 ### Sequenced tests
 
@@ -463,7 +467,8 @@ let simpleTests =
     ]
 ```
 
-For more complex setup and teardown situations we can write one or more setup functions to manage resources:  
+For more complex setup and teardown situations we can write one or more setup
+functions to manage resources:
 
 ```fsharp
 let clientTests setup =
@@ -599,7 +604,7 @@ let config = { FsCheckConfig.defaultConfig with arbitrary = [typeof<UserGen>] }
 
 let properties =
   testList "FsCheck samples" [
-    
+
     // you can also override the FsCheck config
     testPropertyWithConfig config "User with generated User data" <|
       fun x ->
@@ -639,7 +644,7 @@ module Gen =
             Arb.from
     let addToConfig config =
         {config with arbitrary = typeof<Float01>.DeclaringType::config.arbitrary}
-    
+
 [<AutoOpen>]
 module Auto =
     let private config = Gen.addToConfig FsCheckConfig.defaultConfig
@@ -688,11 +693,12 @@ the 18..., 29... seed numbers). It's also a good idea to lift inputs and the
 test-case/parameter combination that failed into its *own* test (which isn't a
 property based test).
 
-FsCheck `Arb.Register` can't be used with Expecto because it is thread local and Expecto runs
-multithreaded by default. This could be worked around but `Arb.Register` is being depricated
-by FsCheck. The recommended way to register and use custom generators is to define `testPropertyWithConfig`
-functions like `testProp` above for each area with common generator use. This ensures the library will
-always be used in a thread safe way.
+FsCheck `Arb.Register` can't be used with Expecto because it is thread local and
+Expecto runs multithreaded by default. This could be worked around but
+`Arb.Register` is being depricated by FsCheck. The recommended way to register
+and use custom generators is to define `testPropertyWithConfig` functions like
+`testProp` above for each area with common generator use. This ensures the
+library will always be used in a thread safe way.
 
 #### Link collection
 
@@ -820,9 +826,9 @@ let compute (multiplier: int) = 42 * multiplier
 test "yup yup" {
   compute 1
     |> Expect.equal "x1 = 42" 42
-    
+
   compute 2
-    |> Expect.equal "x2 = 82" 84 
+    |> Expect.equal "x2 = 82" 84
 }
 |> runTests defaultConfig
 ```
@@ -834,16 +840,21 @@ by calling `Expect.isFasterThan` wrapping your `Test` in `testSequenced`.
 
 ![Sample output](./docs/half-is-faster.png)
 
-This function makes use of a statistical test called [Welch's t-test](https://en.wikipedia.org/wiki/Welch's_t-test).
-It starts with the null hypothesis that the functions mean execution times are the same.
-The functions are run alternately increasing the sample size to test this hypothesis.
+This function makes use of a statistical test called [Welch's
+t-test](https://en.wikipedia.org/wiki/Welch's_t-test).  It starts with the null
+hypothesis that the functions mean execution times are the same.  The functions
+are run alternately increasing the sample size to test this hypothesis.
 
-Once the probability of getting this result based on the null hypothesis goes below 0.01% it rejects the null hypothesis and reports the results.
-If the performance is very close the test will declare them equal when there is 99.99% confidence they differ by less than 0.5%.
-0.01%/99.99% are chosen such that if a test list has 100 performance tests a false test failure would be reported once in many more than 100 runs.
+Once the probability of getting this result based on the null hypothesis goes
+below 0.01% it rejects the null hypothesis and reports the results.  If the
+performance is very close the test will declare them equal when there is 99.99%
+confidence they differ by less than 0.5%.  0.01%/99.99% are chosen such that if
+a test list has 100 performance tests a false test failure would be reported
+once in many more than 100 runs.
 
-This results in a performance test that is very quick to run (the greater the difference the quicker it will run).
-Also, because it is a relative test it can normally be run across all configurations as part of unit testing.
+This results in a performance test that is very quick to run (the greater the
+difference the quicker it will run).  Also, because it is a relative test it can
+normally be run across all configurations as part of unit testing.
 
 The functions must return the same result for same input. Note that since
 Expecto also has a FsCheck integration, your outer (sequenced) test could be
@@ -998,6 +1009,8 @@ Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in
 - `--fscheck-end-size`: FsCheck end size (default: 100 for testing and 10,000 for stress testing).
 - `--list-tests`: Doesn't run tests, print out list of tests instead.
 - `--summary`: Prints out summary after all tests are finished.
+- `--allow-duplicate-names`: Allow duplicate test names
+- `--my-spirit-is-weak`: Don't print UTF8 emojis in the output
 
 ### The config
 
@@ -1135,13 +1148,15 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
   your paket file and you're off to the races!
 * [FsCheck supports it](https://fscheck.github.io/FsCheck/QuickStart.html#Integration-with-Expecto)
 
-![Expecto VS Test Plugin](./docs/expecto-vs-addon.jpeg "Easy to get started even for Enterprise Developers")
+![Expecto VS Test Plugin](./docs/expecto-vs-addon.jpeg "Easy to get started even
+for Enterprise Developers")
 
 ### Testing hardware
 
 People have been testing hardware with Expecto.
 
-![Expecto Hardware Testing](./docs/hw-testing.jpg "Testing Hardware with Expecto, photo by Roman Provazník")
+![Expecto Hardware Testing](./docs/hw-testing.jpg "Testing Hardware with
+Expecto, photo by Roman Provazník")
 
 ## Sending e-mail on failure – custom printers
 
