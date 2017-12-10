@@ -13,6 +13,7 @@
     <ProjectGuid>9996e3a7-f97f-4a6a-ad5f-c6c70858e220</ProjectGuid>
     <OutputType>Exe</OutputType>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

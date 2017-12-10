@@ -25,6 +25,11 @@ matrix:
     - mono: weekly
     - mono: latest
 
+addons:
+  apt:
+    packages:
+    - libunwind8
+
 script:
   - curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version 1.1.5 --install-dir .dotnet --no-path  --shared-runtime
   - export PATH="$PWD/.dotnet":$PATH
