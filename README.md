@@ -35,7 +35,7 @@ programming.
 What follows is the Table of Contents for this README, which also serves as the
 documentation for the project.
 
-* [expecto](#expecto)
+  * [Expecto](#expecto)
     * [Installing](#installing)
     * [\.Net Core support](#net-core-support)
     * [Testing "Hello world"](#testing-hello-world)
@@ -61,6 +61,7 @@ documentation for the project.
       * [Expect module](#expect-module)
       * [Performance module](#performance-module)
         * [Example](#example)
+      * [Performance\.findFastest](#performancefindfastest)
     * [main argv – how to run console apps](#main-argv--how-to-run-console-apps)
       * [The config](#the-config)
     * [Contributing](#contributing)
@@ -70,8 +71,8 @@ documentation for the project.
     * [Sending e\-mail on failure – custom printers](#sending-e-mail-on-failure--custom-printers)
     * [About test parallelism](#about-test-parallelism)
     * [About upgrading from Fuchu](#about-upgrading-from-fuchu)
-      * [Why the strange name?](#why-the-strange-name)
       * [What does 'expected to have type TestCode' mean?](#what-does-expected-to-have-type-testcode-mean)
+
 
 ![Sample output](docs/sample-output-2.png)
 
