@@ -9,13 +9,16 @@
     conventions and the ones used by this project.
     * Visual Studio - [EditorConfig VS Extension][ec-vs]
     * vscode - [EditorConfig VScode Extension][ec-vsc]
- 1. Install the `1.0.4` version of the [**netcore SDK**][netcore-sdk]
- 1. You need [albacore][ac] installed to build like I do – it needs to build
-    with the `Rakefile` or I won't accept the PR.
+ 1. Install the version of the [**netcore SDK**][netcore-sdk] and [Mono][mono-dl] specified [here in .travis.yml][travis]
+ 1. Install 
  1. New features:
    - Make your test for your change
    - Make your change
    - If appropriate, write docs in README.md.
+   
+ 
+## Code style
+
  1. For variables: prefer `test` over `t`. Prefer `test` over
     `sequencedTestCode`.
  1. Try to stick to max 80 chars wide lines, unless it improves readability to
@@ -28,7 +31,7 @@
          element as `t`: `Seq.mapi (fun i t -> ...)`
       3. `l` is easily confused with `I` and `1`, depending on typeface.
 
-## Code style
+Futhermore, in no particular order;
 
  - Spaces after function names.
  - Spaces after parameter names like so `param : typ`.
@@ -63,4 +66,5 @@
  [ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
  [ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
  [netcore-sdk]: https://github.com/dotnet/core/blob/master/release-notes/download-archives/1.0.4-download.md
- [ac]: https://github.com/albacore/albacore
+ [travis]: https://github.com/haf/expecto/blob/master/.travis.yml
+ [mono-dl]: http://www.mono-project.com/download/
