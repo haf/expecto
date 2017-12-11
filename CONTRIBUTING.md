@@ -11,8 +11,8 @@
     * VS Code - [EditorConfig VScode Extension][ec-vsc]
 
  1. The build is in two part, one called `Framework` and the other `DotNetCore`. The full build will run      both of these. 
-    * For `Framework` on Windows you will need either Visual Studio 2015, Visual Studio 2017 or VS Code with the Ionide Extensions. On Linux or OSX you will also need to install Mono. 
-    * For `DotNetCore` you will need [**DotNetCore**][netcore-sdk] v2.x SDK and also [v1.x runtime][netcore-rt] installed. The versions of Mono and DotNetCore currently tested in CI can be found [here in .travis.yml][travis]
+    * For `Framework` on Windows you will need either Visual Studio 2015, Visual Studio 2017 or VS Code with the Ionide Extensions. On Linux or OSX you will also need to install Mono.
+    * For `DotNetCore` you will need DotNetCore [v2.0 SDK][netcore-sdk] and also [v1.1 Runtime][netcore-rt] installed (current available versions are SDK v2.1.2 and Runtime v1.1.5). The versions of Mono and DotNetCore currently tested in CI can be found [here in .travis.yml][travis]
 
  1. Example ways to build from the command line:
       * Windows:  `./build.cmd`, `./build.cmd Framework`, `./build.cmd DotNetCore`
@@ -72,6 +72,6 @@ Futhermore, in no particular order;
  [ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
  [ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
  [netcore-sdk]: https://www.microsoft.com/net/download
- [netcore-rt]: https://github.com/dotnet/core/blob/master/release-notes/download-archives/2.0.0-download.md
+ [netcore-rt]: https://github.com/dotnet/core/blob/master/release-notes/download-archive.md
  [travis]: https://github.com/haf/expecto/blob/master/.travis.yml
  [mono-dl]: http://www.mono-project.com/download/
