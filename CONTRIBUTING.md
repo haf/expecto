@@ -12,7 +12,7 @@
 
  1. The build is in two part, one called `Framework` and the other `DotNetCore`. The full build will run      both of these. 
     * For `Framework` on Windows you will need either Visual Studio 2015, Visual Studio 2017 or VS Code with the Ionide Extensions. On Linux or OSX you will also need to install Mono.
-    * For `DotNetCore` you will need DotNetCore [v2.0 SDK][netcore-sdk] and also [v1.1 Runtime][netcore-rt] installed (current available versions are SDK v2.1.2 and Runtime v1.1.5). The versions of Mono and DotNetCore currently tested in CI can be found [here in .travis.yml][travis]
+    * For `DotNetCore` you will need .NET Core [v2.0 SDK][netcore-sdk] and also [v1.1 Runtime][netcore-rt] installed (current available versions are SDK v2.1.2 and Runtime v1.1.5). The versions of Mono and .NET Core currently tested in CI can be found [here in .travis.yml][travis]
 
  1. Example ways to build from the command line:
       * Windows:  `./build.cmd`, `./build.cmd Framework`, `./build.cmd DotNetCore`
