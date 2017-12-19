@@ -19,7 +19,7 @@
     <Compile Include="Flip.Expect.fs" />
     <PackageReference Include="FSharp.Core" Version="4.1.18" />
     <PackageReference Include="Argu" Version="3.7.0" />
-    <PackageReference Include="Mono.Cecil" Version="0.10.0-beta5" />
+    <PackageReference Include="Mono.Cecil" Version="0.10.0-beta7" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'!='net461'">
     <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />

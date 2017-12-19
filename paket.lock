@@ -190,7 +190,7 @@ NUGET
       NETStandard.Library (>= 1.6.1) - restriction: && (< monotouch) (< net46) (>= netstandard1.3) (< netstandard2.0) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)
       System.Security.AccessControl (>= 4.4) - restriction: || (&& (>= monoandroid) (< netstandard1.3)) (>= monotouch) (&& (< net46) (>= netstandard2.0)) (>= net461) (>= netcoreapp2.0) (>= xamarinios) (>= xamarinmac) (>= xamarintvos) (>= xamarinwatchos)
       System.Security.Principal.Windows (>= 4.4) - restriction: || (&& (>= monoandroid) (< netstandard1.3)) (>= monotouch) (&& (< net46) (>= netstandard2.0)) (>= net461) (>= netcoreapp2.0) (>= xamarinios) (>= xamarinmac) (>= xamarintvos) (>= xamarinwatchos)
-    Mono.Cecil (0.10.0-beta5)
+    Mono.Cecil (0.10.0-beta7)
       System.Collections (>= 4.0.11) - restriction: && (< net35) (>= netstandard1.3)
       System.IO.FileSystem (>= 4.0.1) - restriction: && (< net35) (>= netstandard1.3)
       System.IO.FileSystem.Primitives (>= 4.0.1) - restriction: && (< net35) (>= netstandard1.3)
