@@ -89,7 +89,7 @@ Target "DotNetCoreBuildTest" (fun _ ->
         })
     run "netcoreapp1.1"
     run "netcoreapp2.0"
-    if EnvironmentHelper.isWindows then run "net461"
+    run "net461"
 )
 
 Target "DotNetCoreRunTest" (fun _ ->
