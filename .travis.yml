@@ -16,9 +16,11 @@ matrix:
     - os: osx
       osx_image: xcode9.1
       mono: 5.4.1
+      env: MONO_BASE_PATH=/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/
     - os: osx
       osx_image: xcode9.1
       mono: latest
+      env: MONO_BASE_PATH=/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/
 
   allow_failures:
     - os: osx
@@ -30,9 +32,10 @@ addons:
     packages:
     - dotnet-sharedframework-microsoft.netcore.app-1.1.2
 
+env:
+  global:
+    - DOTNET_CLI_TELEMETRY_OPTOUT: 1
+    - DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
 script:
-  - if [ $TRAVIS_OS_NAME = osx ]; then curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --version 1.1.2 --install-dir .dotnet --no-path  --shared-runtime; fi
-  - if [ $TRAVIS_OS_NAME = osx ]; then export PATH="$PWD/.dotnet":$PATH; fi
-  - if [ $TRAVIS_OS_NAME = osx ]; then export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1; fi
-  - if [ $TRAVIS_OS_NAME = osx ]; then export DOTNET_CLI_TELEMETRY_OPTOUT=1; fi
   - ./build.sh
