@@ -9,17 +9,13 @@ matrix:
   include:
     - os: linux
       mono: 5.4.1
-      env: FrameworkPathOverride=/usr/lib/mono/4.5/
     - os: linux
       mono: weekly
-      env: FrameworkPathOverride=/usr/lib/mono/4.5/
     - os: linux
       mono: latest
-      env: FrameworkPathOverride=/usr/lib/mono/4.5/
     - os: osx
       osx_image: xcode9.1
       mono: 5.4.1
-      env: FrameworkPathOverride=/usr/local/Cellar/mono/5.4.1/lib/mono/4.5/
 
   allow_failures:
     - os: osx
