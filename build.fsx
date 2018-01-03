@@ -93,9 +93,9 @@ Target "DotNetCoreBuildTest" (fun _ ->
 )
 
 Target "DotNetCoreRunTest" (fun _ ->
-    DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.Tests.dll --summary")
     DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.dll --summary")
     if EnvironmentHelper.isWindows then
+        DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.Tests.dll --summary")
         Shell.Exec ("Expecto.Tests/bin/"+configuration+"/net461/Expecto.Tests.exe","--summary")
         |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
 )
