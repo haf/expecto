@@ -1,3 +1,6 @@
+#### 5.1.2 - 2018-01-03
+* Update Mono.Cecil to 0.10.0-beta7. #215 thanks @MNie
+
 #### 5.1.1 - 2017-12-06
 * Framework condition fileversioninfo. #210 thanks @AnthonyLloyd
 * Add allow duplicate names config, #211 thanks @AnthonyLloyd
