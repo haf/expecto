@@ -80,16 +80,19 @@ Target "FrameworkPack" (fun _ ->
 )
 
 Target "DotNetCoreBuildTest" (fun _ ->
-    let run framework =
+    let build project framework =
         DotNetCli.Build (fun p ->
         { p with
             Configuration = configuration
             Framework = framework
-            Project = "Expecto.Tests/Expecto.Tests.netcore.fsproj"
+            Project = project
         })
-    run "netcoreapp1.1"
-    run "netcoreapp2.0"
-    run "net461"
+    build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "netcoreapp1.1"
+    build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "netcoreapp2.0"
+    build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "net461"
+    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netstandard2.0"
+    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "net461"
+    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netstandard1.6"
 )
 
 Target "DotNetCoreRunTest" (fun _ ->
