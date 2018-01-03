@@ -90,9 +90,9 @@ Target "DotNetCoreBuildTest" (fun _ ->
     build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "netcoreapp1.1"
     build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "netcoreapp2.0"
     build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "net461"
-    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netstandard2.0"
+    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netcoreapp2.0"
     build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "net461"
-    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netstandard1.6"
+    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netcoreapp1.1"
 )
 
 Target "DotNetCoreRunTest" (fun _ ->
