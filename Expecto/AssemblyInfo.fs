@@ -6,8 +6,8 @@ open System.Reflection
 [<assembly: AssemblyProductAttribute("Expecto")>]
 [<assembly: AssemblyCopyrightAttribute("Copyright © 2017")>]
 [<assembly: AssemblyDescriptionAttribute("Advanced testing library for F#")>]
-[<assembly: AssemblyVersionAttribute("5.1.1")>]
-[<assembly: AssemblyFileVersionAttribute("5.1.1")>]
+[<assembly: AssemblyVersionAttribute("5.1.2")>]
+[<assembly: AssemblyFileVersionAttribute("5.1.2")>]
 do ()
 
 module internal AssemblyVersionInformation =
@@ -15,5 +15,5 @@ module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyProduct = "Expecto"
     let [<Literal>] AssemblyCopyright = "Copyright © 2017"
     let [<Literal>] AssemblyDescription = "Advanced testing library for F#"
-    let [<Literal>] AssemblyVersion = "5.1.1"
-    let [<Literal>] AssemblyFileVersion = "5.1.1"
+    let [<Literal>] AssemblyVersion = "5.1.2"
+    let [<Literal>] AssemblyFileVersion = "5.1.2"
