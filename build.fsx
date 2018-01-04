@@ -79,17 +79,21 @@ Target "FrameworkPack" (fun _ ->
       })
 )
 
+let build project framework =
+    DotNetCli.Build (fun p ->
+    { p with
+        Configuration = configuration
+        Framework = framework
+        Project = project
+    })
+
 Target "DotNetCoreBuildTest" (fun _ ->
-    let build project framework =
-        DotNetCli.Build (fun p ->
-        { p with
-            Configuration = configuration
-            Framework = framework
-            Project = project
-        })
     build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "netcoreapp1.1"
     build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "netcoreapp2.0"
     build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "net461"
+)
+
+Target "DotNetCoreBuildBenchmarkDotNet" (fun _ ->
     build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netcoreapp2.0"
     build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "net461"
     build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netcoreapp1.1"
@@ -126,6 +130,8 @@ Target "DotNetCorePack" (fun _ ->
             ("pack Expecto/Expecto.netcore.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto"))
         DotNetCli.RunCommand id
             ("pack Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.FsCheck"))
+        DotNetCli.RunCommand id
+            ("pack Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.BenchmarkDotNet"))
 )
 
 Target "Push" (fun _ -> Paket.Push (fun p -> { p with WorkingDir = "bin" }))
@@ -172,10 +178,11 @@ Target "All" ignore
 ==> "FrameworkBuild"
 ==> "FrameworkTest"
 ==> "FrameworkTestCSharp"
-==> "FrameworkPack"
+//==> "FrameworkPack"
 ==> "Framework"
 
 "Initialize"
+==> "DotNetCoreBuildBenchmarkDotNet"
 ==> "DotNetCoreBuildTest"
 ==> "DotNetCoreRunTest"
 ==> "DotNetCorePack"
