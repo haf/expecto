@@ -1,4 +1,4 @@
-#### 5.1.2 - 2018-01-03
+#### 5.1.2 - 2018-01-04
 * Update Mono.Cecil to 0.10.0-beta7. #215 thanks @MNie
 * Expecto.BenchmarkDotNet .NETCoreApp versions. #214 thanks @AnthonyLloyd
 
