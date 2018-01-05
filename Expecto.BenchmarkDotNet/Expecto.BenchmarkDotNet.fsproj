@@ -12,6 +12,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0acabeaa-29bd-4f9f-89db-0d03b5afc952</ProjectGuid>
     <OutputType>Library</OutputType>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
