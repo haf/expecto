@@ -12,6 +12,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Expecto.Tests</RootNamespace>
     <AssemblyName>Expecto.Tests</AssemblyName>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Name>Expecto.Tests</Name>
