@@ -10,13 +10,11 @@
     * Visual Studio - [EditorConfig VS Extension][ec-vs]
     * VS Code - [EditorConfig VScode Extension][ec-vsc]
 
- 1. The build is in two part, one called `Framework` and the other `DotNetCore`. The full build will run      both of these. 
-    * For `Framework` on Windows you will need either Visual Studio 2015, Visual Studio 2017 or VS Code with the Ionide Extensions. On Linux or OSX you will also need to install Mono.
-    * For `DotNetCore` you will need .NET Core [v2.0 SDK][netcore-sdk] and also [v1.1 Runtime][netcore-rt] installed (current available versions are SDK v2.1.2 and Runtime v1.1.5). The versions of Mono and .NET Core currently tested in CI can be found [here in .travis.yml][travis]
+ 1. You will need .NET Core [v2.0 SDK][netcore-sdk] and also [v1.1 Runtime][netcore-rt] installed (current available versions are SDK v2.1.2 and Runtime v1.1.5). The versions of Mono and .NET Core currently tested in CI can be found [here in .travis.yml][travis]
 
- 1. Example ways to build from the command line:
-      * Windows:  `./build.cmd`, `./build.cmd Framework`, `./build.cmd DotNetCore`
-      * Linux/OSX: `./build.sh`, `./build.sh Framework`, `./build.sh DotNetCore`
+ 1. To build from the command line:
+      * Windows:  `./build.cmd`
+      * Linux/OSX: `./build.sh`
 
  1. New features:
       * Make your test for your change
