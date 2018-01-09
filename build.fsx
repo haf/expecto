@@ -42,8 +42,9 @@ Target "PaketFiles" (fun _ ->
 
 Target "ProjectVersion" (fun _ ->
     [
-        "Expecto/Expecto.netcore.fsproj"
-        "Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj"
+        "Expecto/Expecto.fsproj"
+        "Expecto.FsCheck/Expecto.FsCheck.fsproj"
+        "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj"
     ]
     |> List.iter (fun file ->
         XMLHelper.XmlPoke file "Project/PropertyGroup/Version/text()" release.NugetVersion)
@@ -57,18 +58,18 @@ let build project framework =
     })
 
 Target "BuildTest" (fun _ ->
-    build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "netcoreapp1.1"
-    build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "netcoreapp2.0"
-    build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "net461"
-    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.netcore.csproj" "netcoreapp1.1"
-    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.netcore.csproj" "netcoreapp2.0"
-    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.netcore.csproj" "net461"
+    build "Expecto.Tests/Expecto.Tests.fsproj" "netcoreapp1.1"
+    build "Expecto.Tests/Expecto.Tests.fsproj" "netcoreapp2.0"
+    build "Expecto.Tests/Expecto.Tests.fsproj" "net461"
+    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj" "netcoreapp1.1"
+    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj" "netcoreapp2.0"
+    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj" "net461"
 )
 
 Target "BuildBenchmarkDotNet" (fun _ ->
-    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netcoreapp2.0"
-    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "net461"
-    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netcoreapp1.1"
+    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj" "netcoreapp2.0"
+    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj" "net461"
+    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj" "netcoreapp1.1"
 )
 
 Target "RunTest" (fun _ ->
@@ -105,11 +106,11 @@ Target "Pack" (fun _ ->
         ] |> String.concat " "
     if EnvironmentHelper.isWindows then
         DotNetCli.RunCommand id
-            ("pack Expecto/Expecto.netcore.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto"))
+            ("pack Expecto/Expecto.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto"))
         DotNetCli.RunCommand id
-            ("pack Expecto.FsCheck/Expecto.FsCheck.netcore.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.FsCheck"))
+            ("pack Expecto.FsCheck/Expecto.FsCheck.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.FsCheck"))
         DotNetCli.RunCommand id
-            ("pack Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.BenchmarkDotNet"))
+            ("pack Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.BenchmarkDotNet"))
 )
 
 Target "Push" (fun _ -> Paket.Push (fun p -> { p with WorkingDir = "bin" }))

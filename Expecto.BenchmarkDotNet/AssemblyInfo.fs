@@ -4,7 +4,7 @@ open System.Reflection
 
 [<assembly: AssemblyTitleAttribute("Expecto.BenchmarkDotNet")>]
 [<assembly: AssemblyProductAttribute("Expecto.BenchmarkDotNet")>]
-[<assembly: AssemblyCopyrightAttribute("Copyright © 2017")>]
+[<assembly: AssemblyCopyrightAttribute("Copyright © 2018")>]
 [<assembly: AssemblyDescriptionAttribute("Advanced testing library for F#")>]
 [<assembly: AssemblyVersionAttribute("5.1.2")>]
 [<assembly: AssemblyFileVersionAttribute("5.1.2")>]
@@ -13,7 +13,7 @@ do ()
 module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyTitle = "Expecto.BenchmarkDotNet"
     let [<Literal>] AssemblyProduct = "Expecto.BenchmarkDotNet"
-    let [<Literal>] AssemblyCopyright = "Copyright © 2017"
+    let [<Literal>] AssemblyCopyright = "Copyright © 2018"
     let [<Literal>] AssemblyDescription = "Advanced testing library for F#"
     let [<Literal>] AssemblyVersion = "5.1.2"
     let [<Literal>] AssemblyFileVersion = "5.1.2"
