@@ -68,17 +68,6 @@ Target "FrameworkTestCSharp" (fun _ ->
     Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/Expecto.Tests.CSharp.exe","--summary")
     |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
 )
-
-Target "FrameworkPack" (fun _ ->
-    Paket.Pack (fun p ->
-      { p with
-          BuildConfig = configuration
-          OutputPath = "bin"
-          Version = release.AssemblyVersion
-          ReleaseNotes = toLines release.Notes
-      })
-)
-
 let build project framework =
     DotNetCli.Build (fun p ->
     { p with
@@ -178,7 +167,6 @@ Target "All" ignore
 ==> "FrameworkBuild"
 ==> "FrameworkTest"
 ==> "FrameworkTestCSharp"
-//==> "FrameworkPack"
 ==> "Framework"
 
 "Initialize"

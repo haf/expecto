@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Expecto.Tests.CSharp</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net461;netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Tests.cs" />
+    <None Include="paket.references" />
+    <ProjectReference Include="../Expecto/Expecto.netcore.fsproj" />
+  </ItemGroup>
+</Project>
