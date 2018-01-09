@@ -90,10 +90,10 @@ Target "DotNetCoreBuildBenchmarkDotNet" (fun _ ->
 
 Target "DotNetCoreRunTest" (fun _ ->
     DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.dll --summary")
+    Shell.Exec ("Expecto.Tests/bin/"+configuration+"/net461/Expecto.Tests.exe","--summary")
+    |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
     if EnvironmentHelper.isWindows then
         DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.Tests.dll --summary")
-        Shell.Exec ("Expecto.Tests/bin/"+configuration+"/net461/Expecto.Tests.exe","--summary")
-        |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
 )
 
 Target "DotNetCorePack" (fun _ ->
@@ -176,7 +176,7 @@ Target "All" ignore
 ==> "DotNetCorePack"
 ==> "DotNetCore"
 
-"Framework" ==> "All"
+//"Framework" ==> "All"
 "DotNetCore" ==> "All"
 
 "All"
