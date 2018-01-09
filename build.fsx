@@ -13,9 +13,7 @@ let owners = "Anthony Lloyd (formerly Henrik Feldt and cloned from Fuchu by @mau
 let projectUrl = "https://github.com/haf/expecto"
 let iconUrl = "https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png"
 let licenceUrl = "https://github.com/haf/expecto/blob/master/LICENSE"
-let copyright = "Copyright \169 2017"
-
-
+let copyright = "Copyright \169 2018"
 
 Target "Clean" (fun _ -> !!"./**/bin/" ++ "./**/obj/" |> CleanDirs)
 
@@ -50,24 +48,6 @@ Target "ProjectVersion" (fun _ ->
     |> List.iter (fun file ->
         XMLHelper.XmlPoke file "Project/PropertyGroup/Version/text()" release.NugetVersion)
 )
-
-Target "FrameworkBuild" (fun _ ->
-    { BaseDirectory = __SOURCE_DIRECTORY__
-      Includes = ["Expecto.sln"]
-      Excludes = [] } 
-    |> MSBuild "" "Build" ["Configuration", configuration]
-    |> Log "Compile-Output: "
-)
-
-Target "FrameworkTest" (fun _ ->
-    Shell.Exec ("Expecto.Tests/bin/"+configuration+"/Expecto.Tests.exe","--summary")
-    |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
-)
-
-Target "FrameworkTestCSharp" (fun _ ->
-    Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/Expecto.Tests.CSharp.exe","--summary")
-    |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
-)
 let build project framework =
     DotNetCli.Build (fun p ->
     { p with
@@ -76,27 +56,36 @@ let build project framework =
         Project = project
     })
 
-Target "DotNetCoreBuildTest" (fun _ ->
+Target "BuildTest" (fun _ ->
     build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "netcoreapp1.1"
     build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "netcoreapp2.0"
     build "Expecto.Tests/Expecto.Tests.netcore.fsproj" "net461"
+    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.netcore.csproj" "netcoreapp1.1"
+    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.netcore.csproj" "netcoreapp2.0"
+    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.netcore.csproj" "net461"
 )
 
-Target "DotNetCoreBuildBenchmarkDotNet" (fun _ ->
+Target "BuildBenchmarkDotNet" (fun _ ->
     build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netcoreapp2.0"
     build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "net461"
     build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.netcore.fsproj" "netcoreapp1.1"
 )
 
-Target "DotNetCoreRunTest" (fun _ ->
+Target "RunTest" (fun _ ->
     DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.dll --summary")
     Shell.Exec ("Expecto.Tests/bin/"+configuration+"/net461/Expecto.Tests.exe","--summary")
     |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
     if EnvironmentHelper.isWindows then
         DotNetCli.RunCommand id ("Expecto.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.Tests.dll --summary")
+
+    DotNetCli.RunCommand id ("Expecto.Tests.CSharp/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.CSharp.dll --summary")
+    Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/net461/Expecto.Tests.CSharp.exe","--summary")
+    |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
+    if EnvironmentHelper.isWindows then
+        DotNetCli.RunCommand id ("Expecto.Tests.CSharp/bin/"+configuration+"/netcoreapp1.1/Expecto.Tests.CSharp.dll --summary")
 )
 
-Target "DotNetCorePack" (fun _ ->
+Target "Pack" (fun _ ->
     let packParameters name =
         [
             "--no-build"
@@ -152,34 +141,17 @@ Target "Release" (fun _ ->
     |> Async.RunSynchronously
 )
 
-Target "Initialize" ignore
-Target "Framework" ignore
-Target "DotNetCore" ignore
 Target "All" ignore
 
 "Clean"
 ==> "AssemblyInfo"
 ==> "PaketFiles"
 ==> "ProjectVersion"
-==> "Initialize"
-
-"Initialize"
-==> "FrameworkBuild"
-==> "FrameworkTest"
-==> "FrameworkTestCSharp"
-==> "Framework"
-
-"Initialize"
-==> "DotNetCoreBuildBenchmarkDotNet"
-==> "DotNetCoreBuildTest"
-==> "DotNetCoreRunTest"
-==> "DotNetCorePack"
-==> "DotNetCore"
-
-//"Framework" ==> "All"
-"DotNetCore" ==> "All"
-
-"All"
+==> "BuildBenchmarkDotNet"
+==> "BuildTest"
+==> "RunTest"
+==> "Pack"
+==> "All"
 ==> "Push"
 ==> "Release"
 
