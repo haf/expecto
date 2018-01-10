@@ -64,6 +64,9 @@ Target "BuildTest" (fun _ ->
     build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj" "netcoreapp1.1"
     build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj" "netcoreapp2.0"
     build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj" "net461"
+    build "Expecto.Focused.Tests/Expecto.Focused.Tests.csproj" "netcoreapp1.1"
+    build "Expecto.Focused.Tests/Expecto.Focused.Tests.csproj" "netcoreapp2.0"
+    build "Expecto.Focused.Tests/Expecto.Focused.Tests.csproj" "net461"
 )
 
 Target "BuildBenchmarkDotNet" (fun _ ->
@@ -84,6 +87,13 @@ Target "RunTest" (fun _ ->
     |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
     if EnvironmentHelper.isWindows then
         DotNetCli.RunCommand id ("Expecto.Tests.CSharp/bin/"+configuration+"/netcoreapp1.1/Expecto.Tests.CSharp.dll --summary")
+
+    DotNetCli.RunCommand id ("Expecto.Focused.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Focused.Tests.dll --summary")
+    Shell.Exec ("Expecto.Focused.Tests/bin/"+configuration+"/net461/Expecto.Focused.Tests.exe","--summary")
+    |> fun r -> if r<>0 then failwith "Expecto.Focused.Tests.exe failed"
+    if EnvironmentHelper.isWindows then
+        DotNetCli.RunCommand id ("Expecto.Focused.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.Focused.Tests.dll --summary")
+
 )
 
 Target "Pack" (fun _ ->
