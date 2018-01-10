@@ -114,13 +114,12 @@ Target "Pack" (fun _ ->
             sprintf "/p:PackageIconUrl=\"%s\"" iconUrl
             sprintf "/p:PackageLicenseUrl=\"%s\"" licenceUrl
         ] |> String.concat " "
-    if EnvironmentHelper.isWindows then
-        DotNetCli.RunCommand id
-            ("pack Expecto/Expecto.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto"))
-        DotNetCli.RunCommand id
-            ("pack Expecto.FsCheck/Expecto.FsCheck.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.FsCheck"))
-        DotNetCli.RunCommand id
-            ("pack Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.BenchmarkDotNet"))
+    DotNetCli.RunCommand id
+        ("pack Expecto/Expecto.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto"))
+    DotNetCli.RunCommand id
+        ("pack Expecto.FsCheck/Expecto.FsCheck.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.FsCheck"))
+    DotNetCli.RunCommand id
+        ("pack Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.BenchmarkDotNet"))
 )
 
 Target "Push" (fun _ -> Paket.Push (fun p -> { p with WorkingDir = "bin" }))
