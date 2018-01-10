@@ -64,9 +64,9 @@ Target "BuildTest" (fun _ ->
     build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj" "netcoreapp1.1"
     build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj" "netcoreapp2.0"
     build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj" "net461"
-    build "Expecto.Focused.Tests/Expecto.Focused.Tests.csproj" "netcoreapp1.1"
-    build "Expecto.Focused.Tests/Expecto.Focused.Tests.csproj" "netcoreapp2.0"
-    build "Expecto.Focused.Tests/Expecto.Focused.Tests.csproj" "net461"
+    build "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj" "netcoreapp1.1"
+    build "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj" "netcoreapp2.0"
+    build "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj" "net461"
 )
 
 Target "BuildBenchmarkDotNet" (fun _ ->
