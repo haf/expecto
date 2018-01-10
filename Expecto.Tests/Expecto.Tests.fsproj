@@ -20,4 +20,5 @@
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
     <PackageReference Include="FsCheck" Version="2.10.4" />
   </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
