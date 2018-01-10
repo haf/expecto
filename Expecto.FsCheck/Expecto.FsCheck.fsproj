@@ -15,5 +15,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <!-- <Import Project="..\.paket\Paket.Restore.targets" /> -->
 </Project>
