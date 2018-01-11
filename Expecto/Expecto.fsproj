@@ -17,12 +17,9 @@
     <Compile Include="Performance.fs" />
     <Compile Include="Expect.fs" />
     <Compile Include="Flip.Expect.fs" />
-    <PackageReference Include="FSharp.Core" Version="4.1.18" />
-    <PackageReference Include="Argu" Version="3.7.0" />
-    <PackageReference Include="Mono.Cecil" Version="0.10.0-beta7" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'!='net461'">
     <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />
   </ItemGroup>
-  <!-- <Import Project="..\.paket\Paket.Restore.targets" /> -->
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
