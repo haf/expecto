@@ -93,7 +93,6 @@ Target "RunTest" (fun _ ->
     |> fun r -> if r<>0 then failwith "Expecto.Focused.Tests.exe failed"
     if EnvironmentHelper.isWindows then
         DotNetCli.RunCommand id ("Expecto.Focused.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.Focused.Tests.dll --summary")
-
 )
 
 Target "Pack" (fun _ ->
