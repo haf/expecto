@@ -21,8 +21,8 @@ open AssemblyInfoFile
 Target "AssemblyInfo" (fun _ ->
 
     [ "Expecto"
-      "Expecto.BenchmarkDotNet"
       "Expecto.FsCheck"
+      "Expecto.BenchmarkDotNet"
     ]
     |> List.iter (fun product ->
         [ Attribute.Title product
