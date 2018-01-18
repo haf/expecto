@@ -9,8 +9,6 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Expecto.BenchmarkDotNet.fs" />
     <None Include="paket.references" />
-    <PackageReference Include="FSharp.Core" Version="4.1.18" />
-    <PackageReference Include="BenchmarkDotNet" Version="0.10.10" />
   </ItemGroup>
-  <!-- <Import Project="..\.paket\Paket.Restore.targets" /> -->
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

@@ -15,10 +15,8 @@
     <Compile Include="Main.fs" />
     <None Include="Tests.fsx" />
     <None Include="paket.references" />
-    <PackageReference Include="FSharp.Core" Version="4.1.18" />
     <ProjectReference Include="..\Expecto.FsCheck\Expecto.FsCheck.fsproj" />
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
-    <PackageReference Include="FsCheck" Version="2.10.4" />
   </ItemGroup>
-  <!-- <Import Project="..\.paket\Paket.Restore.targets" /> -->
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
