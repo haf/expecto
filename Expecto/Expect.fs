@@ -156,7 +156,7 @@ let floatClose accuracy actual expected message =
     Tests.failtestf "%s. Expected expected to not be infinity, but it was." message
   elif Accuracy.areClose accuracy actual expected |> not then
     Tests.failtestf
-      "%s. Expected difference to be less than %g for accuracy {absolute=%g; relative=%g}, but was %g. actual=%g expected=%g"
+      "%s. Expected difference to be less than %f for accuracy {absolute=%f; relative=%f}, but was %f. actual=%f expected=%f"
       message (Accuracy.areCloseRhs accuracy actual expected)
       accuracy.absolute accuracy.relative
       (Accuracy.areCloseLhs actual expected)
@@ -224,7 +224,7 @@ let inline equal (actual : 'a) (expected : 'a) message =
     let ei = e.ToCharArray().GetEnumerator()
     let mutable i = 0
     let baseMsg errorIndex =
-      let diffString = new String(' ', errorIndex + 1) + "↑"
+      let diffString = String(' ', errorIndex + 1) + "↑"
       sprintf "%s.
           Expected string to equal:
           %A
@@ -249,6 +249,9 @@ let inline equal (actual : 'a) (expected : 'a) message =
       Tests.failtestf "%s
           String `actual` was longer than expected, at pos %i found item %A."
                       (baseMsg i) i (ai.Current)
+  | (:? float as a), (:? float as e) ->
+    if a <> e then
+      Tests.failtestf "%s. Actual value was %f but had expected it to be %f." message a e
   | _, _ ->
     if actual <> expected then
       Tests.failtestf "%s. Actual value was %A but had expected it to be %A." message actual expected
