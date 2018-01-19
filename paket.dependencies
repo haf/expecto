@@ -12,5 +12,4 @@ nuget Mono.Cecil 0.10-beta7
 group build
   source https://api.nuget.org/v3/index.json
   nuget FAKE
-  nuget FSharp.Compiler.Tools
   github fsharp/FAKE modules/Octokit/Octokit.fsx
