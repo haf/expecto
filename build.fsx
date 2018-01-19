@@ -14,12 +14,10 @@ let projectUrl = "https://github.com/haf/expecto"
 let iconUrl = "https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png"
 let licenceUrl = "https://github.com/haf/expecto/blob/master/LICENSE"
 let copyright = "Copyright \169 2018"
-
-let dotnetcliVersion = DotNetCli.GetDotNetSDKVersionFromGlobalJson()
 let mutable dotnetExePath = "dotnet"
 
 Target "InstallDotNetCore" (fun _ ->
-    dotnetExePath <- DotNetCli.InstallDotNetSDK dotnetcliVersion
+    dotnetExePath <- DotNetCli.InstallDotNetSDK "2.0.3"
 )
 
 Target "Clean" (fun _ -> !!"./**/bin/" ++ "./**/obj/" |> CleanDirs)
@@ -57,26 +55,24 @@ Target "ProjectVersion" (fun _ ->
         XMLHelper.XmlPoke file "Project/PropertyGroup/Version/text()" release.NugetVersion)
 )
 
-let build project framework =
+let build project =
     DotNetCli.Build (fun p ->
     { p with
         ToolPath = dotnetExePath
         Configuration = configuration
-        Framework = framework
         Project = project
     })
 
-let run f = DotNetCli.RunCommand (fun p -> { p with ToolPath = dotnetExePath } |> f)
+Target "BuildBenchmarkDotNet" (fun _ ->
+    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj"
+)
 
 Target "BuildTest" (fun _ ->
-    build "Expecto.Tests/Expecto.Tests.fsproj" ""
-    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj" ""
-    build "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj" ""
+    build "Expecto.Tests/Expecto.Tests.fsproj"
+    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj"
+    build "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj"
 )
-
-Target "BuildBenchmarkDotNet" (fun _ ->
-    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj" ""
-)
+let run f = DotNetCli.RunCommand (fun p -> { p with ToolPath = dotnetExePath } |> f)
 
 Target "RunTest" (fun _ ->
     run id ("Expecto.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.dll --summary")
