@@ -5,11 +5,11 @@
     <Typography>
       <Rules>
         <MaxCharactersOnLine>
-          <Enabled>False</Enabled>
+          <Enabled>True</Enabled>
           <Length>80</Length>
         </MaxCharactersOnLine>
         <TrailingNewLineInFile>
-          <Enabled>True</Enabled>
+          <Enabled>False</Enabled>
         </TrailingNewLineInFile>
         <TrailingWhitespaceOnLine>
           <Enabled>True</Enabled>
