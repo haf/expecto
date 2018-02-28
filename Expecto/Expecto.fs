@@ -412,7 +412,8 @@ module Impl =
   open Helpers
   open Mono.Cecil
 
-  let logger = Log.create "Expecto"
+  let mutable logger = Log.create "Expecto"
+  let setLogName name = logger <- Log.create name
 
   type TestResult =
     | Passed
@@ -830,6 +831,8 @@ module Impl =
       printer : TestPrinters
       /// Verbosity level (default: Info).
       verbosity : LogLevel
+      /// Process name to log under (default: "Expecto")
+      logName : string option
       /// Optional function used for finding source code location of test
       /// Defaults to empty source code.
       locate : TestCode -> SourceLocation
@@ -859,6 +862,7 @@ module Impl =
           else
             TestPrinters.defaultPrinter
         verbosity = Info
+        logName = None
         locate = fun _ -> SourceLocation.empty
         fsCheckMaxTests = 100
         fsCheckStartSize = 1
@@ -1454,6 +1458,7 @@ module Tests =
     | Stress_Memory_Limit of float
     | Fail_On_Focused_Tests
     | Debug
+    | Log_Name of name:string
     | Filter of hiera:string
     | Filter_Test_List of substring:string
     | Filter_Test_Case of substring:string
@@ -1476,6 +1481,7 @@ module Tests =
         | Stress_Memory_Limit _ -> "stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB)."
         | Fail_On_Focused_Tests -> "this will make the test runner fail if focused tests exist."
         | Debug -> "extra verbose printing. Useful to combine with --sequenced."
+        | Log_Name _ -> "process name to log under (default: \"Expecto\")"
         | Filter _ -> "filters the list of tests by a hierarchy that's slash (/) separated."
         | Filter_Test_List _ -> "filters the list of test lists by a substring."
         | Filter_Test_Case _ -> "filters the list of test cases by a substring."
@@ -1539,6 +1545,7 @@ module Tests =
         | Stress_Memory_Limit n -> fun o -> { o with stressMemoryLimit = n }
         | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
         | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
+        | Log_Name name -> fun o -> { o with logName = Some name }
         | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
         | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
         | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}
@@ -1611,6 +1618,9 @@ module Tests =
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity, consoleSemaphore = Global.semaphore()) :> Logger }
+    match config.logName with
+    | None -> ()
+    | Some name -> setLogName name
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
       1
     else
