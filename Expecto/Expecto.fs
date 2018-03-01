@@ -1618,9 +1618,7 @@ module Tests =
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity, consoleSemaphore = Global.semaphore()) :> Logger }
-    match config.logName with
-    | None -> ()
-    | Some name -> setLogName name
+    config.logName |> Option.iter setLogName
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
       1
     else
