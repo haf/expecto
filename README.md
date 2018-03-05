@@ -1125,7 +1125,9 @@ open Types
 [<Tests>]
 let tests =
   testList "performance tests" [
-    benchmark<Serialisers> "three serialisers" benchmarkConfig ignore
+    test "three serialisers" {
+      benchmark<Serialisers> benchmarkConfig ignore
+    }
   ]
 ```
 
