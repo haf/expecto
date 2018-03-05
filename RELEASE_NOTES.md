@@ -1,3 +1,10 @@
+#### 6.0.0 - 2018-03-05
+* Allow specifying log name at command line. #224 thanks @rmunn
+* Update paket. #222 thanks @MNie
+* Increase float display precision. thanks @AnthonyLloyd
+* Update build.sh. thanks @haf
+* Fix restore errors. #218 thanks @forki
+
 #### 5.1.2 - 2018-01-04
 * Update Mono.Cecil to 0.10.0-beta7. #215 thanks @MNie
 * Expecto.BenchmarkDotNet .NETCoreApp versions. #214 thanks @AnthonyLloyd
