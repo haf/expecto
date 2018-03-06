@@ -34,9 +34,15 @@ module ExpectoFsCheck =
 
             let numTests i = if i = 1 then "1 test" else sprintf "%i tests" i
 
+            let stampsToString s =
+              let entry (p,xs) = sprintf "%A%s %s" p "%" (String.concat ", " xs)
+              match Seq.map entry s |> Seq.toList with
+              | []  -> ""
+              | [x] -> sprintf " (%s)\n" x
+              | xs  -> sprintf "%s\n" (String.concat "\n" xs)
+
             match testResult with
-            | TestResult.True (_testData,_b) ->
-              ()
+            | TestResult.True (_testData,_b) -> ()
 
             | TestResult.False (_,_,_, Outcome.Exception (:? IgnoreException as e),_) ->
               raise e
@@ -54,20 +60,28 @@ module ExpectoFsCheck =
                   |> List.map (sprintf "%A")
                   |> String.concat " "
                   |> sprintf "\nShrunk %i times to:\n\t%s" data.NumberOfShrinks
-                else
-                  ""
+                else ""
+
+              let labels =
+                match data.Labels.Count with
+                | 0 -> String.Empty
+                | 1 -> sprintf "Label of failing property: %s\n"
+                          (Set.toSeq data.Labels |> Seq.head)
+                | _ -> sprintf "Labels of failing property (one or more is failing): %s\n"
+                          (String.concat " " data.Labels)
 
               let focus =
                 sprintf "Focus on failure:\n\t%s (%i, %i) \"%s\"" methodName std gen name
 
-              sprintf "Failed after %s. %s%s\nResult:\n\t%A\n%s"
-                      (numTests data.NumberOfTests) parameters shrunk outcome focus
+              sprintf "Failed after %s. %s%s\nResult:\n\t%A\n%s%s%s"
+                      (numTests data.NumberOfTests) parameters shrunk
+                      outcome labels (stampsToString data.Stamps) focus
               |> FailedException
               |> raise
 
             | TestResult.Exhausted data ->
-              (numTests data.NumberOfTests)
-              |> sprintf "Exhausted after %s."
+              sprintf "Exhausted after %s%s"
+                (numTests data.NumberOfTests) (stampsToString data.Stamps)
               |> FailedException
               |> raise
       }
