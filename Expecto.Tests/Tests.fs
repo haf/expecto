@@ -1033,8 +1033,6 @@ let close =
 
   ]
 
-open System.Threading
-
 [<Tests>]
 let stress =
   testList "stress testing" [

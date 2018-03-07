@@ -13,7 +13,8 @@ open BenchmarkDotNet.Loggers
 open BenchmarkDotNet.Order
 open BenchmarkDotNet.Validators
 
-[<AutoOpen; CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
+[<AutoOpen>]
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module BenchmarkDotNet =
 
   type BenchmarkAttribute = BenchmarkDotNet.Attributes.BenchmarkAttribute
@@ -55,11 +56,11 @@ module BenchmarkDotNet =
   let private synchronisedLogger =
     let cl = ConsoleLogger.Default
     { new ILogger with
-        member x.Write(kind, text) =
+        member __.Write(kind, text) =
           cl.Write(kind, text)
-        member x.WriteLine(kind, text) =
+        member __.WriteLine(kind, text) =
           cl.WriteLine (kind, text)
-        member x.WriteLine () =
+        member __.WriteLine () =
           cl.WriteLine()
     }
 
@@ -76,7 +77,7 @@ module BenchmarkDotNet =
       validators = def.GetValidators() |> List.ofSeq
       orderProvider = def.GetOrderProvider()
       unionRule = def.UnionRule
-      keepFiles = true 
+      keepFiles = true
       filters = def.GetFilters() |> List.ofSeq
     }
 

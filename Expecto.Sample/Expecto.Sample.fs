@@ -27,7 +27,7 @@ open Expecto
 
 let printingFsCheck =
   { FsCheckConfig.defaultConfig with
-      receivedArgs = fun config name no args ->
+      receivedArgs = fun _ name no args ->
         logger.debugWithBP (
           eventX "For {test} {no}, generated {args}"
           >> setField "test" name
@@ -71,7 +71,7 @@ let tests =
     testCase "You know exns" <| fun _ ->
       failwith "unhandled exception from test code"
 
-    ptestCase "I'm pending" <| fun _ -> ()
+    ptestCase "I'm pending" ignore
 
     // uncomment me:
     //ftestCase "I'm focused, I will cause all other tests to be skipped" <| fun () -> ()

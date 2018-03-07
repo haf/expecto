@@ -1205,7 +1205,7 @@ module Impl =
   let isFsharpFuncType t =
     let baseType =
       let rec findBase (t:Type) =
-        if t.GetTypeInfo().BaseType = null || t.GetTypeInfo().BaseType = typeof<obj> then
+        if t.GetTypeInfo().BaseType |> isNull || t.GetTypeInfo().BaseType = typeof<obj> then
           t
         else
           findBase (t.GetTypeInfo().BaseType)
@@ -1255,9 +1255,8 @@ module Impl =
       m.Body.Instructions
       |> Seq.tryPick (fun i ->
         let sp = m.DebugInformation.GetSequencePoint i
-        if sp <> null && sp.StartLine <> lineNumberIndicatingHiddenLine then
+        if isNull sp |> not && sp.StartLine <> lineNumberIndicatingHiddenLine then
           Some sp else None)
-      |> Option.map (fun maybeSequencePoint -> maybeSequencePoint)
 
     match getMethods className with
     | None -> SourceLocation.empty
@@ -1277,7 +1276,7 @@ module Impl =
     let typeName, methodName = getMethodName asm code
     try
       getSourceLocation asm typeName methodName
-    with :? IO.FileNotFoundException as ioe ->
+    with :? IO.FileNotFoundException ->
       SourceLocation.empty
 
   /// Scan filtered tests marked with TestsAttribute from an assembly
@@ -1524,7 +1523,7 @@ module Tests =
         let all = s.Split ('/')
         match all with
         | [||] -> [||]
-        | [|x|] -> [||]
+        | [|_|] -> [||]
         | xs -> xs.[0 .. all.Length - 2]
 
       let getTastCase (s : string) =

@@ -14,7 +14,7 @@ module ExpectoFsCheck =
     let runner (config: FsCheckConfig) =
       { new IRunner with
           /// Called before a group of properties on a type are checked.
-          member __.OnStartFixture typ =
+          member __.OnStartFixture _ =
             ()
 
           /// Called whenever arguments are generated and after the test is run.
