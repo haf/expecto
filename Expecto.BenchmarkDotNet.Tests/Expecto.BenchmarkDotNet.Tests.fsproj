@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net461;netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="BenchmarkDotNetTests.fs" />
+    <ProjectReference Include="..\Expecto\Expecto.fsproj" />
+    <ProjectReference Include="..\Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj" />
+  </ItemGroup>
+</Project>

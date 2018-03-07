@@ -1082,51 +1082,45 @@ The integration with
 
 ```fsharp
 open Expecto
-open BenchmarkDotNet
 
-module Types =
-  type Y = { a : string; b : int }
-
-type Serialiser =
+type ISerialiser =
   abstract member Serialise<'a> : 'a -> unit
 
 type MySlowSerialiser() =
-  interface Serialiser with
-    member x.Serialise _ =
+  interface ISerialiser with
+    member __.Serialise _ =
       System.Threading.Thread.Sleep(30)
 
 type FastSerialiser() =
-  interface Serialiser with
-    member x.Serialise _ =
+  interface ISerialiser with
+    member __.Serialise _ =
       System.Threading.Thread.Sleep(10)
 
 type FastSerialiserAlt() =
-  interface Serialiser with
-    member x.Serialise _ =
+  interface ISerialiser with
+    member __.Serialise _ =
      System.Threading.Thread.Sleep(20)
 
 type Serialisers() =
   let fast, fastAlt, slow =
-    FastSerialiser() :> Serialiser,
-    FastSerialiserAlt() :> Serialiser,
-    MySlowSerialiser() :> Serialiser
+    FastSerialiser() :> ISerialiser,
+    FastSerialiserAlt() :> ISerialiser,
+    MySlowSerialiser() :> ISerialiser
 
   [<Benchmark>]
-  member x.FastSerialiserAlt() = fastAlt.Serialise "Hello world"
+  member __.FastSerialiserAlt() = fastAlt.Serialise "Hello world"
 
   [<Benchmark>]
-  member x.SlowSerialiser() = slow.Serialise "Hello world"
+  member __.SlowSerialiser() = slow.Serialise "Hello world"
 
   [<Benchmark(Baseline = true)>]
-  member x.FastSerialiser() = fast.Serialise "Hello world"
-
-open Types
+  member __.FastSerialiser() = fast.Serialise "Hello world"
 
 [<Tests>]
 let tests =
   testList "performance tests" [
     test "three serialisers" {
-      benchmark<Serialisers> benchmarkConfig ignore
+      benchmark<Serialisers> benchmarkConfig (fun _ -> null) |> ignore
     }
   ]
 ```
