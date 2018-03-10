@@ -28,6 +28,7 @@ Target "AssemblyInfo" (fun _ ->
     [ "Expecto"
       "Expecto.FsCheck"
       "Expecto.BenchmarkDotNet"
+      "Expecto.Hopac"
     ]
     |> List.iter (fun product ->
         [ Attribute.Title product
@@ -50,6 +51,7 @@ Target "ProjectVersion" (fun _ ->
         "Expecto/Expecto.fsproj"
         "Expecto.FsCheck/Expecto.FsCheck.fsproj"
         "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj"
+        "Expecto.Hopac/Expecto.Hopac.fsproj"
     ]
     |> List.iter (fun file ->
         XMLHelper.XmlPoke file "Project/PropertyGroup/Version/text()" release.NugetVersion)

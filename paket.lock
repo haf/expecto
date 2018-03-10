@@ -52,6 +52,10 @@ NUGET
       System.Threading.Thread (>= 4.0) - restriction: && (< net20) (>= netstandard1.6) (< xamarinmac)
       System.Threading.ThreadPool (>= 4.0.10) - restriction: && (< net20) (>= netstandard1.6) (< xamarinmac)
       System.Threading.Timer (>= 4.0.1) - restriction: && (< net20) (>= netstandard1.6) (< xamarinmac)
+    Hopac (0.3.23)
+      FSharp.Core (>= 3.1.2.5) - restriction: < netstandard1.6
+      FSharp.Core (>= 4.0.1.7-alpha) - restriction: >= netstandard1.6
+      NETStandard.Library (>= 1.6) - restriction: >= netstandard1.6
     Libuv (1.10) - restriction: && (>= netcoreapp1.1) (< netcoreapp2.0)
       Microsoft.NETCore.Platforms (>= 1.0.1) - restriction: >= netstandard1.0
     Microsoft.CodeAnalysis.Analyzers (2.6) - restriction: || (>= net46) (&& (>= netcoreapp1.1) (< netcoreapp2.0))
