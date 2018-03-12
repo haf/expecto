@@ -6,7 +6,6 @@ github logary/logary src/Logary.Facade/Facade.fs
 nuget FSharp.Core 4.1.18
 nuget Argu 3.7
 nuget FsCheck 2.10.4
-nuget BenchmarkDotNet 0.10.10
 nuget Mono.Cecil 0.10-beta7
 
 group build

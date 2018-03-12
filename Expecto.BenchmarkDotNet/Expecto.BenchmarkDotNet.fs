@@ -35,23 +35,25 @@ module BenchmarkDotNet =
       unionRule : ConfigUnionRule
       keepFiles : bool
       filters : IFilter list
+      artifactsPath : string
+      logicalGroupRules : BenchmarkLogicalGroupRule list
     }
-
     interface IConfig with
-      member x.GetColumnProviders() = x.columnProviders :> seq<IColumnProvider>
-      member x.GetHardwareCounters() = x.hardwareCounters :> seq<_>
-      member x.GetSummaryStyle()     = x.summaryStyle
-      member x.GetExporters()       = x.exporters  :> seq<IExporter>
-      member x.GetLoggers()         = x.loggers    :> seq<ILogger>
-      member x.GetDiagnosers()      = x.diagnosers :> seq<IDiagnoser>
-      member x.GetAnalysers()       = x.analysers  :> seq<IAnalyser>
-      member x.GetJobs()            = x.jobs       :> seq<Job>
-      member x.GetValidators()      = x.validators :> seq<IValidator>
-      member x.GetOrderProvider()   = x.orderProvider : IOrderProvider
-      member x.UnionRule            = x.unionRule : ConfigUnionRule
-      /// Determines if all auto-generated files should be kept or removed after running benchmarks
+      member x.GetColumnProviders() = Seq.ofList x.columnProviders
+      member x.GetHardwareCounters() = Seq.ofList x.hardwareCounters
+      member x.GetSummaryStyle() = x.summaryStyle
+      member x.GetExporters() = Seq.ofList x.exporters
+      member x.GetLoggers() = Seq.ofList x.loggers
+      member x.GetDiagnosers() = Seq.ofList x.diagnosers
+      member x.GetAnalysers() = Seq.ofList x.analysers
+      member x.GetJobs() = Seq.ofList x.jobs
+      member x.GetValidators() = Seq.ofList x.validators
+      member x.GetOrderProvider() = x.orderProvider
+      member x.UnionRule = x.unionRule
       member x.KeepBenchmarkFiles = x.keepFiles
-      member x.GetFilters()         = x.filters :> seq<IFilter>
+      member x.GetFilters() = Seq.ofList x.filters
+      member x.ArtifactsPath = x.artifactsPath
+      member x.GetLogicalGroupRules() = Seq.ofList x.logicalGroupRules
 
   let private synchronisedLogger =
     let cl = ConsoleLogger.Default
@@ -79,6 +81,8 @@ module BenchmarkDotNet =
       unionRule = def.UnionRule
       keepFiles = true
       filters = def.GetFilters() |> List.ofSeq
+      artifactsPath = def.ArtifactsPath
+      logicalGroupRules = def.GetLogicalGroupRules() |> List.ofSeq
     }
 
   /// Run a performance test: pass the annotated type as a type param
