@@ -25,9 +25,9 @@ Target "Clean" (fun _ -> !!"./**/bin/" ++ "./**/obj/" |> CleanDirs)
 open AssemblyInfoFile
 Target "AssemblyInfo" (fun _ ->
     let createAssemblyInfo project =
-        CreateFSharpAssemblyInfo (product+"/AssemblyInfo.fs") [
-            Attribute.Title product
-            Attribute.Product product
+        CreateFSharpAssemblyInfo (project+"/AssemblyInfo.fs") [
+            Attribute.Title project
+            Attribute.Product project
             Attribute.Copyright copyright
             Attribute.Description description
             Attribute.Version release.AssemblyVersion
