@@ -80,20 +80,14 @@ Target "RunTest" (fun _ ->
     run id ("Expecto.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.dll --summary")
     Shell.Exec ("Expecto.Tests/bin/"+configuration+"/net461/Expecto.Tests.exe","--summary")
     |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
-    if EnvironmentHelper.isWindows then
-        run id ("Expecto.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.Tests.dll --summary")
-
+    
     run id ("Expecto.Tests.CSharp/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.CSharp.dll --summary")
     Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/net461/Expecto.Tests.CSharp.exe","--summary")
     |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
-    if EnvironmentHelper.isWindows then
-        run id ("Expecto.Tests.CSharp/bin/"+configuration+"/netcoreapp1.1/Expecto.Tests.CSharp.dll --summary")
-
+    
     run id ("Expecto.Focused.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Focused.Tests.dll --summary")
     Shell.Exec ("Expecto.Focused.Tests/bin/"+configuration+"/net461/Expecto.Focused.Tests.exe","--summary")
     |> fun r -> if r<>0 then failwith "Expecto.Focused.Tests.exe failed"
-    if EnvironmentHelper.isWindows then
-        run id ("Expecto.Focused.Tests/bin/"+configuration+"/netcoreapp1.1/Expecto.Focused.Tests.dll --summary")
 )
 
 Target "Pack" (fun _ ->

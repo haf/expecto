@@ -3,7 +3,7 @@
     <AssemblyName>Expecto.BenchmarkDotNet</AssemblyName>
     <PackageId>Expecto.BenchmarkDotNet</PackageId>
     <Version>6.0.0</Version>
-    <TargetFrameworks>net461;netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />

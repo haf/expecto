@@ -3,7 +3,7 @@ storage:none
 
 github logary/logary src/Logary.Facade/Facade.fs
 
-nuget Argu 3.7
+nuget Argu 5.1
 nuget FsCheck 2.10.4
 nuget Hopac 0.3.23
 nuget Mono.Cecil 0.10-beta7
