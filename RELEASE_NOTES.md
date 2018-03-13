@@ -1,3 +1,10 @@
+#### 7.0.0 - 2018-03-13
+* Added Expecto.Hopac. #231 thanks @TheAngryByrd
+* Fix Expecto.BenchmarkDotNet TypeLoadException get_ArtifactsPath. #225 thanks @AnthonyLloyd
+* Fix Argu 5.1.0 update causes MissingMethodException. #227 thanks @AnthonyLloyd
+* Added FSCheck distribution and labels output for failing tests. #221 thanks @AnthonyLloyd
+* Major version release due to removal of netstandard1.6 support.
+
 #### 6.0.0 - 2018-03-05
 * Allow specifying log name at command line. #224 thanks @rmunn
 * Update paket. #222 thanks @MNie
