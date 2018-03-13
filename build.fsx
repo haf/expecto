@@ -24,21 +24,19 @@ Target "Clean" (fun _ -> !!"./**/bin/" ++ "./**/obj/" |> CleanDirs)
 
 open AssemblyInfoFile
 Target "AssemblyInfo" (fun _ ->
-
-    [ "Expecto"
-      "Expecto.FsCheck"
-      "Expecto.BenchmarkDotNet"
-      "Expecto.Hopac"
-    ]
-    |> List.iter (fun product ->
-        [ Attribute.Title product
-          Attribute.Product product
-          Attribute.Copyright copyright
-          Attribute.Description description
-          Attribute.Version release.AssemblyVersion
-          Attribute.FileVersion release.AssemblyVersion
-        ] |> CreateFSharpAssemblyInfo (product+"/AssemblyInfo.fs")
-    )
+    let createAssemblyInfo project =
+        CreateFSharpAssemblyInfo (product+"/AssemblyInfo.fs") [
+            Attribute.Title product
+            Attribute.Product product
+            Attribute.Copyright copyright
+            Attribute.Description description
+            Attribute.Version release.AssemblyVersion
+            Attribute.FileVersion release.AssemblyVersion
+        ]
+    createAssemblyInfo "Expecto"
+    createAssemblyInfo "Expecto.FsCheck"
+    createAssemblyInfo "Expecto.BenchmarkDotNet"
+    createAssemblyInfo "Expecto.Hopac"
 )
 
 Target "PaketFiles" (fun _ ->
@@ -47,16 +45,14 @@ Target "PaketFiles" (fun _ ->
 )
 
 Target "ProjectVersion" (fun _ ->
-    [
-        "Expecto/Expecto.fsproj"
-        "Expecto.FsCheck/Expecto.FsCheck.fsproj"
-        "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj"
-        "Expecto.Hopac/Expecto.Hopac.fsproj"
-    ]
-    |> List.iter (fun file ->
-        XMLHelper.XmlPoke file "Project/PropertyGroup/Version/text()" release.NugetVersion)
+    let setProjectVersion project =
+        XMLHelper.XmlPoke (project+"/"+project+".fsproj")
+            "Project/PropertyGroup/Version/text()" release.NugetVersion
+    setProjectVersion "Expecto"
+    setProjectVersion "Expecto.FsCheck"
+    setProjectVersion "Expecto.BenchmarkDotNet"
+    setProjectVersion "Expecto.Hopac"
 )
-
 let build project =
     DotNetCli.Build (fun p ->
     { p with
@@ -74,46 +70,43 @@ Target "BuildTest" (fun _ ->
     build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj"
     build "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj"
 )
-let run f = DotNetCli.RunCommand (fun p -> { p with ToolPath = dotnetExePath } |> f)
 
 Target "RunTest" (fun _ ->
-    run id ("Expecto.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.dll --summary")
-    Shell.Exec ("Expecto.Tests/bin/"+configuration+"/net461/Expecto.Tests.exe","--summary")
-    |> fun r -> if r<>0 then failwith "Expecto.Tests.exe failed"
-    
-    run id ("Expecto.Tests.CSharp/bin/"+configuration+"/netcoreapp2.0/Expecto.Tests.CSharp.dll --summary")
-    Shell.Exec ("Expecto.Tests.CSharp/bin/"+configuration+"/net461/Expecto.Tests.CSharp.exe","--summary")
-    |> fun r -> if r<>0 then failwith "Expecto.Tests.CSharp.exe failed"
-    
-    run id ("Expecto.Focused.Tests/bin/"+configuration+"/netcoreapp2.0/Expecto.Focused.Tests.dll --summary")
-    Shell.Exec ("Expecto.Focused.Tests/bin/"+configuration+"/net461/Expecto.Focused.Tests.exe","--summary")
-    |> fun r -> if r<>0 then failwith "Expecto.Focused.Tests.exe failed"
+    let runTest project =
+        DotNetCli.RunCommand (fun p -> { p with ToolPath = dotnetExePath })
+            (project+"/bin/"+configuration+"/netcoreapp2.0/"+project+".dll --summary")
+        Shell.Exec (project+"/bin/"+configuration+"/net461/"+project+".exe","--summary")
+        |> fun r -> if r<>0 then project+".exe failed" |> failwith
+    runTest "Expecto.Tests"
+    runTest "Expecto.Tests.CSharp"
+    runTest "Expecto.Focused.Tests"
 )
 
 Target "Pack" (fun _ ->
-    let packParameters name =
-        [
-            "--no-build"
-            "--no-restore"
-            sprintf "/p:Title=\"%s\"" name
-            "/p:PackageVersion=" + release.NugetVersion
-            sprintf "/p:Authors=\"%s\"" authors
-            sprintf "/p:Owners=\"%s\"" owners
-            "/p:PackageRequireLicenseAcceptance=false"
-            sprintf "/p:Description=\"%s\"" description
-            sprintf "/p:PackageReleaseNotes=\"%O\"" ((toLines release.Notes).Replace(",",""))
-            sprintf "/p:Copyright=\"%s\"" copyright
-            sprintf "/p:PackageTags=\"%s\"" tags
-            sprintf "/p:PackageProjectUrl=\"%s\"" projectUrl
-            sprintf "/p:PackageIconUrl=\"%s\"" iconUrl
-            sprintf "/p:PackageLicenseUrl=\"%s\"" licenceUrl
-        ] |> String.concat " "
-    DotNetCli.RunCommand id
-        ("pack Expecto/Expecto.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto"))
-    DotNetCli.RunCommand id
-        ("pack Expecto.FsCheck/Expecto.FsCheck.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.FsCheck"))
-    DotNetCli.RunCommand id
-        ("pack Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj -c "+configuration + " -o ../bin " + (packParameters "Expecto.BenchmarkDotNet"))
+    let pack project =
+        let packParameters =
+            [
+                "--no-build"
+                "--no-restore"
+                sprintf "/p:Title=\"%s\"" project
+                "/p:PackageVersion=" + release.NugetVersion
+                sprintf "/p:Authors=\"%s\"" authors
+                sprintf "/p:Owners=\"%s\"" owners
+                "/p:PackageRequireLicenseAcceptance=false"
+                sprintf "/p:Description=\"%s\"" description
+                sprintf "/p:PackageReleaseNotes=\"%O\"" ((toLines release.Notes).Replace(",",""))
+                sprintf "/p:Copyright=\"%s\"" copyright
+                sprintf "/p:PackageTags=\"%s\"" tags
+                sprintf "/p:PackageProjectUrl=\"%s\"" projectUrl
+                sprintf "/p:PackageIconUrl=\"%s\"" iconUrl
+                sprintf "/p:PackageLicenseUrl=\"%s\"" licenceUrl
+            ] |> String.concat " "
+        "pack "+project+"/"+project+".fsproj -c "+configuration + " -o ../bin " + packParameters
+        |> DotNetCli.RunCommand id
+    pack "Expecto"
+    pack "Expecto.FsCheck"
+    pack "Expecto.BenchmarkDotNet"
+    pack "Expecto.Hopac"
 )
 
 Target "Push" (fun _ -> Paket.Push (fun p -> { p with WorkingDir = "bin" }))
