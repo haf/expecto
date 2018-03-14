@@ -242,6 +242,12 @@ module internal Async =
                                   maxParallelism folder state (s:_ seq) =
     let mutable state = state
     let enumerator = s.GetEnumerator()
+
+    let safePost (mb:MailboxProcessor<_>) msg =
+      try
+        if not ct.IsCancellationRequested then mb.Post msg
+      with | :? ObjectDisposedException -> ()
+      
     use mb =
       MailboxProcessor.Start((fun mb ->
         let rec loop running =
@@ -256,9 +262,9 @@ module internal Async =
                 Async.Start(async {
                   try
                     let! r = next
-                    Some r |> mb.Post
+                    Some r |> safePost mb
                   finally
-                    mb.Post None
+                    safePost mb None
                 }, ct.Token)
                 return! loop (running+1)
               elif running = 0 then
@@ -274,7 +280,7 @@ module internal Async =
 
     let rec start n =
       if n > 0 then
-        mb.Post None
+        safePost mb None
         start (n-1)
 
     start maxParallelism
