@@ -243,11 +243,11 @@ module internal Async =
     let mutable state = state
     let enumerator = s.GetEnumerator()
 
-    let safePost (mb:MailboxProcessor<_>) msg =
+    let inline safePost (mb:MailboxProcessor<_>) msg =
       try
         if not ct.IsCancellationRequested then mb.Post msg
       with | :? ObjectDisposedException -> ()
-      
+
     use mb =
       MailboxProcessor.Start((fun mb ->
         let rec loop running =
@@ -263,8 +263,8 @@ module internal Async =
                   try
                     let! r = next
                     Some r |> safePost mb
-                  finally
                     safePost mb None
+                  with | _ -> ()
                 }, ct.Token)
                 return! loop (running+1)
               elif running = 0 then
