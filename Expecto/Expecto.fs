@@ -260,12 +260,12 @@ module internal Async =
               if enumerator.MoveNext() then
                 let next = enumerator.Current
                 Async.Start(async {
-                  // try
+                  try
                     let! r = next
                     Some r |> safePost mb
                     safePost mb None
-                  // with | e ->
-                  //   eprintfn "foldParallelLimitWithCancel Error:\n%A" e
+                  with | e ->
+                    eprintfn "foldParallelLimitWithCancel Error:\n%A" e
                 }, ct.Token)
                 return! loop (running+1)
               elif running = 0 then
