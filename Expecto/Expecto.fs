@@ -8,6 +8,7 @@ open System.Runtime.CompilerServices
 open System.Reflection
 open System.Diagnostics
 open System.Threading
+open System.Threading.Tasks
 
 // TODO: move to internal
 type SourceLocation =
@@ -222,75 +223,39 @@ module internal Async =
   let bind fn a =
     async.Bind(a, fn)
 
-  let foldSequentiallyWithCancel (ct:CancellationTokenSource)
-                                 folder state (s:_ seq) =
-    let mutable state = state
-    Async.Start(async {
+  let foldSequentiallyWithCancel (ct:CancellationToken) folder state (s:_ seq) =
+    async {
+      let mutable state = state
       use e = s.GetEnumerator()
       while not ct.IsCancellationRequested && e.MoveNext() do
         let! item = e.Current
         state <- folder state item
-      ct.Cancel()
-    }, ct.Token)
-    Async.AwaitWaitHandle ct.Token.WaitHandle |> map (fun _ -> state)
+      return state
+    }
 
-  let foldSequentially folder state (s:_ seq) =
-    foldSequentiallyWithCancel (new CancellationTokenSource())
-                               folder state s
+  let foldSequentially folder state s =
+    foldSequentiallyWithCancel CancellationToken.None folder state s
 
-  let foldParallelLimitWithCancel (ct:CancellationTokenSource)
-                                  maxParallelism folder state (s:_ seq) =
-    let mutable state = state
-    let enumerator = s.GetEnumerator()
+  let foldParallelWithCancel maxParallelism (ct:CancellationToken) folder state (s:_ seq) =
+    async {
+      let mutable state = state
+      let tasks = ResizeArray<Task>()
+      use e = s.GetEnumerator()
+      while not ct.IsCancellationRequested && e.MoveNext() do
+        Async.StartAsTask(async {
+          let! item = e.Current
+          lock tasks (fun () -> state <- folder state item)
+        }, cancellationToken = ct) |> tasks.Add
+        if tasks.Count = maxParallelism then
+          let! finishedTask = Task.WhenAny tasks |> Async.AwaitTask
+          finishedTask |> tasks.Remove |> ignore
+      if not ct.IsCancellationRequested then
+        Task.WaitAll(tasks.ToArray(), cancellationToken = ct)
+      return state
+    }
 
-    let inline safePost (mb:MailboxProcessor<_>) msg =
-      try
-        if not ct.IsCancellationRequested then mb.Post msg
-      with | :? ObjectDisposedException -> ()
-
-    use mb =
-      MailboxProcessor.Start((fun mb ->
-        let rec loop running =
-          async {
-            // by receiving one by one, we ensure we can mutate `results`
-            let! msg = mb.Receive()
-            match msg with
-            // None acts as a kanban card – running another one
-            | None ->
-              if enumerator.MoveNext() then
-                let next = enumerator.Current
-                Async.Start(async {
-                  try
-                    let! r = next
-                    Some r |> safePost mb
-                    safePost mb None
-                  with | e ->
-                    eprintfn "foldParallelLimitWithCancel Error:\n%A" e
-                }, ct.Token)
-                return! loop (running+1)
-              elif running = 0 then
-                ct.Cancel()
-              else
-                return! loop running
-            // the other side of the coin; receiving results
-            | Some r ->
-              state <- folder state r
-              return! loop (running-1)
-          }
-        loop 0), ct.Token)
-
-    let rec start n =
-      if n > 0 then
-        safePost mb None
-        start (n-1)
-
-    start maxParallelism
-    Async.AwaitWaitHandle ct.Token.WaitHandle
-    |> map (fun _ -> state)
-
-  let foldParallelLimit maxParallelism folder state (s:_ seq) =
-    foldParallelLimitWithCancel (new CancellationTokenSource())
-                                maxParallelism folder state s
+  let foldParallel maxParallelism folder state s =
+    foldParallelWithCancel maxParallelism CancellationToken.None folder state s
 
 // TODO: move to internal
 [<ReferenceEquality>]
@@ -937,7 +902,7 @@ module Impl =
             TestSummary.single (TestResult.Error e) (float w.ElapsedMilliseconds)
     }
 
-  let private numberOfWorkers limit config =
+  let private numWorkers limit config =
     if config.parallelWorkers < 0 then
       -config.parallelWorkers * Environment.ProcessorCount
     elif config.parallelWorkers = 0 then
@@ -1002,12 +967,12 @@ module Impl =
             )
 
         let! parallelResults =
-          let noWorkers = numberOfWorkers false config
+          let noWorkers = numWorkers false config
           if List.length parallel <= noWorkers then
             Async.Parallel parallel
             |> Async.map (Seq.concat >> Seq.toList)
           else
-            Async.foldParallelLimit noWorkers (@) [] parallel
+            Async.foldParallel noWorkers (@) [] parallel
 
         if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
           do! config.printer.info "Starting sequenced tests..."
@@ -1110,7 +1075,7 @@ module Impl =
           else
             false )
         >> Seq.map evalTestAsync
-        >> foldRunner cancel folder (runningTests,results,maxMemory)
+        >> foldRunner cancel.Token folder (runningTests,results,maxMemory)
 
       let initial = ResizeArray(), ResizeMap(), GC.GetTotalMemory false
 
@@ -1141,10 +1106,9 @@ module Impl =
                       s=InParallel ||
                       not(Seq.exists (fun t -> t.sequenced=s) runningTests)
                     )
-                 |> asyncRun (fun cancel ->
-                      Async.foldParallelLimitWithCancel cancel
-                                (numberOfWorkers true config)
-                    ) (runningTests,results,maxMemory)
+                 |> asyncRun
+                      (Async.foldParallelWithCancel (numWorkers true config))
+                      (runningTests,results,maxMemory)
              )
 
       w.Stop()
