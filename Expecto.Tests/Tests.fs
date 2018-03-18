@@ -1065,7 +1065,7 @@ let close =
 
 [<Tests>]
 let stress =
-  ptestList "stress testing" [
+  testList "stress testing" [
 
     let singleTest name =
       testList name [
@@ -1122,7 +1122,6 @@ let stress =
         { defaultConfig with
             parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (singleTest "single test")) 0 "one"
@@ -1133,12 +1132,11 @@ let stress =
         { defaultConfig with
             parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (singleTest "single test") &&& 4) 4 "memory"
-     }
+    }
 
     yield testAsync "never ending" {
       let config =
@@ -1190,7 +1188,6 @@ let stress =
         { defaultConfig with
             ``parallel`` = false
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (singleTest "single test")) 0 "one"
@@ -1201,7 +1198,6 @@ let stress =
         { defaultConfig with
             ``parallel`` = false
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }

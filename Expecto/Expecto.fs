@@ -228,10 +228,8 @@ module internal Async =
       let mutable state = state
       use e = s.GetEnumerator()
       while not ct.IsCancellationRequested && e.MoveNext() do
-        Async.StartImmediate(async {
-          let! item = e.Current
-          state <- folder state item
-        }, cancellationToken = ct)
+        let! item = e.Current
+        state <- folder state item
       return state
     }
 
@@ -242,23 +240,17 @@ module internal Async =
     async {
       let mutable state = state
       let tasks = ResizeArray<Task>()
-      let waitAll() =
-        Seq.iter (fun (t:Task) ->
-          Async.StartImmediate(Async.AwaitTask t, cancellationToken = ct)
-        ) tasks
       use e = s.GetEnumerator()
       while not ct.IsCancellationRequested && e.MoveNext() do
-        let toRun = e.Current
         Async.StartAsTask(async {
-          let! item = toRun
+          let! item = e.Current
           lock tasks (fun () -> state <- folder state item)
-        }) |> tasks.Add
+        }, cancellationToken = ct) |> tasks.Add
         if tasks.Count = maxParallelism then
-          try
-            let i = Task.WaitAny(tasks.ToArray(), cancellationToken = ct)
-            if i <> -1 then tasks.RemoveAt i |> ignore
-          with | :? OperationCanceledException -> ()
-      if not ct.IsCancellationRequested then waitAll()
+          let! finishedTask = Task.WhenAny tasks |> Async.AwaitTask
+          finishedTask |> tasks.Remove |> ignore
+      if not ct.IsCancellationRequested then
+        Task.WaitAll(tasks.ToArray(), cancellationToken = ct)
       return state
     }
 
@@ -1050,7 +1042,7 @@ module Impl =
                     results:ResizeMap<_,_>,
                     maxMemory) (test,result) =
 
-          lock runningTests (fun () -> runningTests.Remove test |> ignore)
+          runningTests.Remove test |> ignore
 
           results.[test] <-
             match results.TryGetValue test with
@@ -1078,7 +1070,7 @@ module Impl =
 
         Seq.takeWhile (fun test ->
           if Stopwatch.GetTimestamp() < finishTimestamp.Value then
-            lock runningTests (fun () -> runningTests.Add test)
+            runningTests.Add test
             true
           else
             false )
@@ -1112,9 +1104,7 @@ module Impl =
                  |> Seq.filter (fun test ->
                       let s = test.sequenced
                       s=InParallel ||
-                      lock runningTests (fun () ->
-                        runningTests.Exists(fun t -> t.sequenced=s) |> not
-                      )
+                      not(Seq.exists (fun t -> t.sequenced=s) runningTests)
                     )
                  |> asyncRun
                       (Async.foldParallelWithCancel (numWorkers true config))
