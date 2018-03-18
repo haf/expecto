@@ -8,6 +8,7 @@ open System.Runtime.CompilerServices
 open System.Reflection
 open System.Diagnostics
 open System.Threading
+open System.Threading.Tasks
 
 // TODO: move to internal
 type SourceLocation =
@@ -222,21 +223,21 @@ module internal Async =
   let bind fn a =
     async.Bind(a, fn)
 
-  let foldSequentiallyWithCancel (ct:CancellationTokenSource)
-                                 folder state (s:_ seq) =
-    let mutable state = state
-    Async.Start(async {
-      use e = s.GetEnumerator()
-      while not ct.IsCancellationRequested && e.MoveNext() do
-        let! item = e.Current
-        state <- folder state item
-      ct.Cancel()
-    }, ct.Token)
-    Async.AwaitWaitHandle ct.Token.WaitHandle |> map (fun _ -> state)
+  // let foldSequentiallyWithCancel (ct:CancellationTokenSource)
+  //                                folder state (s:_ seq) =
+  //   let mutable state = state
+  //   Async.Start(async {
+  //     use e = s.GetEnumerator()
+  //     while not ct.IsCancellationRequested && e.MoveNext() do
+  //       let! item = e.Current
+  //       state <- folder state item
+  //     ct.Cancel()
+  //   }, ct.Token)
+  //   Async.AwaitWaitHandle ct.Token.WaitHandle |> map (fun _ -> state)
 
-  let foldSequentially folder state (s:_ seq) =
-    foldSequentiallyWithCancel (new CancellationTokenSource())
-                               folder state s
+  // let foldSequentially folder state (s:_ seq) =
+  //   foldSequentiallyWithCancel (new CancellationTokenSource())
+  //                              folder state s
 
   let foldParallelLimitWithCancel (ct:CancellationTokenSource)
                                   maxParallelism folder state (s:_ seq) =
@@ -291,6 +292,49 @@ module internal Async =
   let foldParallelLimit maxParallelism folder state (s:_ seq) =
     foldParallelLimitWithCancel (new CancellationTokenSource())
                                 maxParallelism folder state s
+
+
+  let foldSequentiallyWithCancel (ct:CancellationTokenSource) folder state (s:_ seq) =
+    async {
+      let mutable state = state
+      use e = s.GetEnumerator()
+      while not ct.IsCancellationRequested && e.MoveNext() do
+        try
+          let item = Async.RunSynchronously(e.Current, cancellationToken = ct.Token)
+          state <- folder state item
+        with | :? OperationCanceledException -> ()
+      return state
+    }
+
+  let foldSequentially folder state s =
+    foldSequentiallyWithCancel (new CancellationTokenSource()) folder state s
+
+  let foldParallelWithCancel maxParallelism (ct:CancellationToken) folder state (s:_ seq) =
+    async {
+      let mutable state = state
+      let tasks = ResizeArray<Task>()
+      let waitAll() =
+        tasks.ForEach(fun (t:Task) ->
+          Async.StartImmediate(Async.AwaitTask t, cancellationToken = ct)
+        )
+      use e = s.GetEnumerator()
+      while not ct.IsCancellationRequested && e.MoveNext() do
+        let toRun = e.Current
+        Async.StartAsTask(async {
+          let! item = toRun
+          lock tasks (fun () -> state <- folder state item)
+        }) |> tasks.Add
+        if tasks.Count = maxParallelism then
+          try
+            let i = Task.WaitAny(tasks.ToArray(), cancellationToken = ct)
+            if i <> -1 then tasks.RemoveAt i |> ignore
+          with | :? OperationCanceledException -> ()
+      if not ct.IsCancellationRequested then waitAll()
+      return state
+    }
+
+  let foldParallel maxParallelism folder state s =
+    foldParallelWithCancel maxParallelism CancellationToken.None folder state s
 
 // TODO: move to internal
 [<ReferenceEquality>]
