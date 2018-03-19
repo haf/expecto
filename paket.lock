@@ -20,7 +20,7 @@ NUGET
       Microsoft.NETCore.Platforms (>= 1.1) - restriction: && (< monoandroid) (< monotouch) (< net46) (>= netstandard1.3) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)
       Microsoft.NETCore.Targets (>= 1.1) - restriction: && (< monoandroid) (< monotouch) (< net46) (>= netstandard1.3) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)
       System.Runtime (>= 4.3) - restriction: && (< monoandroid) (< monotouch) (< net46) (>= netstandard1.3) (< xamarinios) (< xamarinmac) (< xamarintvos) (< xamarinwatchos)
-    Mono.Cecil (0.10.0-beta7)
+    Mono.Cecil (0.10.0)
       System.Collections (>= 4.0.11) - restriction: && (< net35) (>= netstandard1.3)
       System.IO.FileSystem (>= 4.0.1) - restriction: && (< net35) (>= netstandard1.3)
       System.IO.FileSystem.Primitives (>= 4.0.1) - restriction: && (< net35) (>= netstandard1.3)
