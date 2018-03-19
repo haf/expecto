@@ -1122,6 +1122,7 @@ let stress =
         { defaultConfig with
             parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 60000.0
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (singleTest "single test")) 0 "one"
@@ -1132,6 +1133,7 @@ let stress =
         { defaultConfig with
             parallelWorkers = 8
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
+            stressTimeout = TimeSpan.FromMilliseconds 60000.0
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }

@@ -223,21 +223,21 @@ module internal Async =
   let bind fn a =
     async.Bind(a, fn)
 
-  // let foldSequentiallyWithCancel (ct:CancellationTokenSource)
-  //                                folder state (s:_ seq) =
-  //   let mutable state = state
-  //   Async.Start(async {
-  //     use e = s.GetEnumerator()
-  //     while not ct.IsCancellationRequested && e.MoveNext() do
-  //       let! item = e.Current
-  //       state <- folder state item
-  //     ct.Cancel()
-  //   }, ct.Token)
-  //   Async.AwaitWaitHandle ct.Token.WaitHandle |> map (fun _ -> state)
+  let foldSequentiallyWithCancel (ct:CancellationTokenSource)
+                                 folder state (s:_ seq) =
+    let mutable state = state
+    Async.Start(async {
+      use e = s.GetEnumerator()
+      while not ct.IsCancellationRequested && e.MoveNext() do
+        let! item = e.Current
+        state <- folder state item
+      ct.Cancel()
+    }, ct.Token)
+    Async.AwaitWaitHandle ct.Token.WaitHandle |> map (fun _ -> state)
 
-  // let foldSequentially folder state (s:_ seq) =
-  //   foldSequentiallyWithCancel (new CancellationTokenSource())
-  //                              folder state s
+  let foldSequentially folder state (s:_ seq) =
+    foldSequentiallyWithCancel (new CancellationTokenSource())
+                               folder state s
 
   let foldParallelLimitWithCancel (ct:CancellationTokenSource)
                                   maxParallelism folder state (s:_ seq) =
@@ -292,22 +292,6 @@ module internal Async =
   let foldParallelLimit maxParallelism folder state (s:_ seq) =
     foldParallelLimitWithCancel (new CancellationTokenSource())
                                 maxParallelism folder state s
-
-
-  let foldSequentiallyWithCancel (ct:CancellationTokenSource) folder state (s:_ seq) =
-    async {
-      let mutable state = state
-      use e = s.GetEnumerator()
-      while not ct.IsCancellationRequested && e.MoveNext() do
-        try
-          let item = Async.RunSynchronously(e.Current, cancellationToken = ct.Token)
-          state <- folder state item
-        with | :? OperationCanceledException -> ()
-      return state
-    }
-
-  let foldSequentially folder state s =
-    foldSequentiallyWithCancel (new CancellationTokenSource()) folder state s
 
   let foldParallelWithCancel maxParallelism (ct:CancellationToken) folder state (s:_ seq) =
     async {
