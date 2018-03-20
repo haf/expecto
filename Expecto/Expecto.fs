@@ -8,7 +8,6 @@ open System.Runtime.CompilerServices
 open System.Reflection
 open System.Diagnostics
 open System.Threading
-open System.Threading.Tasks
 
 // TODO: move to internal
 type SourceLocation =
@@ -223,97 +222,40 @@ module internal Async =
   let bind fn a =
     async.Bind(a, fn)
 
-  let foldSequentiallyWithCancel (ct:CancellationTokenSource)
-                                 folder state (s:_ seq) =
-    let mutable state = state
-    Async.Start(async {
+  let foldSequentiallyWithCancel (ct:CancellationToken) folder state (s:_ seq) =
+    async {
+      let mutable state = state
       use e = s.GetEnumerator()
       while not ct.IsCancellationRequested && e.MoveNext() do
-        let! item = e.Current
-        state <- folder state item
-      ct.Cancel()
-    }, ct.Token)
-    Async.AwaitWaitHandle ct.Token.WaitHandle |> map (fun _ -> state)
+        let tasks = Async.StartAsTask e.Current
+        while not(tasks.IsCompleted || ct.IsCancellationRequested) do
+          do! Async.Sleep 10
+        if tasks.IsCompleted then
+          state <- folder state tasks.Result
+      return state
+    }
 
   let foldSequentially folder state (s:_ seq) =
-    foldSequentiallyWithCancel (new CancellationTokenSource())
-                               folder state s
-
-  let foldParallelLimitWithCancel (ct:CancellationTokenSource)
-                                  maxParallelism folder state (s:_ seq) =
-    let mutable state = state
-    let enumerator = s.GetEnumerator()
-
-    let inline safePost (mb:MailboxProcessor<_>) msg =
-      try
-        if not ct.IsCancellationRequested then mb.Post msg
-      with | :? ObjectDisposedException -> ()
-
-    use mb =
-      MailboxProcessor.Start((fun mb ->
-        let rec loop running =
-          async {
-            // by receiving one by one, we ensure we can mutate `results`
-            let! msg = mb.Receive()
-            match msg with
-            // None acts as a kanban card – running another one
-            | None ->
-              if enumerator.MoveNext() then
-                let next = enumerator.Current
-                Async.Start(async {
-                  try
-                    let! r = next
-                    Some r |> safePost mb
-                    safePost mb None
-                  with | e ->
-                    eprintfn "foldParallelLimitWithCancel Error:\n%A" e
-                }, ct.Token)
-                return! loop (running+1)
-              elif running = 0 then
-                ct.Cancel()
-              else
-                return! loop running
-            // the other side of the coin; receiving results
-            | Some r ->
-              state <- folder state r
-              return! loop (running-1)
-          }
-        loop 0), ct.Token)
-
-    let rec start n =
-      if n > 0 then
-        safePost mb None
-        start (n-1)
-
-    start maxParallelism
-    Async.AwaitWaitHandle ct.Token.WaitHandle
-    |> map (fun _ -> state)
-
-  let foldParallelLimit maxParallelism folder state (s:_ seq) =
-    foldParallelLimitWithCancel (new CancellationTokenSource())
-                                maxParallelism folder state s
+    foldSequentiallyWithCancel CancellationToken.None folder state s
 
   let foldParallelWithCancel maxParallelism (ct:CancellationToken) folder state (s:_ seq) =
     async {
       let mutable state = state
-      let tasks = ResizeArray<Task>()
-      let waitAll() =
-        tasks.ForEach(fun (t:Task) ->
-          Async.StartImmediate(Async.AwaitTask t, cancellationToken = ct)
-        )
       use e = s.GetEnumerator()
-      while not ct.IsCancellationRequested && e.MoveNext() do
-        let toRun = e.Current
-        Async.StartAsTask(async {
-          let! item = toRun
-          lock tasks (fun () -> state <- folder state item)
-        }) |> tasks.Add
-        if tasks.Count = maxParallelism then
-          try
-            let i = Task.WaitAny(tasks.ToArray(), cancellationToken = ct)
-            if i <> -1 then tasks.RemoveAt i |> ignore
-          with | :? OperationCanceledException -> ()
-      if not ct.IsCancellationRequested then waitAll()
+      if e.MoveNext() then
+        let mutable tasks = [Async.StartAsTask e.Current]
+        while not(ct.IsCancellationRequested || List.isEmpty tasks) do
+          if List.length tasks = maxParallelism || not(e.MoveNext()) then
+            while not( tasks |> List.exists (fun t -> t.IsCompleted)
+                    || ct.IsCancellationRequested) do
+              do! Async.Sleep 10
+            tasks |> List.tryFindIndex (fun t -> t.IsCompleted)
+            |> Option.iter (fun i ->
+              let a,b = List.splitAt i tasks
+              state <- (List.head b).Result |> folder state
+              tasks <- a @ List.tail b
+            )
+          else tasks <- Async.StartAsTask e.Current :: tasks
       return state
     }
 
@@ -1035,7 +977,7 @@ module Impl =
             Async.Parallel parallel
             |> Async.map (Seq.concat >> Seq.toList)
           else
-            Async.foldParallelLimit noWorkers (@) [] parallel
+            Async.foldParallel noWorkers (@) [] parallel
 
         if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
           do! config.printer.info "Starting sequenced tests..."
@@ -1138,7 +1080,7 @@ module Impl =
           else
             false )
         >> Seq.map evalTestAsync
-        >> foldRunner cancel folder (runningTests,results,maxMemory)
+        >> foldRunner cancel.Token folder (runningTests,results,maxMemory)
 
       let initial = ResizeArray(), ResizeMap(), GC.GetTotalMemory false
 
@@ -1169,10 +1111,9 @@ module Impl =
                       s=InParallel ||
                       not(Seq.exists (fun t -> t.sequenced=s) runningTests)
                     )
-                 |> asyncRun (fun cancel ->
-                      Async.foldParallelLimitWithCancel cancel
-                                (numberOfWorkers true config)
-                    ) (runningTests,results,maxMemory)
+                 |> asyncRun
+                      (Async.foldParallelWithCancel (numberOfWorkers true config))
+                      (runningTests,results,maxMemory)
              )
 
       w.Stop()
