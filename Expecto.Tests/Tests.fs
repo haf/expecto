@@ -10,10 +10,8 @@ open System.Reflection
 open Expecto
 open Expecto.Impl
 open System.Globalization
-open Hopac
 
 module Dummy =
-  open Expecto
 
   [<Tests>]
   let testA = TestLabel ("test A", TestList ([], Normal), Normal)
@@ -1150,8 +1148,8 @@ let stress =
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
-    // This test needs to run sequenced to ensure there are enough threads free to deadlock
-    yield testSequenced (testAsync "deadlock" {
+    
+    yield testAsync "deadlock" {
       if Environment.ProcessorCount > 2 then
         let config =
           { defaultConfig with
@@ -1161,7 +1159,7 @@ let stress =
               printer = TestPrinters.silent
               verbosity = Logging.LogLevel.Fatal }
         Expect.equal (runTests config (deadlockTest "deadlock")) 8 "timeout"
-    })
+    }
 
     yield testAsync "sequenced group" {
       let config =
@@ -1218,8 +1216,8 @@ let stress =
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
-    // This test needs to run sequenced to ensure there are enough threads free to test no deadlock
-    yield testSequenced (testAsync "deadlock sequenced" {
+    
+    yield testAsync "deadlock sequenced" {
       let config =
         { defaultConfig with
             ``parallel`` = false
@@ -1228,5 +1226,5 @@ let stress =
             printer = TestPrinters.silent
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config (deadlockTest "deadlock")) 0 "no deadlock"
-    })
+    }
   ]
