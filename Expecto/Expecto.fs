@@ -272,7 +272,7 @@ type FlatTest =
     sequenced : SequenceMethod }
   member x.shouldSkipEvaluation =
     match x.focusOn, x.state with
-    | _, Pending -> Some "The test or one of his parents is marked as Pending"
+    | _, Pending -> Some "The test or one of its parents is marked as Pending"
     | true, Normal -> Some "The test is skipped because other tests are Focused"
     | _ -> None
 
