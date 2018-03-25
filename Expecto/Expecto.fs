@@ -8,6 +8,7 @@ open System.Runtime.CompilerServices
 open System.Reflection
 open System.Diagnostics
 open System.Threading
+open System.Threading.Tasks
 
 // TODO: move to internal
 type SourceLocation =
@@ -222,16 +223,21 @@ module internal Async =
   let bind fn a =
     async.Bind(a, fn)
 
-  let foldSequentiallyWithCancel (ct:CancellationToken) folder state (s:_ seq) =
+  let inline cancelTokenTask (token:CancellationToken) =
+    let tcs = TaskCompletionSource()
+    token.Register(fun () -> tcs.SetResult()) |> ignore
+    tcs.Task
+
+  let foldSequentiallyWithCancel ct folder state (s:_ seq) =
     async {
       let mutable state = state
+      let tasks : Task[] = [| null; cancelTokenTask ct |]
       use e = s.GetEnumerator()
       while not ct.IsCancellationRequested && e.MoveNext() do
-        let tasks = Async.StartAsTask e.Current
-        while not(tasks.IsCompleted || ct.IsCancellationRequested) do
-          do! Async.Sleep 10
-        if tasks.IsCompleted then
-          state <- folder state tasks.Result
+        let task = Async.StartAsTask e.Current
+        tasks.[0] <- task :> Task
+        if Task.WaitAny tasks = 0 then
+          state <- folder state task.Result
       return state
     }
 
