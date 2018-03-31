@@ -647,9 +647,34 @@ module Impl =
                 "( ರ Ĺ̯ ರೃ )"
               else
                 ""
+          let commonAncestor (parentNames : string list) =
+            let rec loop ancestor (descendants : string list) =
+                match descendants with
+                | [] -> ancestor
+                | hd::tl when hd.StartsWith(ancestor)->
+                    loop ancestor tl
+                | _ ->
+                    if ancestor.Contains("/") then
+                        loop (ancestor.Substring(0, ancestor.LastIndexOf "/")) descendants
+                    else
+                        "miscellaneous"
+
+            match parentNames with
+            | [x] -> x
+            | hd::tl ->
+                loop hd tl
+            | _ -> "miscellaneous" //can't get here
+
           logger.logWithAck Info (
-            eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
+            eventX "EXPECTO! {total} tests run in {duration} for {name} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
             >> setField "total" (List.sumBy (fun (_,r) -> r.count) summary.results |> commaString)
+            >> setField "name" (summary.results
+                                |> List.map (fun (flatTest, _)  ->
+                                                if flatTest.name.Contains("/") then
+                                                    flatTest.name.Substring(0, flatTest.name.LastIndexOf "/")
+                                                else
+                                                    flatTest.name)
+                                |> commonAncestor )
             >> setField "duration" summary.duration
             >> setField "passes" (List.sumBy (fun (_,r) -> r.count) summary.passed |> commaString)
             >> setField "ignores" (List.sumBy (fun (_,r) -> r.count) summary.ignored |> commaString)
