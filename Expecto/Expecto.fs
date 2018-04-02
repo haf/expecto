@@ -577,7 +577,7 @@ module Impl =
       exn: string -> exn -> TimeSpan -> Async<unit>
       /// Prints a summary given the test result counts
       summary : ExpectoConfig -> TestRunSummary -> Async<unit> }
-
+    
     static member printResult config (test:FlatTest) (result:TestSummary) =
       match result.result with
       | Passed -> config.printer.passed test.name result.duration
@@ -647,9 +647,36 @@ module Impl =
                 "( ರ Ĺ̯ ರೃ )"
               else
                 ""
+          let commonAncestor =
+            let rec loop ancestor (descendants : string list) =
+              match descendants with
+              | [] -> ancestor
+              | hd::tl when hd.StartsWith(ancestor)->
+                loop ancestor tl
+              | _ ->
+                if ancestor.Contains("/") then
+                  loop (ancestor.Substring(0, ancestor.LastIndexOf "/")) descendants
+                else
+                  "miscellaneous"
+
+            let parentNames =
+              summary.results
+              |> List.map (fun (flatTest, _)  ->
+                if flatTest.name.Contains("/") then
+                  flatTest.name.Substring(0, flatTest.name.LastIndexOf "/")
+                else
+                  flatTest.name )
+
+            match parentNames with
+            | [x] -> x
+            | hd::tl ->
+              loop hd tl
+            | _ -> "miscellaneous" //we can't get here
+
           logger.logWithAck Info (
-            eventX "EXPECTO! {total} tests run in {duration} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
+            eventX "EXPECTO! {total} tests run in {duration} for {name} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
             >> setField "total" (List.sumBy (fun (_,r) -> r.count) summary.results |> commaString)
+            >> setField "name" commonAncestor
             >> setField "duration" summary.duration
             >> setField "passes" (List.sumBy (fun (_,r) -> r.count) summary.passed |> commaString)
             >> setField "ignores" (List.sumBy (fun (_,r) -> r.count) summary.ignored |> commaString)
