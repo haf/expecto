@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyName>Expecto.FsCheck</AssemblyName>
     <PackageId>Expecto.FsCheck</PackageId>
-    <Version>7.0.0</Version>
+    <Version>7.0.1</Version>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>

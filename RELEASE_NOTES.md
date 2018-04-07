@@ -1,3 +1,9 @@
+#### 7.0.1 - 2018-04-07
+* Default printer log with list name. #236 thanks @jackfoxy
+* Minor grammar fix. #235 thanks @rmunn
+* Update mono.cecil to 0.10.0. #234 thanks @MNie
+* foldParallel work fixes ObjectDisposedException. #233 thanks @AnthonyLloyd
+
 #### 7.0.0 - 2018-03-13
 * Added Expecto.Hopac. #231 thanks @TheAngryByrd
 * Fix Expecto.BenchmarkDotNet TypeLoadException get_ArtifactsPath. #225 thanks @AnthonyLloyd
