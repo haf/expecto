@@ -13,7 +13,7 @@ let owners = "Anthony Lloyd (formerly Henrik Feldt and cloned from Fuchu by @mau
 let projectUrl = "https://github.com/haf/expecto"
 let iconUrl = "https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png"
 let licenceUrl = "https://github.com/haf/expecto/blob/master/LICENSE"
-let copyright = "Copyright \169 2018"
+let copyright = "Copyright 2018"
 let mutable dotnetExePath = "dotnet"
 
 Target "InstallDotNetCore" (fun _ ->
@@ -22,10 +22,17 @@ Target "InstallDotNetCore" (fun _ ->
 
 Target "Clean" (fun _ -> !!"./**/bin/" ++ "./**/obj/" |> CleanDirs)
 
+open Fake.StringHelper
+let normaliseFileToLFEnding filename =
+    let s = ReadFileAsString filename
+    s.Replace(WindowsLineBreaks,LinuxLineBreaks)
+    |> WriteStringToFile false filename
+
 open AssemblyInfoFile
 Target "AssemblyInfo" (fun _ ->
     let createAssemblyInfo project =
-        CreateFSharpAssemblyInfo (project+"/AssemblyInfo.fs") [
+        let filename = project+"/AssemblyInfo.fs"
+        CreateFSharpAssemblyInfo filename [
             Attribute.Title project
             Attribute.Product project
             Attribute.Copyright copyright
@@ -33,6 +40,7 @@ Target "AssemblyInfo" (fun _ ->
             Attribute.Version release.AssemblyVersion
             Attribute.FileVersion release.AssemblyVersion
         ]
+        normaliseFileToLFEnding filename
     createAssemblyInfo "Expecto"
     createAssemblyInfo "Expecto.FsCheck"
     createAssemblyInfo "Expecto.BenchmarkDotNet"
@@ -40,14 +48,18 @@ Target "AssemblyInfo" (fun _ ->
 )
 
 Target "PaketFiles" (fun _ ->
+    let filename = "paket-files/logary/logary/src/Logary.Facade/Facade.fs"
     FileHelper.ReplaceInFiles ["namespace Logary.Facade","namespace Expecto.Logging"]
-        ["paket-files/logary/logary/src/Logary.Facade/Facade.fs"]
+        [filename]
+    normaliseFileToLFEnding filename
 )
 
 Target "ProjectVersion" (fun _ ->
     let setProjectVersion project =
-        XMLHelper.XmlPoke (project+"/"+project+".fsproj")
+        let filename = project+"/"+project+".fsproj"
+        XMLHelper.XmlPoke filename
             "Project/PropertyGroup/Version/text()" release.NugetVersion
+        normaliseFileToLFEnding filename
     setProjectVersion "Expecto"
     setProjectVersion "Expecto.FsCheck"
     setProjectVersion "Expecto.BenchmarkDotNet"
