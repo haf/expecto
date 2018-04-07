@@ -31,7 +31,7 @@ let performance =
         "SHA256 is faster than MD5 should fail"
     ) |> assertTestFailsWithMsgContaining "slower"
 
-    testCase "md5 versus sha256" <| fun _ ->
+    ptestCase "md5 versus sha256" <| fun _ ->
       Expect.isFasterThan
         (runMD5 >> ignore |> repeat10)
         (runSHA256 >> ignore |> repeat10)
