@@ -876,13 +876,14 @@ module Global =
     let updating = obj()
     let mutable fwClock : uint32 = snd !config
     let mutable logger : Logger = (fst !config).getLogger name
-    let rec withLogger action =
-      let cfg, cfgClock = !config // copy to local
-      let fwCurr = fwClock // copy to local
-      if cfgClock <> fwCurr then
+
+    let withLogger action =
+      if snd !config <> fwClock then
         lock updating <| fun _ ->
-          logger <- cfg.getLogger name
-          fwClock <- fwCurr + 1u
+          let cfg, cfgClock = !config
+          if cfgClock <> fwClock then
+            logger <- cfg.getLogger name
+            fwClock <- cfgClock
       action logger
 
     let ensureName (m : Message) =
@@ -899,6 +900,7 @@ module Global =
   let internal getStaticLogger (name : string []) =
     Flyweight name
 
+  /// Gets the current timestamp.
   let timestamp () : EpochNanoSeconds =
     (fst !config).timestamp ()
 

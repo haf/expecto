@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
     <AssemblyName>Expecto.Tests</AssemblyName>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
@@ -13,6 +14,7 @@
     <Compile Include="FsCheckTests.fs" />
     <Compile Include="PerformanceTests.fs" />
     <Compile Include="Main.fs" />
+    <None Include="App.config" />
     <None Include="Tests.fsx" />
     <None Include="paket.references" />
     <ProjectReference Include="..\Expecto.Hopac\Expecto.Hopac.fsproj" />
