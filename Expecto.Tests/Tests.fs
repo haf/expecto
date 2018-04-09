@@ -1063,7 +1063,7 @@ let close =
 
 [<Tests>]
 let stress =
-  testSequenced <| testList "stress testing" [
+  testList "stress testing" [
 
     let singleTest name =
       testList name [
