@@ -79,6 +79,7 @@ Target "BuildBenchmarkDotNet" (fun _ ->
 
 Target "BuildTest" (fun _ ->
     build "Expecto.Tests/Expecto.Tests.fsproj"
+    build "Expecto.Hopac.Tests/Expecto.Hopac.Tests.fsproj"
     build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj"
     build "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj"
 )
@@ -90,6 +91,7 @@ Target "RunTest" (fun _ ->
         Shell.Exec (project+"/bin/"+configuration+"/net461/"+project+".exe","--summary")
         |> fun r -> if r<>0 then project+".exe failed" |> failwith
     runTest "Expecto.Tests"
+    runTest "Expecto.Hopac.Tests"
     runTest "Expecto.Tests.CSharp"
     runTest "Expecto.Focused.Tests"
 )

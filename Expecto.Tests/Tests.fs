@@ -1,5 +1,4 @@
 module Expecto.Tests
-open Hopac
 #nowarn "46"
 
 open System
@@ -45,15 +44,6 @@ let tests =
 
     testAsync "using async computation expression with bind" {
       let! x = async { return 4 }
-      Expect.equal x (2+2) "2+2"
-    }
-
-    testJob "using job computation expression" {
-      Expect.equal 4 (2+2) "2+2"
-    }
-
-    testJob "using job computation expression with bind" {
-      let! x = job { return 4 }
       Expect.equal x (2+2) "2+2"
     }
 
@@ -922,25 +912,6 @@ let asyncTests =
 
     testCaseAsync "can fail" <| async {
       let! n = async { return 2 }
-      Expect.equal 1 n "1=n"
-    } |> assertTestFails
-
-  ]
-[<Tests>]
-let jobTests =
-  testList "job" [
-
-    testCaseJob "simple job" <| job {
-      Expect.equal 1 1 "1=1"
-    }
-
-    testCaseJob "let job" <| job {
-      let! n = job { return 1 }
-      Expect.equal 1 n "1=n"
-    }
-
-    testCaseJob "job can fail" <| job {
-      let! n = job { return 2 }
       Expect.equal 1 n "1=n"
     } |> assertTestFails
 

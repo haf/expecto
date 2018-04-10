@@ -1,22 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>Expecto.Tests</AssemblyName>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <AssemblyName>Expecto.Hopac.Tests</AssemblyName>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Prelude.fs" />
     <Compile Include="Tests.fs" />
-    <Compile Include="SummaryTests.fs" />
-    <Compile Include="FocusedTests.fs" />
-    <Compile Include="FsCheckTests.fs" />
-    <Compile Include="PerformanceTests.fs" />
     <Compile Include="Main.fs" />
-    <None Include="Tests.fsx" />
+    <None Include="App.config" />
     <None Include="paket.references" />
     <ProjectReference Include="..\Expecto.Hopac\Expecto.Hopac.fsproj" />
-    <ProjectReference Include="..\Expecto.FsCheck\Expecto.FsCheck.fsproj" />
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
