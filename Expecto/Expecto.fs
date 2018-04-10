@@ -265,9 +265,6 @@ module internal Async =
       return state
     }
 
-  let foldParallel maxParallelism folder state s =
-    foldParallelWithCancel maxParallelism CancellationToken.None folder state s
-
 // TODO: move to internal
 [<ReferenceEquality>]
 type FlatTest =
@@ -952,7 +949,7 @@ module Impl =
       config.parallelWorkers
 
   /// Evaluates tests.
-  let evalTests config test =
+  let evalTestsWithCancel (ct:CancellationToken) config test =
     async {
 
       let evalTestAsync (test:FlatTest) =
@@ -998,10 +995,8 @@ module Impl =
           |> List.sortBy (List.length >> (~-))
           |> List.map (
               function
-              | [test] ->
-                Async.map List.singleton test
-              | l ->
-                Async.foldSequentially cons [] l
+              | [test] -> Async.map List.singleton test
+              | l -> Async.foldSequentiallyWithCancel ct cons [] l
             )
 
         let! parallelResults =
@@ -1010,13 +1005,17 @@ module Impl =
             Async.Parallel parallel
             |> Async.map (Seq.concat >> Seq.toList)
           else
-            Async.foldParallel noWorkers (@) [] parallel
+            Async.foldParallelWithCancel noWorkers ct (@) [] parallel
 
         if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
           do! config.printer.info "Starting sequenced tests..."
 
-        return! Async.foldSequentially cons parallelResults sequenced
+        return! Async.foldSequentiallyWithCancel ct cons parallelResults sequenced
       }
+
+  /// Evaluates tests.
+  let evalTests config test =
+    evalTestsWithCancel CancellationToken.None config test
 
   let evalTestsSilent test =
     let config =
@@ -1028,7 +1027,7 @@ module Impl =
     evalTests config test
 
   /// Runs tests, returns error code
-  let runEval config test =
+  let runEvalWithCancel (ct:CancellationToken) config test =
     async {
       do! config.printer.beforeRun test
 
@@ -1044,8 +1043,12 @@ module Impl =
 
       return testSummary.errorCode
     }
+  
+  /// Runs tests, returns error code
+  let runEval config test =
+    runEvalWithCancel CancellationToken.None config test
 
-  let runStress config test =
+  let runStressWithCancel (ct:CancellationToken) config test =
     async {
       do! config.printer.beforeRun test
 
@@ -1107,7 +1110,8 @@ module Impl =
         }, cancel.Token)
 
         Seq.takeWhile (fun test ->
-          if Stopwatch.GetTimestamp() < finishTimestamp.Value then
+          if Stopwatch.GetTimestamp() < finishTimestamp.Value
+              && not ct.IsCancellationRequested then
             runningTests.Add test
             true
           else
@@ -1163,6 +1167,9 @@ module Impl =
 
       return testSummary.errorCode
     }
+
+  let runStress config test =
+    runStressWithCancel CancellationToken.None config test
 
   let testFromMember (mi: MemberInfo) : Test option =
     let inline unboxTest v =
@@ -1622,7 +1629,7 @@ module Tests =
 
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
-  let runTests config (tests:Test) =
+  let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity, consoleSemaphore = Global.semaphore()) :> Logger }
@@ -1634,18 +1641,22 @@ module Tests =
       let duplicates = lazy duplicatedNames tests
       if config.allowDuplicateNames || List.isEmpty duplicates.Value then
         match config.stress with
-        | None -> runEval config tests |> Async.RunSynchronously
-        | Some _ -> runStress config tests |> Async.RunSynchronously
+        | None -> runEvalWithCancel ct config tests |> Async.RunSynchronously
+        | Some _ -> runStressWithCancel ct config tests |> Async.RunSynchronously
       else
         logger.errorWithBP (
           eventX "Found duplicated test names, these names are: {duplicates}"
           >> setField "duplicates" duplicates.Value
         ) |> Async.RunSynchronously
         1
+  /// Runs tests with the supplied config.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTests config tests =
+    runTestsWithCancel CancellationToken.None config tests
 
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
-  let runTestsWithArgs config args tests =
+  let runTestsWithArgsAndCancel (ct:CancellationToken) config args tests =
     match ExpectoConfig.fillFromArgs config args with
     | ArgsException (usage,message) ->
       printfn "%s\n" message
@@ -1669,15 +1680,24 @@ module Tests =
       printfn "EXPECTO version %s\n"
         (ExpectoConfig.expectoVersion())
 
-      runTests config tests
+      runTestsWithCancel ct config tests
+  /// Runs all given tests with the supplied command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsWithArgs config args tests =
+    runTestsWithArgsAndCancel CancellationToken.None config args tests
+
+  /// Runs tests in this assembly with the supplied command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsInAssemblyWithCancel (ct:CancellationToken) config args =
+    let config = { config with locate = getLocation (Assembly.GetEntryAssembly()) }
+    testFromThisAssembly ()
+    |> Option.orDefault (TestList ([], Normal))
+    |> runTestsWithArgsAndCancel ct config args
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
-    let config = { config with locate = getLocation (Assembly.GetEntryAssembly()) }
-    testFromThisAssembly ()
-    |> Option.orDefault (TestList ([], Normal))
-    |> runTestsWithArgs config args
+    runTestsInAssemblyWithCancel CancellationToken.None config args
 
 // TODO: docs
 type Accuracy =
