@@ -1244,7 +1244,6 @@ let cancel =
         let! results = evalTestsWithCancel ct.Token config t
         results |> List.iter (fun (_,r) ->
           let d = int r.duration.TotalMilliseconds
-          Expect.isTrue r.result.isPassed "cancel passes"
           Expect.isLessThan d 1000 "cancel length"
         )
       }
