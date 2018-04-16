@@ -1204,7 +1204,7 @@ let stress =
 
 [<Tests>]
 let cancel =
-  testList "cancel testing" [
+  testSequenced <| testList "cancel testing" [
 
     let cancelTestSync =
       testCaseWithCancel "sync cancel" (fun ct ->
