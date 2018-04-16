@@ -24,7 +24,7 @@ let performance =
       Expect.isFasterThan runMD5 runSHA256 "MD5 equals SHA256 should fail"
     ) |> assertTestFailsWithMsgContaining "same"
 
-    testCase "sha256 versus md5" (fun _ ->
+    ptestCase "sha256 versus md5" (fun _ ->
       Expect.isFasterThan
         (runSHA256 >> ignore |> repeat10)
         (runMD5 >> ignore |> repeat10)
