@@ -400,6 +400,8 @@ let expecto =
               match test with
               | Sync test ->
                 test()
+              | SyncWithCancel test ->
+                test CancellationToken.None
               | Async test ->
                 do! test
               | AsyncFsCheck (config, _, test) ->

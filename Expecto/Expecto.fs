@@ -63,6 +63,7 @@ type FsCheckConfig =
 /// Actual test function; either an async one, or a synchronous one.
 type TestCode =
   | Sync of stest: (unit -> unit)
+  | SyncWithCancel of stest: (CancellationToken -> unit)
   | Async of atest: Async<unit>
   | AsyncFsCheck of testConfig: FsCheckConfig option *
                     stressConfig: FsCheckConfig option *
@@ -223,21 +224,19 @@ module internal Async =
   let bind fn a =
     async.Bind(a, fn)
 
-  let inline cancelTokenTask (token:CancellationToken) =
-    let tcs = TaskCompletionSource()
-    token.Register(fun () -> tcs.SetResult()) |> ignore
-    tcs.Task
-
-  let foldSequentiallyWithCancel ct folder state (s:_ seq) =
+  let foldSequentiallyWithCancel (ct:CancellationToken) folder state (s:_ seq) =
     async {
       let mutable state = state
-      let tasks : Task[] = [| null; cancelTokenTask ct |]
+      let tcs = TaskCompletionSource()
+      let dispose = Action tcs.SetResult |> ct.Register
+      let tasks : Task[] = [| null; tcs.Task |]
       use e = s.GetEnumerator()
       while not ct.IsCancellationRequested && e.MoveNext() do
         let task = Async.StartAsTask e.Current
         tasks.[0] <- task :> Task
         if Task.WaitAny tasks = 0 then
           state <- folder state task.Result
+      dispose.Dispose()
       return state
     }
 
@@ -379,6 +378,10 @@ module Test =
 
     match test with
     | Sync test -> async { test() } |> timeoutAsync |> Async
+    | SyncWithCancel test ->
+      SyncWithCancel (fun ct ->
+        Async.StartImmediate(async { test ct } |> timeoutAsync)
+      )
     | Async test -> timeoutAsync test |> Async
     | AsyncFsCheck (testConfig, stressConfig, test) ->
       AsyncFsCheck (testConfig, stressConfig, test >> timeoutAsync)
@@ -878,7 +881,7 @@ module Impl =
         allowDuplicateNames = false
       }
 
-  let execTestAsync config (test:FlatTest) : Async<TestSummary> =
+  let execTestAsync (ct:CancellationToken) config (test:FlatTest) : Async<TestSummary> =
     async {
       let w = Stopwatch.StartNew()
       try
@@ -890,6 +893,8 @@ module Impl =
           match test.test with
           | Sync test ->
             test()
+          | SyncWithCancel test ->
+            test ct
           | Async test ->
             do! test
           | AsyncFsCheck (testConfig, stressConfig, test) ->
@@ -959,7 +964,7 @@ module Impl =
 
         async {
           let! beforeAsync = beforeEach test |> Async.StartChild
-          let! result = execTestAsync config test
+          let! result = execTestAsync ct config test
           do! beforeAsync
           do! TestPrinters.printResult config test result
           return test,result
@@ -1060,7 +1065,7 @@ module Impl =
         config.stressMemoryLimit * 1024.0 * 1024.0 |> int64
 
       let evalTestAsync test =
-        execTestAsync config test |> Async.map (addFst test)
+        execTestAsync ct config test |> Async.map (addFst test)
 
       let rand = Random()
 
@@ -1246,6 +1251,8 @@ module Impl =
       let t = getFuncTypeToUse test asm
       let m = t.GetTypeInfo().GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
       (t.FullName, m.Name)
+    | SyncWithCancel _ ->
+      ("Unknown SyncWithCancel", "Unknown SyncWithCancel")
     | Async _ | AsyncFsCheck _ ->
       ("Unknown Async", "Unknown Async")
 
@@ -1362,14 +1369,20 @@ module Tests =
   /// Builds a test case that will be ignored by Expecto if exists focused
   /// tests and none of the parents is focused
   let inline testCase name test = TestLabel(name, TestCase (Sync test,Normal), Normal)
+  /// Builds a test case with a CancellationToken that can be check for cancel
+  let inline testCaseWithCancel name test = TestLabel(name, TestCase (SyncWithCancel test,Normal), Normal)
   /// Builds an async test case
   let inline testCaseAsync name test = TestLabel(name, TestCase (Async test,Normal), Normal)
   /// Builds a test case that will make Expecto to ignore other unfocused tests
   let inline ftestCase name test = TestLabel(name, TestCase (Sync test, Focused), Focused)
+  /// Builds a test case with cancel that will make Expecto to ignore other unfocused tests
+  let inline ftestCaseWithCancel name test = TestLabel(name, TestCase (SyncWithCancel test, Focused), Focused)
   /// Builds an async test case that will make Expecto to ignore other unfocused tests
   let inline ftestCaseAsync name test = TestLabel(name, TestCase (Async test, Focused), Focused)
   /// Builds a test case that will be ignored by Expecto
   let inline ptestCase name test = TestLabel(name, TestCase (Sync test, Pending), Pending)
+  /// Builds a test case with cancel that will be ignored by Expecto
+  let inline ptestCaseWithCancel name test = TestLabel(name, TestCase (SyncWithCancel test, Pending), Pending)
   /// Builds an async test case that will be ignored by Expecto
   let inline ptestCaseAsync name test = TestLabel(name, TestCase (Async test, Pending), Pending)
   /// Test case or list needs to run sequenced. Use for any benchmark code or
