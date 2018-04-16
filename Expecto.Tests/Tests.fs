@@ -1242,7 +1242,11 @@ let cancel =
         let! _ = Async.StartChild(async { do! Async.Sleep 50
                                           ct.Cancel() })
         let! results = evalTestsWithCancel ct.Token config t
-        Expect.isEmpty results "cancel"
+        results |> List.iter (fun (_,r) ->
+          let d = int r.duration.TotalMilliseconds
+          Expect.isTrue r.result.isPassed "cancel passes"
+          Expect.isLessThan d 1000 "cancel length"
+        )
       }
     )
   ]
