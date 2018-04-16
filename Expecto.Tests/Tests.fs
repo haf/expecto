@@ -1201,3 +1201,48 @@ let stress =
       Expect.equal (runTests config (deadlockTest "deadlock")) 0 "no deadlock"
     }
   ]
+
+[<Tests>]
+let cancel =
+  testList "cancel testing" [
+
+    let cancelTestSync =
+      testCaseWithCancel "sync cancel" (fun ct ->
+        let mutable i = 200
+        while not ct.IsCancellationRequested && i>0 do
+          Thread.Sleep 10
+          i <- i - 1
+        if not ct.IsCancellationRequested then
+          failwith "sync not cancelled"
+      )
+      
+    let cancelTestAsync =
+      testAsync "async cancel" {
+        let mutable i = 200
+        while i>0 do
+          do! Async.Sleep 10
+          i <- i - 1
+        failwith "sync not cancelled"
+      }
+
+    yield! [
+      false, cancelTestSync, "parallel false sync"
+      false, cancelTestAsync, "parallel false async"
+      true, cancelTestSync, "parallel true sync"
+      true, cancelTestAsync, "parallel true async"
+    ]
+    |> List.map (fun (p,t,n) ->
+      testAsync n {
+        let config =
+          { defaultConfig with
+              parallel = p
+              printer = TestPrinters.silent
+              verbosity = Logging.LogLevel.Fatal }
+        use ct = new CancellationTokenSource()
+        let! _ = Async.StartChild(async { do! Async.Sleep 50
+                                          ct.Cancel() })
+        let! results = evalTestsWithCancel ct.Token config t
+        Expect.isEmpty results "cancel"
+      }
+    )
+  ]

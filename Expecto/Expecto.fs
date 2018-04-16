@@ -228,7 +228,7 @@ module internal Async =
     async {
       let mutable state = state
       let tcs = TaskCompletionSource()
-      let dispose = Action tcs.SetResult |> ct.Register
+      use _ = Action tcs.SetResult |> ct.Register
       let tasks : Task[] = [| null; tcs.Task |]
       use e = s.GetEnumerator()
       while not ct.IsCancellationRequested && e.MoveNext() do
@@ -236,7 +236,6 @@ module internal Async =
         tasks.[0] <- task :> Task
         if Task.WaitAny tasks = 0 then
           state <- folder state task.Result
-      dispose.Dispose()
       return state
     }
 
@@ -978,7 +977,7 @@ module Impl =
          List.forall (fun t -> t.sequenced=Synchronous) tests then
         return!
           List.map evalTestAsync tests
-          |> Async.foldSequentially cons []
+          |> Async.foldSequentiallyWithCancel ct cons []
       else
         let sequenced =
           List.filter (fun t -> t.sequenced=Synchronous) tests
@@ -1006,11 +1005,7 @@ module Impl =
 
         let! parallelResults =
           let noWorkers = numberOfWorkers false config
-          if List.length parallel <= noWorkers then
-            Async.Parallel parallel
-            |> Async.map (Seq.concat >> Seq.toList)
-          else
-            Async.foldParallelWithCancel noWorkers ct (@) [] parallel
+          Async.foldParallelWithCancel noWorkers ct (@) [] parallel
 
         if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
           do! config.printer.info "Starting sequenced tests..."
