@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Expecto.Tests.CSharp", "Exp
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.Focused.Tests", "Expecto.Focused.Tests\Expecto.Focused.Tests.fsproj", "{751478CE-23B9-4C81-98C1-5B24078B84A2}"
 EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.Hopac", "Expecto.Hopac\Expecto.Hopac.fsproj", "{089DA13B-15DF-40C0-B96E-E47461A715D1}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.Hopac.Tests", "Expecto.Hopac.Tests\Expecto.Hopac.Tests.fsproj", "{DF3DAA62-1273-47AB-ADEB-659492FFEE94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +55,14 @@ Global
 		{751478CE-23B9-4C81-98C1-5B24078B84A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{751478CE-23B9-4C81-98C1-5B24078B84A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{751478CE-23B9-4C81-98C1-5B24078B84A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{089DA13B-15DF-40C0-B96E-E47461A715D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{089DA13B-15DF-40C0-B96E-E47461A715D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{089DA13B-15DF-40C0-B96E-E47461A715D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{089DA13B-15DF-40C0-B96E-E47461A715D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF3DAA62-1273-47AB-ADEB-659492FFEE94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF3DAA62-1273-47AB-ADEB-659492FFEE94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF3DAA62-1273-47AB-ADEB-659492FFEE94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF3DAA62-1273-47AB-ADEB-659492FFEE94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
