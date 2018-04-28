@@ -94,6 +94,41 @@ with Expecto:
 
 ![Sample output from Logary](docs/sample-output-logary.png)
 
+### Prettify stacktraces/ship test logs
+
+To get a complete logging solution and stacktrace highlighting, parsing and
+the ability to ship your build logs somewhere, also add these:
+
+```
+nuget Logary.Adapters.Facade prerelease
+```
+
+And in your tests:
+
+```
+open Hopac
+open Logary
+open Logary.Configuration
+open Logary.Adapters.Facade
+
+[<EntryPoint>]
+let main argv =
+  let logary =
+    Config.create "MyProject.Tests" "localhost"
+    |> Config.targets [ LiterateConsole.create LiterateConsole.empty "console" ]
+    |> Config.processing (Events.events |> Events.sink ["console";])
+    |> Config.build
+    |> run
+  LogaryFacadeAdapter.initialise<Expecto.Logging.Logger> logary
+
+  // Invoke Expecto:
+  runTestsInAssembly defaultConfig argv
+```
+
+Now, when you use Logary in your app, you can see your log messages
+together with the log output/summary/debug printing of Expecto,
+and the output won't be interlaced due to concurrency.
+
 ## .Net Core support
 
 [Expecto has it's own .net core template](https://github.com/MNie/Expecto.Template)!

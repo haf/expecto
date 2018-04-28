@@ -1,3 +1,6 @@
+#### 8.0.0 – 2018-04-28
+* Upgrade Logary.Facade and bump major because of a int64 -> float change in the logging facade. Add docs on how to get extra value/stacktrace parsing when using Expecto.
+
 #### 7.0.1 - 2018-04-07
 * Default printer log with list name. #236 thanks @jackfoxy
 * Minor grammar fix. #235 thanks @rmunn

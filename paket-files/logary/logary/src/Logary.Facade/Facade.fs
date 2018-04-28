@@ -1,11 +1,13 @@
-/// The logging namespace, which contains the logging abstraction for this
+﻿/// The logging namespace, which contains the logging abstraction for this
 /// library. See https://github.com/logary/logary for details. This module is
 /// completely stand-alone in that it has no external references and its adapter
 /// in Logary has been well tested.
+///
+/// This facade is Apache licensed unless running on MSFT-based web servers, in which
+/// case you need a commercial license: contact henrik@haf.se for one.
 namespace Expecto.Logging
 
 open System
-open System.Runtime.CompilerServices
 
 /// The log level denotes how 'important' the gauge or event message is.
 [<CustomEquality; CustomComparison>]
@@ -42,7 +44,7 @@ type LogLevel =
     | Fatal   -> "fatal"
 
   /// Converts the string passed to a Loglevel.
-  static member ofString (str : string) =
+  static member ofString (str: string) =
     if str = null then invalidArg "str" "may not be null"
     match str.ToLowerInvariant() with
     | "verbose" -> Verbose
@@ -72,7 +74,7 @@ type LogLevel =
     | 4 -> Warn
     | 5 -> Error
     | 6 -> Fatal
-    | _ as i -> failwithf "LogLevel matching integer %i is not available" i) i
+    | i -> failwithf "LogLevel matching integer %i is not available" i) i
 
   interface IComparable<LogLevel> with
     member x.CompareTo other =
@@ -116,7 +118,7 @@ type PointValue =
   | Event of template:string
   /// This is as value for a metric, with a unit attached. The unit can be
   /// something like Seconds or Hz.
-  | Gauge of value:int64 * units:string
+  | Gauge of value:float * units:string
 
 /// The # of nanoseconds after 1970-01-01 00:00:00.
 type EpochNanoSeconds = int64
@@ -125,12 +127,12 @@ type EpochNanoSeconds = int64
 module DateTime =
 
   /// Get the Logary timestamp off the DateTime.
-  let timestamp (dt : DateTime) : EpochNanoSeconds =
+  let timestamp (dt: DateTime): EpochNanoSeconds =
     (dt.Ticks - DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks)
     * 100L
 
   /// Get the DateTimeOffset ticks off from the EpochNanoSeconds.
-  let ticksUTC (epoch : EpochNanoSeconds) : int64 =
+  let ticksUTC (epoch: EpochNanoSeconds): int64 =
     epoch / 100L
     + DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks
 
@@ -138,12 +140,12 @@ module DateTime =
 module DateTimeOffset =
 
   /// Get the Logary timestamp off the DateTimeOffset.
-  let timestamp (dt : DateTimeOffset) : EpochNanoSeconds =
+  let timestamp (dt: DateTimeOffset): EpochNanoSeconds =
     (dt.Ticks - DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero).Ticks)
     * 100L
 
   /// Get the DateTimeOffset ticks from EpochNanoSeconds
-  let ticksUTC (epoch : EpochNanoSeconds) : int64 =
+  let ticksUTC (epoch: EpochNanoSeconds): int64 =
     epoch / 100L
     + DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero).Ticks
 
@@ -152,16 +154,16 @@ module DateTimeOffset =
 type Message =
   { /// The 'path' or 'name' of this data point. Do not confuse template in
     /// (Event template) = message.value
-    name      : string[]
+    name: string[]
     /// The main value for this metric or event. Either a Gauge or an Event. (A
     /// discriminated union type)
-    value     : PointValue
+    value: PointValue
     /// The structured-logging data.
-    fields    : Map<string, obj>
+    fields: Map<string, obj>
     /// When? nanoseconds since UNIX epoch.
-    timestamp : EpochNanoSeconds
+    timestamp: EpochNanoSeconds
     /// How important? See the docs on the LogLevel type for details.
-    level     : LogLevel }
+    level: LogLevel }
 
   /// Gets the ticks for UTC since 0001-01-01 00:00:00 for this message. You
   /// can pass this value into a DateTimeOffset c'tor
@@ -179,7 +181,7 @@ type Message =
 /// method to choose the right one for your use-case.
 type Logger =
   /// Gets the name of the logger instance.
-  abstract member name : string[]
+  abstract member name: string[]
   /// Logs with the specified log level with backpressure via the logging
   /// library's buffers *and* ACK/flush to the underlying message targets.
   ///
@@ -192,7 +194,7 @@ type Logger =
   /// You need to start the (cold) async value for the logging to happen.
   ///
   /// You should not do blocking/heavy operations in the callback.
-  abstract member logWithAck : LogLevel -> (LogLevel -> Message) -> Async<unit>
+  abstract member logWithAck: LogLevel -> (LogLevel -> Message) -> Async<unit>
 
   /// Logs with the specified log level with backpressure via the logging
   /// library's buffers.
@@ -206,12 +208,12 @@ type Logger =
   /// You need to start the (cold) async value for the logging to happen.
   ///
   /// You should not do blocking/heavy operations in the callback.
-  abstract member log : LogLevel -> (LogLevel -> Message) -> Async<unit>
+  abstract member log: LogLevel -> (LogLevel -> Message) -> Async<unit>
 
 /// Syntactic sugar on top of Logger for F# libraries.
 [<AutoOpen>]
 module LoggerEx =
-  let private logWithTimeout (logger : Logger) level messageFactory =
+  let private logWithTimeout (logger: Logger) level messageFactory =
     async {
       let! child = Async.StartChild (logger.log level messageFactory, 5000)
       try
@@ -224,46 +226,46 @@ module LoggerEx =
     }
 
   type Logger with
-    member x.verbose (messageFactory : LogLevel -> Message) : unit =
+    member x.verbose (messageFactory: LogLevel -> Message): unit =
       logWithTimeout x Verbose messageFactory |> Async.Start
 
     /// Log with backpressure
-    member x.verboseWithBP (messageFactory : LogLevel -> Message) : Async<unit> =
+    member x.verboseWithBP (messageFactory: LogLevel -> Message): Async<unit> =
       x.log Verbose messageFactory
-      
-    member x.debug (messageFactory : LogLevel -> Message) : unit =
+
+    member x.debug (messageFactory: LogLevel -> Message): unit =
       logWithTimeout x Debug messageFactory |> Async.Start
 
     /// Log with backpressure
-    member x.debugWithBP (messageFactory : LogLevel -> Message) : Async<unit> =
+    member x.debugWithBP (messageFactory: LogLevel -> Message): Async<unit> =
       x.log Debug messageFactory
-      
-    member x.info (messageFactory : LogLevel -> Message) : unit =
+
+    member x.info (messageFactory: LogLevel -> Message): unit =
       logWithTimeout x Info messageFactory |> Async.Start
 
     /// Log with backpressure
-    member x.infoWithBP (messageFactory : LogLevel -> Message) : Async<unit> =
+    member x.infoWithBP (messageFactory: LogLevel -> Message): Async<unit> =
       x.log Info messageFactory
-      
-    member x.warn (messageFactory : LogLevel -> Message) : unit =
+
+    member x.warn (messageFactory: LogLevel -> Message): unit =
       logWithTimeout x Warn messageFactory |> Async.Start
 
     /// Log with backpressure
-    member x.warnWithBP (messageFactory : LogLevel -> Message) : Async<unit> =
+    member x.warnWithBP (messageFactory: LogLevel -> Message): Async<unit> =
       x.log Warn messageFactory
-      
-    member x.error (messageFactory : LogLevel -> Message) : unit =
+
+    member x.error (messageFactory: LogLevel -> Message): unit =
       logWithTimeout x Error messageFactory |> Async.Start
 
     /// Log with backpressure
-    member x.errorWithBP (messageFactory : LogLevel -> Message) : Async<unit> =
+    member x.errorWithBP (messageFactory: LogLevel -> Message): Async<unit> =
       x.log Error messageFactory
-      
-    member x.fatal (messageFactory : LogLevel -> Message) : unit =
+
+    member x.fatal (messageFactory: LogLevel -> Message): unit =
       logWithTimeout x Fatal messageFactory |> Async.Start
 
     /// Log with backpressure
-    member x.fatalWithBP (messageFactory : LogLevel -> Message) : Async<unit> =
+    member x.fatalWithBP (messageFactory: LogLevel -> Message): Async<unit> =
       x.log Fatal messageFactory
 
     /// Log a message, but don't synchronously wait for the message to be placed
@@ -278,7 +280,7 @@ module LoggerEx =
     /// without dropping messages.
     ///
     /// It's recommended to have alerting on STDERR.
-    member x.logSimple message : unit =
+    member x.logSimple message: unit =
       logWithTimeout x message.level (fun _ -> message) |> Async.Start
 
     // TODO: timeXXX functions
@@ -286,16 +288,16 @@ module LoggerEx =
 type LoggingConfig =
   { /// The `timestamp` function should preferably be monotonic and not 'jumpy'
     /// or take much time to call.
-    timestamp        : unit -> int64
+    timestamp: unit -> int64
     /// The `getLogger` function returns a logger that directly can be logged to.
-    getLogger        : string[] -> Logger
+    getLogger: string[] -> Logger
     /// When composing apps from the outside-in (rather than having a unified
     /// framework with static/global config) with libraries (again, rather than
     /// a unified framework) like is best-practice, there's not necessarily a
     /// way to coordinate around the STDOUT and STDERR streams between
     /// different libraries running things on different threads. Use Logary's
     /// adapter to replace this semaphore with a global semaphore.
-    consoleSemaphore : obj }
+    consoleSemaphore: obj }
 
 module Literate =
   /// The output tokens, which can be potentially coloured.
@@ -307,10 +309,10 @@ module Literate =
     | MissingTemplateField
 
   type LiterateOptions =
-    { formatProvider          : IFormatProvider
-      theme                   : LiterateToken -> ConsoleColor
-      getLogLevelText         : LogLevel -> string
-      printTemplateFieldNames : bool }
+    { formatProvider: IFormatProvider
+      theme: LiterateToken -> ConsoleColor
+      getLogLevelText: LogLevel -> string
+      printTemplateFieldNames: bool }
 
     static member create ?formatProvider =
       // note: literate is meant for human consumption, and so the default
@@ -318,12 +320,12 @@ module Literate =
       // to see the dates, numbers, currency, etc formatted in the local culture
       { formatProvider = defaultArg formatProvider Globalization.CultureInfo.CurrentCulture
         getLogLevelText = function
-                | Debug ->    "DBG"
-                | Error ->    "ERR"
-                | Fatal ->    "FTL"
-                | Info ->     "INF"
-                | Verbose ->  "VRB"
-                | Warn ->     "WRN"
+                | Debug -> "DBG"
+                | Error -> "ERR"
+                | Fatal -> "FTL"
+                | Info ->"INF"
+                | Verbose -> "VRB"
+                | Warn -> "WRN"
         theme = function
                 | Text -> ConsoleColor.White
                 | Subtext -> ConsoleColor.Gray
@@ -351,7 +353,7 @@ module Literals =
 
   /// What version of the Facade is this. This is a major version that allows the Facade
   /// adapter to choose how it handles the API.
-  let FacadeVersion = 2u
+  let FacadeVersion = 3u
 
   /// What language this Facade has. This controls things like naming standards.
   let FacadeLanguage = "F#"
@@ -365,12 +367,12 @@ module Literals =
 module internal FsMtParser =
   open System.Text
 
-  type Property(name : string, format : string) =
+  type Property(name: string, format: string) =
     static let emptyInstance = Property("", null)
     static member empty = emptyInstance
     member x.name = name
     member x.format = format
-    member internal x.AppendPropertyString(sb : StringBuilder, ?replacementName) =
+    member internal x.AppendPropertyString(sb: StringBuilder, ?replacementName) =
       sb.Append("{")
         .Append(defaultArg replacementName name)
         .Append(match x.format with null | "" -> "" | _ -> ":" + x.format)
@@ -379,46 +381,41 @@ module internal FsMtParser =
 
   module internal ParserBits =
 
-    let inline isNull o =
-      match o with
-      | null -> true
-      | _ -> false
-
     let inline isLetterOrDigit c = System.Char.IsLetterOrDigit c
     let inline isValidInPropName c = c = '_' || System.Char.IsLetterOrDigit c
     let inline isValidInFormat c = c <> '}' && (c = ' ' || isLetterOrDigit c || System.Char.IsPunctuation c)
     let inline isValidCharInPropTag c = c = ':' || isValidInPropName c || isValidInFormat c
 
     [<Struct>]
-    type Range(startIndex : int, endIndex : int) =
+    type Range(startIndex: int, endIndex: int) =
       member inline x.start = startIndex
       member inline x.``end`` = endIndex
       member inline x.length = (endIndex - startIndex) + 1
-      member inline x.getSubstring (s : string) = s.Substring(startIndex, x.length)
+      member inline x.getSubstring (s: string) = s.Substring(startIndex, x.length)
       member inline x.isEmpty = startIndex = -1 && endIndex = -1
-      static member inline substring (s : string, startIndex, endIndex) = s.Substring(startIndex, (endIndex - startIndex) + 1)
+      static member inline substring (s: string, startIndex, endIndex) = s.Substring(startIndex, (endIndex - startIndex) + 1)
       static member inline empty = Range(-1, -1)
 
-    let inline tryGetFirstCharInRange predicate (s : string) (range : Range) =
+    let inline tryGetFirstCharInRange predicate (s: string) (range: Range) =
       let rec go i =
         if i > range.``end`` then -1
         else if not (predicate s.[i]) then go (i+1) else i
       go range.start
 
-    let inline tryGetFirstChar predicate (s : string) first =
+    let inline tryGetFirstChar predicate (s: string) first =
       tryGetFirstCharInRange predicate s (Range(first, s.Length - 1))
 
-    let inline hasAnyInRange predicate (s : string) (range : Range) =
+    let inline hasAnyInRange predicate (s: string) (range: Range) =
       match tryGetFirstChar (predicate) s range.start with
       | -1 ->
         false
       | i ->
         i <= range.``end``
 
-    let inline hasAny predicate (s : string) = hasAnyInRange predicate s (Range(0, s.Length - 1))
+    let inline hasAny predicate (s: string) = hasAnyInRange predicate s (Range(0, s.Length - 1))
     let inline indexOfInRange s range c = tryGetFirstCharInRange ((=) c) s range
 
-    let inline tryGetPropInRange (template : string) (within : Range) : Property =
+    let inline tryGetPropInRange (template: string) (within: Range): Property =
       // Attempts to validate and parse a property token within the specified range inside
       // the template string. If the property insides contains any invalid characters,
       // then the `Property.Empty' instance is returned (hence the name 'try')
@@ -437,13 +434,13 @@ module internal FsMtParser =
         let format = if formatRange.isEmpty then null else formatRange.getSubstring template
         Property(propertyName, format)
 
-    let findNextNonPropText (startAt : int) (template : string) (foundText : string->unit) : int =
+    let findNextNonPropText (startAt: int) (template: string) (foundText: string->unit): int =
       // Finds the next text token (starting from the 'startAt' index) and returns the next character
       // index within the template string. If the end of the template string is reached, or the start
       // of a property token is found (i.e. a single { character), then the 'consumed' text is passed
       // to the 'foundText' method, and index of the next character is returned.
       let mutable escapedBuilder = Unchecked.defaultof<StringBuilder> // don't create one until it's needed
-      let inline append (ch : char) = if not (isNull escapedBuilder) then escapedBuilder.Append(ch) |> ignore
+      let inline append (ch: char) = if not (isNull escapedBuilder) then escapedBuilder.Append(ch) |> ignore
       let inline createStringBuilderAndPopulate i =
         if isNull escapedBuilder then
           escapedBuilder <- StringBuilder() // found escaped open-brace, take the slow path
@@ -471,9 +468,9 @@ module internal FsMtParser =
           foundText (escapedBuilder.ToString())
       nextIndex
 
-    let findPropOrText (start : int) (template : string)
-                       (foundText : string -> unit)
-                       (foundProp : Property -> unit) : int =
+    let findPropOrText (start: int) (template: string)
+                       (foundText: string -> unit)
+                       (foundProp: Property -> unit): int =
       // Attempts to find the indices of the next property in the template
       // string (starting from the 'start' index). Once the start and end of
       // the property token is known, it will be further validated (by the
@@ -504,7 +501,7 @@ module internal FsMtParser =
   /// Parses template strings such as "Hello, {PropertyWithFormat:##.##}"
   /// and calls the 'foundTextF' or 'foundPropF' functions as the text or
   /// property tokens are encountered.
-  let parseParts (template : string) foundTextF foundPropF =
+  let parseParts (template: string) foundTextF foundPropF =
     let tlen = template.Length
     let rec go start =
       if start >= tlen then () else
@@ -515,15 +512,40 @@ module internal FsMtParser =
         go (ParserBits.findPropOrText start template foundTextF foundPropF)
     go 0
 
-/// Internal module for formatting text for printing to the console.
-module internal Formatting =
+module internal MessageTemplates =
+  type internal TemplateToken = TextToken of text:string | PropToken of name : string * format : string
+  let internal parseTemplate template =
+    let tokens = ResizeArray<TemplateToken>()
+    let foundText (text: string) = tokens.Add (TextToken text)
+    let foundProp (prop: FsMtParser.Property) = tokens.Add (PropToken (prop.name, prop.format))
+    FsMtParser.parseParts template foundText foundProp
+    tokens
+
+/// Internal module for converting message parts into theme-able tokens.
+module internal LiterateTokenisation =
   open System.Text
   open Literals
   open Literate
 
-  let literateFormatValue (options : LiterateOptions) (fields : Map<string, obj>) = function
+  /// A piece of text with an associated `LiterateToken`.
+  type TokenisedPart = string * LiterateToken
+
+  /// Converts some part(s) of a `Message` into text with an associated `LiterateToken`.
+  type LiterateTokeniser = LiterateOptions -> Message -> TokenisedPart list
+
+  /// Chooses the appropriate `LiterateToken` based on the value `Type`.
+  let getTokenTypeForValue (value: obj) =
+    match value with
+    | :? bool -> KeywordSymbol
+    | :? int16 | :? int32 | :? int64 | :? decimal | :? float | :? double -> NumericSymbol
+    | :? string | :? char -> StringSymbol
+    | _ -> OtherSymbol
+
+  /// Converts a `PointValue` into a sequence literate tokens. The returned `Set<string>` contains
+  /// the names of the properties that were found in the `Event` template.
+  let tokenisePointValue (options: LiterateOptions) (fields: Map<string, obj>) = function
     | Event template ->
-      let themedParts = ResizeArray<string * LiterateToken>()
+      let themedParts = ResizeArray<TokenisedPart>()
       let matchedFields = ResizeArray<string>()
       let foundText (text: string) = themedParts.Add (text, Text)
       let foundProp (prop: FsMtParser.Property) =
@@ -532,42 +554,28 @@ module internal Formatting =
           // render using string.Format, so the formatting is applied
           let stringFormatTemplate = prop.AppendPropertyString(StringBuilder(), "0").ToString()
           let fieldAsText = String.Format (options.formatProvider, stringFormatTemplate, [| propValue |])
-          // find the right theme colour based on data type
-          let valueColour =
-            match propValue with
-            | :? bool ->
-              KeywordSymbol
-            | :? int16 | :? int32 | :? int64 | :? decimal | :? float | :? double ->
-              NumericSymbol
-            | :? string | :? char ->
-              StringSymbol
-            | _ ->
-              OtherSymbol
+          let valueTokenType = getTokenTypeForValue propValue
           if options.printTemplateFieldNames then
             themedParts.Add ("["+prop.name+"] ", Subtext)
           matchedFields.Add prop.name
-          themedParts.Add (fieldAsText, valueColour)
+          themedParts.Add (fieldAsText, valueTokenType)
 
         | None ->
           themedParts.Add (prop.ToString(), MissingTemplateField)
 
       FsMtParser.parseParts template foundText foundProp
-      Set.ofSeq matchedFields, List.ofSeq themedParts
+      Set.ofSeq matchedFields, (themedParts :> TokenisedPart seq)
 
     | Gauge (value, units) ->
-      Set.empty, [ sprintf "%i" value, NumericSymbol
-                   sprintf "%s" units, KeywordSymbol ]
+      Set.empty, ([| sprintf "%f" value, NumericSymbol
+                     sprintf "%s" units, KeywordSymbol |] :> TokenisedPart seq)
 
-  let formatValue (fields : Map<string, obj>) (pv : PointValue) =
-    let matchedFields, themedParts =
-      literateFormatValue (LiterateOptions.createInvariant()) fields pv
-    matchedFields, System.String.Concat(themedParts |> List.map fst)
-
-  let literateExceptionColouriser (options : LiterateOptions) (ex : exn) =
+  /// Converts a single exception into a sequence of literate tokens.
+  let tokeniseExn (options: LiterateOptions) (ex: exn) =
     let stackFrameLinePrefix = "   at" // 3 spaces
     let monoStackFrameLinePrefix = "  at" // 2 spaces
     use exnLines = new System.IO.StringReader(ex.ToString())
-    let rec go lines =
+    let rec go (lines: TokenisedPart list) =
       match exnLines.ReadLine() with
       | null ->
         List.rev lines // finished reading
@@ -580,11 +588,12 @@ module internal Formatting =
           go ((line, Text) :: (Environment.NewLine, Text) :: lines)
     go []
 
-  let literateColouriseExceptions (context : LiterateOptions) message =
+  /// Converts all exceptions in a `Message` into a sequence of literate tokens.
+  let tokeniseMessageExns (context: LiterateOptions) message =
     let exnExceptionParts =
       match message.fields.TryFind FieldExnKey with
       | Some (:? Exception as ex) ->
-        literateExceptionColouriser context ex
+        tokeniseExn context ex
       | _ ->
         [] // there is no spoon
     let errorsExceptionParts =
@@ -592,7 +601,7 @@ module internal Formatting =
       | Some (:? List<obj> as exnListAsObjList) ->
         exnListAsObjList |> List.collect (function
           | :? exn as ex ->
-            literateExceptionColouriser context ex
+            tokeniseExn context ex
           | _ ->
             [])
       | _ ->
@@ -600,7 +609,7 @@ module internal Formatting =
 
     exnExceptionParts @ errorsExceptionParts
 
-  let getLogLevelToken = function
+  let tokeniseLogLevel = function
     | Verbose -> LevelVerbose
     | Debug -> LevelDebug
     | Info -> LevelInfo
@@ -608,22 +617,21 @@ module internal Formatting =
     | Error -> LevelError
     | Fatal -> LevelFatal
 
-  /// Split a structured message up into theme-able parts (tokens), allowing the
-  /// final output to display to a user with colours to enhance readability.
-  let literateDefaultTokeniser (options : LiterateOptions) (message : Message) : (string * LiterateToken) list =
-    let formatLocalTime (utcTicks : int64) =
+  /// Converts a `Message` into sequence of literate tokens.
+  let tokeniseMessage (options: LiterateOptions) (message: Message): TokenisedPart list =
+    let formatLocalTime (utcTicks: int64) =
       DateTimeOffset(utcTicks, TimeSpan.Zero).LocalDateTime.ToString("HH:mm:ss", options.formatProvider),
       Subtext
 
     let _, themedMessageParts =
-      message.value |> literateFormatValue options message.fields
+      message.value |> tokenisePointValue options message.fields
 
-    let themedExceptionParts = literateColouriseExceptions options message
+    let themedExceptionParts = tokeniseMessageExns options message
 
     [ yield "[", Punctuation
       yield formatLocalTime message.utcTicks
       yield " ", Subtext
-      yield options.getLogLevelText message.level, getLogLevelToken message.level
+      yield options.getLogLevelText message.level, tokeniseLogLevel message.level
       yield "] ", Punctuation
       yield! themedMessageParts
       if not (isNull message.name) && message.name.Length > 0 then
@@ -634,41 +642,40 @@ module internal Formatting =
       yield! themedExceptionParts
     ]
 
-  let literateDefaultColourWriter sem (parts : (string * ConsoleColor) list) =
-    lock sem <| fun _ ->
-      let originalColour = Console.ForegroundColor
-      let mutable currentColour = originalColour
-      parts |> List.iter (fun (text, colour) ->
-        if currentColour <> colour then
-          Console.ForegroundColor <- colour
-          currentColour <- colour
-        Console.Write(text)
-      )
-      if currentColour <> originalColour then
-        Console.ForegroundColor <- originalColour
+/// Internal module for formatting text for printing to the console.
+module internal Formatting =
+  open Literals
+  open Literate
+  open LiterateTokenisation
+  open System.Text
+
+  let formatValue (fields: Map<string, obj>) (pv: PointValue) =
+    let matchedFields, themedParts =
+      tokenisePointValue (LiterateOptions.createInvariant()) fields pv
+    matchedFields, System.String.Concat(themedParts |> Seq.map fst)
 
   /// let the ISO8601 love flow
-  let defaultFormatter (message : Message) =
-    let app (x : obj) (sb : StringBuilder) =
+  let defaultFormatter (message: Message) =
+    let app (x: obj) (sb: StringBuilder) =
       sb.Append x |> ignore
 
-    let formatLevel (level : LogLevel) =
+    let formatLevel (level: LogLevel) =
       "[" + Char.ToUpperInvariant(level.ToString().[0]).ToString() + "] "
 
-    let formatInstant (utcTicks : int64) =
+    let formatInstant (utcTicks: int64) =
       (DateTimeOffset(utcTicks, TimeSpan.Zero).ToString("o")) + ": "
 
-    let formatName (name : string[]) =
+    let formatName (name: string[]) =
       " [" + String.concat "." name + "]"
 
-    let formatExn (fields : Map<string, obj>) =
+    let formatExn (fields: Map<string, obj>) =
       match fields |> Map.tryFind FieldExnKey with
       | None ->
         String.Empty
       | Some ex ->
         " exn:\n" + ex.ToString()
 
-    let formatFields (ignored : Set<string>) (fields : Map<string, obj>) =
+    let formatFields (ignored: Set<string>) (fields: Map<string, obj>) =
       if not (Map.isEmpty fields) then
         fields
         |> Seq.filter (fun (KeyValue (k, _)) ->
@@ -693,26 +700,55 @@ module internal Formatting =
 /// Assists with controlling the output of the `LiterateConsoleTarget`.
 module internal LiterateFormatting =
   open Literate
-  type TokenisedPart = string * LiterateToken
-  type LiterateTokeniser = LiterateOptions -> Message -> TokenisedPart list
+  open LiterateTokenisation
+  open MessageTemplates
 
-  type internal TemplateToken = TextToken of text:string | PropToken of name : string * format : string
-  let internal parseTemplate template =
-    let tokens = ResizeArray<TemplateToken>()
-    let foundText (text: string) = tokens.Add (TextToken text)
-    let foundProp (prop: FsMtParser.Property) = tokens.Add (PropToken (prop.name, prop.format))
-    FsMtParser.parseParts template foundText foundProp
-    tokens :> seq<TemplateToken>
-  
+  type ColouredTextPart = string * ConsoleColor
+
+  /// Writes string*ConsoleColor parts atomically (in a `lock`)
+  let atomicallyWriteColouredTextToConsole sem (parts: ColouredTextPart list) =
+    lock sem <| fun _ ->
+      let originalColour = Console.ForegroundColor
+      let mutable currentColour = originalColour
+      parts |> List.iter (fun (text, colour) ->
+        if currentColour <> colour then
+          Console.ForegroundColor <- colour
+          currentColour <- colour
+        Console.Write(text)
+      )
+      if currentColour <> originalColour then
+        Console.ForegroundColor <- originalColour
+
   [<AutoOpen>]
   module OutputTemplateTokenisers =
+    open System.Collections.Generic
 
-    let tokeniseTimestamp format (options : LiterateOptions) (message : Message) = 
+    let exceptionFieldNames = set [ Literals.FieldExnKey; Literals.FieldErrorsKey ]
+    let tokeniseExtraField (options: LiterateOptions) (message: Message) (field: KeyValuePair<string, obj>) =
+      seq {
+        yield " - ", Punctuation
+        yield field.Key, NameSymbol
+        yield ": ", Punctuation
+        yield System.String.Format(options.formatProvider, "{0}", field.Value), getTokenTypeForValue field.Value
+      }
+
+    let tokeniseExtraFields (options: LiterateOptions) (message: Message) (templateFieldNames: Set<string>) =
+      let fieldsToExclude = Set.union templateFieldNames exceptionFieldNames
+      let extraFields = message.fields |> Map.filter (fun key _ -> not (fieldsToExclude.Contains key))
+      let mutable isFirst = true
+      seq {
+        for field in extraFields do
+          if isFirst then isFirst <- false
+          else yield Environment.NewLine, Text
+          yield! tokeniseExtraField options message field
+      }
+
+    let tokeniseTimestamp format (options: LiterateOptions) (message: Message) =
       let localDateTimeOffset = DateTimeOffset(message.utcTicks, TimeSpan.Zero).ToLocalTime()
       let formattedTimestamp = localDateTimeOffset.ToString(format, options.formatProvider)
       seq { yield formattedTimestamp, Subtext }
 
-    let tokeniseTimestampUtc format (options : LiterateOptions) (message : Message) = 
+    let tokeniseTimestampUtc format (options: LiterateOptions) (message: Message) =
       let utcDateTimeOffset = DateTimeOffset(message.utcTicks, TimeSpan.Zero)
       let formattedTimestamp = utcDateTimeOffset.ToString(format, options.formatProvider)
       seq { yield formattedTimestamp, Subtext }
@@ -726,42 +762,76 @@ module internal LiterateFormatting =
           yield format, Subtext
         yield "}", Punctuation }
 
-    let tokeniseLogLevel (options : LiterateOptions) (message : Message) =
-      seq { yield options.getLogLevelText message.level, Formatting.getLogLevelToken message.level }
+    let tokeniseLogLevel (options: LiterateOptions) (message: Message) =
+      seq { yield options.getLogLevelText message.level, tokeniseLogLevel message.level }
 
-    let tokeniseSource (options : LiterateOptions) (message : Message) =
+    let tokeniseSource (options: LiterateOptions) (message: Message) =
       seq { yield (String.concat "." message.name), Subtext }
 
-    let tokeniseNewline (options : LiterateOptions) (message : Message) =
+    let tokeniseNewline (options: LiterateOptions) (message: Message) =
       seq { yield Environment.NewLine, Text }
 
-    let tokeniseTab (options : LiterateOptions) (message : Message) =
+    let tokeniseTab (options: LiterateOptions) (message: Message) =
       seq { yield "\t", Text }
 
-  /// Creates a `LiterateTokeniser` function which can be passed to the `LiterateConsoleTarget`
-  /// constructor in order to customise how each log message is rendered. The default template
-  /// would be: `[{timestampLocal:HH:mm:ss} {level}] {message}{newline}{exceptions}`.
+  /// Creates a `LiterateTokeniser` function which can be used by the `LiterateConsoleTarget`
+  /// to customise how each log message is rendered. The default output template
+  /// would be: `[{timestamp:HH:mm:ss} {level}] {message}{newline}{exceptions}`.
   /// Available template fields are: `timestamp`, `timestampUtc`, `level`, `source`,
-  /// `newline`, `tab`, `message`, `exceptions`. Any misspelled or otheriwese invalid property
-  /// names will be treated as `LiterateToken.MissingTemplateField`. 
-  let tokeniserForOutputTemplate template : LiterateTokeniser =
+  /// `newline`, `tab`, `message`, `properties`, `exceptions`. A special field named
+  /// `newLineIfNext` will output a new line if the next field in the template will render
+  /// anything (i.e. non-empty). Any misspelled or different property names will become a
+  /// `LiterateToken.MissingTemplateField`.
+  let tokeniserForOutputTemplate template: LiterateTokeniser =
     let tokens = parseTemplate template
+
     fun options message ->
+      // render the message template first so we have the template-matched fields available
+      let fieldsInMessageTemplate, messageParts =
+        tokenisePointValue options message.fields message.value
+
+      let tokeniseOutputTemplateField fieldName format = seq {
+        match fieldName with
+        | "timestamp" ->            yield! tokeniseTimestamp format options message
+        | "timestampUtc" ->         yield! tokeniseTimestampUtc format options message
+        | "level" ->                yield! tokeniseLogLevel options message
+        | "source" ->               yield! tokeniseSource options message
+        | "newline" ->              yield! tokeniseNewline options message
+        | "tab" ->                  yield! tokeniseTab options message
+        | "message" ->              yield! messageParts
+        | "properties" ->           yield! tokeniseExtraFields options message fieldsInMessageTemplate
+        | "exceptions" ->           yield! tokeniseMessageExns options message
+        | _ ->                      yield! tokeniseMissingField fieldName format
+      }
+
       seq {
-        for token in tokens do
+        let lastTokenIndex = tokens.Count - 1
+        let mutable nextPartsArray: TokenisedPart[] = null
+        for index in [0..lastTokenIndex] do
+          let token = tokens.[index]
           match token with
           | TextToken text -> yield text, LiterateToken.Punctuation
           | PropToken (name, format) ->
-            match name with
-            | "timestamp" ->    yield! tokeniseTimestamp format options message
-            | "timestampUtc" -> yield! tokeniseTimestampUtc format options message
-            | "level" ->        yield! tokeniseLogLevel options message
-            | "source" ->       yield! tokeniseSource options message
-            | "newline" ->      yield! tokeniseNewline options message
-            | "tab" ->          yield! tokeniseTab options message
-            | "message" ->      yield! Formatting.literateFormatValue options message.fields message.value |> snd
-            | "exceptions" ->   yield! Formatting.literateColouriseExceptions options message
-            | _ ->              yield! tokeniseMissingField name format
+            if index <> lastTokenIndex && name = "newLineIfNext" then
+              match tokens.[index + 1] with
+              | PropToken (nextName, nextFormat) ->
+                // Tokenise the next property now, to determine if it's 'empty'. To avoid doing
+                // unnecessary work, we save these tokens ('nextPartsArray') so it can be
+                // 'yield'ed on the next iteration.
+                nextPartsArray <- tokeniseOutputTemplateField nextName nextFormat |> Seq.toArray
+                if nextPartsArray.Length > 0 then
+                  yield! tokeniseNewline options message
+              | _ ->
+                // It's questionable what to do here. It was an invalid output template,
+                // because the {newLineIfNext} should only appear immediately prior to some other
+                // valid output field. We could `failwith "invalid output template"`?
+                ()
+            else
+              if not (isNull nextPartsArray) then
+                yield! nextPartsArray
+                nextPartsArray <- null
+              else
+                yield! tokeniseOutputTemplateField name format
       }
       |> Seq.toList
 
@@ -771,19 +841,24 @@ module internal LiterateFormatting =
 type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?outputWriter, ?consoleSemaphore) =
   let sem          = defaultArg consoleSemaphore (obj())
   let options      = defaultArg options (Literate.LiterateOptions.create())
-  let tokenise     = defaultArg literateTokeniser Formatting.literateDefaultTokeniser
-  let colourWriter = defaultArg outputWriter Formatting.literateDefaultColourWriter sem
+  let tokenise     = defaultArg literateTokeniser LiterateTokenisation.tokeniseMessage
+  let colourWriter = defaultArg outputWriter LiterateFormatting.atomicallyWriteColouredTextToConsole sem
 
-  let colouriseThenNewLine message =
-    (tokenise options message) @ [Environment.NewLine, Literate.Text]
-    |> List.map (fun (s, t) ->
-      s, options.theme(t))
+  /// Converts the message to tokens, apply the theme, then output them using the `colourWriter`.
+  let writeColourisedThenNewLine message =
+    [ yield! tokenise options message
+      yield Environment.NewLine, Literate.Text ]
+    |> List.map (fun (s, t) -> s, options.theme(t))
+    |> colourWriter
 
-  /// Creates the target with a custom output template. The default `outputTemplate`
-  /// is `[{timestampLocal:HH:mm:ss} {level}] {message}{exceptions}`.
+  /// Creates the target with a custom output template.
+  /// For example, the default output template would be:
+  /// `[{timestamp:HH:mm:ss} {level}] {message} <{source}>{newLineIfNext}{exceptions}`.
   /// Available template fields are: `timestamp`, `timestampUtc`, `level`, `source`,
-  /// `newline`, `tab`, `message`, `exceptions`. Any misspelled or otheriwese invalid property
-  /// names will be treated as `LiterateToken.MissingTemplateField`.
+  /// `newline`, `tab`, `message`, `properties`, `exceptions`.
+  /// A special field named `newLineIfNext` will output a new line if the next field renders
+  /// anything (i.e. non-empty). Any other property names will become a
+  /// `LiterateToken.MissingTemplateField`.
   new (name, minLevel, outputTemplate, ?options, ?outputWriter, ?consoleSemaphore) =
     let tokeniser = LiterateFormatting.tokeniserForOutputTemplate outputTemplate
     LiterateConsoleTarget(name, minLevel, ?options=options, literateTokeniser=tokeniser, ?outputWriter=outputWriter, ?consoleSemaphore=consoleSemaphore)
@@ -792,16 +867,16 @@ type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?output
     member x.name = name
     member x.logWithAck level msgFactory =
       if level >= minLevel then
-        async { do colourWriter (colouriseThenNewLine (msgFactory level)) }
+        async { do writeColourisedThenNewLine (msgFactory level) }
       else
         async.Return ()
     member x.log level msgFactory =
       if level >= minLevel then
-        async { do colourWriter (colouriseThenNewLine (msgFactory level)) }
+        async { do writeColourisedThenNewLine (msgFactory level) }
       else
         async.Return ()
 
-type TextWriterTarget(name, minLevel, writer : System.IO.TextWriter, ?formatter) =
+type TextWriterTarget(name, minLevel, writer: System.IO.TextWriter, ?formatter) =
   let formatter = defaultArg formatter Formatting.defaultFormatter
   let log msg = writer.WriteLine(formatter msg)
 
@@ -838,7 +913,7 @@ type OutputWindowTarget(name, minLevel, ?formatter) =
         async.Return ()
 
 /// A logger to use for combining a number of other loggers
-type CombiningTarget(name, otherLoggers : Logger list) =
+type CombiningTarget(name, otherLoggers: Logger list) =
   interface Logger with
     member x.name = name
     member x.logWithAck level messageFactory =
@@ -872,10 +947,10 @@ module Global =
   /// multiple per-process logging setups, then don't use the static methods,
   /// but instead pass a Logger instance around, setting the name field of the
   /// Message value you pass into the logger.
-  type internal Flyweight(name : string[]) =
+  type internal Flyweight(name: string[]) =
     let updating = obj()
-    let mutable fwClock : uint32 = snd !config
-    let mutable logger : Logger = (fst !config).getLogger name
+    let mutable fwClock: uint32 = snd !config
+    let mutable logger: Logger = (fst !config).getLogger name
 
     let withLogger action =
       if snd !config <> fwClock then
@@ -886,7 +961,7 @@ module Global =
             fwClock <- cfgClock
       action logger
 
-    let ensureName (m : Message) =
+    let ensureName (m: Message) =
       if Array.isEmpty m.name then { m with name = name } else m
 
     interface Logger with
@@ -897,11 +972,11 @@ module Global =
       member x.logWithAck level msgFactory =
         withLogger (fun logger -> logger.logWithAck level (msgFactory >> ensureName))
 
-  let internal getStaticLogger (name : string []) =
+  let internal getStaticLogger (name: string []) =
     Flyweight name
 
   /// Gets the current timestamp.
-  let timestamp () : EpochNanoSeconds =
+  let timestamp (): EpochNanoSeconds =
     (fst !config).timestamp ()
 
   /// Returns the synchronisation object to use when printing to the console.
@@ -944,13 +1019,13 @@ module Log =
 
   /// Create a named logger. Full stop (.) acts as segment delimiter in the
   /// hierachy of namespaces and loggers.
-  let create (name : string) =
+  let create (name: string) =
     if name = null then invalidArg "name" "name is null"
     Global.getStaticLogger (name.Split([|'.'|], StringSplitOptions.RemoveEmptyEntries))
     :> Logger
 
   /// Create an hierarchically named logger
-  let createHiera (name : string[]) =
+  let createHiera (name: string[]) =
     if name = null then invalidArg "name" "name is null"
     if name.Length = 0 then invalidArg "name" "must have >0 segments"
     Global.getStaticLogger name
@@ -970,7 +1045,7 @@ module Message =
       timestamp = Global.timestamp ()
       level     = level }
 
-  /// Create a new event log message � like `event` but with parameters flipped.
+  /// Create a new event log message – like `event` but with parameters flipped.
   /// Useful to use with `Logger.log` with point-free style, to reduce the
   /// noise. E.g. `logger.logVerbose (eventX "Returned {code}" >> setField "code" 24)`
   let eventX template level =
@@ -985,11 +1060,11 @@ module Message =
       level     = Debug }
 
   /// Sets the name/path of the log message.
-  let setName (name : string[]) (x : Message) =
+  let setName (name: string[]) (x: Message) =
     { x with name = name }
 
   /// Sets the final portion o fthe name of the Message.
-  let setNameEnding (ending : string) (x : Message) =
+  let setNameEnding (ending: string) (x: Message) =
     if String.IsNullOrWhiteSpace ending then x else
     let segs = ResizeArray<_>(x.name)
     segs.Add ending
@@ -997,7 +1072,7 @@ module Message =
 
   /// Sets the name as a single string; if this string contains dots, the string
   /// will be split on these dots.
-  let setSingleName (name : string) (x : Message) =
+  let setSingleName (name: string) (x: Message) =
     if name = null then invalidArg "name" "may not be null"
 
     let name' =
@@ -1006,29 +1081,29 @@ module Message =
     x |> setName name'
 
   /// Sets the value of the field on the log message.
-  let setField (key : string) (value : obj) (x : Message) =
+  let setField (key: string) (value: obj) (x: Message) =
     { x with fields = x.fields |> Map.add key value }
 
   /// Alias to `setField`
   let setFieldValue = setField
 
   /// Sets the timestamp on the log message.
-  let setTimestamp (ts : EpochNanoSeconds) (x : Message) =
+  let setTimestamp (ts: EpochNanoSeconds) (x: Message) =
     { x with timestamp = ts }
 
   /// Sets the level on the log message.
-  let setLevel (level : LogLevel) (x : Message) =
+  let setLevel (level: LogLevel) (x: Message) =
     { x with level = level }
 
   /// Adds an exception to the Message, to the 'errors' field, inside a list.
-  let addExn ex (x : Message) =
+  let addExn ex (x: Message) =
     let fields' =
       match Map.tryFind FieldErrorsKey x.fields with
       | None ->
         x.fields |> Map.add FieldErrorsKey (box [ box ex ])
 
       | Some errors ->
-        let arr : obj list = unbox errors
+        let arr: obj list = unbox errors
         x.fields |> Map.add FieldErrorsKey (box (box ex :: arr))
 
     { x with fields = fields' }
