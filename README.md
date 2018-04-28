@@ -108,7 +108,7 @@ nuget Logary.Adapters.Facade prerelease
 
 And in your tests:
 
-```
+```fsharp
 open Hopac
 open Logary
 open Logary.Configuration
