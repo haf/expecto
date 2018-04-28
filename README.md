@@ -99,7 +99,7 @@ with Expecto:
 
 ### Prettify stacktraces/ship test logs
 
-To get a complete logging solution and stacktrace highlighting, parsing and
+To get a [complete logging solution][logary] and stacktrace highlighting, parsing and
 the ability to ship your build logs somewhere, also add these:
 
 ```
@@ -1288,3 +1288,6 @@ you should create a function like so: `testCase "abc" <| fun () -> Expect.equal
 ...`.
 
 ![Expecto expecto](./docs/expecto-patronus-2000x1126.png)
+
+
+ [logary]: https://github.com/logary/logary#using-logary-in-a-library
