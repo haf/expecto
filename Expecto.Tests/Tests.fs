@@ -508,6 +508,23 @@ let expecto =
 
       ]
 
+      testList "flipped throwsT" [
+
+        testCase "pass" <| fun _ ->
+          (fun _ -> nullArg "") |> Flip.Expect.throwsT<ArgumentNullException> 
+                                                "Should throw null arg"
+
+        testCase "fail with incorrect exception" (fun _ ->
+          (fun _ -> nullArg "") |> Flip.Expect.throwsT<ArgumentException> 
+                                            "Expected argument exception."
+        ) |> assertTestFails
+
+        testCase "fail with no exception" (fun _ ->
+          ignore |> Flip.Expect.throwsT<ArgumentNullException> "Ignore 'should' throw an exn, ;)"
+        ) |> assertTestFails
+
+      ]
+
       testList "double" [
         testList "nan testing" [
           testCase "is not 'NaN'" <| fun _ ->
