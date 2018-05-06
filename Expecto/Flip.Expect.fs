@@ -7,7 +7,7 @@ let inline throws message f = Expecto.Expect.throws f message
 let inline throwsC cont f = Expecto.Expect.throwsC f cont
 
 /// Expects the passed function to throw `'texn`.
-let inline throwsT<'texn> message f = Expecto.Expect.throwsT f message
+let inline throwsT<'texn> message f = Expecto.Expect.throwsT<'texn> f message
 
 /// Expects the value to be a None value.
 let inline isNone message x = Expecto.Expect.isNone x message
