@@ -1,4 +1,4 @@
-﻿/// The logging namespace, which contains the logging abstraction for this
+/// The logging namespace, which contains the logging abstraction for this
 /// library. See https://github.com/logary/logary for details. This module is
 /// completely stand-alone in that it has no external references and its adapter
 /// in Logary has been well tested.
@@ -540,7 +540,7 @@ module internal LiterateTokenisation =
     | :? int16 | :? int32 | :? int64 | :? decimal | :? float | :? double -> NumericSymbol
     | :? string | :? char -> StringSymbol
     | _ -> OtherSymbol
-
+  
   /// Converts a `PointValue` into a sequence literate tokens. The returned `Set<string>` contains
   /// the names of the properties that were found in the `Event` template.
   let tokenisePointValue (options: LiterateOptions) (fields: Map<string, obj>) = function
@@ -587,7 +587,7 @@ module internal LiterateTokenisation =
           // regular text
           go ((line, Text) :: (Environment.NewLine, Text) :: lines)
     go []
-
+  
   /// Converts all exceptions in a `Message` into a sequence of literate tokens.
   let tokeniseMessageExns (context: LiterateOptions) message =
     let exnExceptionParts =
@@ -742,8 +742,8 @@ module internal LiterateFormatting =
           else yield Environment.NewLine, Text
           yield! tokeniseExtraField options message field
       }
-
-    let tokeniseTimestamp format (options: LiterateOptions) (message: Message) =
+    
+    let tokeniseTimestamp format (options: LiterateOptions) (message: Message) = 
       let localDateTimeOffset = DateTimeOffset(message.utcTicks, TimeSpan.Zero).ToLocalTime()
       let formattedTimestamp = localDateTimeOffset.ToString(format, options.formatProvider)
       seq { yield formattedTimestamp, Subtext }
@@ -789,7 +789,7 @@ module internal LiterateFormatting =
       // render the message template first so we have the template-matched fields available
       let fieldsInMessageTemplate, messageParts =
         tokenisePointValue options message.fields message.value
-
+      
       let tokeniseOutputTemplateField fieldName format = seq {
         match fieldName with
         | "timestamp" ->            yield! tokeniseTimestamp format options message
@@ -1045,7 +1045,7 @@ module Message =
       timestamp = Global.timestamp ()
       level     = level }
 
-  /// Create a new event log message – like `event` but with parameters flipped.
+  /// Create a new event log message � like `event` but with parameters flipped.
   /// Useful to use with `Logger.log` with point-free style, to reduce the
   /// noise. E.g. `logger.logVerbose (eventX "Returned {code}" >> setField "code" 24)`
   let eventX template level =

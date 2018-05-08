@@ -1,5 +1,9 @@
-#### 8.0.0 – 2018-04-28
-* Upgrade Logary.Facade and bump major because of a int64 -> float change in the logging facade. Add docs on how to get extra value/stacktrace parsing when using Expecto.
+#### 8.0.0 – 2018-05-08
+* Upgrade Logary.Facade and bump major because of a int64 to float change. thanks @haf
+* Add docs on how to get extra value/stacktrace parsing when using Expecto. thanks @haf
+* Fixed flipped throwsT not passing exception type through. #244 thanks @daniel-chambers
+* Fixed all and allEqual call enumeration more than once. #245 thanks @kleidemos
+* Add passing cancellation token to run functions. #229 thanks @AnthonyLloyd
 
 #### 7.0.1 - 2018-04-07
 * Default printer log with list name. #236 thanks @jackfoxy
