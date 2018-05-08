@@ -77,27 +77,23 @@ Target "BuildBenchmarkDotNet" (fun _ ->
     build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj"
 )
 
-let testProjects = [
-    "Expecto.Tests/Expecto.Tests.fsproj"
-    "Expecto.Hopac.Tests/Expecto.Hopac.Tests.fsproj"
-    "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj"
-    "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj"
-]
-
 Target "BuildTest" (fun _ ->
-    List.iter build testProjects
+    build "Expecto.Tests/Expecto.Tests.fsproj"
+    build "Expecto.Hopac.Tests/Expecto.Hopac.Tests.fsproj"
+    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj"
+    build "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj"
 )
 
 Target "RunTest" (fun _ ->
     let runTest project =
-        ["netcoreapp2.0"; "net461"]
-        |> List.iter (fun fwk ->
-            "run -p ./" + project + " -f " + fwk + " -c " + configuration +
-                " --no-restore --no-build --summary"
-            |> DotNetCli.RunCommand (fun p ->
-               { p with ToolPath = dotnetExePath })
-        )
-    List.iter runTest testProjects
+        DotNetCli.RunCommand (fun p -> { p with ToolPath = dotnetExePath })
+            (project+"/bin/"+configuration+"/netcoreapp2.0/"+project+".dll --summary")
+        Shell.Exec (project+"/bin/"+configuration+"/net461/"+project+".exe","--summary")
+        |> fun r -> if r<>0 then project+".exe failed" |> failwith
+    runTest "Expecto.Tests"
+    runTest "Expecto.Hopac.Tests"
+    runTest "Expecto.Tests.CSharp"
+    runTest "Expecto.Focused.Tests"
 )
 
 Target "Pack" (fun _ ->
