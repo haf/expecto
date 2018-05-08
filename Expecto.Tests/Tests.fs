@@ -511,11 +511,11 @@ let expecto =
       testList "flipped throwsT" [
 
         testCase "pass" <| fun _ ->
-          (fun _ -> nullArg "") |> Flip.Expect.throwsT<ArgumentNullException> 
+          (fun _ -> nullArg "") |> Flip.Expect.throwsT<ArgumentNullException>
                                                 "Should throw null arg"
 
         testCase "fail with incorrect exception" (fun _ ->
-          (fun _ -> nullArg "") |> Flip.Expect.throwsT<ArgumentException> 
+          (fun _ -> nullArg "") |> Flip.Expect.throwsT<ArgumentException>
                                             "Expected argument exception."
         ) |> assertTestFails
 
@@ -763,6 +763,18 @@ let expecto =
         testCase "null" (fun _ ->
           Expect.all null ((=) 5) "should also fail"
         ) |> assertTestFails
+
+        testCase "enumerating has side effects" <| fun _ ->
+          let count = 10
+          let mutable id = 0
+          let tryCreate value =
+            if id = count then failtest "sequence should be enumerated only once"
+            id <- id + 1
+            Some (id, value)
+          Expect.all
+            ([1..count] |> Seq.map tryCreate)
+            Option.isSome
+            "should pass"
       ]
 
       testList "#allEqual" [
@@ -779,6 +791,18 @@ let expecto =
         testCase "null" (fun _ ->
           Expect.allEqual null 5 "should also fail"
         ) |> assertTestFails
+
+        testCase "enumerating has side effects" <| fun _ ->
+          let count = 10
+          let mutable id = 0
+          let tryCreate value =
+            if id = count then failtest "sequence should be enumerated only once"
+            id <- id + 1
+            Some (id, value)
+          Expect.allEqual
+            ([1..count] |> Seq.map (tryCreate >> Option.isSome))
+            true
+            "should pass"
       ]
 
       testList "#containsAll" [
@@ -1138,7 +1162,7 @@ let stress =
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
-    
+
     yield testAsync "deadlock" {
       if Environment.ProcessorCount > 2 then
         let config =
@@ -1206,7 +1230,7 @@ let stress =
             verbosity = Logging.LogLevel.Fatal }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
-    
+
     yield testAsync "deadlock sequenced" {
       let config =
         { defaultConfig with
@@ -1232,7 +1256,7 @@ let cancel =
         if not ct.IsCancellationRequested then
           failwith "sync not cancelled"
       )
-      
+
     let cancelTestAsync =
       testAsync "async cancel" {
         let mutable i = 200

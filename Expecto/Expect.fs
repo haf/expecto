@@ -256,8 +256,6 @@ let inline equal (actual : 'a) (expected : 'a) message =
     if actual <> expected then
       Tests.failtestf "%s. Actual value was %A but had expected it to be %A." message actual expected
 
-
-
 /// Expects the two values not to equal each other.
 let notEqual (actual : 'a) (expected : 'a) message =
   if expected = actual then
@@ -316,10 +314,13 @@ let exists ( actual: 'a seq) asserter message =
   else Tests.failtestf "%s. There isn't any element which satisfies given assertion %A." message asserter
 
 let private allEqualTo actual asserter =
-  seq { for i in 0..(actual |> Seq.length) - 1 do
-            let isDifferent = Seq.item i actual |> asserter |> not
-            if isDifferent then yield (i, sprintf "%A" (Seq.item i actual))
-      }
+  actual
+  |> Seq.indexed
+  |> Seq.choose (fun (index, item) ->
+    if not <| asserter item
+    then Some (index, sprintf "%A" item)
+    else None)
+  |> List.ofSeq
 
 let private formatAllEqualTo actual =
   actual
@@ -566,7 +567,6 @@ let stringHasLength (subject : string) (length : int) message =
   if subject.Length <> length then
     Tests.failtestf "%s. Expected subject string '%s' to have length '%d'."
                     message subject length
-
 
 /// Expect the streams to byte-wise equal.
 let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) message =
