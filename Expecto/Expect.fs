@@ -481,11 +481,11 @@ let inline private formattedList (sequence) =
 let sequenceEqual (actual : _ seq) (expected : _ seq) message =
   use ai = actual.GetEnumerator()
   use ei = expected.GetEnumerator()
-  let baseMsg =
+  let baseMsg() =
     sprintf "%s.
         Expected value was:
         %s
-        Actual value was:
+        Actual value (may be incomplete) was:
         %s"
                   message (formattedList expected) (formattedList actual)
   let mutable i = 0
@@ -495,16 +495,16 @@ let sequenceEqual (actual : _ seq) (expected : _ seq) message =
       else
         Tests.failtestf "%s
         Sequence does not match at position %i. Expected item: %A, but got %A."
-                           baseMsg i (ei.Current) (ai.Current)
+                           (baseMsg()) i (ei.Current) (ai.Current)
     else
       Tests.failtestf "%s
       Sequence actual shorter than expected, at pos %i for expected item %A."
-                      baseMsg i (ei.Current)
+                      (baseMsg()) i (ei.Current)
     i <- i + 1
   if ai.MoveNext() then
     Tests.failtestf "%s
     Sequence actual longer than expected, at pos %i found item %A."
-                      baseMsg i (ai.Current)
+                      (baseMsg()) i (ai.Current)
 
 /// Expect the sequence `subject` to start with `prefix`. If it does not
 /// then fail with `message` as an error message together with a description

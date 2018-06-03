@@ -848,6 +848,24 @@ let expecto =
         testCase "pass" <| fun _ ->
           Expect.sequenceEqual [1;2;3] [1;2;3] "Sequences actually equal"
 
+        testCase "affine sequence pass" <| fun _ ->
+          let bytes = Text.Encoding.UTF8.GetBytes("1\r\n2\r\n3\r\n")
+          use stream = new IO.MemoryStream(bytes)
+          let ofStreamByChunk chunkSize (stream: System.IO.Stream) =
+            let buffer = Array.zeroCreate<byte> chunkSize
+            seq { while stream.Length <> stream.Position do
+                    let bytesRead = stream.Read(buffer, 0, chunkSize)
+                    if bytesRead = 0 then ()
+                    else yield buffer }
+
+          let expected =
+            [ Text.Encoding.UTF8.GetBytes("1\r\n")
+              Text.Encoding.UTF8.GetBytes("2\r\n")
+              Text.Encoding.UTF8.GetBytes("3\r\n") ]
+            |> List.toSeq
+
+          Expect.sequenceEqual (ofStreamByChunk 3 stream) expected "Sequences actually equal"
+
         testCase "fail - longer" (fun _ ->
           Expect.sequenceEqual [1;2;3] [1] "Deliberately failing"
         ) |> assertTestFails
