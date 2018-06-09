@@ -1,11 +1,12 @@
-/// The logging namespace, which contains the logging abstraction for this
+﻿/// The logging namespace, which contains the logging abstraction for this
 /// library. See https://github.com/logary/logary for details. This module is
 /// completely stand-alone in that it has no external references and its adapter
 /// in Logary has been well tested.
 ///
-/// This facade is Apache licensed unless running on MSFT-based web servers, in which
-/// case you need a commercial license: contact henrik@haf.se for one.
-namespace Expecto.Logging
+/// This file is licensed under the Apache 2.0 license without modifications.
+/// This license applies to v3 of the Logary Facade. You can copy and paste this
+/// code into your software, which freezes this license in place.
+namespace Logary.Facade
 
 open System
 
@@ -1045,7 +1046,7 @@ module Message =
       timestamp = Global.timestamp ()
       level     = level }
 
-  /// Create a new event log message � like `event` but with parameters flipped.
+  /// Create a new event log message – like `event` but with parameters flipped.
   /// Useful to use with `Logger.log` with point-free style, to reduce the
   /// noise. E.g. `logger.logVerbose (eventX "Returned {code}" >> setField "code" 24)`
   let eventX template level =

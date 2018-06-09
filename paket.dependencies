@@ -2,8 +2,6 @@ source https://api.nuget.org/v3/index.json
 framework net461, netstandard2.0, netcoreapp2.0
 storage:none
 
-github logary/logary:5c2fd4a5bc6bd70b9e64a1b8c9587da0e153897c src/Logary.Facade/Facade.fs
-
 nuget Argu 5.1
 nuget FsCheck 2.10.4
 nuget Hopac 0.3.23
