@@ -23,15 +23,6 @@ cores for testing your software.
 
 ![Parallel by default](./docs/parallel-testing.png)
 
-Originally, Expecto is a fork of Fuchu aiming to be properly updated and pushed
-to nuget when PRs come in. Expecto is part of the F# suite of libraries I've
-built or am building, to make F# the most approachable language for system
-programming.
-
-- [Suave](https://suave.io)
-- [Logary](https://github.com/logary/)
-- [Http.fs](https://github.com/haf/Http.fs/)
-
 What follows is the Table of Contents for this README, which also serves as the
 documentation for the project.
 

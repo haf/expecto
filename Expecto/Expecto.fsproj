@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Expecto</AssemblyName>
     <PackageId>Expecto</PackageId>
-    <Version>8.0.0</Version>
+    <Version>8.1.0</Version>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Optional: Declare that the Repository URL can be published to NuSpec -->
@@ -14,11 +14,8 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\paket-files\logary\logary\src\Logary.Facade\Facade.fs">
-      <Paket>True</Paket>
-      <Link>paket-files/Facade.fs</Link>
-    </Compile>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Logging.fs" />
     <Compile Include="Statistics.fs" />
     <Compile Include="Expecto.fs" />
     <Compile Include="Performance.fs" />

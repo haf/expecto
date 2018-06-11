@@ -1,3 +1,8 @@
+#### 8.1.0 – 2018-06-11
+* Logary.Facade corrected to v3 Apache 2.0 version. thanks @haf/@AnthonyLloyd
+* Added sourcelink support. #251 thanks @jackfoxy
+* Fixed comparison of affine (ephemeral) sequence. #253 thanks @jackfoxy
+
 #### 8.0.0 – 2018-05-08
 * Upgrade Logary.Facade and bump major because of a int64 to float change. thanks @haf
 * Add docs on how to get extra value/stacktrace parsing when using Expecto. thanks @haf

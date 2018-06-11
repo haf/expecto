@@ -1,4 +1,4 @@
-﻿/// The logging namespace, which contains the logging abstraction for this
+/// The logging namespace, which contains the logging abstraction for this
 /// library. See https://github.com/logary/logary for details. This module is
 /// completely stand-alone in that it has no external references and its adapter
 /// in Logary has been well tested.
@@ -6,7 +6,14 @@
 /// This file is licensed under the Apache 2.0 license without modifications.
 /// This license applies to v3 of the Logary Facade. You can copy and paste this
 /// code into your software, which freezes this license in place.
-namespace Logary.Facade
+///
+/// Original Source:
+/// https://github.com/logary/logary/blob/996bdf92713f406b17c6cd7284e4d674f49e3ff6/src/Logary.Facade/Facade.fs
+///
+/// Changes:
+///     Changed namespace to Expecto.Logging and file name to Logging.fs - Anthony Lloyd - 11 Jun 2018
+///
+namespace Expecto.Logging
 
 open System
 

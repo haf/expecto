@@ -22,7 +22,6 @@ Target "InstallDotNetCore" (fun _ ->
 
 Target "Clean" (fun _ -> !!"./**/bin/" ++ "./**/obj/" |> CleanDirs)
 
-open Fake.StringHelper
 let normaliseFileToLFEnding filename =
     let s = ReadFileAsString filename
     s.Replace(WindowsLineBreaks,LinuxLineBreaks)
@@ -45,13 +44,6 @@ Target "AssemblyInfo" (fun _ ->
     createAssemblyInfo "Expecto.FsCheck"
     createAssemblyInfo "Expecto.BenchmarkDotNet"
     createAssemblyInfo "Expecto.Hopac"
-)
-
-Target "PaketFiles" (fun _ ->
-    let filename = "paket-files/logary/logary/src/Logary.Facade/Facade.fs"
-    FileHelper.ReplaceInFiles ["namespace Logary.Facade","namespace Expecto.Logging"]
-        [filename]
-    normaliseFileToLFEnding filename
 )
 
 Target "ProjectVersion" (fun _ ->
@@ -157,7 +149,6 @@ Target "All" ignore
 "Clean"
 ==> "InstallDotNetCore"
 ==> "AssemblyInfo"
-==> "PaketFiles"
 ==> "ProjectVersion"
 ==> "BuildBenchmarkDotNet"
 ==> "BuildTest"
