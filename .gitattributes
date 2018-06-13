@@ -1,4 +1,5 @@
 # These files are text and should be normalized (convert crlf to lf)
+*.lock text eol=lf
 *.config text eol=lf crlf=input
 *.cs text eol=lf crlf=input
 *.fs text eol=lf crlf=input

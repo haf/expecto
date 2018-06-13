@@ -1,3 +1,6 @@
+#### 8.1.1 – 2018-06-13
+* Compile against 4.3.4 of F# Core for now, thanks @haf
+
 #### 8.1.0 – 2018-06-11
 * Logary.Facade corrected to v3 Apache 2.0 version. thanks @haf/@AnthonyLloyd
 * Added sourcelink support. #251 thanks @jackfoxy
