@@ -79,7 +79,7 @@ Target "BuildTest" (fun _ ->
 Target "RunTest" (fun _ ->
     let runTest project =
         DotNetCli.RunCommand (fun p -> { p with ToolPath = dotnetExePath })
-            (project+"/bin/"+configuration+"/netcoreapp2.1/"+project+".dll --summary")
+            (project+"/bin/"+configuration+"/netcoreapp2.0/"+project+".dll --summary")
         Shell.Exec (project+"/bin/"+configuration+"/net461/"+project+".exe","--summary")
         |> fun r -> if r<>0 then project+".exe failed" |> failwith
     runTest "Expecto.Tests"

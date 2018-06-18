@@ -1321,7 +1321,7 @@ module Impl =
     if focused.Length = 0 then true
     else
       if config.verbosity <> LogLevel.Fatal then
-        logger.log LogLevel.Error (
+        logger.logWithAck LogLevel.Error (
           eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
           >> setField "count" focused.Length)
         |> Async.StartImmediate
