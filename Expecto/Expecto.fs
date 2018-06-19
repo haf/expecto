@@ -1026,20 +1026,28 @@ module Impl =
       }
     evalTests config test
 
+  let private flush (l:Logger) =
+    let d = l :?> IDisposable
+    if isNull d |> not then d.Dispose()
+
   /// Runs tests, returns error code
   let runEvalWithCancel (ct:CancellationToken) config test =
     async {
       do! config.printer.beforeRun test
 
       let w = Stopwatch.StartNew()
-      let! results = evalTests config test
+      let! results = evalTestsWithCancel ct config test
       w.Stop()
-      let testSummary = { results = results
-                          duration = w.Elapsed
-                          maxMemory = 0L
-                          memoryLimit = 0L
-                          timedOut = [] }
+      let testSummary = {
+        results = results
+        duration = w.Elapsed
+        maxMemory = 0L
+        memoryLimit = 0L
+        timedOut = []
+      }
       do! config.printer.summary config testSummary
+
+      flush logger
 
       return testSummary.errorCode
     }
@@ -1164,6 +1172,8 @@ module Impl =
                           timedOut = List.ofSeq runningTests }
 
       do! config.printer.summary config testSummary
+
+      flush logger
 
       return testSummary.errorCode
     }

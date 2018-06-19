@@ -12,6 +12,7 @@
 ///
 /// Changes:
 ///     Changed namespace to Expecto.Logging and file name to Logging.fs - Anthony Lloyd - 11 Jun 2018
+///     Add IFlushable - Anthony Lloyd - 19 Jun 2018
 ///
 namespace Expecto.Logging
 
@@ -292,6 +293,9 @@ module LoggerEx =
       logWithTimeout x message.level (fun _ -> message) |> Async.Start
 
     // TODO: timeXXX functions
+
+type IFlushable =
+  abstract Flush : unit -> unit
 
 type LoggingConfig =
   { /// The `timestamp` function should preferably be monotonic and not 'jumpy'
