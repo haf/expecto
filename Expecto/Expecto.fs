@@ -1027,8 +1027,7 @@ module Impl =
     evalTests config test
 
   let private flush (l:Logger) =
-    let d = l :?> IDisposable
-    if isNull d |> not then d.Dispose()
+    if l :? IFlushable then (l :?> IFlushable).Flush()
 
   /// Runs tests, returns error code
   let runEvalWithCancel (ct:CancellationToken) config test =
