@@ -1649,7 +1649,7 @@ module Tests =
   let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
     Global.initialiseIfDefault
       { Global.defaultConfig with
-          getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity, consoleSemaphore = Global.semaphore()) :> Logger }
+          getLogger = fun name -> ANSIConsoleLogger(name, config.verbosity, consoleSemaphore = Global.semaphore()) :> Logger }
     config.logName |> Option.iter setLogName
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
       1

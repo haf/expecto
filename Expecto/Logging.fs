@@ -17,6 +17,7 @@
 namespace Expecto.Logging
 
 open System
+open System.Text
 
 /// The log level denotes how 'important' the gauge or event message is.
 [<CustomEquality; CustomComparison>]
@@ -940,6 +941,70 @@ type CombiningTarget(name, otherLoggers: Logger list) =
       |> Async.Parallel
       |> Async.Ignore // Async<unit>
 
+type ANSIConsoleLogger(name, minLevel, ?consoleSemaphore) =
+  let sem = defaultArg consoleSemaphore (obj())
+  let options = Literate.LiterateOptions.create()
+  let tokenise = LiterateTokenisation.tokeniseMessage
+  let buffer = StringBuilder()
+
+  let colorForWhite =
+    if Console.BackgroundColor = ConsoleColor.White then "\x1B[90m" else "\x1B[97m"
+  let colorReset = "\x1B[0m"
+
+  let colorANSI = function
+    | ConsoleColor.White -> colorForWhite
+    | ConsoleColor.Gray -> "\x1B[31m"
+    | ConsoleColor.DarkGray -> "\x1B[90m"
+    | ConsoleColor.Yellow -> "\x1B[93m"
+    | ConsoleColor.Red -> "\x1B[91m"
+    | ConsoleColor.Blue -> "\x1B[33m"
+    | ConsoleColor.Magenta -> "\x1B[95m"
+    | ConsoleColor.Cyan -> "\x1B[96m"
+    | ConsoleColor.Green -> "\x1B[92m"
+    | _ -> "\x1B[334m"
+
+  let atomicallyWriteColouredTextToConsole sem (parts: (string * ConsoleColor) list) =
+    lock sem <| fun _ ->
+      let mutable currentColour = Console.ForegroundColor
+      parts |> List.iter (fun (text, colour) ->
+        if currentColour <> colour then
+          colorANSI colour |> buffer.Append |> ignore
+          currentColour <- colour
+        buffer.Append text |> ignore
+      )
+      buffer.Append colorReset |> ignore
+
+  let atomicallyWriteTextToConsole sem (parts: (string * ConsoleColor) list) =
+    lock sem <| fun _ ->
+      parts |> List.iter (fun (text, _) ->
+        buffer.Append text |> ignore
+      )
+
+  let textToBuffer =
+    if Console.IsOutputRedirected then atomicallyWriteTextToConsole
+    else atomicallyWriteColouredTextToConsole
+
+  let writeColourisedThenNewLine message =
+    [ yield! tokenise options message
+      yield Environment.NewLine, Literate.Text ]
+    |> List.map (fun (s, t) -> s, options.theme(t))
+    |> textToBuffer sem
+
+  interface Logger with
+    member __.name = name
+    member __.logWithAck level msgFactory =
+      if level >= minLevel then writeColourisedThenNewLine (msgFactory level)
+      async.Return()
+    member __.log level msgFactory =
+      if level >= minLevel then writeColourisedThenNewLine (msgFactory level)
+      async.Return()
+  interface IFlushable with
+    member __.Flush() =
+      lock sem (fun _ ->
+        buffer.ToString() |> Console.Write
+        buffer.Clear() |> ignore
+      )
+
 module Global =
   /// This is the global semaphore for colourising the console output. Ensure
   /// that the same semaphore is used across libraries by using the Logary
@@ -949,7 +1014,7 @@ module Global =
   /// The global default configuration, which logs to Console at Info level.
   let defaultConfig =
     { timestamp        = fun () -> DateTimeOffset.timestamp DateTimeOffset.UtcNow
-      getLogger        = fun name -> LiterateConsoleTarget(name, Info) :> Logger
+      getLogger        = fun name -> ANSIConsoleLogger(name, Info) :> Logger
       consoleSemaphore = consoleSemaphore }
 
   let private config =
@@ -983,6 +1048,10 @@ module Global =
 
       member x.logWithAck level msgFactory =
         withLogger (fun logger -> logger.logWithAck level (msgFactory >> ensureName))
+
+    interface IFlushable with
+      member __.Flush() =
+        if logger :? IFlushable then (logger :?> IFlushable).Flush()
 
   let internal getStaticLogger (name: string []) =
     Flyweight name
