@@ -17,7 +17,7 @@ let copyright = "Copyright 2018"
 let mutable dotnetExePath = "dotnet"
 
 Target "InstallDotNetCore" (fun _ ->
-    dotnetExePath <- DotNetCli.InstallDotNetSDK "2.1.3"
+    dotnetExePath <- DotNetCli.InstallDotNetSDK "2.1.301"
 )
 
 Target "Clean" (fun _ -> !!"./**/bin/" ++ "./**/obj/" |> CleanDirs)
