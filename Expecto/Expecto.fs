@@ -810,7 +810,42 @@ module Impl =
           do! innerPrinter.summary c s
           tcLog "testSuiteFinished" [
             "name", "ExpectoTestSuite" ] } }
+    static member fromInterface (i : ITestPrinter) =
+      { beforeRun   = i.BeforeRun >> Async.AwaitTask
+        beforeEach  = i.BeforeEach >> Async.AwaitTask
+        passed      = fun n d -> i.Passed(n, d) |> Async.AwaitTask
+        info        = i.Info >> Async.AwaitTask
+        ignored     = fun n m -> i.Ignored(n, m) |> Async.AwaitTask
+        failed      = fun n m d -> i.Failed(n, m, d) |> Async.AwaitTask
+        exn         = fun n e d -> i.Exn(n, e, d) |> Async.AwaitTask
+        summary     = fun c s -> i.Summary(c, s) |> Async.AwaitTask
+      }
+    static member mergePrinters (first:TestPrinters, second:TestPrinters) =
+      let runTwoAsyncs a b = async {
+        do! a
+        do! b
+      }
+      { beforeRun   = fun _tests -> runTwoAsyncs (first.beforeRun _tests) (second.beforeRun _tests)
+        beforeEach  = fun n -> runTwoAsyncs (first.beforeEach n) (second.beforeEach n)
+        info        = fun s -> runTwoAsyncs (first.info s) (second.info s)
+        passed      = fun n d -> runTwoAsyncs (first.passed n d) (second.passed n d)
+        ignored     = fun n m -> runTwoAsyncs (first.ignored n m) (second.ignored n m)
+        failed      = fun n m d -> runTwoAsyncs (first.failed n m d) (second.failed n m d)
+        exn         = fun n e d -> runTwoAsyncs (first.exn n e d) (second.exn n e d)
+        summary     = fun config summary -> runTwoAsyncs (first.summary config summary) (second.summary config summary)
+      }
 
+  // C# is weak and can't really handle Async or partial application
+  and ITestPrinter =
+    abstract member BeforeRun   : Test -> Task
+    abstract member BeforeEach  : string -> Task
+    abstract member Info        : string -> Task
+    abstract member Passed      : string * TimeSpan -> Task
+    abstract member Ignored     : string * string -> Task
+    abstract member Failed      : string * string * TimeSpan -> Task
+    abstract member Exn         : string * exn * TimeSpan -> Task
+    abstract member Summary     : ExpectoConfig * TestRunSummary -> Task
+    
   // Runner options
   and ExpectoConfig =
     { /// Whether to run the tests in parallel. Defaults to
@@ -857,6 +892,29 @@ module Impl =
       /// Allows duplicate test names.
       allowDuplicateNames: bool
     }
+    // C# is weak and it is hard to update the configuration
+    member x.WithParallel(parallel) = { x with parallel = parallel }
+    member x.WithParallelWorkers(parallelWorkers) = { x with parallelWorkers = parallelWorkers }
+    member x.WithStress(stress) = { x with stress = stress }
+    member x.WithStressTimeout(stressTimeout) = { x with stressTimeout = stressTimeout }
+    member x.WithStressMemoryLimit(stressMemoryLimit) = { x with stressMemoryLimit = stressMemoryLimit }
+    member x.WithFilter(filter) = { x with filter = filter }
+    member x.WithFailOnFocusedTests(failOnFocusedTests) = { x with failOnFocusedTests = failOnFocusedTests }
+    member x.WithPrinter(printer) = { x with printer = printer }
+    /// Set the printer - this replaces the current one
+    member x.WithPrinter(printer:ITestPrinter) = { x with printer = TestPrinters.fromInterface printer }
+    /// Add an additional printer - this does not replace the current one
+    member x.AddPrinter(printer:ITestPrinter) =
+      let combinedPrinter = TestPrinters.mergePrinters (x.printer, (TestPrinters.fromInterface printer))
+      { x with printer = combinedPrinter }
+    member x.WithVerbosity(verbosity) = { x with verbosity = verbosity }
+    member x.WithLogName(logName) = { x with logName = logName }
+    member x.WithLocate(locate) = { x with locate = locate }
+    member x.WithFsCheckMaxTests(fsCheckMaxTests) = { x with fsCheckMaxTests = fsCheckMaxTests }
+    member x.WithFsCheckStartSize(fsCheckStartSize) = { x with fsCheckStartSize = fsCheckStartSize }
+    member x.WithFsCheckEndSize(fsCheckEndSize) = { x with fsCheckEndSize = fsCheckEndSize }
+    member x.WithMySpiritIsWeak(mySpiritIsWeak) = { x with mySpiritIsWeak = mySpiritIsWeak }
+    member x.WithAllowDuplicateNames(allowDuplicateNames) = { x with allowDuplicateNames = allowDuplicateNames }
     static member defaultConfig =
       { parallel = true
         parallelWorkers = Environment.ProcessorCount
