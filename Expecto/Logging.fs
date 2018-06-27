@@ -990,20 +990,30 @@ type ANSIConsoleLogger(name, minLevel, ?consoleSemaphore) =
     |> List.map (fun (s, t) -> s, options.theme(t))
     |> textToBuffer sem
 
-  interface Logger with
-    member __.name = name
-    member __.logWithAck level msgFactory =
-      if level >= minLevel then writeColourisedThenNewLine (msgFactory level)
-      async.Return()
-    member __.log level msgFactory =
-      if level >= minLevel then writeColourisedThenNewLine (msgFactory level)
-      async.Return()
   interface IFlushable with
     member __.Flush() =
       lock sem (fun _ ->
         buffer.ToString() |> Console.Write
         buffer.Clear() |> ignore
       )
+
+  interface Logger with
+    member __.name = name
+    member x.logWithAck level msgFactory =
+      if level >= minLevel then
+        writeColourisedThenNewLine (msgFactory level)
+        Expecto.ProgressIndicator.pause (fun () ->
+            (x :> IFlushable).Flush()
+          )
+      async.Return()
+    member x.log level msgFactory =
+      if level >= minLevel then
+        writeColourisedThenNewLine (msgFactory level)
+        if level=Error then
+          Expecto.ProgressIndicator.pause (fun () ->
+            (x :> IFlushable).Flush()
+          )
+      async.Return()
 
 module Global =
   /// This is the global semaphore for colourising the console output. Ensure

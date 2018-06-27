@@ -396,6 +396,11 @@ module Impl =
 
   let mutable logger = Log.create "Expecto"
   let setLogName name = logger <- Log.create name
+  let flush (l:Logger) =
+    if l :? IFlushable then
+      ProgressIndicator.pause (fun () ->
+        (l :?> IFlushable).Flush()
+      )
 
   type TestResult =
     | Passed
@@ -953,8 +958,13 @@ module Impl =
       config.parallelWorkers
 
   /// Evaluates tests.
-  let evalTestsWithCancel (ct:CancellationToken) config test =
+  let evalTestsWithCancel (ct:CancellationToken) config test progressStarted =
     async {
+
+      let tests = Test.toTestCodeList test
+      let testLength = List.length tests
+
+      let testsCompleted = ref 0
 
       let evalTestAsync (test:FlatTest) =
 
@@ -966,10 +976,14 @@ module Impl =
           let! result = execTestAsync ct config test
           do! beforeAsync
           do! TestPrinters.printResult config test result
+          
+          if progressStarted then
+            Interlocked.Increment(testsCompleted) + testLength/200
+            / testLength |> ProgressIndicator.update
+          
           return test,result
         }
 
-      let tests = Test.toTestCodeList test
       let inline cons xs x = x::xs
 
       if not config.``parallel`` ||
@@ -1015,7 +1029,7 @@ module Impl =
 
   /// Evaluates tests.
   let evalTests config test =
-    evalTestsWithCancel CancellationToken.None config test
+    evalTestsWithCancel CancellationToken.None config test false
 
   let evalTestsSilent test =
     let config =
@@ -1026,16 +1040,17 @@ module Impl =
       }
     evalTests config test
 
-  let private flush (l:Logger) =
-    if l :? IFlushable then (l :?> IFlushable).Flush()
-
   /// Runs tests, returns error code
   let runEvalWithCancel (ct:CancellationToken) config test =
     async {
       do! config.printer.beforeRun test
 
+      ProgressIndicator.text "Expecto Running... "
+      let progressStarted = ProgressIndicator.start()
+
+
       let w = Stopwatch.StartNew()
-      let! results = evalTestsWithCancel ct config test
+      let! results = evalTestsWithCancel ct config test progressStarted
       w.Stop()
       let testSummary = {
         results = results
@@ -1045,6 +1060,8 @@ module Impl =
         timedOut = []
       }
       do! config.printer.summary config testSummary
+
+      if progressStarted then ProgressIndicator.stop()
 
       flush logger
 
@@ -1058,6 +1075,9 @@ module Impl =
   let runStressWithCancel (ct:CancellationToken) config test =
     async {
       do! config.printer.beforeRun test
+
+      ProgressIndicator.text "Expecto Running... "
+      let progressStarted = ProgressIndicator.start()
 
       let tests =
         Test.toTestCodeList test
@@ -1075,11 +1095,13 @@ module Impl =
         let next = List.length tests |> rand.Next
         List.item next tests
 
-      let finishTimestamp =
-        lazy
+      let totalTicks =
         config.stress.Value.TotalSeconds * float Stopwatch.Frequency
         |> int64
-        |> (+) (Stopwatch.GetTimestamp())
+
+      let finishTime =
+        lazy
+        totalTicks |> (+) (Stopwatch.GetTimestamp())
 
       let asyncRun foldRunner (runningTests:ResizeArray<_>,
                                results,
@@ -1108,7 +1130,7 @@ module Impl =
 
         Async.Start(async {
           let finishMilliseconds =
-            max (finishTimestamp.Value - Stopwatch.GetTimestamp()) 0L
+            max (finishTime.Value - Stopwatch.GetTimestamp()) 0L
             * 1000L / Stopwatch.Frequency
           let timeout =
             int finishMilliseconds + int config.stressTimeout.TotalMilliseconds
@@ -1117,7 +1139,13 @@ module Impl =
         }, cancel.Token)
 
         Seq.takeWhile (fun test ->
-          if Stopwatch.GetTimestamp() < finishTimestamp.Value
+          let now = Stopwatch.GetTimestamp()
+          
+          if progressStarted then
+            100 - int((finishTime.Value - now + totalTicks / 200L) / totalTicks)
+            |> ProgressIndicator.update
+          
+          if now < finishTime.Value
               && not ct.IsCancellationRequested then
             runningTests.Add test
             true
@@ -1143,7 +1171,7 @@ module Impl =
           |> asyncRun Async.foldSequentiallyWithCancel initial
           |> Async.bind (fun (runningTests,results,maxMemory) ->
                if maxMemory > memoryLimit ||
-                  Stopwatch.GetTimestamp() > finishTimestamp.Value then
+                  Stopwatch.GetTimestamp() > finishTime.Value then
                  async.Return (runningTests,results,maxMemory)
                else
                  let parallel =
@@ -1171,6 +1199,8 @@ module Impl =
                           timedOut = List.ofSeq runningTests }
 
       do! config.printer.summary config testSummary
+
+      if progressStarted then ProgressIndicator.stop()
 
       flush logger
 

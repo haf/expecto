@@ -15,6 +15,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Progress.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Statistics.fs" />
     <Compile Include="Expecto.fs" />
