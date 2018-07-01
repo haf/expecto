@@ -524,6 +524,25 @@ let sequenceStarts (subject : _ seq) (prefix : _ seq) message =
                       message i (pi.Current)
     i <- i + 1
 
+let sequenceContainsOrder (actual: seq<'t>) (expected: seq<'t>) msg =
+  let el = System.Collections.Generic.Queue<'t> expected
+  use ae = actual.GetEnumerator()
+  let missingFail missing = failwithf "%s. Missing: %A in correct order from actual: %A" msg missing actual
+
+  let rec check i =
+    if el.Count = 0 then ()
+    else
+      if not (ae.MoveNext()) then missingFail el
+      else
+        let expect = el.Peek()
+        if expect = ae.Current then
+          ignore (el.Dequeue())
+          check (i + 1)
+        else
+          check (i + 1)
+
+  check 0
+
 /// Expect the sequence `subject` to be ascending. If it does not
 /// then fail with `message` as an error message.
 let isAscending (subject : _ seq) message =

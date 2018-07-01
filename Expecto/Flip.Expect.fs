@@ -143,6 +143,8 @@ let inline distribution message expected actual = Expecto.Expect.distribution ac
 /// Expects the `actual` sequence to equal the `expected` one.
 let inline sequenceEqual message expected actual = Expecto.Expect.sequenceEqual actual expected message
 
+let inline sequenceContainsOrder message expected actual = sequenceContainsOrder actual expected message
+
 /// Expect the sequence `subject` to start with `prefix`. If it does not
 /// then fail with `message` as an error message together with a description
 /// of `subject` and `prefix`.
