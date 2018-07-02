@@ -816,7 +816,7 @@ module Impl =
           do! innerPrinter.summary c s
           tcLog "testSuiteFinished" [
             "name", "ExpectoTestSuite" ] } }
-    static member mergePrinters (first:TestPrinters, second:TestPrinters) =
+    static member internal mergePrinters (first:TestPrinters, second:TestPrinters) =
       let runTwoAsyncs a b = async {
         do! a
         do! b
