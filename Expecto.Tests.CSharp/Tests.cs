@@ -2,9 +2,53 @@ using System;
 using System.Threading.Tasks;
 using Expecto.CSharp;
 using Expecto;
+using static Expecto.Impl;
 
 namespace Test.CSharp
 {
+    public class CSharpPrinter : ITestPrinter
+    {
+        Task ITestPrinter.BeforeEach(string value)
+        {
+            return Task.CompletedTask;
+        }
+
+        Task ITestPrinter.BeforeRun(Expecto.Test value)
+        {
+            return Task.CompletedTask;
+        }
+
+        Task ITestPrinter.Exn(string value1, Exception value2, TimeSpan value3)
+        {
+            return Task.CompletedTask;
+        }
+
+        Task ITestPrinter.Failed(string value1, string value2, TimeSpan value3)
+        {
+            return Task.CompletedTask;
+        }
+
+        Task ITestPrinter.Ignored(string value1, string value2)
+        {
+            return Task.CompletedTask;
+        }
+
+        Task ITestPrinter.Info(string value)
+        {
+            return Task.CompletedTask;
+        }
+
+        Task ITestPrinter.Passed(string value1, TimeSpan value2)
+        {
+            return Task.CompletedTask;
+        }
+
+        Task ITestPrinter.Summary(ExpectoConfig value1, TestRunSummary value2)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
     public class Samples
     {
         [Tests]
@@ -39,6 +83,6 @@ namespace Test.CSharp
                 })
             });
 
-        public static int Main(string[] argv) => Runner.RunTestsInAssembly(Runner.DefaultConfig, argv);
+        public static int Main(string[] argv) => Runner.RunTestsInAssembly(Runner.DefaultConfig.WithMySpiritIsWeak(false).AddPrinter(new CSharpPrinter()), argv);
     }
 }
