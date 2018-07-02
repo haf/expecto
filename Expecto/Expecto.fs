@@ -1769,18 +1769,17 @@ type ITestPrinter =
 
 [<AutoOpen; Extension>]
 module Runner =
-  open Expecto
   open System.Collections.Generic
 
   let private printerFromInterface (i : ITestPrinter) =
-      { beforeRun   = i.BeforeRun >> Async.AwaitTask
-        beforeEach  = i.BeforeEach >> Async.AwaitTask
-        passed      = fun n d -> i.Passed(n, d) |> Async.AwaitTask
-        info        = i.Info >> Async.AwaitTask
-        ignored     = fun n m -> i.Ignored(n, m) |> Async.AwaitTask
-        failed      = fun n m d -> i.Failed(n, m, d) |> Async.AwaitTask
-        exn         = fun n e d -> i.Exn(n, e, d) |> Async.AwaitTask
-        summary     = fun c s -> i.Summary(c, s) |> Async.AwaitTask
+      { beforeRun   = fun t ->      async { return! i.BeforeRun(t) |> Async.AwaitTask }
+        beforeEach  = fun s ->      async { return! i.BeforeEach(s) |> Async.AwaitTask }
+        passed      = fun n d ->    async { return! i.Passed(n, d) |> Async.AwaitTask }
+        info        = fun s ->      async { return! i.Info(s) |> Async.AwaitTask }
+        ignored     = fun n m ->    async { return! i.Ignored(n, m) |> Async.AwaitTask }
+        failed      = fun n m d ->  async { return! i.Failed(n, m, d) |> Async.AwaitTask }
+        exn         = fun n e d ->  async { return! i.Exn(n, e, d) |> Async.AwaitTask }
+        summary     = fun c s ->    async { return! i.Summary(c, s) |> Async.AwaitTask }
       }
 
   type Async with
