@@ -394,13 +394,11 @@ module Impl =
   open Helpers
   open Mono.Cecil
 
+  let ansiOutputWriter = new ANSIOutputWriter()
   let mutable logger = Log.create "Expecto"
   let setLogName name = logger <- Log.create name
-  let flush (l:Logger) =
-    if l :? IFlushable then
-      ProgressIndicator.pause (fun () ->
-        (l :?> IFlushable).Flush()
-      )
+  let flushLogger() =
+    ansiOutputWriter.Flush()
 
   type TestResult =
     | Passed
@@ -978,8 +976,8 @@ module Impl =
           do! TestPrinters.printResult config test result
           
           if progressStarted then
-            Interlocked.Increment(testsCompleted) + testLength/200
-            / testLength |> ProgressIndicator.update
+            Fraction (Interlocked.Increment testsCompleted, testLength)
+            |> ProgressIndicator.update
           
           return test,result
         }
@@ -1063,7 +1061,7 @@ module Impl =
 
       if progressStarted then ProgressIndicator.stop()
 
-      flush logger
+      flushLogger()
 
       return testSummary.errorCode
     }
@@ -1143,6 +1141,7 @@ module Impl =
           
           if progressStarted then
             100 - int((finishTime.Value - now + totalTicks / 200L) / totalTicks)
+            |> Percent
             |> ProgressIndicator.update
           
           if now < finishTime.Value
@@ -1202,7 +1201,7 @@ module Impl =
 
       if progressStarted then ProgressIndicator.stop()
 
-      flush logger
+      flushLogger()
 
       return testSummary.errorCode
     }
@@ -1673,13 +1672,15 @@ module Tests =
       | _ -> 
         None
     )
-
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
     Global.initialiseIfDefault
       { Global.defaultConfig with
-          getLogger = fun name -> ANSIConsoleLogger(name, config.verbosity, consoleSemaphore = Global.semaphore()) :> Logger }
+          getLogger = fun name ->
+            LiterateConsoleTarget(name, config.verbosity,
+              outputWriter = ansiOutputWriter.TextToOutput,
+              consoleSemaphore = Global.semaphore()) :> Logger }
     config.logName |> Option.iter setLogName
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
       1
