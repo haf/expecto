@@ -10,6 +10,12 @@ open System.Diagnostics
 open System.Threading
 open System.Threading.Tasks
 
+// When exposing Extension Methods, you should declare an assembly-level attribute (in addition to class and method)
+[<assembly:Extension>]
+do
+  ()
+
+
 // TODO: move to internal
 type SourceLocation =
   { sourcePath : string
@@ -810,16 +816,6 @@ module Impl =
           do! innerPrinter.summary c s
           tcLog "testSuiteFinished" [
             "name", "ExpectoTestSuite" ] } }
-    static member fromInterface (i : ITestPrinter) =
-      { beforeRun   = i.BeforeRun >> Async.AwaitTask
-        beforeEach  = i.BeforeEach >> Async.AwaitTask
-        passed      = fun n d -> i.Passed(n, d) |> Async.AwaitTask
-        info        = i.Info >> Async.AwaitTask
-        ignored     = fun n m -> i.Ignored(n, m) |> Async.AwaitTask
-        failed      = fun n m d -> i.Failed(n, m, d) |> Async.AwaitTask
-        exn         = fun n e d -> i.Exn(n, e, d) |> Async.AwaitTask
-        summary     = fun c s -> i.Summary(c, s) |> Async.AwaitTask
-      }
     static member mergePrinters (first:TestPrinters, second:TestPrinters) =
       let runTwoAsyncs a b = async {
         do! a
@@ -834,17 +830,6 @@ module Impl =
         exn         = fun n e d -> runTwoAsyncs (first.exn n e d) (second.exn n e d)
         summary     = fun config summary -> runTwoAsyncs (first.summary config summary) (second.summary config summary)
       }
-
-  // C# is weak and can't really handle Async or partial application
-  and ITestPrinter =
-    abstract member BeforeRun   : Test -> Task
-    abstract member BeforeEach  : string -> Task
-    abstract member Info        : string -> Task
-    abstract member Passed      : string * TimeSpan -> Task
-    abstract member Ignored     : string * string -> Task
-    abstract member Failed      : string * string * TimeSpan -> Task
-    abstract member Exn         : string * exn * TimeSpan -> Task
-    abstract member Summary     : ExpectoConfig * TestRunSummary -> Task
     
   // Runner options
   and ExpectoConfig =
@@ -892,29 +877,6 @@ module Impl =
       /// Allows duplicate test names.
       allowDuplicateNames: bool
     }
-    // C# is weak and it is hard to update the configuration
-    member x.WithParallel(parallel) = { x with parallel = parallel }
-    member x.WithParallelWorkers(parallelWorkers) = { x with parallelWorkers = parallelWorkers }
-    member x.WithStress(stress) = { x with stress = stress }
-    member x.WithStressTimeout(stressTimeout) = { x with stressTimeout = stressTimeout }
-    member x.WithStressMemoryLimit(stressMemoryLimit) = { x with stressMemoryLimit = stressMemoryLimit }
-    member x.WithFilter(filter) = { x with filter = filter }
-    member x.WithFailOnFocusedTests(failOnFocusedTests) = { x with failOnFocusedTests = failOnFocusedTests }
-    member x.WithPrinter(printer) = { x with printer = printer }
-    /// Set the printer - this replaces the current one
-    member x.WithPrinter(printer:ITestPrinter) = { x with printer = TestPrinters.fromInterface printer }
-    /// Add an additional printer - this does not replace the current one
-    member x.AddPrinter(printer:ITestPrinter) =
-      let combinedPrinter = TestPrinters.mergePrinters (x.printer, (TestPrinters.fromInterface printer))
-      { x with printer = combinedPrinter }
-    member x.WithVerbosity(verbosity) = { x with verbosity = verbosity }
-    member x.WithLogName(logName) = { x with logName = logName }
-    member x.WithLocate(locate) = { x with locate = locate }
-    member x.WithFsCheckMaxTests(fsCheckMaxTests) = { x with fsCheckMaxTests = fsCheckMaxTests }
-    member x.WithFsCheckStartSize(fsCheckStartSize) = { x with fsCheckStartSize = fsCheckStartSize }
-    member x.WithFsCheckEndSize(fsCheckEndSize) = { x with fsCheckEndSize = fsCheckEndSize }
-    member x.WithMySpiritIsWeak(mySpiritIsWeak) = { x with mySpiritIsWeak = mySpiritIsWeak }
-    member x.WithAllowDuplicateNames(allowDuplicateNames) = { x with allowDuplicateNames = allowDuplicateNames }
     static member defaultConfig =
       { parallel = true
         parallelWorkers = Environment.ProcessorCount
@@ -1787,14 +1749,39 @@ module Accuracy =
     {absolute=1e-12; relative=1e-9}
 
 namespace Expecto.CSharp
+open System
+open System.Threading.Tasks
 open System.Runtime.CompilerServices
+open Expecto
+open Expecto.Impl
+
+// C# is weak and can't really handle Async or partial application
+type ITestPrinter =
+  abstract member BeforeRun   : Test -> Task
+  abstract member BeforeEach  : string -> Task
+  abstract member Info        : string -> Task
+  abstract member Passed      : string * TimeSpan -> Task
+  abstract member Ignored     : string * string -> Task
+  abstract member Failed      : string * string * TimeSpan -> Task
+  abstract member Exn         : string * exn * TimeSpan -> Task
+  abstract member Summary     : ExpectoConfig * TestRunSummary -> Task
+
 
 [<AutoOpen; Extension>]
 module Runner =
   open Expecto
-  open Expecto.Impl
   open System.Collections.Generic
-  open System.Threading.Tasks
+
+  let private printerFromInterface (i : ITestPrinter) =
+      { beforeRun   = i.BeforeRun >> Async.AwaitTask
+        beforeEach  = i.BeforeEach >> Async.AwaitTask
+        passed      = fun n d -> i.Passed(n, d) |> Async.AwaitTask
+        info        = i.Info >> Async.AwaitTask
+        ignored     = fun n m -> i.Ignored(n, m) |> Async.AwaitTask
+        failed      = fun n m d -> i.Failed(n, m, d) |> Async.AwaitTask
+        exn         = fun n e d -> i.Exn(n, e, d) |> Async.AwaitTask
+        summary     = fun c s -> i.Summary(c, s) |> Async.AwaitTask
+      }
 
   type Async with
     static member AwaitTask(t : Task) =
@@ -1830,3 +1817,64 @@ module Runner =
   [<CompiledName("FocusedTestCase")>]
   let FocusedTestCaseFT(name, test: System.Func<Task>) = ftestCaseAsync name (async { do! Async.AwaitTask (test.Invoke()) })
   let DefaultConfig = defaultConfig
+
+  type Expecto.Impl.ExpectoConfig with
+
+      // C# is weak and it is hard to update the configuration
+      [<Extension; CompiledName("WithParallel")>]
+      member x.WithParallel(parallel) = { x with parallel = parallel }
+
+      [<Extension; CompiledName("WithParallelWorkers")>]
+      member x.WithParallelWorkers(parallelWorkers) = { x with parallelWorkers = parallelWorkers }
+
+      [<Extension; CompiledName("WithStress")>]
+      member x.WithStress(stress) = { x with stress = stress }
+
+      [<Extension; CompiledName("WithStressTimeout")>]
+      member x.WithStressTimeout(stressTimeout) = { x with stressTimeout = stressTimeout }
+
+      [<Extension; CompiledName("WithStressMemoryLimit")>]
+      member x.WithStressMemoryLimit(stressMemoryLimit) = { x with stressMemoryLimit = stressMemoryLimit }
+
+      [<Extension; CompiledName("WithFilter")>]
+      member x.WithFilter(filter) = { x with filter = filter }
+
+      [<Extension; CompiledName("WithFailOnFocusedTests")>]
+      member x.WithFailOnFocusedTests(failOnFocusedTests) = { x with failOnFocusedTests = failOnFocusedTests }
+
+      [<Extension; CompiledName("WithPrinter")>]
+      member x.WithPrinter(printer) = { x with printer = printer }
+
+      /// Set the printer - this replaces the current one
+      [<Extension; CompiledName("WithPrinter")>]
+      member x.WithPrinter(printer:ITestPrinter) = { x with printer = printerFromInterface printer }
+
+      /// Add an additional printer - this does not replace the current one
+      [<Extension; CompiledName("AddPrinter")>]
+      member x.AddPrinter(printer:ITestPrinter) =
+        let combinedPrinter = TestPrinters.mergePrinters (x.printer, (printerFromInterface printer))
+        { x with printer = combinedPrinter }
+
+      [<Extension; CompiledName("WithVerbosity")>]
+      member x.WithVerbosity(verbosity) = { x with verbosity = verbosity }
+
+      [<Extension; CompiledName("WithLogName")>]
+      member x.WithLogName(logName) = { x with logName = logName }
+
+      [<Extension; CompiledName("WithLocate")>]
+      member x.WithLocate(locate) = { x with locate = locate }
+
+      [<Extension; CompiledName("WithFsCheckMaxTests")>]
+      member x.WithFsCheckMaxTests(fsCheckMaxTests) = { x with fsCheckMaxTests = fsCheckMaxTests }
+
+      [<Extension; CompiledName("WithFsCheckStartSize")>]
+      member x.WithFsCheckStartSize(fsCheckStartSize) = { x with fsCheckStartSize = fsCheckStartSize }
+
+      [<Extension; CompiledName("WithFsCheckEndSize")>]
+      member x.WithFsCheckEndSize(fsCheckEndSize) = { x with fsCheckEndSize = fsCheckEndSize }
+
+      [<Extension; CompiledName("WithMySpiritIsWeak")>]
+      member x.WithMySpiritIsWeak(mySpiritIsWeak) = { x with mySpiritIsWeak = mySpiritIsWeak }
+
+      [<Extension; CompiledName("WithAllowDuplicateNames")>]
+      member x.WithAllowDuplicateNames(allowDuplicateNames) = { x with allowDuplicateNames = allowDuplicateNames }
