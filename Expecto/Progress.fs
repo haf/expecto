@@ -166,7 +166,7 @@ module internal ANSIOutputWriter =
     if RuntimeInformation.IsOSPlatform OSPlatform.Windows then
       WindowsConsole.enableVTMode()
 #else
-    WindowsConsole.enableVTMode()
+    //WindowsConsole.enableVTMode()
 #endif
     ProgressIndicator.originalStdout.Flush()
     let encoding = ProgressIndicator.originalStdout.Encoding
