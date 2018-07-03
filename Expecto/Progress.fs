@@ -162,11 +162,11 @@ module internal ANSIOutputWriter =
           let value = value ||| ENABLE_VIRTUAL_TERMINAL_PROCESSING
           SetConsoleMode(handle, value) |> ignore
   do
-#if NETFRAMEWORK
-    WindowsConsole.enableVTMode()
-#else
+#if NETSTANDARD2_0
     if RuntimeInformation.IsOSPlatform OSPlatform.Windows then
       WindowsConsole.enableVTMode()
+#else
+    WindowsConsole.enableVTMode()
 #endif
     ProgressIndicator.originalStdout.Flush()
     let encoding = ProgressIndicator.originalStdout.Encoding
