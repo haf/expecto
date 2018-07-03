@@ -394,11 +394,8 @@ module Impl =
   open Helpers
   open Mono.Cecil
 
-  let ansiOutputWriter = new ANSIOutputWriter()
   let mutable logger = Log.create "Expecto"
   let setLogName name = logger <- Log.create name
-  let flushLogger() =
-    ansiOutputWriter.Flush()
 
   type TestResult =
     | Passed
@@ -622,33 +619,29 @@ module Impl =
             >> setField "reason" m)
 
         failed = fun n m d ->
-          logger.logWithAck LogLevel.Error (
-            eventX "{testName} failed in {duration}. {message}"
-            >> setField "testName" n
-            >> setField "duration" d
-            >> setField "message" m)
+          async {
+            do! logger.logWithAck LogLevel.Error (
+                  eventX "{testName} failed in {duration}. {message}"
+                  >> setField "testName" n
+                  >> setField "duration" d
+                  >> setField "message" m)
+            ANSIOutputWriter.Flush()
+          }
 
         exn = fun n e d ->
-          logger.logWithAck LogLevel.Error (
-            eventX "{testName} errored in {duration}"
-            >> setField "testName" n
-            >> setField "duration" d
-            >> addExn e)
+          async {
+            do! logger.logWithAck LogLevel.Error (
+                  eventX "{testName} errored in {duration}"
+                  >> setField "testName" n
+                  >> setField "duration" d
+                  >> addExn e)
+            ANSIOutputWriter.Flush()
+          }
+          
 
-        summary = fun config summary ->
+        summary = fun _config summary ->
           let spirit =
-            if summary.successful then
-              if Console.OutputEncoding.WebName = "utf-8"
-                 && not config.mySpiritIsWeak then
-                "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
-              else
-                "Success!"
-            else
-              if Console.OutputEncoding.WebName = "utf-8"
-                 && not config.mySpiritIsWeak then
-                "( ರ Ĺ̯ ರೃ )"
-              else
-                ""
+            if summary.successful then "Success!" else String.Empty
           let commonAncestor =
             let rec loop ancestor (descendants : string list) =
               match descendants with
@@ -855,7 +848,7 @@ module Impl =
       /// FsCheck end size (default: 100 for testing and 10,000 for
       /// stress testing).
       fsCheckEndSize: int option
-      /// Turn off spirits.
+      /// Depricated. Will be removed on next major release.
       mySpiritIsWeak: bool
       /// Allows duplicate test names.
       allowDuplicateNames: bool
@@ -869,10 +862,11 @@ module Impl =
         filter = id
         failOnFocusedTests = false
         printer =
-          if Environment.GetEnvironmentVariable "TEAMCITY_PROJECT_NAME" <> null then
-            TestPrinters.teamCityPrinter TestPrinters.defaultPrinter
-          else
+          let tc = Environment.GetEnvironmentVariable "TEAMCITY_PROJECT_NAME"
+          if isNull tc then
             TestPrinters.defaultPrinter
+          else
+            TestPrinters.teamCityPrinter TestPrinters.defaultPrinter
         verbosity = Info
         logName = None
         locate = fun _ -> SourceLocation.empty
@@ -1059,9 +1053,9 @@ module Impl =
       }
       do! config.printer.summary config testSummary
 
-      if progressStarted then ProgressIndicator.stop()
-
-      flushLogger()
+      if progressStarted then
+        ProgressIndicator.stop()
+        ANSIOutputWriter.Close()
 
       return testSummary.errorCode
     }
@@ -1199,9 +1193,9 @@ module Impl =
 
       do! config.printer.summary config testSummary
 
-      if progressStarted then ProgressIndicator.stop()
-
-      flushLogger()
+      if progressStarted then
+        ProgressIndicator.stop()
+        ANSIOutputWriter.Close()
 
       return testSummary.errorCode
     }
@@ -1363,6 +1357,7 @@ module Impl =
           eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
           >> setField "count" focused.Length)
         |> Async.StartImmediate
+        ANSIOutputWriter.Flush()
       false
 
 [<AutoOpen; Extension>]
@@ -1618,7 +1613,7 @@ module Tests =
         | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
         | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
         | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
-        | My_Spirit_Is_Weak -> fun o -> { o with mySpiritIsWeak = true }
+        | My_Spirit_Is_Weak -> id
         | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
 
       let parsed =
@@ -1679,7 +1674,7 @@ module Tests =
       { Global.defaultConfig with
           getLogger = fun name ->
             LiterateConsoleTarget(name, config.verbosity,
-              outputWriter = ansiOutputWriter.TextToOutput,
+              outputWriter = ANSIOutputWriter.TextToOutput,
               consoleSemaphore = Global.semaphore()) :> Logger }
     config.logName |> Option.iter setLogName
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
@@ -1696,6 +1691,7 @@ module Tests =
           eventX "Found duplicated test names, these names are: {duplicates}"
           >> setField "duplicates" duplicates.Value
         ) |> Async.RunSynchronously
+        ANSIOutputWriter.Flush()
         1
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
