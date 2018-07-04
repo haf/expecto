@@ -525,6 +525,7 @@ let sequenceStarts (subject : _ seq) (prefix : _ seq) message =
                       message i (pi.Current)
     i <- i + 1
 
+/// Expect the sequence `actual` to contains elements from sequence `expected` in the right order.
 let sequenceContainsOrder (actual: seq<'t>) (expected: seq<'t>) msg =
   let el = System.Collections.Generic.Queue<'t> expected
   use ae = actual.GetEnumerator()

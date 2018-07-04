@@ -801,6 +801,7 @@ This module is your main entry-point when asserting.
 - `sequenceStarts` - Expect the sequence `subject` to start with `prefix`. If
    it does not then fail with `format` as an error message together with a
    description of `subject` and `prefix`.
+- `sequenceContainsOrder` - Expect the sequence `actual` to contains elements from sequence `expected` in the right order.
 - `isAscending` - Expect the sequence `subject` to be ascending. If it does not
    then fail with `format` as an error message.
 - `isDescending` - Expect the sequence `subject` to be descending. If it does
