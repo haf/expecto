@@ -8,6 +8,7 @@ open System
 open System.Text.RegularExpressions
 open Expecto.Logging
 open Expecto.Logging.Message
+open System.Runtime.InteropServices
 
 /// Expects f to throw an exception.
 let throws f message =
@@ -527,13 +528,17 @@ let sequenceStarts (subject : _ seq) (prefix : _ seq) message =
 let sequenceContainsOrder (actual: seq<'t>) (expected: seq<'t>) msg =
   let el = System.Collections.Generic.Queue<'t> expected
   use ae = actual.GetEnumerator()
-  let missingFail missing = failwithf "%s. Missing: %A in correct order from actual: %A" msg missing actual
+  let nl = Environment.NewLine
+  let al = ResizeArray<'t>()
+  let missingFail expected iter missing = 
+    failwithf "%s. Remainder of expected enumerable:%s%A%sWent through actual enumerable (%i items):%A%s" msg nl expected nl iter missing nl
 
   let rec check i =
     if el.Count = 0 then ()
     else
-      if not (ae.MoveNext()) then missingFail el
+      if not (ae.MoveNext()) then missingFail el i al
       else
+        al.Add ae.Current
         let expect = el.Peek()
         if expect = ae.Current then
           ignore (el.Dequeue())
