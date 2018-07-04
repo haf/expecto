@@ -850,11 +850,11 @@ let expecto =
 
         testCase "Wrong order of 0th and 1th elem" (fun _ ->
           Expect.sequenceContainsOrder [ 1; 2; 3; 4; 5; 6 ] [ 3; 1; 6 ] "should fail"
-        ) |> assertTestFailsWithMsgStarting "should fail. Missing: [ 1; 6 ] in correct order from actual: [ 1; 2; 3; 4; 5; 6 ]"
+        ) |> assertTestFailsWithMsgStarting "should fail"
 
         testCase "Missing 7 from actual" (fun _ ->
           Expect.sequenceContainsOrder [ 1; 2; 3; 4; 5; 6 ] [ 1; 3; 7 ] "should pass"
-        ) |> assertTestFailsWithMsgStarting "should fail. Missing: [ 7 ] in correct order from actual: [ 1; 2; 3; 4; 5; 6 ]"
+        ) |> assertTestFailsWithMsgStarting "should fail"
 
         testCase "Empty list passes" <| fun _ ->
           Expect.sequenceContainsOrder [ 1; 2; 3; 4; 5; 6 ] [ ] "should pass"
