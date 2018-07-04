@@ -37,6 +37,8 @@ module internal ProgressIndicator =
   let text s =
     textValue <- s
 
+  let mutable private currentLength = 0
+
   let update progress =
     progressValue :=
       match progress with
@@ -66,9 +68,11 @@ module internal ProgressIndicator =
                       |> String
                     | Fraction (n,d) ->
                       let ns, ds = string n, string d
-                      String(' ',ds.Length-ns.Length) + ns + "/" + ds + " " + string a
-                  color + textValue + progress +
-                  String('\b', textValue.Length + progress.Length) + colorReset
+                      String(' ',ds.Length-ns.Length) + ns + "/" + ds
+                      + " " + string a
+                  currentLength <- textValue.Length + progress.Length
+                  color + textValue + progress
+                  + String('\b', currentLength) + colorReset
                   |> originalStdout.Write
                   originalStdout.Flush()
               )
@@ -82,7 +86,7 @@ module internal ProgressIndicator =
       if !isRunning then
         isRunning := false
         if isEnabled then
-          String(' ', 80) + String('\b', 80) + showCursor
+          String(' ', currentLength) + String('\b', currentLength) + showCursor
           |> originalStdout.Write
           originalStdout.Flush()
     )
@@ -166,7 +170,8 @@ module internal ANSIOutputWriter =
     if RuntimeInformation.IsOSPlatform OSPlatform.Windows then
       WindowsConsole.enableVTMode()
 #else
-    //WindowsConsole.enableVTMode()
+    if Environment.OSVersion.Platform = PlatformID.Win32NT then
+      WindowsConsole.enableVTMode()
 #endif
     ProgressIndicator.originalStdout.Flush()
     let encoding = ProgressIndicator.originalStdout.Encoding
