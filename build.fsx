@@ -74,6 +74,7 @@ Target "BuildExpecto" (fun _ ->
 
 Target "BuildBenchmarkDotNet" (fun _ ->
     build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj"
+    build "Expecto.BenchmarkDotNet.Tests/Expecto.BenchmarkDotNet.Tests.fsproj"
 )
 
 Target "BuildTest" (fun _ ->
