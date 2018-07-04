@@ -1300,7 +1300,7 @@ let cancel =
         use ct = new CancellationTokenSource()
         let! _ = Async.StartChild(async { do! Async.Sleep 50
                                           ct.Cancel() })
-        let! results = evalTestsWithCancel ct.Token config t
+        let! results = evalTestsWithCancel ct.Token config t false
         results |> List.iter (fun (_,r) ->
           let d = int r.duration.TotalMilliseconds
           Expect.isLessThan d 1000 "cancel length"

@@ -10,12 +10,10 @@
 /// Original Source:
 /// https://github.com/logary/logary/blob/996bdf92713f406b17c6cd7284e4d674f49e3ff6/src/Logary.Facade/Facade.fs
 ///
-/// Changes:
-///     Changed namespace to Expecto.Logging and file name to Logging.fs - Anthony Lloyd - 11 Jun 2018
-///
 namespace Expecto.Logging
 
 open System
+open System.Text
 
 /// The log level denotes how 'important' the gauge or event message is.
 [<CustomEquality; CustomComparison>]

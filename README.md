@@ -1085,20 +1085,12 @@ ExpectoConfig record, that looks like:
   /// FsCheck end size (default: 100 for testing and 10,000 for
   /// stress testing).
   fsCheckEndSize: int option
-  /// Turn off spirits.
-  mySpiritIsWeak: bool
   /// Allows duplicate test names.
   allowDuplicateNames: bool
 }
 ```
 
 By doing a `let config = { defaultConfig with parallel = true }`, for example.
-
-If you [don't](https://github.com/haf/expecto/pull/43)
-[like](https://github.com/haf/expecto/issues/145#issuecomment-297032723) the
-spirits appearing in the output, you can turn them off by setting
-`mySpiritIsWeak = true` when you run Expecto, or by running with
-`--my-spirit-is-weak` from the command line ( ರ Ĺ̯ ರೃ ).
 
 ## Contributing
 

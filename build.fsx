@@ -63,7 +63,14 @@ let build project =
         ToolPath = dotnetExePath
         Configuration = configuration
         Project = project
+        AdditionalArgs = ["--no-dependencies"]
     })
+
+Target "BuildExpecto" (fun _ ->
+    build "Expecto/Expecto.fsproj"
+    build "Expecto.Hopac/Expecto.Hopac.fsproj"
+    build "Expecto.FsCheck/Expecto.FsCheck.fsproj"
+)
 
 Target "BuildBenchmarkDotNet" (fun _ ->
     build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj"
@@ -150,6 +157,7 @@ Target "All" ignore
 ==> "InstallDotNetCore"
 ==> "AssemblyInfo"
 ==> "ProjectVersion"
+==> "BuildExpecto"
 ==> "BuildBenchmarkDotNet"
 ==> "BuildTest"
 ==> "RunTest"

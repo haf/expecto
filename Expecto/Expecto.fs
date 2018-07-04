@@ -625,33 +625,29 @@ module Impl =
             >> setField "reason" m)
 
         failed = fun n m d ->
-          logger.logWithAck LogLevel.Error (
-            eventX "{testName} failed in {duration}. {message}"
-            >> setField "testName" n
-            >> setField "duration" d
-            >> setField "message" m)
+          async {
+            do! logger.logWithAck LogLevel.Error (
+                  eventX "{testName} failed in {duration}. {message}"
+                  >> setField "testName" n
+                  >> setField "duration" d
+                  >> setField "message" m)
+            ANSIOutputWriter.Flush()
+          }
 
         exn = fun n e d ->
-          logger.logWithAck LogLevel.Error (
-            eventX "{testName} errored in {duration}"
-            >> setField "testName" n
-            >> setField "duration" d
-            >> addExn e)
+          async {
+            do! logger.logWithAck LogLevel.Error (
+                  eventX "{testName} errored in {duration}"
+                  >> setField "testName" n
+                  >> setField "duration" d
+                  >> addExn e)
+            ANSIOutputWriter.Flush()
+          }
+          
 
-        summary = fun config summary ->
+        summary = fun _config summary ->
           let spirit =
-            if summary.successful then
-              if Console.OutputEncoding.WebName = "utf-8"
-                 && not config.mySpiritIsWeak then
-                "ᕙ໒( ˵ ಠ ╭͜ʖ╮ ಠೃ ˵ )७ᕗ"
-              else
-                "Success!"
-            else
-              if Console.OutputEncoding.WebName = "utf-8"
-                 && not config.mySpiritIsWeak then
-                "( ರ Ĺ̯ ರೃ )"
-              else
-                ""
+            if summary.successful then "Success!" else String.Empty
           let commonAncestor =
             let rec loop ancestor (descendants : string list) =
               match descendants with
@@ -872,7 +868,7 @@ module Impl =
       /// FsCheck end size (default: 100 for testing and 10,000 for
       /// stress testing).
       fsCheckEndSize: int option
-      /// Turn off spirits.
+      /// Depricated. Will be removed on next major release.
       mySpiritIsWeak: bool
       /// Allows duplicate test names.
       allowDuplicateNames: bool
@@ -886,10 +882,11 @@ module Impl =
         filter = id
         failOnFocusedTests = false
         printer =
-          if Environment.GetEnvironmentVariable "TEAMCITY_PROJECT_NAME" <> null then
-            TestPrinters.teamCityPrinter TestPrinters.defaultPrinter
-          else
+          let tc = Environment.GetEnvironmentVariable "TEAMCITY_PROJECT_NAME"
+          if isNull tc then
             TestPrinters.defaultPrinter
+          else
+            TestPrinters.teamCityPrinter TestPrinters.defaultPrinter
         verbosity = Info
         logName = None
         locate = fun _ -> SourceLocation.empty
@@ -973,8 +970,13 @@ module Impl =
       config.parallelWorkers
 
   /// Evaluates tests.
-  let evalTestsWithCancel (ct:CancellationToken) config test =
+  let evalTestsWithCancel (ct:CancellationToken) config test progressStarted =
     async {
+
+      let tests = Test.toTestCodeList test
+      let testLength = List.length tests
+
+      let testsCompleted = ref 0
 
       let evalTestAsync (test:FlatTest) =
 
@@ -986,10 +988,14 @@ module Impl =
           let! result = execTestAsync ct config test
           do! beforeAsync
           do! TestPrinters.printResult config test result
+          
+          if progressStarted then
+            Fraction (Interlocked.Increment testsCompleted, testLength)
+            |> ProgressIndicator.update
+          
           return test,result
         }
 
-      let tests = Test.toTestCodeList test
       let inline cons xs x = x::xs
 
       if not config.``parallel`` ||
@@ -1035,7 +1041,7 @@ module Impl =
 
   /// Evaluates tests.
   let evalTests config test =
-    evalTestsWithCancel CancellationToken.None config test
+    evalTestsWithCancel CancellationToken.None config test false
 
   let evalTestsSilent test =
     let config =
@@ -1051,15 +1057,25 @@ module Impl =
     async {
       do! config.printer.beforeRun test
 
+      ProgressIndicator.text "Expecto Running... "
+      let progressStarted = ProgressIndicator.start()
+
+
       let w = Stopwatch.StartNew()
-      let! results = evalTests config test
+      let! results = evalTestsWithCancel ct config test progressStarted
       w.Stop()
-      let testSummary = { results = results
-                          duration = w.Elapsed
-                          maxMemory = 0L
-                          memoryLimit = 0L
-                          timedOut = [] }
+      let testSummary = {
+        results = results
+        duration = w.Elapsed
+        maxMemory = 0L
+        memoryLimit = 0L
+        timedOut = []
+      }
       do! config.printer.summary config testSummary
+
+      if progressStarted then
+        ProgressIndicator.stop()
+        ANSIOutputWriter.Close()
 
       return testSummary.errorCode
     }
@@ -1071,6 +1087,9 @@ module Impl =
   let runStressWithCancel (ct:CancellationToken) config test =
     async {
       do! config.printer.beforeRun test
+
+      ProgressIndicator.text "Expecto Running... "
+      let progressStarted = ProgressIndicator.start()
 
       let tests =
         Test.toTestCodeList test
@@ -1088,11 +1107,13 @@ module Impl =
         let next = List.length tests |> rand.Next
         List.item next tests
 
-      let finishTimestamp =
-        lazy
+      let totalTicks =
         config.stress.Value.TotalSeconds * float Stopwatch.Frequency
         |> int64
-        |> (+) (Stopwatch.GetTimestamp())
+
+      let finishTime =
+        lazy
+        totalTicks |> (+) (Stopwatch.GetTimestamp())
 
       let asyncRun foldRunner (runningTests:ResizeArray<_>,
                                results,
@@ -1121,7 +1142,7 @@ module Impl =
 
         Async.Start(async {
           let finishMilliseconds =
-            max (finishTimestamp.Value - Stopwatch.GetTimestamp()) 0L
+            max (finishTime.Value - Stopwatch.GetTimestamp()) 0L
             * 1000L / Stopwatch.Frequency
           let timeout =
             int finishMilliseconds + int config.stressTimeout.TotalMilliseconds
@@ -1130,7 +1151,14 @@ module Impl =
         }, cancel.Token)
 
         Seq.takeWhile (fun test ->
-          if Stopwatch.GetTimestamp() < finishTimestamp.Value
+          let now = Stopwatch.GetTimestamp()
+          
+          if progressStarted then
+            100 - int((finishTime.Value - now + totalTicks / 200L) / totalTicks)
+            |> Percent
+            |> ProgressIndicator.update
+          
+          if now < finishTime.Value
               && not ct.IsCancellationRequested then
             runningTests.Add test
             true
@@ -1156,7 +1184,7 @@ module Impl =
           |> asyncRun Async.foldSequentiallyWithCancel initial
           |> Async.bind (fun (runningTests,results,maxMemory) ->
                if maxMemory > memoryLimit ||
-                  Stopwatch.GetTimestamp() > finishTimestamp.Value then
+                  Stopwatch.GetTimestamp() > finishTime.Value then
                  async.Return (runningTests,results,maxMemory)
                else
                  let parallel =
@@ -1184,6 +1212,10 @@ module Impl =
                           timedOut = List.ofSeq runningTests }
 
       do! config.printer.summary config testSummary
+
+      if progressStarted then
+        ProgressIndicator.stop()
+        ANSIOutputWriter.Close()
 
       return testSummary.errorCode
     }
@@ -1345,6 +1377,7 @@ module Impl =
           eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
           >> setField "count" focused.Length)
         |> Async.StartImmediate
+        ANSIOutputWriter.Flush()
       false
 
 [<AutoOpen; Extension>]
@@ -1600,7 +1633,7 @@ module Tests =
         | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
         | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
         | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
-        | My_Spirit_Is_Weak -> fun o -> { o with mySpiritIsWeak = true }
+        | My_Spirit_Is_Weak -> id
         | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
 
       let parsed =
@@ -1654,13 +1687,15 @@ module Tests =
       | _ -> 
         None
     )
-
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
     Global.initialiseIfDefault
       { Global.defaultConfig with
-          getLogger = fun name -> LiterateConsoleTarget(name, config.verbosity, consoleSemaphore = Global.semaphore()) :> Logger }
+          getLogger = fun name ->
+            LiterateConsoleTarget(name, config.verbosity,
+              outputWriter = ANSIOutputWriter.TextToOutput,
+              consoleSemaphore = Global.semaphore()) :> Logger }
     config.logName |> Option.iter setLogName
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
       1
@@ -1676,6 +1711,7 @@ module Tests =
           eventX "Found duplicated test names, these names are: {duplicates}"
           >> setField "duplicates" duplicates.Value
         ) |> Async.RunSynchronously
+        ANSIOutputWriter.Flush()
         1
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1

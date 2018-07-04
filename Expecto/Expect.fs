@@ -587,7 +587,7 @@ let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) message =
 /// subset of the functions. Statistical test to 99.99% confidence level.
 let isFasterThanSub (f1:Performance.Measurer<_,_>->'a) (f2:Performance.Measurer<_,_>->'a) format =
   let toString (s:SampleStatistics) =
-    sprintf "%.4f \u00B1 %.4f ms" s.mean s.meanStandardError
+    sprintf "%.4f ± %.4f ms" s.mean s.meanStandardError
 
   match Performance.timeCompare f1 f2 with
   | Performance.ResultNotTheSame (r1, r2)->
