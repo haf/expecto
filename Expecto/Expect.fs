@@ -217,7 +217,7 @@ let hasCountOf (actual : _ seq) (expected : uint32) (selector : _ -> bool) messa
   if hits <> expected then Tests.failtestf "%s. Should be of count: %d, but was: %d" message expected hits
 
 /// Expects the two values to equal each other.
-let inline equal (actual : 'a) (expected : 'a) message =
+let equal (actual : 'a) (expected : 'a) message =
   match box actual, box expected with
   | (:? string as a), (:? string as e) ->
     let ai = a.ToCharArray().GetEnumerator()
@@ -352,7 +352,7 @@ let contains sequence element message =
   | None ->
     Tests.failtestf "%s. Sequence did not contain %A." message element
 
-let inline private formatSet<'a> (concatBy) (formatResult) (whenEmpty) (ss : 'a seq) : string =
+let private formatSet<'a> (concatBy) (formatResult) (whenEmpty) (ss : 'a seq) : string =
   if Seq.isEmpty ss then
     whenEmpty
   else
@@ -398,7 +398,7 @@ let containsAll (actual : _ seq)
               message (formatResult axs) (formatResult exs) (formatResult missing) (formatResult extra)
   |> Tests.failtest
 
-let inline private except (elementsToCheck: Map<_,uint32>) (elementsToContain: Map<_,uint32>) (isExcept: bool) =
+let private except (elementsToCheck: Map<_,uint32>) (elementsToContain: Map<_,uint32>) (isExcept: bool) =
   let getMapValue (map: Map<_, uint32>) (element) =
     map |> Map.find element
   let getResult found expected =
@@ -471,7 +471,7 @@ let distribution (actual : _ seq)
               message (formatInput actual) (formatInput formatedExpected) missingElementsInfo extraElementsInfo
   |> Tests.failtest
 
-let inline private formattedList (sequence) =
+let private formattedList (sequence) =
   let formattedElements =
     sequence
     |> Seq.mapi( fun index element -> sprintf "[%d] %A" index element)
