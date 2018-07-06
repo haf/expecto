@@ -184,7 +184,7 @@ Target.create "All" ignore
 ==> "AssemblyInfo"
 ==> "ProjectVersion"
 ==> "BuildExpecto"
-==> "BuildBenchmarkDotNet"
+//==> "BuildBenchmarkDotNet"
 ==> "BuildTest"
 ==> "RunTest"
 ==> "Pack"
