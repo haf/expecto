@@ -39,4 +39,4 @@ before_install:
   - mono .paket/paket.exe restore
 
 script:
-  - fake build
+  - mono fake build
