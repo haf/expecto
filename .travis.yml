@@ -34,7 +34,8 @@ env:
 
 before_install:
   - dotnet tool install fake-cli -g
+  - export PATH="$PATH:/home/travis/.dotnet/tools"
+  - export FrameworkPathOverride=$(dirname $(which mono))/../lib/mono/4.6.1-api
 
 script:
-  - export FrameworkPathOverride=$(dirname $(which mono))/../lib/mono/4.6.1-api
   - fake build
