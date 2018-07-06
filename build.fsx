@@ -8,7 +8,7 @@ nuget Fake.Core.Target
 nuget Fake.Core.Environment
 nuget Fake.Core.UserInput
 nuget Fake.DotNet.AssemblyInfoFile
-nuget Fake.Core.ReleaseNotes"
+nuget Fake.Core.ReleaseNotes //"
 #load "./.fake/build.fsx/intellisense.fsx"
 #if !FAKE
 #r "netstandard"
