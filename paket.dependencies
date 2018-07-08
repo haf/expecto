@@ -7,3 +7,4 @@ nuget Argu 5.1
 nuget FsCheck 2.10.4
 nuget Hopac 0.3.23
 nuget Mono.Cecil 0.10.0
+nuget BenchmarkDotNet 0.10.14
