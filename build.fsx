@@ -106,10 +106,14 @@ Target.create "RunTest" (fun _ ->
              (project+"/bin/"+configuration+"/netcoreapp2.0/"+project+".dll")
              "--summary"
         |> fun r -> if r.ExitCode<>0 then project+".dll failed" |> failwith
+        let exeName = project+"/bin/"+configuration+"/net461/"+project+".exe"
+        let filename, arguments =
+            if Environment.isWindows then exeName, "--summary"
+            else "mono", exeName + " --summary"
         Process.execSimple (fun si ->
           { si with
-              FileName = project+"/bin/"+configuration+"/net461/"+project+".exe"
-              Arguments = "--summary"
+              FileName = filename
+              Arguments = arguments
           }
         ) TimeSpan.MaxValue
         |> fun r -> if r<>0 then project+".exe failed" |> failwith
