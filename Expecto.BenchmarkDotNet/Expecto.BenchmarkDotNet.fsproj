@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Expecto.BenchmarkDotNet</AssemblyName>
     <PackageId>Expecto.BenchmarkDotNet</PackageId>
@@ -16,7 +16,5 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Expecto.BenchmarkDotNet.fs" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.10.14" />
-  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

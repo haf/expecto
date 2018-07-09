@@ -1,5 +1,5 @@
 source https://api.nuget.org/v3/index.json
-framework net461, netstandard2.0, netcoreapp2.0
+framework net461, netstandard2.0, netcoreapp2.0, netcoreapp2.1
 storage:none
 
 nuget FSharp.Core 4.3.4
@@ -7,9 +7,4 @@ nuget Argu 5.1
 nuget FsCheck 2.10.4
 nuget Hopac 0.3.23
 nuget Mono.Cecil 0.10.0
-
-group build
-  source https://api.nuget.org/v3/index.json
-  nuget FAKE prerelease
-  nuget Octokit 0.29
-  github fsharp/FAKE modules/Octokit/Octokit.fsx (6ba51f5612a914e161be2a9b642907f75e28780f)
+nuget BenchmarkDotNet 0.10.14

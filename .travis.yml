@@ -1,7 +1,7 @@
 language: csharp
 dist: trusty
 sudo: false
-dotnet: 2.1.3
+dotnet: 2.1.301
 
 matrix:
   fast_finish: true
@@ -32,5 +32,11 @@ env:
     - DOTNET_CLI_TELEMETRY_OPTOUT: 1
     - DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
+before_install:
+  - dotnet tool install fake-cli -g
+  - export PATH="$PATH:/home/travis/.dotnet/tools"
+  - export FrameworkPathOverride=$(dirname $(which mono))/../lib/mono/4.6.1-api
+  - mono .paket/paket.exe restore
+
 script:
-  - ./build.sh
+  - fake build
