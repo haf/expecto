@@ -22,11 +22,11 @@ type Progress =
 module internal ProgressIndicator =
   let originalStdout = stdout
   let originalStderr = stderr
-  let private hideCursor = "\x1B[?25l"
-  let private showCursor = "\x1B[?25h"
+  let private hideCursor = "" //"\x1B[?25l" needs more testing
+  let private showCursor = "" //"\x1B[?25h"
   let private animation = @"|/-\"
 
-  let private color = "\x1b[30;1m"
+  let private color = "\x1b[35;1m"
   let private colorReset = "\x1B[0m"
   
   let mutable private textValue = String.Empty

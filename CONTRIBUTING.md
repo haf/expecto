@@ -10,11 +10,9 @@
     * Visual Studio - [EditorConfig VS Extension][ec-vs]
     * VS Code - [EditorConfig VScode Extension][ec-vsc]
 
- 1. You will need .NET Core [v2.0 SDK][netcore-sdk] and also [v1.1 Runtime][netcore-rt] installed (current available versions are SDK v2.1.2 and Runtime v1.1.5). The versions of Mono and .NET Core currently tested in CI can be found [here in .travis.yml][travis]
+ 1. You will need .NET Core [v2.1 SDK][netcore-sdk] installed. The versions of Mono and .NET Core currently tested in CI can be found [here in .travis.yml][travis]
 
- 1. To build from the command line:
-      * Windows:  `./build.cmd`
-      * Linux/OSX: `./build.sh`
+ 1. You will also need [FAKE 5][fake] installed. To build run `fake build`.
 
  1. New features:
       * Make your test for your change
@@ -73,3 +71,4 @@ Futhermore, in no particular order;
  [netcore-rt]: https://github.com/dotnet/core/blob/master/release-notes/download-archive.md#net-core-11
  [travis]: https://github.com/haf/expecto/blob/master/.travis.yml
  [mono-dl]: http://www.mono-project.com/download/
+ [fake]: https://fake.build/fake-gettingstarted.html
