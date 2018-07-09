@@ -103,7 +103,7 @@ Target.create "BuildTest" (fun _ ->
 Target.create "RunTest" (fun _ ->
     let runTest project =
         DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
-             (project+"/bin/"+configuration+"/netcoreapp2.1/"+project+".dll")
+             (project+"/bin/"+configuration+"/netcoreapp2.0/"+project+".dll")
              "--summary"
         |> fun r -> if r.ExitCode<>0 then project+".dll failed" |> failwith
         let exeName = project+"/bin/"+configuration+"/net461/"+project+".exe"

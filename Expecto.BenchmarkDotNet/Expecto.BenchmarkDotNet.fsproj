@@ -3,7 +3,7 @@
     <AssemblyName>Expecto.BenchmarkDotNet</AssemblyName>
     <PackageId>Expecto.BenchmarkDotNet</PackageId>
     <Version>8.1.1</Version>
-    <TargetFrameworks>net461;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Optional: Declare that the Repository URL can be published to NuSpec -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
