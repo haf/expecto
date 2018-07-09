@@ -22,11 +22,11 @@ type Progress =
 module internal ProgressIndicator =
   let originalStdout = stdout
   let originalStderr = stderr
-  let private hideCursor = "" //"\x1B[?25l" needs more testing
-  let private showCursor = "" //"\x1B[?25h"
+  let private hideCursor = "\x1B[?25l"
+  let private showCursor = "\x1B[?25h"
   let private animation = @"|/-\"
 
-  let private color = "\x1b[35;1m"
+  let private color = "\x1b[1;33m"
   let private colorReset = "\x1B[0m"
   
   let mutable private textValue = String.Empty
@@ -51,7 +51,6 @@ module internal ProgressIndicator =
       else
         isRunning := true
         if isEnabled then
-          hideCursor |> stdout.Write
           Thread(fun () ->
             let start = DateTime.UtcNow
             while !isRunning do
@@ -72,7 +71,7 @@ module internal ProgressIndicator =
                       + " " + string a
                   currentLength <- textValue.Length + progress.Length
                   color + textValue + progress
-                  + String('\b', currentLength) + colorReset
+                  + String('\b', currentLength) + colorReset + hideCursor
                   |> originalStdout.Write
                   originalStdout.Flush()
               )
@@ -101,7 +100,7 @@ module internal ProgressIndicator =
 module internal ANSIOutputWriter =
   let private colorForWhite =
     if Console.BackgroundColor = ConsoleColor.White then "\x1B[30m"
-    else "\x1B[37;1m"
+    else "\x1B[1;37m"
   let private colorReset = "\x1B[0m"
   let private colorANSI = function
     | ConsoleColor.Black -> "\x1b[30m"
@@ -112,13 +111,13 @@ module internal ANSIOutputWriter =
     | ConsoleColor.DarkMagenta -> "\x1b[35m"
     | ConsoleColor.DarkYellow -> "\x1b[33m"
     | ConsoleColor.Gray -> "\x1b[37m"
-    | ConsoleColor.DarkGray -> "\x1b[30;1m"
-    | ConsoleColor.Blue -> "\x1b[34;1m"
-    | ConsoleColor.Green -> "\x1b[32;1m"
-    | ConsoleColor.Cyan -> "\x1b[36;1m"
-    | ConsoleColor.Red -> "\x1b[31;1m"
-    | ConsoleColor.Magenta -> "\x1b[35;1m"
-    | ConsoleColor.Yellow -> "\x1b[33;1m"
+    | ConsoleColor.DarkGray -> "\x1b[1;30m"
+    | ConsoleColor.Blue -> "\x1b[1;34m"
+    | ConsoleColor.Green -> "\x1b[1;32m"
+    | ConsoleColor.Cyan -> "\x1b[1;36m"
+    | ConsoleColor.Red -> "\x1b[1;31m"
+    | ConsoleColor.Magenta -> "\x1b[1;35m"
+    | ConsoleColor.Yellow -> "\x1b[1;33m"
     | ConsoleColor.White -> colorForWhite
     | _ -> ""
 

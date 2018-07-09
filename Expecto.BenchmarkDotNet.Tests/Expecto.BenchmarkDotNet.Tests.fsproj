@@ -8,4 +8,5 @@
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
     <ProjectReference Include="..\Expecto.BenchmarkDotNet\Expecto.BenchmarkDotNet.fsproj" />
   </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
