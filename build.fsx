@@ -103,19 +103,18 @@ Target.create "BuildTest" (fun _ ->
 Target.create "RunTest" (fun _ ->
     let runTest project =
         DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
-             (project+"/bin/"+configuration+"/netcoreapp2.0/"+project+".dll")
+             (project+"/bin/"+configuration+"/netcoreapp2.1/"+project+".dll")
              "--summary"
         |> fun r -> if r.ExitCode<>0 then project+".dll failed" |> failwith
         let exeName = project+"/bin/"+configuration+"/net461/"+project+".exe"
         let filename, arguments =
             if Environment.isWindows then exeName, "--summary"
             else "mono", exeName + " --summary"
-        Process.execSimple (fun si ->
-          { si with
-              FileName = filename
-              Arguments = arguments
+        Process.shellExec
+          { ExecParams.Empty with
+              Program = filename
+              CommandLine = arguments
           }
-        ) TimeSpan.MaxValue
         |> fun r -> if r<>0 then project+".exe failed" |> failwith
     runTest "Expecto.Tests"
     runTest "Expecto.Hopac.Tests"
