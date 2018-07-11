@@ -1,3 +1,10 @@
+#### 8.2.0 – 2018-07-12
+* Added C# compatible With methods / Logging: add Task based Interface. #259 thanks @0x53A
+* Feature/sequencecontainsorder. #262 thanks @MNie
+* Console work inc ANSI colours, progress indicator. #258 thanks @AnthonyLloyd
+* Upgrade to FAKE 5. #263 thanks @AnthonyLloyd
+* Removed inlining. #254 thanks @jackfoxy @AnthonyLloyd
+
 #### 8.1.1 – 2018-06-13
 * Compile against 4.3.4 of F# Core for now, thanks @haf
 
