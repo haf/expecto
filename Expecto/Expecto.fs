@@ -1154,7 +1154,7 @@ module Impl =
           let now = Stopwatch.GetTimestamp()
           
           if progressStarted then
-            100 - int((finishTime.Value - now + totalTicks / 200L) / totalTicks)
+            100 - int((finishTime.Value - now) * 100L / totalTicks)
             |> Percent
             |> ProgressIndicator.update
           
