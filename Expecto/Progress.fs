@@ -26,7 +26,7 @@ module internal ProgressIndicator =
   let private showCursor = "\x1B[?25h"
   let private animation = @"|/-\"
 
-  let private color = "\x1b[1;33m"
+  let private color = "\x1b[1;30m"
   let private colorReset = "\x1B[0m"
   
   let mutable private textValue = String.Empty
@@ -89,6 +89,8 @@ module internal ProgressIndicator =
           |> originalStdout.Write
           originalStdout.Flush()
     )
+
+  Console.CancelKeyPress |> Event.add (fun _ -> stop())
 
   let pause f =
     lock isRunning (fun () ->
