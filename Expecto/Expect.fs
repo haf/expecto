@@ -525,6 +525,9 @@ let sequenceStarts (subject : _ seq) (prefix : _ seq) message =
                       message i (pi.Current)
     i <- i + 1
 
+let private printSeq (xs: #seq<_>): string =
+    xs |> Seq.mapi (fun i x -> sprintf "  [%i] %A" i x) |> String.concat Environment.NewLine
+
 /// Expect the sequence `actual` to contains elements from sequence `expected` in the right order.
 let sequenceContainsOrder (actual: seq<'t>) (expected: seq<'t>) msg =
   let el = System.Collections.Generic.Queue<'t> expected
@@ -532,7 +535,7 @@ let sequenceContainsOrder (actual: seq<'t>) (expected: seq<'t>) msg =
   let nl = Environment.NewLine
   let al = ResizeArray<'t>()
   let missingFail expected iter missing = 
-    Tests.failtestf "%s. Remainder of expected enumerable:%s%A%sWent through actual enumerable (%i items):%A%s" msg nl expected nl iter missing nl
+    Tests.failtestf "%s. Remainder of expected enumerable:%s%s%sWent through actual enumerable (%i items):%s%s%s" msg nl (printSeq expected) nl iter (printSeq missing) nl nl
 
   let rec check i =
     if el.Count = 0 then ()
