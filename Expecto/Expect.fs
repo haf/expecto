@@ -8,6 +8,7 @@ open System
 open System.Text.RegularExpressions
 open Expecto.Logging
 open Expecto.Logging.Message
+open System.Runtime.InteropServices
 
 /// Expects f to throw an exception.
 let throws f message =
@@ -523,6 +524,33 @@ let sequenceStarts (subject : _ seq) (prefix : _ seq) message =
       Tests.failtestf "%s. Sequence actual shorter than expected, at pos %i for expected item %A."
                       message i (pi.Current)
     i <- i + 1
+
+let private printSeq (xs: #seq<_>): string =
+    xs |> Seq.mapi (fun i x -> sprintf "  [%i] %A" i x) |> String.concat Environment.NewLine
+
+/// Expect the sequence `actual` to contains elements from sequence `expected` in the right order.
+let sequenceContainsOrder (actual: seq<'t>) (expected: seq<'t>) msg =
+  let el = System.Collections.Generic.Queue<'t> expected
+  use ae = actual.GetEnumerator()
+  let nl = Environment.NewLine
+  let al = ResizeArray<'t>()
+  let missingFail expected iter missing = 
+    Tests.failtestf "%s. Remainder of expected enumerable:%s%s%sWent through actual enumerable (%i items):%s%s%s" msg nl (printSeq expected) nl iter (printSeq missing) nl nl
+
+  let rec check i =
+    if el.Count = 0 then ()
+    else
+      if not (ae.MoveNext()) then missingFail el i al
+      else
+        al.Add ae.Current
+        let expect = el.Peek()
+        if expect = ae.Current then
+          ignore (el.Dequeue())
+          check (i + 1)
+        else
+          check (i + 1)
+
+  check 0
 
 /// Expect the sequence `subject` to be ascending. If it does not
 /// then fail with `message` as an error message.

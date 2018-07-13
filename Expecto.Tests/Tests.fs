@@ -844,6 +844,22 @@ let expecto =
         ) |> assertTestFailsWithMsgStarting "Sequence should contain two and two.\n    Sequence `actual` does not contain every `expected` elements.\n        All elements in `actual`:\n        {2, 2, 4}\n        All elements in `expected` ['item', 'number of expected occurrences']:\n        {2: 1, 4: 1}\n\tExtra elements in `actual`:\n\t'2' (2/1)"
       ]
 
+      testList "#sequenceContainsOrder" [
+        testCase "Valid ordering of subsequence" <| fun _ ->
+          Expect.sequenceContainsOrder [ 1; 2; 3; 4; 5; 6 ] [ 1; 3; 5 ] "should pass"
+
+        testCase "Wrong order of 0th and 1th elem" (fun _ ->
+          Expect.sequenceContainsOrder [ 1; 2; 3; 4; 5; 6 ] [ 3; 1; 6 ] "should fail"
+        ) |> assertTestFails
+
+        testCase "Missing 7 from actual" (fun _ ->
+          Expect.sequenceContainsOrder [ 1; 2; 3; 4; 5; 6 ] [ 1; 3; 7 ] "should fail"
+        ) |> assertTestFails
+
+        testCase "Empty list passes" <| fun _ ->
+          Expect.sequenceContainsOrder [ 1; 2; 3; 4; 5; 6 ] [ ] "should pass"
+      ]
+
       testList "sequence equal" [
         testCase "pass" <| fun _ ->
           Expect.sequenceEqual [1;2;3] [1;2;3] "Sequences actually equal"
