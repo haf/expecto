@@ -1,4 +1,4 @@
-#### 8.2.0 – 2018-07-12
+#### 8.2.0 – 2018-07-13
 * Added C# compatible With methods / Logging: add Task based Interface. #259 thanks @0x53A
 * Feature/sequencecontainsorder. #262 thanks @MNie
 * Console work inc ANSI colours, progress indicator. #258 thanks @AnthonyLloyd
