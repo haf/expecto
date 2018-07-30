@@ -34,6 +34,7 @@ module internal ProgressIndicator =
   let mutable private textValue = String.Empty
   let private progressValue = Percent 0 |> ref
   let private isRunning = ref false
+  let mutable private isPaused = false
   let private isEnabled = not Console.IsOutputRedirected
 
   let text s =
@@ -56,40 +57,43 @@ module internal ProgressIndicator =
           Thread(fun () ->
             let start = DateTime.UtcNow
             while !isRunning do
-              lock isRunning (fun () ->
-                if !isRunning then
-                  let t = (DateTime.UtcNow - start).TotalSeconds
-                  let a = animation.[int t % animation.Length]
-                  let progress =
-                    match !progressValue with
-                    | Percent p ->
-                      if p=100 then [|'1';'0';'0';'%';' ';a|]
-                      elif p<10 then [|' ';' ';char(48+p);'%';' ';a|]
-                      else [|' ';char(48+p/10);char(48+p%10);'%';' ';a|]
-                      |> String
-                    | Fraction (n,d) ->
-                      let ns, ds = string n, string d
-                      String(' ',ds.Length-ns.Length) + ns + "/" + ds
-                      + " " + string a
-                  currentLength <- textValue.Length + progress.Length
-                  color + textValue + progress
-                  + backStart + colorReset + hideCursor
-                  |> originalStdout.Write
-                  originalStdout.Flush()
-              )
+              if not isPaused then
+                lock isRunning (fun () ->
+                  if !isRunning then
+                    let t = (DateTime.UtcNow - start).TotalSeconds
+                    let a = animation.[int t % animation.Length]
+                    let progress =
+                      match !progressValue with
+                      | Percent p ->
+                        if p=100 then [|'1';'0';'0';'%';' ';a|]
+                        elif p<10 then [|' ';' ';char(48+p);'%';' ';a|]
+                        else [|' ';char(48+p/10);char(48+p%10);'%';' ';a|]
+                        |> String
+                      | Fraction (n,d) ->
+                        let ns, ds = string n, string d
+                        String(' ',ds.Length-ns.Length) + ns + "/" + ds
+                        + " " + string a
+                    currentLength <- textValue.Length + progress.Length
+                    color + textValue + progress
+                    + backStart + colorReset + hideCursor
+                    |> originalStdout.Write
+                    originalStdout.Flush()
+                )
               Thread.Sleep 1000
           ).Start()
         true
     )
 
+  let clear() =
+    String(' ', currentLength) + backStart + showCursor
+    |> originalStdout.Write
+    originalStdout.Flush()
+
   let stop() =
     lock isRunning (fun() ->
       if !isRunning then
         isRunning := false
-        if isEnabled then
-          String(' ', currentLength) + backStart + showCursor
-          |> originalStdout.Write
-          originalStdout.Flush()
+        if isEnabled then clear()
     )
 
   Console.CancelKeyPress |> Event.add (fun _ -> stop())
@@ -97,7 +101,10 @@ module internal ProgressIndicator =
   let pause f =
     lock isRunning (fun () ->
       if !isRunning then
-        stop(); f(); start() |> ignore
+        isPaused <- true
+        clear()
+        f()
+        isPaused <- false
       else f()
     )
 
