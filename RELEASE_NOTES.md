@@ -1,3 +1,8 @@
+#### 8.2.1 – 2018-07-30
+* Fixed version doesn't seem to work. #268 thanks @AnthonyLloyd
+* Add auto flush console output for debug. #267 thanks @AnthonyLloyd
+* Attempted fix for progress indicator on iTerm/zsh. #267 thanks @AnthonyLloyd
+
 #### 8.2.0 – 2018-07-13
 * Added C# compatible With methods / Logging: add Task based Interface. #259 thanks @0x53A
 * Feature/sequencecontainsorder. #262 thanks @MNie
