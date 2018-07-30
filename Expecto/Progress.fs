@@ -22,12 +22,14 @@ type Progress =
 module internal ProgressIndicator =
   let originalStdout = stdout
   let originalStderr = stderr
-  let private hideCursor = "\x1B[?25l"
-  let private showCursor = "\x1B[?25h"
+  let private hideCursor = "\u001b[?25l"
+  let private showCursor = "\u001b[?25h"
   let private animation = @"|/-\"
 
-  let private color = "\x1b[1;30m"
-  let private colorReset = "\x1B[0m"
+  let private color = "\u001b[1;30m"
+  let private colorReset = "\u001b[0m"
+
+  let private backStart = "\u001b[1000D"
   
   let mutable private textValue = String.Empty
   let private progressValue = Percent 0 |> ref
@@ -71,7 +73,7 @@ module internal ProgressIndicator =
                       + " " + string a
                   currentLength <- textValue.Length + progress.Length
                   color + textValue + progress
-                  + String('\b', currentLength) + colorReset + hideCursor
+                  + backStart + colorReset + hideCursor
                   |> originalStdout.Write
                   originalStdout.Flush()
               )
@@ -85,7 +87,7 @@ module internal ProgressIndicator =
       if !isRunning then
         isRunning := false
         if isEnabled then
-          String(' ', currentLength) + String('\b', currentLength) + showCursor
+          String(' ', currentLength) + backStart + showCursor
           |> originalStdout.Write
           originalStdout.Flush()
     )
@@ -101,25 +103,25 @@ module internal ProgressIndicator =
 
 module internal ANSIOutputWriter =
   let private colorForWhite =
-    if Console.BackgroundColor = ConsoleColor.White then "\x1B[30m"
-    else "\x1B[1;37m"
-  let private colorReset = "\x1B[0m"
+    if Console.BackgroundColor = ConsoleColor.White then "\u001b[30m"
+    else "\u001b[1;37m"
+  let private colorReset = "\u001b[0m"
   let private colorANSI = function
-    | ConsoleColor.Black -> "\x1b[30m"
-    | ConsoleColor.DarkBlue -> "\x1b[34m"
-    | ConsoleColor.DarkGreen -> "\x1b[32m"
-    | ConsoleColor.DarkCyan -> "\x1b[36m"
-    | ConsoleColor.DarkRed -> "\x1b[31m"
-    | ConsoleColor.DarkMagenta -> "\x1b[35m"
-    | ConsoleColor.DarkYellow -> "\x1b[33m"
-    | ConsoleColor.Gray -> "\x1b[37m"
-    | ConsoleColor.DarkGray -> "\x1b[1;30m"
-    | ConsoleColor.Blue -> "\x1b[1;34m"
-    | ConsoleColor.Green -> "\x1b[1;32m"
-    | ConsoleColor.Cyan -> "\x1b[1;36m"
-    | ConsoleColor.Red -> "\x1b[1;31m"
-    | ConsoleColor.Magenta -> "\x1b[1;35m"
-    | ConsoleColor.Yellow -> "\x1b[1;33m"
+    | ConsoleColor.Black -> "\u001b[30m"
+    | ConsoleColor.DarkBlue -> "\u001b[34m"
+    | ConsoleColor.DarkGreen -> "\u001b[32m"
+    | ConsoleColor.DarkCyan -> "\u001b[36m"
+    | ConsoleColor.DarkRed -> "\u001b[31m"
+    | ConsoleColor.DarkMagenta -> "\u001b[35m"
+    | ConsoleColor.DarkYellow -> "\u001b[33m"
+    | ConsoleColor.Gray -> "\u001b[37m"
+    | ConsoleColor.DarkGray -> "\u001b[1;30m"
+    | ConsoleColor.Blue -> "\u001b[1;34m"
+    | ConsoleColor.Green -> "\u001b[1;32m"
+    | ConsoleColor.Cyan -> "\u001b[1;36m"
+    | ConsoleColor.Red -> "\u001b[1;31m"
+    | ConsoleColor.Magenta -> "\u001b[1;35m"
+    | ConsoleColor.Yellow -> "\u001b[1;33m"
     | ConsoleColor.White -> colorForWhite
     | _ -> ""
 
