@@ -1690,11 +1690,12 @@ module Tests =
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
+    let autoflush = config.verbosity <= LogLevel.Debug
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name ->
             LiterateConsoleTarget(name, config.verbosity,
-              outputWriter = ANSIOutputWriter.TextToOutput,
+              outputWriter = ANSIOutputWriter.TextToOutput autoflush,
               consoleSemaphore = Global.semaphore()) :> Logger }
     config.logName |> Option.iter setLogName
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then

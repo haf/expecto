@@ -126,7 +126,13 @@ module internal ANSIOutputWriter =
   let private foregroundColor = Console.ForegroundColor
 
   let private buffer = StringBuilder()
-  let private textToOutput (parts: (string * ConsoleColor) list) =
+  let Flush() =
+      lock buffer <| fun _ ->
+        ProgressIndicator.pause <| fun _ ->
+          buffer.ToString() |> ProgressIndicator.originalStdout.Write
+          buffer.Clear() |> ignore
+
+  let private textToOutput (autoflush:bool) (parts: (string * ConsoleColor) list) =
     lock buffer <| fun _ ->
       let mutable currentColour = foregroundColor
       parts |> List.iter (fun (text, colour) ->
@@ -136,12 +142,8 @@ module internal ANSIOutputWriter =
         buffer.Append text |> ignore
       )
       buffer.Append colorReset |> ignore
+      if autoflush then Flush()
 
-  let Flush() =
-      lock buffer <| fun _ ->
-        ProgressIndicator.pause <| fun _ ->
-          buffer.ToString() |> ProgressIndicator.originalStdout.Write
-          buffer.Clear() |> ignore
   let Close() =
     Flush()
     Console.SetOut ProgressIndicator.originalStdout
@@ -176,15 +178,13 @@ module internal ANSIOutputWriter =
 #endif
     ProgressIndicator.originalStdout.Flush()
     let encoding = ProgressIndicator.originalStdout.Encoding
-    let std s = textToOutput [s, foregroundColor]
+    let std s = textToOutput true [s, foregroundColor]
     new FuncTextWriter(encoding, std)
     |> Console.SetOut
     let errorEncoding = ProgressIndicator.originalStderr.Encoding
-    let errorToOutput s =
-      textToOutput [s, ConsoleColor.Red]
-      Flush()
+    let errorToOutput s = textToOutput true [s, ConsoleColor.Red]
     new FuncTextWriter(errorEncoding, errorToOutput)
     |> Console.SetError
-  let TextToOutput (sem:obj) (parts: (string * ConsoleColor) list) =
+  let TextToOutput autoflush (sem:obj) (parts: (string * ConsoleColor) list) =
     lock sem <| fun _ ->
-      textToOutput parts
+      textToOutput autoflush parts
