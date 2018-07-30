@@ -26,7 +26,7 @@ module EmptyModule =
   let thisModuleNameQualified = sprintf "Expecto.Tests+EmptyModule, %s" Dummy.thisAssemblyName
   let thisModuleType = lazy Type.GetType(thisModuleNameQualified, throwOnError=true)
 
-let (==?) actual expected = Expect.equal expected actual ""
+let (==?) actual expected = Expect.equal actual expected ""
 
 [<Tests>]
 let tests =
