@@ -48,14 +48,14 @@ let normaliseFileToLFEnding filename =
 Target.create "AssemblyInfo" (fun _ ->
     let createAssemblyInfo project =
         let filename = project+"/AssemblyInfo.fs"
-        AssemblyInfoFile.createFSharp filename [
+        AssemblyInfoFile.createFSharpWithConfig filename [
             AssemblyInfo.Title project
             AssemblyInfo.Product project
             AssemblyInfo.Copyright copyright
             AssemblyInfo.Description description
             AssemblyInfo.Version release.AssemblyVersion
             AssemblyInfo.FileVersion release.AssemblyVersion
-        ]
+        ] (AssemblyInfoFileConfig(true,false,"Expecto.AssemblyInfo"))
         normaliseFileToLFEnding filename
     createAssemblyInfo "Expecto"
     createAssemblyInfo "Expecto.FsCheck"

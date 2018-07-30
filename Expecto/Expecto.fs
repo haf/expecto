@@ -1583,10 +1583,7 @@ module Tests =
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
 
-    let expectoVersion() =
-      let assembly = typeof<ExpectoConfig>.GetTypeInfo().Assembly
-      let fileInfoVersion = FileVersionInfo.GetVersionInfo assembly.Location
-      fileInfoVersion.ProductVersion
+    let expectoVersion = Expecto.AssemblyInfo.AssemblyVersionInformation.AssemblyVersion
 
     /// Parses command-line arguments into a config. This allows you to
     /// override the config from the command line, rather than having
@@ -1725,14 +1722,13 @@ module Tests =
     match ExpectoConfig.fillFromArgs config args with
     | ArgsException (usage,message) ->
       printfn "%s\n" message
-      printfn "EXPECTO version %s\n\n%s" (ExpectoConfig.expectoVersion()) usage
+      printfn "EXPECTO version %s\n\n%s" ExpectoConfig.expectoVersion usage
       1
     | ArgsUsage (usage,errors) ->
       if List.isEmpty errors |> not then
         printfn "ERROR unknown options: %s\n" (String.Join(" ",errors))
 
-      printfn "EXPECTO version %s\n\n%s"
-        (ExpectoConfig.expectoVersion()) usage
+      printfn "EXPECTO version %s\n\n%s" ExpectoConfig.expectoVersion usage
 
       if List.isEmpty errors then 0 else 1
     | ArgsList config ->
@@ -1742,8 +1738,7 @@ module Tests =
     | ArgsRun config ->
       runTests config tests
     | ArgsVersion config ->
-      printfn "EXPECTO version %s\n"
-        (ExpectoConfig.expectoVersion())
+      printfn "EXPECTO version %s\n" ExpectoConfig.expectoVersion
 
       runTestsWithCancel ct config tests
   /// Runs all given tests with the supplied command-line options.
