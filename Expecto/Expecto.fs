@@ -952,6 +952,10 @@ module Impl =
           w.Stop()
           return
             TestSummary.single (Ignored e.Message) (float w.ElapsedMilliseconds)
+        | :? AggregateException as e when e.InnerExceptions.Count = 1 ->
+          w.Stop()
+          return
+            TestSummary.single (TestResult.Error e.InnerException) (float w.ElapsedMilliseconds)
         | e ->
           w.Stop()
           return
