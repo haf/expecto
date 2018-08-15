@@ -1,3 +1,7 @@
+#### 8.2.2 – 2018-08-15
+* Store non-atomic printfn output. #267 thanks @t1m0thyj @AnthonyLloyd
+* Unwrap AggregateExcpetions with single inner. #269 thanks @0x53A
+
 #### 8.2.1 – 2018-07-30
 * Fixed version doesn't seem to work. #268 thanks @AnthonyLloyd
 * Add auto flush console output for debug. #267 thanks @AnthonyLloyd
