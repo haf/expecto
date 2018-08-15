@@ -141,17 +141,32 @@ module internal ANSIOutputWriter =
           buffer.ToString() |> ProgressIndicator.originalStdout.Write
           buffer.Clear() |> ignore
 
-  let private textToOutput (autoflush:bool) (parts: (string * ConsoleColor) list) =
+  let mutable private incompleteTextOutput : (string * ConsoleColor) list = []
+
+  let private textToOutput (autoflush:bool) (fromStdOut:bool) (parts: (string * ConsoleColor) list) =
     lock buffer <| fun _ ->
-      let mutable currentColour = foregroundColor
-      parts |> List.iter (fun (text, colour) ->
-        if currentColour <> colour then
-          colorANSI colour |> buffer.Append |> ignore
-          currentColour <- colour
-        buffer.Append text |> ignore
-      )
-      buffer.Append colorReset |> ignore
-      if autoflush then Flush()
+      let hasEndLine = List.last parts |> fst |> Seq.last |> (=) '\n'
+      if fromStdOut && not hasEndLine then
+        incompleteTextOutput <- incompleteTextOutput @ parts
+      else
+        let parts =
+          if List.isEmpty incompleteTextOutput then parts
+          else
+            let parts = incompleteTextOutput @ parts
+            incompleteTextOutput <- []
+            parts
+        let mutable currentColour = foregroundColor
+        parts |> List.iter (fun (text, colour) ->
+          if currentColour <> colour then
+            colorANSI colour |> buffer.Append |> ignore
+            currentColour <- colour
+          buffer.Append text |> ignore
+        )
+        buffer.Append colorReset |> ignore
+        if autoflush then Flush()
+
+// text from printfn could come in multiple parts.
+// For this need to check if it has /n else store it and put in buffer together.
 
   let Close() =
     Flush()
@@ -187,13 +202,13 @@ module internal ANSIOutputWriter =
 #endif
     ProgressIndicator.originalStdout.Flush()
     let encoding = ProgressIndicator.originalStdout.Encoding
-    let std s = textToOutput true [s, foregroundColor]
+    let std s = textToOutput true true [s, foregroundColor]
     new FuncTextWriter(encoding, std)
     |> Console.SetOut
     let errorEncoding = ProgressIndicator.originalStderr.Encoding
-    let errorToOutput s = textToOutput true [s, ConsoleColor.Red]
+    let errorToOutput s = textToOutput true true [s, ConsoleColor.Red]
     new FuncTextWriter(errorEncoding, errorToOutput)
     |> Console.SetError
   let TextToOutput autoflush (sem:obj) (parts: (string * ConsoleColor) list) =
     lock sem <| fun _ ->
-      textToOutput autoflush parts
+      textToOutput autoflush false parts
