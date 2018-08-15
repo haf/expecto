@@ -145,7 +145,12 @@ module internal ANSIOutputWriter =
 
   let private textToOutput (autoflush:bool) (fromStdOut:bool) (parts: (string * ConsoleColor) list) =
     lock buffer <| fun _ ->
-      let hasEndLine = List.last parts |> fst |> Seq.last |> (=) '\n'
+      let hasEndLine =
+        Seq.map fst parts
+        |> Seq.where (String.IsNullOrEmpty >> not)
+        |> Seq.tryLast
+        |> Option.bind Seq.tryLast
+        |> fun oc -> oc = Some '\n'
       if fromStdOut && not hasEndLine then
         incompleteTextOutput <- incompleteTextOutput @ parts
       else
@@ -164,9 +169,6 @@ module internal ANSIOutputWriter =
         )
         buffer.Append colorReset |> ignore
         if autoflush then Flush()
-
-// text from printfn could come in multiple parts.
-// For this need to check if it has /n else store it and put in buffer together.
 
   let Close() =
     Flush()
