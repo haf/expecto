@@ -26,7 +26,7 @@ VSCode and Ionide (`ionide-fsharp`) integrate out-of-the-box with Expecto's comm
 There's also a nuget `Expecto.VisualStudio.TestAdapter` that you can add to your
 test project to enable Visual Studio integration.
 
-![Parallel by default](./docs/parallel-testing.png)
+![Parallel by default](./docs/stress.jpg)
 
 What follows is the Table of Contents for this README, which also serves as the
 documentation for the project.
