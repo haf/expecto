@@ -4,8 +4,7 @@
 [![Windows Build](https://ci.appveyor.com/api/projects/status/mscx44sh1ci3xdlr?svg=true&branch=master)](https://ci.appveyor.com/project/haf/expecto)
 [![NuGet Badge](https://buildstats.info/nuget/expecto)](https://www.nuget.org/packages/expecto)
 
-Expecto is a smooth testing library for F#, with **APIs made for humans**,
-giving **strong testing methodologies to everyone**.
+Expecto is an advanced testing library for F#.
 
 Expecto tests are parallel and async by default, so that you can use all your
 cores for testing your software.
@@ -19,7 +18,7 @@ Setup and teardown are just simple functions, no need for attributes.
 Expecto comes with batteries included with an integrated test runner, but it's still open for extension due to
 its compositional model.
 
-Expecto comes with performance testing, making statistically sound perfomance comparison simple.
+Expecto comes with performance testing, making statistically sound performance comparison simple.
 
 Expecto also provides a simple API for property based testing using FsCheck.
 
