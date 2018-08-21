@@ -22,9 +22,8 @@ Expecto comes with performance testing, making statistically sound performance c
 
 Expecto also provides a simple API for property based testing using FsCheck.
 
-VSCode and Ionide (`ionide-fsharp`) integrate out-of-the-box with Expecto's command-line output.
-There's also a nuget `Expecto.VisualStudio.TestAdapter` that you can add to your
-test project to enable Visual Studio integration.
+VSCode and Ionide integrate out-of-the-box with Expecto's command-line output.
+There's also a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio integration.
 
 ![Parallel by default](./docs/stress.jpg)
 
