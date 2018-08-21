@@ -7,19 +7,25 @@
 Expecto is a smooth testing library for F#, with **APIs made for humans**,
 giving **strong testing methodologies to everyone**.
 
+Expecto tests are parallel and async by default, so that you can use all your
+cores for testing your software.
+This also opens up a new way of catching threading and memory issues for free using stress testing.
+
 With Expecto you write tests as values. Tests can be composed, reduced,
 filtered, repeated and passed as values, because they are values. This gives the
 programmer a lot of leverage when writing tests.
+Setup and teardown are just simple functions, no need for attributes.
 
-Expecto comes with batteries included, but it's still open for extension due to
+Expecto comes with batteries included with an integrated test runner, but it's still open for extension due to
 its compositional model.
+
+Expecto comes with performance testing, making statistically sound perfomance comparison simple.
+
+Expecto also provides a simple API for property based testing using FsCheck.
 
 VSCode and Ionide (`ionide-fsharp`) integrate out-of-the-box with Expecto's command-line output.
 There's also a nuget `Expecto.VisualStudio.TestAdapter` that you can add to your
 test project to enable Visual Studio integration.
-
-Expecto tests are parallel and async by default, so that you can use all your
-cores for testing your software.
 
 ![Parallel by default](./docs/parallel-testing.png)
 
