@@ -36,17 +36,20 @@ let throwsC f cont =
 
 /// Expects the passed function to throw `'texn`.
 let throwsT<'texn> f message =
-  try
-    f ()
-    Tests.failtestf "%s. Expected f to throw." message
-  with
-  | e when e.GetType() <> typeof<'texn> ->
+  let thrown =
+    try
+      f ()
+      None
+    with e ->
+      Some e
+  match thrown with
+  | Some e when e.GetType() <> typeof<'texn> ->
     Tests.failtestf "%s. Expected f to throw an exn of type %s, but one of type %s was thrown."
                     message
                     (typeof<'texn>.FullName)
                     (e.GetType().FullName)
-  | e ->
-    ()
+  | Some _ -> ()
+  | _ -> Tests.failtestf "%s. Expected f to throw." message
 
 /// Expects the value to be a None value.
 let isNone x message =

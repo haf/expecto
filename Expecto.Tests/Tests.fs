@@ -506,6 +506,10 @@ let expecto =
           Expect.throwsT<ArgumentNullException> ignore "Ignore 'should' throw an exn, ;)"
         ) |> assertTestFails
 
+        testCase "give correct assert message on no exception" (fun _ ->
+          Expect.throwsT<ArgumentNullException> ignore "Should throw null arg"
+        ) |> assertTestFailsWithMsgContaining "Expected f to throw."
+
       ]
 
       testList "flipped throwsT" [
