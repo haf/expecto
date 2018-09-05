@@ -151,6 +151,7 @@ Target.create "Pack" (fun _ ->
     pack "Expecto.FsCheck"
     pack "Expecto.BenchmarkDotNet"
     pack "Expecto.Hopac"
+    pack "Expecto.TestResults"
 )
 
 Target.create "Push" (fun _ ->
