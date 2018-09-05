@@ -12,7 +12,14 @@
 
  1. You will need .NET Core [v2.1 SDK][netcore-sdk] installed. The versions of Mono and .NET Core currently tested in CI can be found [here in .travis.yml][travis]
 
- 1. You will also need [FAKE 5][fake] installed. To build run `fake build`.
+ 1. Set up of compiler state:
+
+    ```
+    dotnet tool install fake-cli -g
+    export FrameworkPathOverride=$(dirname $(which mono))/../lib/mono/4.6.1-api
+    mono .paket/paket.exe restore
+    fake build
+    ```
 
  1. New features:
       * Make your test for your change

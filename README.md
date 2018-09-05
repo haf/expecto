@@ -7,23 +7,25 @@
 Expecto is an advanced testing library for F#.
 
 Expecto tests are parallel and async by default, so that you can use all your
-cores for testing your software.
-This also opens up a new way of catching threading and memory issues for free using stress testing.
+cores for testing your software.  This also opens up a new way of catching
+threading and memory issues for free using stress testing.
 
 With Expecto you write tests as values. Tests can be composed, reduced,
 filtered, repeated and passed as values, because they are values. This gives the
-programmer a lot of leverage when writing tests.
-Setup and teardown are just simple functions, no need for attributes.
+programmer a lot of leverage when writing tests.  Setup and teardown are just
+simple functions, no need for attributes.
 
-Expecto comes with batteries included with an integrated test runner, but it's still open for extension due to
-its compositional model.
+Expecto comes with batteries included with an integrated test runner, but it's
+still open for extension due to its compositional model.
 
-Expecto comes with performance testing, making statistically sound performance comparison simple.
+Expecto comes with performance testing, making statistically sound performance
+comparison simple.
 
 Expecto also provides a simple API for property based testing using FsCheck.
 
 VSCode and Ionide integrate out-of-the-box with Expecto's command-line output.
-There's also a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio integration.
+There's also a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio
+integration.
 
 ![Parallel by default](./docs/stress.jpg)
 
@@ -82,6 +84,7 @@ In your paket.dependencies:
 nuget Expecto
 nuget Expecto.BenchmarkDotNet
 nuget Expecto.FsCheck
+nuget Expecto.Hopac
 ```
 
 Tests should be first-class values so that you can move them around and execute
@@ -133,16 +136,13 @@ and the output won't be interlaced due to concurrency.
 You could create a base .net core project with expecto.
 How to do that? Simply write following lines:
 
-```
-dotnet new -i Expecto.Template::*
-dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
-```
+    dotnet new -i Expecto.Template::*
+    dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
 
 How to run it?
-```
-dotnet restore
-dotnet run
-```
+
+    dotnet restore
+    dotnet run
 
 ![How to create expecto template](docs/expecto.gif)
 
