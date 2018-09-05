@@ -130,6 +130,24 @@ Now, when you use Logary in your app, you can see your log messages
 together with the log output/summary/debug printing of Expecto,
 and the output won't be interlaced due to concurrency.
 
+### TestResults file
+
+```
+nuget Expecto.TestResults
+```
+
+and configure it
+
+```fsharp
+open Expecto
+
+[<EntryPoint>]
+let main args =
+  let writeResults = TestResults.writeNUnitSummary ("TestResults.xml", "Expecto.Tests")
+  let config = defaultConfig.appendSummaryHandler writeResults
+  runTestsInAssembly config args
+```
+
 ## .Net Core support
 
 [Expecto has it's own .net core template](https://github.com/MNie/Expecto.Template)!
@@ -1279,4 +1297,4 @@ you should create a function like so: `testCase "abc" <| fun () -> Expect.equal
 ![Expecto expecto](./docs/expecto-patronus-2000x1126.png)
 
 
- [logary]: https://github.com/logary/logary#using-logary-in-a-library
+[logary]: https://github.com/logary/logary#using-logary-in-a-library
