@@ -84,6 +84,7 @@ let build project =
 
 Target.create "BuildExpecto" (fun _ ->
     build "Expecto/Expecto.fsproj"
+    build "Expecto.TestResults/Expecto.TestResults.fsproj"
     build "Expecto.Hopac/Expecto.Hopac.fsproj"
     build "Expecto.FsCheck/Expecto.FsCheck.fsproj"
 )
