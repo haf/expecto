@@ -63,7 +63,7 @@ documentation for the project.
   * [Performance.findFastest](#performancefindfastest)
 - [`main argv` – how to run console apps](#main-argv-%E2%80%93-how-to-run-console-apps)
   * [The config](#the-config)
-- [Contributing](#contributing)
+- [Contributing and building](#contributing-and-building)
 - [BenchmarkDotNet usage](#benchmarkdotnet-usage)
 - [You're not alone!](#youre-not-alone)
   * [Testing hardware](#testing-hardware)
@@ -1097,9 +1097,10 @@ ExpectoConfig record, that looks like:
 
 By doing a `let config = { defaultConfig with parallel = true }`, for example.
 
-## Contributing
+## Contributing and building
 
-Please review the [guidelines for contributing](./CONTRIBUTING.md) to Expecto.
+Please review the [guidelines for contributing](./CONTRIBUTING.md) to Expecto;
+this document also includes instructions on how to build.
 
 ## BenchmarkDotNet usage
 
