@@ -36,6 +36,7 @@ documentation for the project.
 
 - [Installing](#installing)
   * [Prettify stacktraces/ship test logs](#prettify-stacktracesship-test-logs)
+  * [TestResults file](#testresults-file)
 - [.Net Core support](#net-core-support)
 - [Testing "Hello world"](#testing-hello-world)
 - [Running tests](#running-tests)
