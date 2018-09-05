@@ -116,12 +116,3 @@ let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
     let doc = XDocument([|element|])
     let path = Path.GetFullPath file
     doc.Save(path)
-
-/// Generate a TestResults.xml file; after the original summary has printed.
-let appendSummaryHandler handleSummary (def: Expecto.Impl.TestPrinters) =
-    { def with
-        summary = fun _config summary -> async {
-            do! def.summary _config summary
-            handleSummary summary
-          }
-      }

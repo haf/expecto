@@ -582,7 +582,7 @@ module Impl =
       exn: string -> exn -> TimeSpan -> Async<unit>
       /// Prints a summary given the test result counts
       summary : ExpectoConfig -> TestRunSummary -> Async<unit> }
-    
+
     static member printResult config (test:FlatTest) (result:TestSummary) =
       match result.result with
       | Passed -> config.printer.passed test.name result.duration
@@ -643,7 +643,7 @@ module Impl =
                   >> addExn e)
             ANSIOutputWriter.Flush()
           }
-          
+
 
         summary = fun _config summary ->
           let spirit =
@@ -826,7 +826,7 @@ module Impl =
         exn         = fun n e d -> runTwoAsyncs (first.exn n e d) (second.exn n e d)
         summary     = fun config summary -> runTwoAsyncs (first.summary config summary) (second.summary config summary)
       }
-    
+
   // Runner options
   and ExpectoConfig =
     { /// Whether to run the tests in parallel. Defaults to
@@ -895,6 +895,17 @@ module Impl =
         fsCheckEndSize = None
         mySpiritIsWeak = false
         allowDuplicateNames = false
+      }
+
+    member x.appendSummaryHandler handleSummary =
+      { x with
+          printer =
+            { x.printer with
+                summary = fun _config summary -> async {
+                  do! x.printer.summary _config summary
+                  handleSummary summary
+                }
+              }
       }
 
   let execTestAsync (ct:CancellationToken) config (test:FlatTest) : Async<TestSummary> =
@@ -992,11 +1003,11 @@ module Impl =
           let! result = execTestAsync ct config test
           do! beforeAsync
           do! TestPrinters.printResult config test result
-          
+
           if progressStarted then
             Fraction (Interlocked.Increment testsCompleted, testLength)
             |> ProgressIndicator.update
-          
+
           return test,result
         }
 
@@ -1083,7 +1094,7 @@ module Impl =
 
       return testSummary.errorCode
     }
-  
+
   /// Runs tests, returns error code
   let runEval config test =
     runEvalWithCancel CancellationToken.None config test
@@ -1156,12 +1167,12 @@ module Impl =
 
         Seq.takeWhile (fun test ->
           let now = Stopwatch.GetTimestamp()
-          
+
           if progressStarted then
             100 - int((finishTime.Value - now) * 100L / totalTicks)
             |> Percent
             |> ProgressIndicator.update
-          
+
           if now < finishTime.Value
               && not ct.IsCancellationRequested then
             runningTests.Add test
@@ -1683,9 +1694,9 @@ module Tests =
     |> Seq.toList
     |> List.groupBy (fun t -> t.name)
     |> List.choose ( function
-      | _, x :: _ :: _ -> 
+      | _, x :: _ :: _ ->
         Some x.name
-      | _ -> 
+      | _ ->
         None
     )
   /// Runs tests with the supplied config.
