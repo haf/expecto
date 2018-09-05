@@ -12,6 +12,8 @@
 
  1. You will need .NET Core [v2.1 SDK][netcore-sdk] installed. The versions of Mono and .NET Core currently tested in CI can be found [here in .travis.yml][travis]
 
+ 1. Ensure .Net Core tools are on your PATH: `$HOME/.dotnet/tools`
+
  1. Set up of compiler state:
 
     ```

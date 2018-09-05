@@ -1,3 +1,6 @@
+#### 8.3.0 – 2018-09-05
+* Adding test results file, see #179, thanks @matthid, @haf
+
 #### 8.2.2 – 2018-08-15
 * Store non-atomic printfn output. #267 thanks @t1m0thyj @AnthonyLloyd
 * Unwrap AggregateExcpetions with single inner. #269 thanks @0x53A

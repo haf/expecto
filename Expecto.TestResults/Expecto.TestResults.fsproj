@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Expecto.TestResults</AssemblyName>
+    <PackageId>Expecto.TestResults</PackageId>
+    <Version>8.2.2</Version>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Optional: Declare that the Repository URL can be published to NuSpec -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <!-- Optional: Embed source files that are not tracked by the source control manager to the PDB -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Optional: Include PDB in the built .nupkg -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Library.fs" />
+    <None Include="paket.references" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Expecto\Expecto.fsproj" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>
