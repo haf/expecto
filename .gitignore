@@ -5,6 +5,7 @@
 *.pidb
 bin
 obj
+.idea/
 _ReSharper.*
 packages/*
 **/packages/*
