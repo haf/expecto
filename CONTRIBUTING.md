@@ -74,10 +74,15 @@ Futhermore, in no particular order;
    you need to use the `logWithAck` function, because the returned async will
    yield when the data has been written to the configured output.
 
- [ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
- [ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
- [netcore-sdk]: https://www.microsoft.com/net/download
- [netcore-rt]: https://github.com/dotnet/core/blob/master/release-notes/download-archive.md#net-core-11
- [travis]: https://github.com/haf/expecto/blob/master/.travis.yml
- [mono-dl]: http://www.mono-project.com/download/
- [fake]: https://fake.build/fake-gettingstarted.html
+## Releasing
+
+`fake build -- --target Release`
+
+[ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
+[ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
+[netcore-sdk]: https://www.microsoft.com/net/download
+[netcore-rt]: https://github.com/dotnet/core/blob/master/release-notes/download-archive.md#net-core-11
+[travis]: https://github.com/haf/expecto/blob/master/.travis.yml
+[mono-dl]: http://www.mono-project.com/download/
+[fake]: https://fake.build/fake-gettingstarted.html
+
