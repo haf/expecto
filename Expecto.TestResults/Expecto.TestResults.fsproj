@@ -15,6 +15,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Library.fs" />
+    <Compile Include="CSharp.fs" />
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
