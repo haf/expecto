@@ -115,4 +115,7 @@ let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
 
     let doc = XDocument([|element|])
     let path = Path.GetFullPath file
+    Path.GetDirectoryName path
+    |> Directory.CreateDirectory
+    |> ignore
     doc.Save(path)
