@@ -83,6 +83,14 @@ namespace Test.CSharp
                 })
             });
 
-        public static int Main(string[] argv) => Runner.RunTestsInAssembly(Runner.DefaultConfig.WithMySpiritIsWeak(false).AddPrinter(new CSharpPrinter()), argv);
+        public static int Main(string[] argv)
+        {
+            var config =
+                Runner.DefaultConfig
+                    .WithMySpiritIsWeak(false)
+                    .AddPrinter(new CSharpPrinter())
+                    .AddNUnitSummary("test.xml", "someAssembly");
+            return Runner.RunTestsInAssembly(config, argv);
+        }
     }
 }

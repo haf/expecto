@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Expecto.Tests.CSharp</AssemblyName>
     <OutputType>Exe</OutputType>
@@ -12,6 +12,7 @@
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Expecto.TestResults\Expecto.TestResults.fsproj" />
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
