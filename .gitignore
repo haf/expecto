@@ -19,7 +19,5 @@ BenchmarkDotNet.Artifacts/
 any/
 /.fake/
 /.vs/
-build/
 *.orig
 tools/nuget-workaround/obj/
-TestResults.xml

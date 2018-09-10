@@ -118,8 +118,10 @@ Target.create "RunTest" (fun _ ->
           }
         |> fun r -> if r<>0 then project+".exe failed" |> failwith
     runTest "Expecto.Tests"
+    Trace.publish (ImportData.Nunit NunitDataVersion.Nunit) "bin/Expecto.Tests.TestResults.xml"
     runTest "Expecto.Hopac.Tests"
     runTest "Expecto.Tests.CSharp"
+    Trace.publish (ImportData.Nunit NunitDataVersion.Nunit) "bin/Expecto.Tests.CSharp.TestResults.xml"
     runTest "Expecto.Focused.Tests"
 )
 

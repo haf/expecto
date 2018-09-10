@@ -89,7 +89,7 @@ namespace Test.CSharp
                 Runner.DefaultConfig
                     .WithMySpiritIsWeak(false)
                     .AddPrinter(new CSharpPrinter())
-                    .AddNUnitSummary("test.xml", "someAssembly");
+                    .AddNUnitSummary("bin/Expecto.Tests.CSharp.TestResults.xml", "someAssembly");
             return Runner.RunTestsInAssembly(config, argv);
         }
     }
