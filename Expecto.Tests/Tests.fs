@@ -351,25 +351,29 @@ let expecto =
         yield testCase "run with filter" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          Tests.runTestsWithArgs defaultConfig [|"--filter"; "c/f"|] test ==? 0
+          Tests.runTestsWithArgs { defaultConfig with noSpinner = true }
+            [|"--filter"; "c/f"|] test ==? 0
           !count ==? 2
 
         yield testCase "run with filter test case" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          Tests.runTestsWithArgs defaultConfig [|"--filter-test-case"; "a"|] test ==? 0
+          Tests.runTestsWithArgs { defaultConfig with noSpinner = true }
+            [|"--filter-test-case"; "a"|] test ==? 0
           !count ==? 2
 
         yield testCase "run with filter test list" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          Tests.runTestsWithArgs defaultConfig [|"--filter-test-list"; "f"|] test ==? 0
+          Tests.runTestsWithArgs { defaultConfig with noSpinner = true }
+            [|"--filter-test-list"; "f"|] test ==? 0
           !count ==? 2
 
         yield testCase "run with run" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          Tests.runTestsWithArgs defaultConfig [|"--run"; "a"; "c/d"; "c/f/h"|] test ==? 0
+          Tests.runTestsWithArgs { defaultConfig with noSpinner = true }
+            [|"--run"; "a"; "c/d"; "c/f/h"|] test ==? 0
           !count ==? 3
 
       ]
@@ -1174,7 +1178,8 @@ let stress =
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
+            verbosity = Logging.LogLevel.Fatal
+            noSpinner = true }
       Expect.equal (runTests config (singleTest "single test")) 0 "one"
     }
 
@@ -1186,7 +1191,8 @@ let stress =
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
+            verbosity = Logging.LogLevel.Fatal
+            noSpinner = true }
       Expect.equal (runTests config (singleTest "single test") &&& 4) 4 "memory"
     }
 
@@ -1197,7 +1203,8 @@ let stress =
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
+            verbosity = Logging.LogLevel.Fatal
+            noSpinner = true }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
 
@@ -1209,7 +1216,8 @@ let stress =
               stress = TimeSpan.FromMilliseconds 10000.0 |> Some
               stressTimeout = TimeSpan.FromMilliseconds 10000.0
               printer = TestPrinters.silent
-              verbosity = Logging.LogLevel.Fatal }
+              verbosity = Logging.LogLevel.Fatal
+              noSpinner = true }
         Expect.equal (runTests config (deadlockTest "deadlock")) 8 "timeout"
     }
 
@@ -1220,7 +1228,8 @@ let stress =
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
+            verbosity = Logging.LogLevel.Fatal
+            noSpinner = true }
       Expect.equal (runTests config (sequencedGroup())) 0 "no timeout"
     }
 
@@ -1231,7 +1240,8 @@ let stress =
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
+            verbosity = Logging.LogLevel.Fatal
+            noSpinner = true }
       Expect.equal (runTests config (twoSequencedGroups())) 0 "no timeout"
     }
 
@@ -1242,7 +1252,8 @@ let stress =
             stress = TimeSpan.FromMilliseconds 100.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
+            verbosity = Logging.LogLevel.Fatal
+            noSpinner = true }
       Expect.equal (runTests config (singleTest "single test")) 0 "one"
     }
 
@@ -1254,7 +1265,8 @@ let stress =
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             stressMemoryLimit = 0.001
             printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
+            verbosity = Logging.LogLevel.Fatal
+            noSpinner = true }
       Expect.equal (runTests config (singleTest "single test")) 4 "memory"
     }
 
@@ -1265,7 +1277,8 @@ let stress =
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
+            verbosity = Logging.LogLevel.Fatal
+            noSpinner = true }
       Expect.equal (runTests config neverEndingTest) 8 "timeout"
     }
 
@@ -1276,7 +1289,8 @@ let stress =
             stress = TimeSpan.FromMilliseconds 10000.0 |> Some
             stressTimeout = TimeSpan.FromMilliseconds 10000.0
             printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal }
+            verbosity = Logging.LogLevel.Fatal
+            noSpinner = true }
       Expect.equal (runTests config (deadlockTest "deadlock")) 0 "no deadlock"
     }
   ]
@@ -1316,7 +1330,8 @@ let cancel =
           { defaultConfig with
               parallel = p
               printer = TestPrinters.silent
-              verbosity = Logging.LogLevel.Fatal }
+              verbosity = Logging.LogLevel.Fatal
+              noSpinner = true }
         use ct = new CancellationTokenSource()
         let! _ = Async.StartChild(async { do! Async.Sleep 50
                                           ct.Cancel() })

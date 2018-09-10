@@ -115,7 +115,8 @@ let all =
       if runTests { defaultConfig with
                       failOnFocusedTests = true
                       printer = TestPrinters.silent
-                      verbosity = Logging.LogLevel.Fatal } localList
+                      verbosity = Logging.LogLevel.Fatal
+                      noSpinner = true } localList
          <> 0 then
         failwith "focused test check didn't fail"
 ]
@@ -148,9 +149,12 @@ let configTests =
       testCase "same name" ignore
     ]
 
-  let silentConfig = { defaultConfig with
-                          verbosity = Fatal
-                          printer = TestPrinters.silent }
+  let silentConfig = {
+    defaultConfig with
+      verbosity = Fatal
+      printer = TestPrinters.silent
+      noSpinner = true
+   }
 
   testList "config tests" [
     testCase "parallel config works" <| fun _ ->

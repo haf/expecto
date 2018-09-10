@@ -872,6 +872,8 @@ module Impl =
       mySpiritIsWeak: bool
       /// Allows duplicate test names.
       allowDuplicateNames: bool
+      /// Disable spinner progress update.
+      noSpinner: bool
     }
     static member defaultConfig =
       { parallel = true
@@ -895,14 +897,15 @@ module Impl =
         fsCheckEndSize = None
         mySpiritIsWeak = false
         allowDuplicateNames = false
+        noSpinner = false
       }
 
     member x.appendSummaryHandler handleSummary =
       { x with
           printer =
             { x.printer with
-                summary = fun _config summary -> async {
-                  do! x.printer.summary _config summary
+                summary = fun config summary -> async {
+                  do! x.printer.summary config summary
                   handleSummary summary
                 }
               }
@@ -1072,8 +1075,11 @@ module Impl =
     async {
       do! config.printer.beforeRun test
 
-      ProgressIndicator.text "Expecto Running... "
-      let progressStarted = ProgressIndicator.start()
+      let progressStarted =
+        if config.noSpinner then false
+        else
+          ProgressIndicator.text "Expecto Running... "
+          ProgressIndicator.start()
 
 
       let w = Stopwatch.StartNew()
@@ -1090,7 +1096,8 @@ module Impl =
 
       if progressStarted then
         ProgressIndicator.stop()
-        ANSIOutputWriter.Close()
+      
+      ANSIOutputWriter.Close()
 
       return testSummary.errorCode
     }
@@ -1103,8 +1110,11 @@ module Impl =
     async {
       do! config.printer.beforeRun test
 
-      ProgressIndicator.text "Expecto Running... "
-      let progressStarted = ProgressIndicator.start()
+      let progressStarted =
+        if config.noSpinner then false
+        else
+          ProgressIndicator.text "Expecto Running... "
+          ProgressIndicator.start()
 
       let tests =
         Test.toTestCodeList test
@@ -1230,7 +1240,8 @@ module Impl =
 
       if progressStarted then
         ProgressIndicator.stop()
-        ANSIOutputWriter.Close()
+      
+      ANSIOutputWriter.Close()
 
       return testSummary.errorCode
     }
@@ -1560,6 +1571,7 @@ module Tests =
     | Version
     | My_Spirit_Is_Weak
     | Allow_Duplicate_Names
+    | No_Spinner
 
     interface IArgParserTemplate with
       member s.Usage =
@@ -1586,6 +1598,7 @@ module Tests =
         | FsCheck_End_Size _ -> "FsCheck end size (default: 100 for testing and 10,000 for stress testing)."
         | My_Spirit_Is_Weak -> "removes spirits from the output."
         | Allow_Duplicate_Names -> "allow duplicate test names."
+        | No_Spinner -> "disable the spinner progress update."
 
   type FillFromArgsResult =
     | ArgsRun of ExpectoConfig
@@ -1647,6 +1660,7 @@ module Tests =
         | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
         | My_Spirit_Is_Weak -> id
         | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
+        | No_Spinner -> fun o -> { o with noSpinner = true }
 
       let parsed =
         try
