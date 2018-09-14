@@ -119,3 +119,66 @@ let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
     |> Directory.CreateDirectory
     |> ignore
     doc.Save(path)
+
+let writeJUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
+    // junit does not have an official xml spec
+    // this is a minimal implementation to get gitlab to recognize the tests: https://docs.gitlab.com/ee/ci/junit_test_reports.html
+    let totalTests = summary.errored @ summary.failed @ summary.ignored @ summary.passed
+    let testCaseElements =
+        totalTests
+        |> Seq.map (fun (flatTest, test) ->
+            let content =
+                match test.result with
+                | Impl.TestResult.Passed ->
+                  [|
+                    XAttribute(XName.Get "time",
+                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "{0:0.000}", test.duration.TotalSeconds)) |> box
+                  |]
+                | Impl.TestResult.Error e ->
+                  [|
+                    XAttribute(XName.Get "time",
+                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "{0:0.000}", test.duration.TotalSeconds)) |> box
+                    XElement(XName.Get "error",
+                      [|
+                        XAttribute(XName.Get "message", e.Message) |> box
+                        XText(e.ToString()) |> box
+                      |]) |> box
+                  |]
+                | Impl.TestResult.Failed msg ->
+                  [|
+                    XAttribute(XName.Get "time",
+                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "{0:0.000}", test.duration.TotalSeconds)) |> box
+                    XElement(XName.Get "failure",
+                        XAttribute(XName.Get "message", msg))
+                  |]
+                | Impl.TestResult.Ignored msg ->
+                  [|
+                    XElement(XName.Get "skipped",
+                        XAttribute(XName.Get "message", msg)) |> box
+                  |]
+
+            XElement(XName.Get "testcase",
+              [|
+                yield XAttribute(XName.Get "name", flatTest.name) |> box
+                yield! content
+              |]) |> box)
+    let element =
+      XElement(
+        XName.Get "testsuites",
+        [|
+          yield XElement(XName.Get "testsuite",
+            [|
+              yield XAttribute(XName.Get "name", assemblyName) |> box
+              yield! testCaseElements
+            |]) |> box
+        |])
+
+    let doc = XDocument([|element|])
+    let path = Path.GetFullPath file
+    Path.GetDirectoryName path
+    |> Directory.CreateDirectory
+    |> ignore
+    doc.Save(path)
