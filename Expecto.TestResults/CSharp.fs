@@ -17,3 +17,7 @@ module ConfigExt =
       [<Extension; CompiledName("AddNUnitSummary")>]
       member x.AddNUnitSummary(file:string, assemblyName:string) =
           x.appendSummaryHandler (TestResults.writeNUnitSummary(file, assemblyName) )
+
+      [<Extension; CompiledName("AddJUnitSummary")>]
+      member x.AddJUnitSummary(file:string, assemblyName:string) =
+          x.appendSummaryHandler (TestResults.writeJUnitSummary(file, assemblyName) )
