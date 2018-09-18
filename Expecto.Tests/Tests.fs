@@ -28,6 +28,9 @@ module EmptyModule =
 
 let (==?) actual expected = Expect.equal actual expected ""
 
+type smallRecord = { a: string }
+type anotherSmallRecord = { a: string; b:string }
+
 [<Tests>]
 let tests =
   testList "all" [
@@ -70,6 +73,16 @@ let tests =
       test "fail - different content" {
         Expect.equal "Test" "Tes2" "Failing - string with different content"
       } |> assertTestFailsWithMsgStarting "Failing - string with different content.\n          Expected string to equal:\n          \"Tes2\"\n              ↑\n          The string differs at index 3.\n          \"Test\"\n              ↑\n          String does not match at position 3. Expected char: '2', but got 't'."
+    ]
+
+    testList "record comparison" [
+      test "record equal" {
+        Expect.equal { a = "dd" } { a = "dd" } "Test record"
+      }
+
+      test "fail - different content" {
+        Expect.equal {a = "dd"; b = "de" } {a = "dd"; b = "dw" } "Failing - record with different content"
+      } |> assertTestFailsWithMsgStarting "Failing - record with different content.\n            Expected record to equal:\n            {a = \"dd\";\n b = \"dw\";}\n            The record differs at index 1.\n            {a = \"dd\";\n b = \"de\";}\n            Record does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\"."
     ]
 
     testList "sumTestResults" [
