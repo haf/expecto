@@ -8,7 +8,6 @@ open System
 open System.Text.RegularExpressions
 open Expecto.Logging
 open Expecto.Logging.Message
-open System.Runtime.InteropServices
 open Microsoft.FSharp.Reflection
 open System.Reflection
 
@@ -222,69 +221,70 @@ let hasCountOf (actual : _ seq) (expected : uint32) (selector : _ -> bool) messa
     actual |> Seq.fold (fun acc element -> if selector element then acc + 1u else acc) 0u
   if hits <> expected then Tests.failtestf "%s. Should be of count: %d, but was: %d" message expected hits
 
+let private stringEquals (a:string) (e:string) message =
+  let ai = a.GetEnumerator()
+  let ei = e.GetEnumerator()
+  let mutable i = 0
+  let mutable errorIndex = 0
+  let baseMsg errorIndex =
+    let diffString = String(' ', errorIndex) + "↑"
+    sprintf "%s.
+Expected string to equal:
+%s
+%s
+The string differs at index %d.
+%s
+%s"
+        message e diffString errorIndex a diffString
+  while ei.MoveNext() do
+    if ai.MoveNext() then
+      if ai.Current = ei.Current then
+        if '\n'.Equals(ai.Current) then errorIndex <- 0
+      else
+        Tests.failtestf "%s\nString does not match at position %i. Expected char: %A, but got %A."
+          (baseMsg errorIndex) i ei.Current ai.Current
+    else
+      Tests.failtestf "%s\nString `actual` was shorter than expected, at pos %i for expected item %A."
+        (baseMsg errorIndex) i ei.Current
+    i <- i + 1
+    errorIndex <- errorIndex + 1
+  if ai.MoveNext() then
+    Tests.failtestf "%s\nString `actual` was longer than expected, at pos %i found item %A."
+      (baseMsg errorIndex) i (ai.Current)
+
 /// Expects the two values to equal each other.
 let equal (actual : 'a) (expected : 'a) message =
   match box actual, box expected with
   | (:? string as a), (:? string as e) ->
-    let ai = a.ToCharArray().GetEnumerator()
-    let ei = e.ToCharArray().GetEnumerator()
-    let mutable i = 0
-    let baseMsg errorIndex =
-      let diffString = String(' ', errorIndex + 1) + "↑"
-      sprintf "%s.
-          Expected string to equal:
-          %A
-          %s
-          The string differs at index %d.
-          %A
-          %s"
-                    message expected diffString errorIndex actual diffString
-    while ei.MoveNext() do
-      if ai.MoveNext() then
-        if ai.Current = ei.Current then ()
-        else
-          Tests.failtestf "%s
-          String does not match at position %i. Expected char: %A, but got %A."
-            (baseMsg i) i ei.Current ai.Current
-      else
-        Tests.failtestf "%s
-          String `actual` was shorter than expected, at pos %i for expected item %A."
-          (baseMsg i) i ei.Current
-      i <- i + 1
-    if ai.MoveNext() then
-      Tests.failtestf "%s
-          String `actual` was longer than expected, at pos %i found item %A."
-                      (baseMsg i) i (ai.Current)
+    stringEquals a e message
   | (:? float as a), (:? float as e) ->
     if a <> e then
       Tests.failtestf "%s. Actual value was %f but had expected it to be %f." message a e
   | a, e ->
-    if FSharpType.IsRecord(a.GetType(), BindingFlags.Default) then
-      let value (elem: obj) previous =
-        (elem :?> PropertyInfo).GetValue(previous, null)
-      let ai = (FSharpType.GetRecordFields (a.GetType(), BindingFlags.Public)).GetEnumerator()
-      let ei = (FSharpType.GetRecordFields (e.GetType(), BindingFlags.Public)).GetEnumerator()
-      let name() = (ai.Current :?> PropertyInfo).Name
-      let mutable i = 0
-      let baseMsg errorIndex =
-        sprintf "%s.
-            Expected record to equal:
-            %A
-            The record differs at index %d.
-            %A"
-                      message expected errorIndex actual
-      while ei.MoveNext() do
-        if ai.MoveNext() then
-          let currentA = value ai.Current a
-          let currentE = value ei.Current e
-          if currentA = currentE then ()
-          else
-            Tests.failtestf "%s
-            Record does not match at position %i for field named `%s`. Expected field with value: %A, but got %A."
-              (baseMsg i) (i + 1) (name()) currentE currentA
-        i <- i + 1
-    elif actual <> expected then
-      Tests.failtestf "%s. Actual value was %A but had expected it to be %A." message actual expected
+    if actual <> expected then
+      if FSharpType.IsRecord(a.GetType(), BindingFlags.Default) then
+        let value (elem: obj) previous =
+          (elem :?> PropertyInfo).GetValue(previous, null)
+        let ai = (FSharpType.GetRecordFields (a.GetType(), BindingFlags.Public)).GetEnumerator()
+        let ei = (FSharpType.GetRecordFields (e.GetType(), BindingFlags.Public)).GetEnumerator()
+        let name() = (ai.Current :?> PropertyInfo).Name
+        let mutable i = 0
+        while ei.MoveNext() do
+          if ai.MoveNext() then
+            let currentA = value ai.Current a
+            let currentE = value ei.Current e
+            if currentA = currentE then ()
+            else
+              Tests.failtestf "%s.
+Record does not match at position %i for field named `%s`. Expected field with value: %A, but got %A.
+Expected:
+%A
+Actual:
+%A"
+                message (i + 1) (name()) currentE currentA expected actual
+          i <- i + 1
+      else
+        Tests.failtestf "%s. Actual value was %A but had expected it to be %A." message actual expected
 
 /// Expects the two values not to equal each other.
 let notEqual (actual : 'a) (expected : 'a) message =
@@ -393,7 +393,7 @@ let private formatSet<'a> (concatBy) (formatResult) (whenEmpty) (ss : 'a seq) : 
       |> Seq.sort
       |> Seq.cast<'a>
       |> Seq.map (fun (a : 'a) -> a.ToString())
-    | otherwise ->
+    | _ ->
       ss
       |> Seq.map (fun a -> a.ToString())
       |> Seq.sort)
@@ -605,9 +605,29 @@ let stringContains (subject : string) (substring : string) message =
 /// then fail with `message` as an error message together with a description
 /// of `subject` and `prefix`.
 let stringStarts (subject : string) (prefix : string) message =
-  if not (subject.StartsWith prefix) then
-    Tests.failtestf "%s. Expected subject string '%s' to start with '%s'."
-                    message subject prefix
+  let su = Seq.append (Seq.map Some subject) (Seq.initInfinite (fun _ -> None))
+  let pr = Seq.append (Seq.map Some prefix) (Seq.initInfinite (fun _ -> None))
+  let diff =
+    Seq.mapi2 (fun i s p -> i,s,p) su pr
+    |> Seq.find (function |_,Some s,Some p when s=p -> false |_-> true)
+  match diff with
+  | _,_,None -> ()
+  | i,None,Some p ->
+    Tests.failtestf
+      "%s. Expected subject string to be longer or equal to prefix.
+Differs at position %i with char '%c'.
+subject: '%s'
+prefix : '%s'"
+      message i p subject prefix
+  | i,Some s,Some p ->
+    Tests.failtestf
+      "%s. Expected subject string to start with the prefix.
+Differs at position %i with subject '%c' and prefix '%c'.
+subject: '%s'
+prefix : '%s'"
+      message i s p
+      (subject.Insert(i+1,"\u001b[24m").Insert(i,"\u001b[4m"))
+      (prefix.Insert(i+1,"\u001b[24m").Insert(i,"\u001b[4m"))
 
 /// Expect the string `subject` to end with `suffix`. If it does not
 /// then fail with `message` as an error message together with a description

@@ -21,3 +21,4 @@ any/
 /.vs/
 *.orig
 tools/nuget-workaround/obj/
+.ionide

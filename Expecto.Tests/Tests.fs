@@ -64,15 +64,15 @@ let tests =
 
       test "different length, actual is shorter" {
         Expect.equal "Test" "Test2" "Failing - string with different length"
-      } |> assertTestFailsWithMsgStarting "Failing - string with different length.\n          Expected string to equal:\n          \"Test2\"\n               ↑\n          The string differs at index 4.\n          \"Test\"\n               ↑\n          String `actual` was shorter than expected, at pos 4 for expected item '2'."
+      } |> assertTestFailsWithMsgStarting "Failing - string with different length.\nExpected string to equal:\nTest2\n    ↑\nThe string differs at index 4.\nTest\n    ↑\nString `actual` was shorter than expected, at pos 4 for expected item '2'."
 
       test "different length, actual is longer" {
         Expect.equal "Test2" "Test" "Failing - string with different length"
-      } |> assertTestFailsWithMsgStarting "Failing - string with different length.\n          Expected string to equal:\n          \"Test\"\n               ↑\n          The string differs at index 4.\n          \"Test2\"\n               ↑\n          String `actual` was longer than expected, at pos 4 found item '2'."
+      } |> assertTestFailsWithMsgStarting "Failing - string with different length.\nExpected string to equal:\nTest\n    ↑\nThe string differs at index 4.\nTest2\n    ↑\nString `actual` was longer than expected, at pos 4 found item '2'."
 
       test "fail - different content" {
         Expect.equal "Test" "Tes2" "Failing - string with different content"
-      } |> assertTestFailsWithMsgStarting "Failing - string with different content.\n          Expected string to equal:\n          \"Tes2\"\n              ↑\n          The string differs at index 3.\n          \"Test\"\n              ↑\n          String does not match at position 3. Expected char: '2', but got 't'."
+      } |> assertTestFailsWithMsgStarting "Failing - string with different content.\nExpected string to equal:\nTes2\n   ↑\nThe string differs at index 3.\nTest\n   ↑\nString does not match at position 3. Expected char: '2', but got 't'."
     ]
 
     testList "record comparison" [
@@ -82,7 +82,7 @@ let tests =
 
       test "fail - different content" {
         Expect.equal {a = "dd"; b = "de" } {a = "dd"; b = "dw" } "Failing - record with different content"
-      } |> assertTestFailsWithMsgStarting "Failing - record with different content.\n            Expected record to equal:\n            {a = \"dd\";\n b = \"dw\";}\n            The record differs at index 1.\n            {a = \"dd\";\n b = \"de\";}\n            Record does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\"."
+      } |> assertTestFailsWithMsgStarting "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\nExpected:\n{a = \"dd\";\n b = \"dw\";}\nActual:\n{a = \"dd\";\n b = \"de\";}"
     ]
 
     testList "sumTestResults" [
