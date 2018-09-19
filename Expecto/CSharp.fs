@@ -5,6 +5,7 @@ namespace Expecto.CSharp
 open System
 open System.Threading.Tasks
 open System.Runtime.CompilerServices
+open System.Runtime.InteropServices
 open Expecto
 open Expecto.Impl
 
@@ -68,6 +69,9 @@ module Runner =
   let FocusedTestCaseT(name, test: Task) = ftestCaseAsync name (Async.AwaitTask test)
   [<CompiledName("FocusedTestCase")>]
   let FocusedTestCaseFT(name, test: System.Func<Task>) = ftestCaseAsync name (async { do! Async.AwaitTask (test.Invoke()) })
+
+  let TestSequenced(test: Test) = testSequenced test
+
   let DefaultConfig = defaultConfig
 
   type Expecto.Impl.ExpectoConfig with
@@ -130,3 +134,91 @@ module Runner =
 
       [<Extension; CompiledName("WithAllowDuplicateNames")>]
       member x.WithAllowDuplicateNames(allowDuplicateNames) = { x with allowDuplicateNames = allowDuplicateNames }
+
+
+type Function() =
+
+  static let isFasterThanSub (f1:Performance.Measurer<_,_>->'a)
+                             (f2:Performance.Measurer<_,_>->'a) message =
+    let toString (s:SampleStatistics) =
+      sprintf "%.4f ± %.4f ms" s.mean s.meanStandardError
+
+    match Performance.timeCompare f1 f2 with
+    | Performance.ResultNotTheSame (r1, r2)->
+      false,
+      sprintf "%s. Expected function results to be the same (%A vs %A)."
+        message r1 r2
+    | Performance.MetricTooShort (s,p) ->
+      false,
+      sprintf
+        "%s. Expected metric (%s) to be much longer than the machine resolution (%s)."
+        message (toString s) (toString p)
+    | Performance.MetricEqual (s1,s2) ->
+      false,
+      sprintf
+        "%s. Expected f1 (%s) to be faster than f2 (%s) but are equal."
+        message (toString s1) (toString s2)
+    | Performance.MetricMoreThan (s1,s2) ->
+      false,
+      sprintf
+        "%s. Expected f1 (%s) to be faster than f2 (%s) but is ~%.0f%% slower."
+        message (toString s1) (toString s2) ((s1.mean/s2.mean-1.0)*100.0)
+    | Performance.MetricLessThan (s1,s2) ->
+      true,
+      sprintf "%s. f1 (%s) is {%s} faster than f2 ({%s})."
+        message (toString s1) (sprintf "~%.0f%%" ((1.0-s1.mean/s2.mean)*100.0))
+        (toString s2)
+
+  /// Expects function `f1` is faster than `f2`. Statistical test to 99.99%
+  /// confidence level.
+  static member IsFasterThan (f1:Func<'a>,
+                              f2:Func<'a>,
+                              message:string, [<Out>] result:string byref) =
+    let b,r =
+      isFasterThanSub
+        (fun measurer -> measurer f1.Invoke ())
+        (fun measurer -> measurer f2.Invoke ())
+        message
+    result <- r
+    b
+    
+  /// Expects function `f1` is faster than `f2`. Statistical test to 99.99%
+  /// confidence level. With `setup` actions.
+  static member IsFasterThan (setup1:Action, f1:Func<'a>,
+                              setup2:Action, f2:Func<'a>,
+                              message:string, [<Out>] result:string byref) =
+    let b,r =
+      isFasterThanSub
+        (fun measurer ->
+          setup1.Invoke()
+          measurer f1.Invoke ()
+        )
+        (fun measurer ->
+          setup2.Invoke()
+          measurer f2.Invoke ()
+        )
+        message
+    result <- r
+    b
+
+  /// Expects function `f1` is faster than `f2`. Statistical test to 99.99%
+  /// confidence level. With `setup` and `teardown` actions.
+  static member IsFasterThan (setup1:Action, f1:Func<'a>, teardown1: Action,
+                              setup2:Action, f2:Func<'a>, teardown2: Action,
+                              message:string, [<Out>] result:string byref) =
+    let b,r =
+      isFasterThanSub
+        (fun measurer ->
+          setup1.Invoke()
+          let a = measurer f1.Invoke ()
+          teardown1.Invoke()
+          a
+          )
+        (fun measurer ->
+          setup2.Invoke()
+          let a = measurer f2.Invoke ()
+          teardown2.Invoke()
+          a)
+        message
+    result <- r
+    b

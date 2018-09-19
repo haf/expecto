@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Expecto.CSharp;
 using Expecto;
@@ -57,30 +58,30 @@ namespace Test.CSharp
                 Runner.TestCase("standard", () => Console.Write("standard")),
                 Runner.TestCase("standard async", async () => {
                     await Task.Delay(100);
-                    Console.Write("standard task");
                 }),
                 Runner.PendingTestCase("pending", () => Console.Write("pending")),
                 Runner.PendingTestCase("pending async", async () => {
                     await Task.Delay(100);
-                    Console.Write("standard task");
                 }),
                 Runner.FocusedTestCase("focused", () => Console.Write("focused")),
                 Runner.FocusedTestCase("focused async", async () => {
                     await Task.Delay(100);
-                    Console.Write("standard task");
                 }),
                 Runner.TestCase("async Action", async () => {
                     await Task.Delay(100);
-                    Console.Write("task");
                 }),
                 Runner.PendingTestCase("pending async Action", async () => {
                     await Task.Delay(100);
-                    Console.Write("task");
                 }),
-                Runner.FocusedTestCase("focused async Action", async () => {
-                    await Task.Delay(100);
-                    Console.Write("task");
-                })
+                Runner.TestSequenced(
+                    Runner.FocusedTestCase("focused async Action", async () => {
+                        var r = Function.IsFasterThan(
+                            () => { Thread.Sleep(50); return 1; },
+                            () => { Thread.Sleep(100); return 1; },
+                            "IsFasterThan", out var ignore);
+                        if(!r) throw new Exception("not faster");
+                        await Task.Delay(1);
+                }))
             });
 
         public static int Main(string[] argv)
