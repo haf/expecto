@@ -202,6 +202,25 @@ type Function() =
     b
 
   /// Expects function `f1` is faster than `f2`. Statistical test to 99.99%
+  /// confidence level. With `setup` funcs.
+  static member IsFasterThan (setup1:Func<'a>, f1:Func<'a,'b>,
+                              setup2:Func<'a>, f2:Func<'a,'b>,
+                              message:string, [<Out>] result:string byref) =
+    let b,r =
+      isFasterThanSub
+        (fun measurer ->
+          let a = setup1.Invoke()
+          measurer (fun () -> f1.Invoke a) ()
+        )
+        (fun measurer ->
+          let a = setup2.Invoke()
+          measurer (fun () -> f1.Invoke a) ()
+        )
+        message
+    result <- r
+    b
+
+  /// Expects function `f1` is faster than `f2`. Statistical test to 99.99%
   /// confidence level. With `setup` and `teardown` actions.
   static member IsFasterThan (setup1:Action, f1:Func<'a>, teardown1: Action,
                               setup2:Action, f2:Func<'a>, teardown2: Action,
