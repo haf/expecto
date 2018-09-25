@@ -1,3 +1,13 @@
+### 8.4.0 - 2018-09-25
+* Create Expecto.TestResults package. thanks @haf
+* Create test results directory. #274 thanks @JonCanning
+* Add a C# friendly extension method for the nunit testresult xml. #275 thanks @0x53A
+* Add JUnit-like summary file. #278 thanks @0x53A
+* Expect.equal - locate first different field for records. #280 thanks @MNie
+* Expect.stringStarts - underline first difference. thanks @AnthonyLloyd
+* Add no-spinner switch. thanks @AnthonyLloyd
+* Add C# methods for IsFasterThan. thanks @AnthonyLloyd
+
 #### 8.3.0 – 2018-09-05
 * Adding test results file, see #179, thanks @matthid, @haf
 * Fix throwsT message on no exception. #272 thanks @otto-gebb
