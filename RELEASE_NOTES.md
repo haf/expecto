@@ -1,4 +1,4 @@
-### 8.4.0 - 2018-09-25
+#### 8.4.0 - 2018-09-25
 * Create Expecto.TestResults package. thanks @haf
 * Create test results directory. #274 thanks @JonCanning
 * Add a C# friendly extension method for the nunit testresult xml. #275 thanks @0x53A
