@@ -1,3 +1,6 @@
+#### 8.4.1 - 2018-09-25
+* Bug fix for C# IsFasterThan. thanks @AnthonyLloyd
+
 #### 8.4.0 - 2018-09-25
 * Create Expecto.TestResults package. thanks @haf
 * Create test results directory. #274 thanks @JonCanning
