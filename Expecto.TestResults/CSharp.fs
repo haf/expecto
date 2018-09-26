@@ -1,5 +1,6 @@
 namespace Expecto.CSharp
 
+open System.Runtime.InteropServices
 open System.Runtime.CompilerServices
 open Expecto
 
@@ -18,6 +19,8 @@ module ConfigExt =
       member x.AddNUnitSummary(file:string, assemblyName:string) =
           x.appendSummaryHandler (TestResults.writeNUnitSummary(file, assemblyName) )
 
+          
+      /// If using this with gitlab, set the third parameter 'handleErrorsLikeFailures' to true.
       [<Extension; CompiledName("AddJUnitSummary")>]
-      member x.AddJUnitSummary(file:string, assemblyName:string) =
-          x.appendSummaryHandler (TestResults.writeJUnitSummary(file, assemblyName) )
+      member x.AddJUnitSummary(file:string, assemblyName:string, [<Optional;DefaultParameterValue(false)>]handleErrorsLikeFailures) =
+          x.appendSummaryHandler (TestResults.writeJUnitSummary(file, assemblyName, handleErrorsLikeFailures) )
