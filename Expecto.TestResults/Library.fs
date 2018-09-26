@@ -120,9 +120,16 @@ let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
     |> ignore
     doc.Save(path)
 
-let writeJUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
+/// If using this with gitlab, set the third parameter 'handleErrorsLikeFailures' to true.
+let writeJUnitSummary (file, assemblyName, handleErrorsLikeFailures) (summary: Impl.TestRunSummary) =
+
     // junit does not have an official xml spec
     // this is a minimal implementation to get gitlab to recognize the tests: https://docs.gitlab.com/ee/ci/junit_test_reports.html
+
+    // gitlab only detects failures, and does not yet handle errors:
+    // see issue https://gitlab.com/gitlab-org/gitlab-ce/issues/51087
+    // and see code https://gitlab.com/gitlab-org/gitlab-ce/blob/master/lib/gitlab/ci/parsers/junit.rb#L45-52
+
     let totalTests = summary.errored @ summary.failed @ summary.ignored @ summary.passed
     let testCaseElements =
         totalTests
@@ -134,6 +141,17 @@ let writeJUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
                     XAttribute(XName.Get "time",
                         System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
                             "{0:0.000}", test.duration.TotalSeconds)) |> box
+                  |]
+                | Impl.TestResult.Error e when (handleErrorsLikeFailures = true) ->
+                  [|
+                    XAttribute(XName.Get "time",
+                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "{0:0.000}", test.duration.TotalSeconds)) |> box
+                    XElement(XName.Get "failure",
+                      [|
+                        XAttribute(XName.Get "message", e.Message) |> box
+                        XText(e.ToString()) |> box
+                      |]) |> box
                   |]
                 | Impl.TestResult.Error e ->
                   [|
