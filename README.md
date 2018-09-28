@@ -703,7 +703,8 @@ module Auto =
     let private config = Gen.addToConfig FsCheckConfig.defaultConfig
     let testProp name = testPropertyWithConfig config name
     let ptestProp name = ptestPropertyWithConfig config name
-    let ftestProp stdgen name = ftestPropertyWithConfig stdgen config name
+    let ftestProp name = ftestPropertyWithConfig config name
+    let etestProp stdgen name = etestPropertyWithConfig stdgen config name
 
 module Tests =
     let topicTests =
@@ -738,8 +739,8 @@ If a property fails, the output could look like this.
       1 0
     Result:
       False
-    Focus on failure:
-      ftestProperty (1865288075, 296281834) "addition is not commutative (should fail)"
+    Focus on error:
+      etestProperty (1865288075, 296281834) "addition is not commutative (should fail)"
 
 The output that Expecto gives you, lets you recreate the exact test (that's from
 the 18..., 29... seed numbers). It's also a good idea to lift inputs and the

@@ -71,7 +71,7 @@ module ExpectoFsCheck =
                           (String.concat " " data.Labels)
 
               let focus =
-                sprintf "Focus on failure:\n\t%s (%i, %i) \"%s\"" methodName std gen name
+                sprintf "Focus on error:\n\t%s (%i, %i) \"%s\"" methodName std gen name
 
               sprintf "Failed after %s. %s%s\nResult:\n\t%A\n%s%s%s"
                       (numTests data.NumberOfTests) parameters shrunk
@@ -114,48 +114,62 @@ module ExpectoFsCheck =
 
   /// Builds a test property with config
   let testPropertyWithConfigs testConfig stressConfig name =
-    propertyTest "ftestPropertyWithConfig" Normal
+    propertyTest "etestPropertyWithConfigs" Normal
                  (Some(testConfig, stressConfig)) name
 
   /// Builds an ignored test property with an explicit config.
   let ptestPropertyWithConfigs testConfig stressConfig name =
-    propertyTest "ftestPropertyWithConfig" Pending
+    propertyTest "etestPropertyWithConfigs" Pending
+                 (Some (testConfig,stressConfig)) name
+
+  /// Builds an ignored test property with an explicit config.
+  let ftestPropertyWithConfigs testConfig stressConfig name =
+    propertyTest "etestPropertyWithConfigs" Focused
                  (Some (testConfig,stressConfig)) name
 
   /// Builds a test property with config that will make Expecto to
-  /// ignore other unfocused tests.
-  let ftestPropertyWithConfigs stdGen testConfig stressConfig name =
+  /// ignore other unfocused tests and use an error stdGen.
+  let etestPropertyWithConfigs stdGen testConfig stressConfig name =
     let testConfig = { testConfig with replay = Some stdGen }
     let stressConfig = { stressConfig with replay = Some stdGen }
-    propertyTest "ftestPropertyWithConfig" Focused
+    propertyTest "etestPropertyWithConfigs" Focused
                  (Some(testConfig,stressConfig)) name
 
   /// Builds a test property with config
   let testPropertyWithConfig config name =
-    propertyTest "ftestPropertyWithConfig" Normal (Some (config,config)) name
+    propertyTest "etestPropertyWithConfig" Normal (Some (config,config)) name
 
   /// Builds a test property with config that will be ignored by Expecto.
   let ptestPropertyWithConfig config name =
-    propertyTest "ftestPropertyWithConfig" Pending (Some(config,config)) name
+    propertyTest "etestPropertyWithConfig" Pending (Some(config,config)) name
 
-  /// Builds a test property with config that will make Expecto to
-  /// ignore other unfocused tests.
-  let ftestPropertyWithConfig stdGen config name =
+  /// Builds a test property with config that will make Expecto
+  /// ignore other unfocused tests
+  let ftestPropertyWithConfig config name =
+    propertyTest "etestPropertyWithConfig" Focused (Some(config,config)) name
+
+  /// Builds a test property with config that will make Expecto
+  /// ignore other unfocused tests and use an error stdGen.
+  let etestPropertyWithConfig stdGen config name =
     let config = { config with replay = Some stdGen }
-    propertyTest "ftestPropertyWithConfig" Focused (Some(config,config)) name
+    propertyTest "etestPropertyWithConfig" Focused (Some(config,config)) name
 
   /// Builds a test property.
   let testProperty name =
-    propertyTest "ftestProperty" Normal None name
+    propertyTest "etestProperty" Normal None name
 
   /// Builds a test property that will be ignored by Expecto.
   let ptestProperty name =
-    propertyTest "ftestProperty" Pending None name
+    propertyTest "etestProperty" Pending None name
 
   /// Builds a test property that will make Expecto to ignore other unfocused tests.
-  let ftestProperty stdGen name =
+  let ftestProperty name =
+    propertyTest "etestProperty" Focused None name
+  
+  /// Builds a test property that will make Expecto focus on this test use an error stdGen.
+  let etestProperty stdGen name =
     let config = { FsCheckConfig.defaultConfig with replay = Some stdGen }
-    propertyTest "ftestProperty" Focused (Some(config,config)) name
+    propertyTest "etestProperty" Focused (Some(config,config)) name
 
 
 type FsCheck =
