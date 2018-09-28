@@ -1,3 +1,7 @@
+#### 8.4.2 - 2018-09-28
+* Junit report: add option to treat errors like failures. #282 thanks @0x53A
+* Add etestProperty for stdgen and keep ftestProperty for just focus. #281 thanks @AnthonyLloyd
+
 #### 8.4.1 - 2018-09-25
 * Bug fix for C# IsFasterThan. thanks @AnthonyLloyd
 
