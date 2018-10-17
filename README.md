@@ -281,6 +281,8 @@ Expecto supports the following test constructors:
    `testPropertyWithConfigs` from `Expecto.FsCheck`
 - performance tests with `Expecto.BenchmarkDotNet` and `benchmark<TBench> :
    string -> Test`.
+- wrapping your test with a label with `testLabel`. If your root label is the
+  same across your test project, you'll have an easier time filtering tests.
 
 All of the above compile to a `Test` value that you can compose. For example,
 you can compose a `test` and a `testCaseAsync` in a `testList` which you wrap in
@@ -317,6 +319,7 @@ let tests =
       Expect.equal x (2+2) "2+2"
     }
   ]
+  |> testLabel "samples"
 ```
 
 Also have a look at [the

@@ -1096,7 +1096,7 @@ module Impl =
 
       if progressStarted then
         ProgressIndicator.stop()
-      
+
       ANSIOutputWriter.Close()
 
       return testSummary.errorCode
@@ -1240,7 +1240,7 @@ module Impl =
 
       if progressStarted then
         ProgressIndicator.stop()
-      
+
       ANSIOutputWriter.Close()
 
       return testSummary.errorCode
@@ -1439,6 +1439,11 @@ module Tests =
   let inline ftestList name tests = TestLabel(name, TestList (tests, Focused), Focused)
   /// Builds a list/group of tests that will be ignored by Expecto
   let inline ptestList name tests = TestLabel(name, TestList (tests, Pending), Pending)
+
+  /// Labels the passed test with a text segment. In Expecto, tests are slash-separated (`/`), so this wraps the passed
+  /// tests in such a label. Useful when you don't want lots of indentation in your tests (the code would become hard to
+  /// modify and read, due to all the whitespace), and you want to do `testList "..." [ ] |> testLabel "api"`.
+  let inline testLabel name test = TestLabel(name, test, FocusState.Normal)
 
   /// Builds a test case that will be ignored by Expecto if exists focused
   /// tests and none of the parents is focused

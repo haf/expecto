@@ -1,3 +1,6 @@
+#### xxxxx
+* Add testLabel, fixes #286, thanks @haf
+
 #### 8.4.2 - 2018-09-28
 * Junit report: add option to treat errors like failures. #282 thanks @0x53A
 * Add etestProperty for stdgen and keep ftestProperty for just focus. #281 thanks @AnthonyLloyd
