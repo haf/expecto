@@ -32,7 +32,7 @@ module internal ProgressIndicator =
   let private backStart = "\u001b[1000D"
   
   let mutable private textValue = String.Empty
-  let private progressValue = Percent 0 |> ref
+  let private progressValue = None |> ref
   let private isRunning = ref false
   let mutable private isPaused = false
   let private isEnabled = not Console.IsOutputRedirected
@@ -45,8 +45,8 @@ module internal ProgressIndicator =
   let update progress =
     progressValue :=
       match progress with
-      | Percent p -> max p 0 |> min 100 |> Percent
-      | f -> f
+      | Percent p -> max p 0 |> min 100 |> Percent |> Some
+      | f -> Some f
 
   let start() =
     lock isRunning (fun () ->
@@ -64,15 +64,17 @@ module internal ProgressIndicator =
                     let a = animation.[int t % animation.Length]
                     let progress =
                       match !progressValue with
-                      | Percent p ->
+                      | Some(Percent p) ->
                         if p=100 then [|'1';'0';'0';'%';' ';a|]
                         elif p<10 then [|' ';' ';char(48+p);'%';' ';a|]
                         else [|' ';char(48+p/10);char(48+p%10);'%';' ';a|]
                         |> String
-                      | Fraction (n,d) ->
+                      | Some(Fraction (n,d)) ->
                         let ns, ds = string n, string d
                         String(' ',ds.Length-ns.Length) + ns + "/" + ds
                         + " " + string a
+                      | None ->
+                        String.Empty
                     currentLength <- textValue.Length + progress.Length
                     color + textValue + progress
                     + backStart + colorReset + hideCursor

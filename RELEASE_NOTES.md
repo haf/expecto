@@ -1,5 +1,7 @@
 #### 8.4.3 - not released yet est 2018-09-26
-* Add testLabel, fixes #286, thanks @haf
+* Add testLabel. #286 thanks @haf
+* Document tests results are nunit v2 and upload. #288 thanks @enricosada
+* Fix small progress spinner issues. #285 thanks @AnthonyLloyd
 
 #### 8.4.2 - 2018-09-28
 * Junit report: add option to treat errors like failures. #282 thanks @0x53A

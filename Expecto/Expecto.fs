@@ -992,7 +992,10 @@ module Impl =
     async {
 
       let tests = Test.toTestCodeList test
-      let testLength = List.length tests
+      let testLength =
+        tests
+        |> Seq.where (fun t -> Option.isNone t.shouldSkipEvaluation)
+        |> Seq.length
 
       let testsCompleted = ref 0
 
@@ -1007,7 +1010,7 @@ module Impl =
           do! beforeAsync
           do! TestPrinters.printResult config test result
 
-          if progressStarted then
+          if progressStarted && Option.isNone test.shouldSkipEvaluation then
             Fraction (Interlocked.Increment testsCompleted, testLength)
             |> ProgressIndicator.update
 
