@@ -3,6 +3,7 @@ module Expecto.TestResults
 open System.IO
 open System.Xml.Linq
 
+/// Generate test results using NUnit v2 schema.
 let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
     // v3: https://github.com/nunit/docs/wiki/Test-Result-XML-Format
     // this impl is v2: http://nunit.org/docs/files/TestResult.xml

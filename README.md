@@ -137,7 +137,7 @@ and the output won't be interlaced due to concurrency.
 nuget Expecto.TestResults
 ```
 
-and configure it
+and configure it to generate the tests result file (nunit v2 format)
 
 ```fsharp
 open Expecto
