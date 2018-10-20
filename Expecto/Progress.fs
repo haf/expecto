@@ -123,7 +123,7 @@ module internal ANSIOutputWriter =
     | ConsoleColor.DarkRed -> "\u001b[31m"
     | ConsoleColor.DarkMagenta -> "\u001b[35m"
     | ConsoleColor.DarkYellow -> "\u001b[33m"
-    | ConsoleColor.Gray -> "\u001b[37m"
+    | ConsoleColor.Gray -> colorForWhite // make this white instead of "\u001b[37m"
     | ConsoleColor.DarkGray -> "\u001b[1;30m"
     | ConsoleColor.Blue -> "\u001b[1;34m"
     | ConsoleColor.Green -> "\u001b[1;32m"
