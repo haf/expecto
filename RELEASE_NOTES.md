@@ -1,3 +1,6 @@
+#### 8.4.4 - not released yet
+* Use Fake.BuildServer and sort tests. thanks @AnthonyLloyd
+
 #### 8.4.3 - 2018-10-20
 * Add testLabel. #286 thanks @haf
 * Document tests results are nunit v2 and upload. #288 thanks @enricosada
