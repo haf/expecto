@@ -8,6 +8,8 @@ nuget Fake.Core.Target
 nuget Fake.Core.Environment
 nuget Fake.Core.UserInput
 nuget Fake.DotNet.AssemblyInfoFile
+nuget Fake.BuildServer.AppVeyor
+nuget Fake.BuildServer.Travis
 nuget Fake.Core.ReleaseNotes //"
 #load "./.fake/build.fsx/intellisense.fsx"
 #if !FAKE
@@ -22,6 +24,7 @@ open Fake.Api
 open Fake.IO
 open Fake.Core.TargetOperators
 open Fake.IO.Globbing.Operators
+open Fake.BuildServer
 
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 let configuration = Environment.environVarOrDefault "Configuration" "Release"
@@ -36,10 +39,14 @@ let licenceUrl = "https://github.com/haf/expecto/blob/master/LICENSE"
 let copyright = "Copyright 2018"
 let mutable dotnetExePath = "dotnet"
 
+BuildServer.install [
+    Travis.Installer
+    AppVeyor.Installer
+]
+
 Target.create "Clean" (fun _ ->
     !!"./**/bin/" ++ "./**/obj/" |> Shell.cleanDirs
 )
-
 let normaliseFileToLFEnding filename =
     let s = File.readAsString filename
     s.Replace(String.WindowsLineBreaks,String.LinuxLineBreaks)
@@ -104,6 +111,7 @@ Target.create "BuildTest" (fun _ ->
 )
 
 Target.create "RunTest" (fun _ ->
+    
     let runTest project =
         DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
              (project+"/bin/"+configuration+"/netcoreapp2.1/"+project+".dll")
@@ -119,11 +127,19 @@ Target.create "RunTest" (fun _ ->
               CommandLine = arguments
           }
         |> fun r -> if r<>0 then project+".exe failed" |> failwith
+    
     runTest "Expecto.Tests"
-    Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
-        (Path.combine (Path.combine __SOURCE_DIRECTORY__ "bin") "Expecto.Tests.TestResults.xml")
-    runTest "Expecto.Hopac.Tests"
+
+    "Expecto.Tests.TestResults.xml"
+    |> Path.combine (Path.combine __SOURCE_DIRECTORY__ "bin")
+    |> Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
+
     runTest "Expecto.Tests.CSharp"
+    "Expecto.Tests.CSharp.TestResults.xml"
+    |> Path.combine (Path.combine __SOURCE_DIRECTORY__ "bin")
+    |> Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
+
+    runTest "Expecto.Hopac.Tests"
     runTest "Expecto.Focused.Tests"
 )
 
