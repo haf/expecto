@@ -420,6 +420,13 @@ module Impl =
       | Ignored _ -> 1
       | Failed _ -> 2
       | Error _ -> 3
+
+    member x.order =
+      match x with
+      | Ignored _ -> 0
+      | Passed -> 1
+      | Failed _ -> 2
+      | Error _ -> 3
     member x.isPassed =
       match x with
       | Passed -> true

@@ -90,8 +90,8 @@ namespace Test.CSharp
                 Runner.DefaultConfig
                     .WithMySpiritIsWeak(false)
                     .AddPrinter(new CSharpPrinter())
-                    .AddNUnitSummary("bin/Expecto.Tests.CSharp.TestResults.xml", "someAssembly")
-                    .AddJUnitSummary("bin/Expecto.Tests.CSharp.TestResults.junit.xml", "someAssembly", handleErrorsLikeFailures: true);
+                    .AddNUnitSummary("bin/Expecto.Tests.CSharp.TestResults.xml", "Expecto.Tests.CSharp")
+                    .AddJUnitSummary("bin/Expecto.Tests.CSharp.TestResults.junit.xml", "Expecto.Tests.CSharp", handleErrorsLikeFailures: true);
             return Runner.RunTestsInAssembly(config, argv);
         }
     }

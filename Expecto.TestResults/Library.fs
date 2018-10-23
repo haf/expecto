@@ -10,6 +10,7 @@ let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
     let totalTests = summary.errored @ summary.failed @ summary.ignored @ summary.passed
     let testCaseElements =
         totalTests
+        |> Seq.sortByDescending (fun (_,test) -> test.result.order,test.duration.TotalSeconds)
         |> Seq.map (fun (flatTest, test) ->
             let content =
                 match test.result with
@@ -134,6 +135,7 @@ let writeJUnitSummary (file, assemblyName, handleErrorsLikeFailures) (summary: I
     let totalTests = summary.errored @ summary.failed @ summary.ignored @ summary.passed
     let testCaseElements =
         totalTests
+        |> Seq.sortByDescending (fun (_,test) -> test.result.order,test.duration.TotalSeconds)
         |> Seq.map (fun (flatTest, test) ->
             let content =
                 match test.result with
