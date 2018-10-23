@@ -135,6 +135,7 @@ Target.create "RunTest" (fun _ ->
     |> Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
 
     runTest "Expecto.Tests.CSharp"
+    
     "Expecto.Tests.CSharp.TestResults.xml"
     |> Path.combine (Path.combine __SOURCE_DIRECTORY__ "bin")
     |> Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
