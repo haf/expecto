@@ -1,5 +1,6 @@
 #### 8.5.0 - 2018-11-05
 * Add task tests i.e. testTask/ftestTask etc. thanks @AnthonyLloyd
+* Add afterRunTests function global teardown. thanks @AnthonyLloyd
 * Use Fake.BuildServer and sort tests. thanks @AnthonyLloyd
 
 #### 8.4.3 - 2018-10-20

@@ -1425,6 +1425,29 @@ module Tests =
   open Expecto.Logging.Message
   open FSharp.Control.Tasks.CopiedDoNotReference
 
+  let mutable private afterRunTestsList = []
+  let private afterRunTestsListLock = obj()
+  /// Add a function that will be called after all testing has finished.
+  let afterRunTests f =
+    lock afterRunTestsListLock (fun () ->
+        afterRunTestsList <- f :: afterRunTestsList
+      )
+  let internal afterRunTestsInvoke() =
+    lock afterRunTestsListLock (fun () ->
+      let failures =
+        List.rev afterRunTestsList
+        |> List.choose (fun f ->
+          try
+            f()
+            None
+          with e -> Some e
+        )
+      match failures with
+      | [] -> ()
+      | l -> List.toArray l |> AggregateException |> raise
+    )
+  Console.CancelKeyPress |> Event.add (fun _ -> afterRunTestsInvoke())
+
   /// The full name of the currently running test
   let testName() = TestNameHolder.Name
 
@@ -1662,7 +1685,7 @@ module Tests =
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
 
-    let expectoVersion = Expecto.AssemblyInfo.AssemblyVersionInformation.AssemblyVersion
+    let expectoVersion = AssemblyInfo.AssemblyVersionInformation.AssemblyVersion
 
     /// Parses command-line arguments into a config. This allows you to
     /// override the config from the command line, rather than having
@@ -1781,9 +1804,12 @@ module Tests =
       let tests = config.filter tests
       let duplicates = lazy duplicatedNames tests
       if config.allowDuplicateNames || List.isEmpty duplicates.Value then
-        match config.stress with
-        | None -> runEvalWithCancel ct config tests |> Async.RunSynchronously
-        | Some _ -> runStressWithCancel ct config tests |> Async.RunSynchronously
+        let retCode =
+          match config.stress with
+          | None -> runEvalWithCancel ct config tests |> Async.RunSynchronously
+          | Some _ -> runStressWithCancel ct config tests |> Async.RunSynchronously
+        afterRunTestsInvoke()
+        retCode
       else
         logger.errorWithBP (
           eventX "Found duplicated test names, these names are: {duplicates}"

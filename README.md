@@ -10,6 +10,8 @@ Expecto tests are parallel and async by default, so that you can use all your
 cores for testing your software.  This also opens up a new way of catching
 threading and memory issues for free using stress testing.
 
+![Parallel by default](./docs/stress.jpg)
+
 With Expecto you write tests as values. Tests can be composed, reduced,
 filtered, repeated and passed as values, because they are values. This gives the
 programmer a lot of leverage when writing tests.  Setup and teardown are just
@@ -27,7 +29,10 @@ VSCode and Ionide integrate out-of-the-box with Expecto's command-line output.
 There's also a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio
 integration.
 
-![Parallel by default](./docs/stress.jpg)
+Or simply `dotnet run` or `dotnet watch` from the command line:
+```
+dotnet watch -p MyProject.Tests run -f netcoreapp2.1
+```
 
 What follows is the Table of Contents for this README, which also serves as the
 documentation for the project.
