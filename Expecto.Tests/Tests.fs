@@ -1005,14 +1005,54 @@ let asyncTests =
 
     testCaseAsync "let" <| async {
       let! n = async { return 1 }
-      Expect.equal 1 n "1=n"
+      Expect.equal n 1 "n=1"
     }
 
     testCaseAsync "can fail" <| async {
       let! n = async { return 2 }
-      Expect.equal 1 n "1=n"
+      Expect.equal n 1 "n=1"
     } |> assertTestFails
 
+  ]
+
+open System.Threading.Tasks
+
+[<Tests>]
+let taskTests =
+  testList "task" [
+
+    testTask "simple" {
+      Expect.equal 1 1 "1=1"
+    }
+
+    testTask "let" {
+      let! n = Task.FromResult 23
+      Expect.equal n 23 "n=23"
+    }
+
+    testTask "can fail" {
+        let! n = Task.FromResult 2
+        Expect.equal n 1 "n=1"
+    } |> assertTestFails
+
+    testTask "two" {
+        let! n = Task.FromResult 2
+        let! m = Task.FromResult (3*n)
+        Expect.equal m 6 "m=6"
+    }
+
+    testTask "two can fail" {
+        let! n = Task.FromResult 2
+        let! m = Task.FromResult (3*n)
+        Expect.equal m 7 "m=7"
+    } |> assertTestFails
+
+    testTask "two can fail middle" {
+        let! n = Task.FromResult 2
+        Expect.equal n 3 "n=3"
+        let! m = Task.FromResult (3*n)
+        Expect.equal m 6 "m=6"
+    } |> assertTestFails
   ]
 
 [<Tests>]

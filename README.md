@@ -295,6 +295,7 @@ test project.**
 
 - `test : string -> TestCaseBuilder` -  Builds a test case in a computation expression.
 - `testAsync : string -> TestAsyncBuilder` - Builds an async test case in a computation expression.
+- `testTask : string -> TestTaskBuilder` - Builds a task test case in a computation expression.
 - `testCase : string -> (unit -> unit) -> Test` - Builds a test case from a test function.
 - `testCaseAsync : string -> Async<unit> -> Test` - Builds an async test case from an async expression.
 
@@ -303,7 +304,6 @@ test project.**
 Tests can be grouped (with arbitrary nesting):
 
 ```fsharp
-
 let tests =
   testList "A test group" [
     test "one test" {
@@ -317,6 +317,11 @@ let tests =
     testAsync "this is an async test" {
       let! x = async { return 4 }
       Expect.equal x (2+2) "2+2"
+    }
+
+    testTask "this is a task test" {
+      let! n = Task.FromResult 2
+      Expect.equal n 2 "n=2"
     }
   ]
   |> testLabel "samples"
@@ -354,6 +359,7 @@ testList "Setup & teardown 3" [
 - `ptestCase`
 - `ptest`
 - `ptestAsync`
+- `ptestTask`
 - `ptestCaseAsync`
 
 You can mark an individual spec or container as Pending. This will prevent the
@@ -400,6 +406,7 @@ Focusing can be done with
 - `ftestCaseAsync`
 - `ftest`
 - `ftestAsync`
+- `ftestTask`
 
 It is often convenient, when developing to be able to run a subset of specs.
 Expecto allows you to focus specific test cases or tests list by putting `f`

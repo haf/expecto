@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyName>Expecto.FsCheck</AssemblyName>
     <PackageId>Expecto.FsCheck</PackageId>
-    <Version>8.4.3</Version>
+    <Version>8.5.0</Version>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Optional: Declare that the Repository URL can be published to NuSpec -->

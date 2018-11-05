@@ -1423,6 +1423,7 @@ module Tests =
   open Argu
   open Expecto.Logging
   open Expecto.Logging.Message
+  open FSharp.Control.Tasks.CopiedDoNotReference
 
   /// The full name of the currently running test
   let testName() = TestNameHolder.Name
@@ -1557,6 +1558,41 @@ module Tests =
   /// Builds an async test case that will be ignored by Expecto
   let inline ptestAsync name =
     TestAsyncBuilder (name, Pending)
+
+  type TestTaskBuilder(name, focusState) =
+    member __.Zero() = task.Zero()
+    member __.Delay(f) = task.Delay(f)
+    member __.Return(x) = task.Return(x)
+    member __.ReturnFrom(x) = task.ReturnFrom(x)
+    member __.Bind(p1, p2) = task.Bind(p1, p2)
+    member __.Using(g, p) = task.Using(g, p)
+    member __.While(gd, prog) = task.While(gd, prog)
+    member __.For(e, prog) = task.For(e, prog)
+    member __.Combine(p1, p2) = task.Combine(p1, p2)
+    member __.TryFinally(p, cf) = task.TryFinally(p, cf)
+    member __.TryWith(p, cf) = task.TryWith(p, cf)
+    member __.Run f =
+      let a = async {
+        try
+          do! task.Run f |> Async.AwaitTask
+        with
+          | :? AggregateException as e when e.InnerExceptions.Count = 1 ->
+            raise e.InnerException
+      }
+      match focusState with
+      | Normal -> testCaseAsync name a
+      | Focused -> ftestCaseAsync name a
+      | Pending -> ptestCaseAsync name a
+
+  /// Builds a task test case
+  let inline testTask name =
+    TestTaskBuilder (name, Normal)
+  /// Builds a task test case that will make Expecto to ignore other unfocused tests
+  let inline ftestTask name =
+    TestTaskBuilder (name, Focused)
+  /// Builds a task test case that will be ignored by Expecto
+  let inline ptestTask name =
+    TestTaskBuilder (name, Pending)
 
   /// The default configuration for Expecto.
   let defaultConfig = ExpectoConfig.defaultConfig

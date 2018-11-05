@@ -45,20 +45,20 @@ module TestHelpers =
 
   let assertTestFails test =
     async {
-      let! result = Impl.evalTestsSilent test
+      let! result = evalTestsSilent test
       match result with
-      | [(_,{ result = TestResult.Ignored _ })] -> ()
-      | [(_,{ result = TestResult.Failed _ })] -> ()
+      | [(_,{ result = Ignored _ })] -> ()
+      | [(_,{ result = Failed _ })] -> ()
       | [x] -> failtestf "Should have failed, but was %A" x
       | _ -> failtestf "Should have one test to assert"
     } |> makeTest test
 
   let assertTestFailsWithMsgStarting (msg : string) test =
     async {
-      let! result = Impl.evalTestsSilent test
+      let! result = evalTestsSilent test
       match result with
-      | [(_,{ result = TestResult.Ignored _ })] -> ()
-      | [(_,{ result = TestResult.Failed x })] ->
+      | [(_,{ result = Ignored _ })] -> ()
+      | [(_,{ result = Failed x })] ->
         let removeCR = x.Replace("\r","").Trim('\n')
         Expect.stringStarts removeCR msg "Test failure strings should equal"
       | [x] -> failtestf "Should have failed, but was %A" x
@@ -67,11 +67,11 @@ module TestHelpers =
 
   let assertTestFailsWithMsgContaining (msg : string) test =
     async {
-      let! result = Impl.evalTestsSilent test
+      let! result = evalTestsSilent test
       match result with
-      | [(_,{ result = TestResult.Ignored _ })] -> ()
-      | [(_,{ result = TestResult.Failed x })] when x.Contains msg -> ()
-      | [(_,{ result = TestResult.Failed x })] ->
+      | [(_,{ result = Ignored _ })] -> ()
+      | [(_,{ result = Failed x })] when x.Contains msg -> ()
+      | [(_,{ result = Failed x })] ->
         failtestf "Should have failed with message containing: \"%s\" but failed with \"%s\"" msg x
       | [x] -> failtestf "Should have failed, but was %A" x
       | _ -> failtestf "Should have one test to assert"

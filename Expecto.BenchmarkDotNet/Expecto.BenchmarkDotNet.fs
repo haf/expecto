@@ -17,9 +17,9 @@ open BenchmarkDotNet.Validators
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module BenchmarkDotNet =
 
-  type BenchmarkAttribute = BenchmarkDotNet.Attributes.BenchmarkAttribute
-  type CleanupAttribute = BenchmarkDotNet.Attributes.GlobalCleanupAttribute
-  type SetupAttribute = BenchmarkDotNet.Attributes.GlobalSetupAttribute
+  type BenchmarkAttribute = Attributes.BenchmarkAttribute
+  type CleanupAttribute = Attributes.GlobalCleanupAttribute
+  type SetupAttribute = Attributes.GlobalSetupAttribute
 
   type BenchmarkConfig =
     { columnProviders: IColumnProvider list

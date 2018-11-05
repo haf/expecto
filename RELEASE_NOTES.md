@@ -1,4 +1,5 @@
-#### 8.4.4 - not released yet
+#### 8.5.0 - 2018-11-05
+* Add task tests i.e. testTask/ftestTask etc. thanks @AnthonyLloyd
 * Use Fake.BuildServer and sort tests. thanks @AnthonyLloyd
 
 #### 8.4.3 - 2018-10-20
