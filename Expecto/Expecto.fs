@@ -1423,7 +1423,7 @@ module Tests =
   open Argu
   open Expecto.Logging
   open Expecto.Logging.Message
-  open FSharp.Control.Tasks.CopiedDoNotReference
+  open FSharp.Control.Tasks.CopiedDoNotReference.V2
 
   let mutable private afterRunTestsList = []
   let private afterRunTestsListLock = obj()
@@ -1587,7 +1587,7 @@ module Tests =
     member __.Delay(f) = task.Delay(f)
     member __.Return(x) = task.Return(x)
     member __.ReturnFrom(x) = task.ReturnFrom(x)
-    member __.Bind(p1, p2) = task.Bind(p1, p2)
+    member __.Bind(p1:Task<'a>, p2:'a->_) = task.Bind(p1, p2)
     member __.Using(g, p) = task.Using(g, p)
     member __.While(gd, prog) = task.While(gd, prog)
     member __.For(e, prog) = task.For(e, prog)
