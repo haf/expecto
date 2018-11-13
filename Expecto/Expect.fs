@@ -11,6 +11,8 @@ open Expecto.Logging.Message
 open Microsoft.FSharp.Reflection
 open System.Reflection
 
+let private isNull' value = isNull value
+
 /// Expects f to throw an exception.
 let throws f message =
   let thrown =
@@ -262,7 +264,7 @@ let equal (actual : 'a) (expected : 'a) message =
       Tests.failtestf "%s. Actual value was %f but had expected it to be %f." message a e
   | a, e ->
     if actual <> expected then
-      if FSharpType.IsRecord(a.GetType(), BindingFlags.Default) then
+      if not (isNull' a) && FSharpType.IsRecord(a.GetType(), BindingFlags.Default) then
         let value (elem: obj) previous =
           (elem :?> PropertyInfo).GetValue(previous, null)
         let ai = (FSharpType.GetRecordFields (a.GetType(), BindingFlags.Public)).GetEnumerator()

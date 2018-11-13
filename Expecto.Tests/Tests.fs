@@ -57,6 +57,16 @@ let tests =
         Expect.equal (testName()) "all/testName tests/two test" "two name"
     ]
 
+    testList "null comparison" [
+      testCase "actual" (fun _ ->
+        Expect.equal null (obj()) ""
+      ) |> assertTestFails
+
+      testCase "expected" (fun _ ->
+        Expect.equal (obj()) null ""
+      ) |> assertTestFails
+    ]
+
     testList "string comparison" [
       test "string equal" {
         Expect.equal "Test string" "Test string" "Test string"
