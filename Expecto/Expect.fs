@@ -262,7 +262,7 @@ let equal (actual : 'a) (expected : 'a) message =
       Tests.failtestf "%s. Actual value was %f but had expected it to be %f." message a e
   | a, e ->
     if actual <> expected then
-      if FSharpType.IsRecord(a.GetType(), BindingFlags.Default) then
+      if a <> null && FSharpType.IsRecord(a.GetType(), BindingFlags.Default) then
         let value (elem: obj) previous =
           (elem :?> PropertyInfo).GetValue(previous, null)
         let ai = (FSharpType.GetRecordFields (a.GetType(), BindingFlags.Public)).GetEnumerator()
