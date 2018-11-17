@@ -1,3 +1,10 @@
+#### 8.6.0 - 2018-11-17
+* #266 Merge ANSI Output Writer back into Logary Facade, decouple it from Progress, thanks @haf
+* #290 Speed up Progress, thanks @haf
+* #291 Make ANSI writing the default, so Expecto loggers work outside of framework-provided runXXXX functions, thanks @haf
+* Make sure isEqual doesn't crash on null values, thanks @kleidemos
+* Using the improved v2 task workflow builder, thanks @AnthonyLloyd
+
 #### 8.5.0 - 2018-11-05
 * Add task tests i.e. testTask/ftestTask etc. thanks @AnthonyLloyd
 * Add afterRunTests function global teardown. thanks @AnthonyLloyd
