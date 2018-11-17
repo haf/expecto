@@ -12,6 +12,8 @@
 ///
 namespace Expecto.Logging
 
+#nowarn "9"
+
 open System
 open System.Text
 
@@ -546,7 +548,7 @@ module internal LiterateTokenisation =
     | :? int16 | :? int32 | :? int64 | :? decimal | :? float | :? double -> NumericSymbol
     | :? string | :? char -> StringSymbol
     | _ -> OtherSymbol
-  
+
   /// Converts a `PointValue` into a sequence literate tokens. The returned `Set<string>` contains
   /// the names of the properties that were found in the `Event` template.
   let tokenisePointValue (options: LiterateOptions) (fields: Map<string, obj>) = function
@@ -593,7 +595,7 @@ module internal LiterateTokenisation =
           // regular text
           go ((line, Text) :: (Environment.NewLine, Text) :: lines)
     go []
-  
+
   /// Converts all exceptions in a `Message` into a sequence of literate tokens.
   let tokeniseMessageExns (context: LiterateOptions) message =
     let exnExceptionParts =
@@ -748,8 +750,8 @@ module internal LiterateFormatting =
           else yield Environment.NewLine, Text
           yield! tokeniseExtraField options message field
       }
-    
-    let tokeniseTimestamp format (options: LiterateOptions) (message: Message) = 
+
+    let tokeniseTimestamp format (options: LiterateOptions) (message: Message) =
       let localDateTimeOffset = DateTimeOffset(message.utcTicks, TimeSpan.Zero).ToLocalTime()
       let formattedTimestamp = localDateTimeOffset.ToString(format, options.formatProvider)
       seq { yield formattedTimestamp, Subtext }
@@ -795,7 +797,7 @@ module internal LiterateFormatting =
       // render the message template first so we have the template-matched fields available
       let fieldsInMessageTemplate, messageParts =
         tokenisePointValue options message.fields message.value
-      
+
       let tokeniseOutputTemplateField fieldName format = seq {
         match fieldName with
         | "timestamp" ->            yield! tokeniseTimestamp format options message
@@ -841,6 +843,165 @@ module internal LiterateFormatting =
       }
       |> Seq.toList
 
+module internal ANSIOutputWriter =
+  open System.IO
+  open System.Runtime.InteropServices
+
+  type private FuncTextWriter(encoding: Encoding, write: string -> unit) =
+    inherit TextWriter()
+    override __.Encoding = encoding
+    override __.Write (s:string) = write s
+    override __.WriteLine (s:string) = s + "\n" |> write
+    override __.WriteLine() = write "\n"
+
+  let private colorForWhite =
+    if Console.BackgroundColor = ConsoleColor.White then "\u001b[30m"
+    else "\u001b[1;37m"
+
+  let private colorReset = "\u001b[0m"
+
+  let private colorANSI = function
+    | ConsoleColor.Black -> "\u001b[30m"
+    | ConsoleColor.DarkBlue -> "\u001b[34m"
+    | ConsoleColor.DarkGreen -> "\u001b[32m"
+    | ConsoleColor.DarkCyan -> "\u001b[36m"
+    | ConsoleColor.DarkRed -> "\u001b[31m"
+    | ConsoleColor.DarkMagenta -> "\u001b[35m"
+    | ConsoleColor.DarkYellow -> "\u001b[33m"
+    | ConsoleColor.Gray -> colorForWhite // make this white instead of "\u001b[37m"
+    | ConsoleColor.DarkGray -> "\u001b[1;30m"
+    | ConsoleColor.Blue -> "\u001b[1;34m"
+    | ConsoleColor.Green -> "\u001b[1;32m"
+    | ConsoleColor.Cyan -> "\u001b[1;36m"
+    | ConsoleColor.Red -> "\u001b[1;31m"
+    | ConsoleColor.Magenta -> "\u001b[1;35m"
+    | ConsoleColor.Yellow -> "\u001b[1;33m"
+    | ConsoleColor.White -> colorForWhite
+    | _ -> ""
+
+  let private foregroundColor = Console.ForegroundColor
+
+  let private buffer = StringBuilder()
+
+  /// Unbuffered, unlocked write and flush to the original stdout file descriptor. Only use this when you are sure that
+  /// you want to be manipulating the state of the output buffer/console directly. Calls to this function does not
+  /// trigger the FlushStart/FlushEnd events.
+  let writeAndFlushRaw =
+    let fd = stdout
+    fun (value: string) ->
+      fd.Write value
+      fd.Flush()
+
+  // Invert control flow, from calling INTO the ProgressIndicator, to having the ProgressIndicator subscribe to the life
+  // cycle events of the ANSIOutputWriter.
+
+  let private flushStart = new Event<unit>()
+  /// This event is triggered when the ANSIOutputWriter is about to flush its internal buffer of characters to print to
+  /// STDOUT. Events are synchronously dispatched on the caller thread.
+  let [<CLIEvent>] FlushStart = flushStart.Publish
+
+  let private flushEnd = new Event<unit>()
+  /// This event is triggered when the ANSIOutputWriter has finished flusing its internal buffer of characters to to
+  /// STDOUT. Events are synchronously dispatched on the caller thread.
+  let [<CLIEvent>] FlushEnd = flushEnd.Publish
+
+  /// Flushes the built-up buffer and clears it. Calling this function will trigger FlushStart and FlushEnd, in that
+  /// order.
+  let flush =
+    let fd = stdout
+    fun () ->
+      lock buffer <| fun _ ->
+        flushStart.Trigger ()
+        buffer.ToString() |> fd.Write
+        buffer.Clear() |> ignore
+        flushEnd.Trigger ()
+
+  let mutable private incompleteTextOutput: (string * ConsoleColor) list = []
+
+  let private prettyPrint (autoFlush: bool) (fromStdOut: bool) (parts: (string * ConsoleColor) list) =
+    lock buffer <| fun _ ->
+      let hasEndLine =
+        parts
+        |> Seq.map fst
+        |> Seq.where (String.IsNullOrEmpty >> not)
+        |> Seq.tryLast
+        |> Option.bind Seq.tryLast
+        |> fun oc -> oc = Some '\n'
+
+      if fromStdOut && not hasEndLine then
+        incompleteTextOutput <- incompleteTextOutput @ parts
+      else
+        let parts =
+          if List.isEmpty incompleteTextOutput then parts
+          else
+            let parts = incompleteTextOutput @ parts
+            incompleteTextOutput <- []
+            parts
+        let mutable currentColour = foregroundColor
+        parts |> List.iter (fun (text, colour) ->
+          if currentColour <> colour then
+            colorANSI colour |> buffer.Append |> ignore
+            currentColour <- colour
+          buffer.Append text |> ignore
+        )
+        buffer.Append colorReset |> ignore
+        if autoFlush then flush ()
+
+  let close =
+    let origOut, origErr = stdout, stderr
+    fun () ->
+      flush ()
+      Console.SetOut origOut
+      Console.SetError origErr
+
+  module WindowsConsole =
+    open Microsoft.FSharp.NativeInterop
+
+    [<DllImport("Kernel32")>]
+    extern void* private GetStdHandle(int _nStdHandle)
+
+    [<DllImport("Kernel32")>]
+    extern bool private GetConsoleMode(void* _hConsoleHandle, int* _lpMode)
+
+    [<DllImport("Kernel32")>]
+    extern bool private SetConsoleMode(void* _hConsoleHandle, int _lpMode)
+
+    let enableVTMode() =
+      let INVALID_HANDLE_VALUE = nativeint -1
+      let STD_OUTPUT_HANDLE = -11
+      let ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+      let handle = GetStdHandle(STD_OUTPUT_HANDLE)
+      if handle <> INVALID_HANDLE_VALUE then
+        let mode = NativePtr.stackalloc<int> 1
+        if GetConsoleMode(handle, mode) then
+          let value = NativePtr.read mode
+          let value = value ||| ENABLE_VIRTUAL_TERMINAL_PROCESSING
+          SetConsoleMode(handle, value) |> ignore
+
+  // The below executes when the code is loaded
+  do
+#if NETSTANDARD2_0
+    if RuntimeInformation.IsOSPlatform OSPlatform.Windows then
+      WindowsConsole.enableVTMode()
+#else
+    if Environment.OSVersion.Platform = PlatformID.Win32NT then
+      WindowsConsole.enableVTMode()
+#endif
+    // since this executes on module load, it will be the original stdout
+    stdout.Flush()
+    let encoding = stdout.Encoding
+    let std s = prettyPrint true true [s, foregroundColor]
+
+    Console.SetOut (new FuncTextWriter(encoding, std))
+    let errorEncoding = stderr.Encoding
+    let errorToOutput s = prettyPrint true true [s, ConsoleColor.Red]
+
+    Console.SetError (new FuncTextWriter(errorEncoding, errorToOutput))
+
+  let textToOutput autoFlush (sem: obj) (parts: (string * ConsoleColor) list) =
+    lock sem <| fun _ ->
+      prettyPrint autoFlush false parts
+
 /// Logs a line in a format that is great for human consumption,
 /// using console colours to enhance readability.
 /// Sample: [10:30:49 INF] User "AdamC" began the "checkout" process with 100 cart items
@@ -848,7 +1009,7 @@ type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?output
   let sem          = defaultArg consoleSemaphore (obj())
   let options      = defaultArg options (Literate.LiterateOptions.create())
   let tokenise     = defaultArg literateTokeniser LiterateTokenisation.tokeniseMessage
-  let colourWriter = defaultArg outputWriter LiterateFormatting.atomicallyWriteColouredTextToConsole sem
+  let colourWriter = defaultArg outputWriter (ANSIOutputWriter.textToOutput (minLevel <= Debug)) sem
 
   /// Converts the message to tokens, apply the theme, then output them using the `colourWriter`.
   let writeColourisedThenNewLine message =

@@ -638,7 +638,7 @@ module Impl =
                   >> setField "testName" n
                   >> setField "duration" d
                   >> setField "message" m)
-            ANSIOutputWriter.Flush()
+            ANSIOutputWriter.flush ()
           }
 
         exn = fun n e d ->
@@ -648,9 +648,8 @@ module Impl =
                   >> setField "testName" n
                   >> setField "duration" d
                   >> addExn e)
-            ANSIOutputWriter.Flush()
+            ANSIOutputWriter.flush ()
           }
-
 
         summary = fun _config summary ->
           let spirit =
@@ -1105,9 +1104,9 @@ module Impl =
       do! config.printer.summary config testSummary
 
       if progressStarted then
-        ProgressIndicator.stop()
+        ProgressIndicator.stop ()
 
-      ANSIOutputWriter.Close()
+      ANSIOutputWriter.close ()
 
       return testSummary.errorCode
     }
@@ -1251,7 +1250,7 @@ module Impl =
       if progressStarted then
         ProgressIndicator.stop()
 
-      ANSIOutputWriter.Close()
+      ANSIOutputWriter.close ()
 
       return testSummary.errorCode
     }
@@ -1413,7 +1412,7 @@ module Impl =
           eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
           >> setField "count" focused.Length)
         |> Async.StartImmediate
-        ANSIOutputWriter.Flush()
+        ANSIOutputWriter.flush ()
       false
 
 [<AutoOpen; Extension>]
@@ -1790,12 +1789,13 @@ module Tests =
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
-    let autoflush = config.verbosity <= LogLevel.Debug
+    let autoFlush = config.verbosity <= LogLevel.Debug
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name ->
-            LiterateConsoleTarget(name, config.verbosity,
-              outputWriter = ANSIOutputWriter.TextToOutput autoflush,
+            LiterateConsoleTarget(
+              name, config.verbosity,
+              outputWriter = ANSIOutputWriter.textToOutput autoFlush,
               consoleSemaphore = Global.semaphore()) :> Logger }
     config.logName |> Option.iter setLogName
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
@@ -1815,7 +1815,7 @@ module Tests =
           eventX "Found duplicated test names, these names are: {duplicates}"
           >> setField "duplicates" duplicates.Value
         ) |> Async.RunSynchronously
-        ANSIOutputWriter.Flush()
+        ANSIOutputWriter.flush ()
         1
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
