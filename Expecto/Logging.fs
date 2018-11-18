@@ -291,21 +291,12 @@ module LoggerEx =
     member x.logSimple message: unit =
       logWithTimeout x message.level (fun _ -> message) |> Async.Start
 
-    // TODO: timeXXX functions
-
 type LoggingConfig =
-  { /// The `timestamp` function should preferably be monotonic and not 'jumpy'
-    /// or take much time to call.
-    timestamp: unit -> int64
-    /// The `getLogger` function returns a logger that directly can be logged to.
+  { timestamp: unit -> int64
     getLogger: string[] -> Logger
-    /// When composing apps from the outside-in (rather than having a unified
-    /// framework with static/global config) with libraries (again, rather than
-    /// a unified framework) like is best-practice, there's not necessarily a
-    /// way to coordinate around the STDOUT and STDERR streams between
-    /// different libraries running things on different threads. Use Logary's
-    /// adapter to replace this semaphore with a global semaphore.
     consoleSemaphore: obj }
+  static member create u2ts n2l sem =
+    { timestamp = u2ts; getLogger = n2l; consoleSemaphore = sem }
 
 module Literate =
   /// The output tokens, which can be potentially coloured.
@@ -371,6 +362,31 @@ module Literals =
 
   [<Literal>]
   let FieldErrorsKey = "errors"
+
+type DVar<'a> = private { mutable cell: 'a; event: Event<'a>; mutable changed: bool }
+
+module DVar =
+  open System.Threading
+  let create (x: 'x) = { cell = x; event = new Event<'x>(); changed = false }
+  let get (xD: DVar<'x>) = xD.cell
+  let wasChanged (xD: DVar<'x>) = xD.changed
+  let put (x: 'x) (xD: DVar<'x>) =
+    let prevX = Interlocked.Exchange (&xD.cell, x) // last writer wins
+    xD.changed <- true // monotonically reaches true, hence thread safe
+    xD.event.Trigger x
+  let changes (xD: DVar<'x>) = xD.event.Publish
+  let subs (xD: DVar<'x>) (x2u: 'x -> unit) = xD |> changes |> Event.add x2u
+  let apply (a2bD: DVar<'a -> 'b>) (aD: DVar<'a>): DVar<'b> =
+    let b = (get a2bD) (get aD)
+    let bD = create b
+    subs a2bD <| fun a2b -> let b = a2b (get aD) in put b bD
+    subs aD <| fun a -> let f = get a2bD in let b = f a in put b bD
+    bD
+  let map (x2y: 'x -> 'y) (xD: DVar<'x>): DVar<'y> = let yD = create (x2y (get xD)) in subs xD (x2y >> fun x -> put x yD); yD
+  let bindToRef (xR: 'x ref) (xD: DVar<'x>) = xR := get xD; subs xD (fun a -> xR := a)
+  module Operators =
+    let (<!>) = map
+    let (<*>) = apply
 
 module internal FsMtParser =
   open System.Text
@@ -521,7 +537,7 @@ module internal FsMtParser =
     go 0
 
 module internal MessageTemplates =
-  type internal TemplateToken = TextToken of text:string | PropToken of name : string * format : string
+  type internal TemplateToken = TextToken of text:string | PropToken of name: string * format: string
   let internal parseTemplate template =
     let tokens = ResizeArray<TemplateToken>()
     let foundText (text: string) = tokens.Add (TextToken text)
@@ -854,107 +870,84 @@ module internal ANSIOutputWriter =
     override __.WriteLine (s:string) = s + "\n" |> write
     override __.WriteLine() = write "\n"
 
-  let private colorForWhite =
-    if Console.BackgroundColor = ConsoleColor.White then "\u001b[30m"
-    else "\u001b[1;37m"
-
   let private colorReset = "\u001b[0m"
 
-  let private colorANSI = function
+  let private colour8 = function
     | ConsoleColor.Black -> "\u001b[30m"
-    | ConsoleColor.DarkBlue -> "\u001b[34m"
-    | ConsoleColor.DarkGreen -> "\u001b[32m"
-    | ConsoleColor.DarkCyan -> "\u001b[36m"
-    | ConsoleColor.DarkRed -> "\u001b[31m"
-    | ConsoleColor.DarkMagenta -> "\u001b[35m"
-    | ConsoleColor.DarkYellow -> "\u001b[33m"
-    | ConsoleColor.Gray -> colorForWhite // make this white instead of "\u001b[37m"
-    | ConsoleColor.DarkGray -> "\u001b[1;30m"
-    | ConsoleColor.Blue -> "\u001b[1;34m"
-    | ConsoleColor.Green -> "\u001b[1;32m"
-    | ConsoleColor.Cyan -> "\u001b[1;36m"
-    | ConsoleColor.Red -> "\u001b[1;31m"
-    | ConsoleColor.Magenta -> "\u001b[1;35m"
-    | ConsoleColor.Yellow -> "\u001b[1;33m"
-    | ConsoleColor.White -> colorForWhite
+    | ConsoleColor.DarkRed
+    | ConsoleColor.Red -> "\u001b[31m"
+    | ConsoleColor.DarkGreen
+    | ConsoleColor.Green -> "\u001b[32m"
+    | ConsoleColor.DarkYellow
+    | ConsoleColor.Yellow -> "\u001b[33m"
+    | ConsoleColor.DarkBlue
+    | ConsoleColor.Blue -> "\u001b[34m"
+    | ConsoleColor.DarkMagenta
+    | ConsoleColor.Magenta -> "\u001b[35m"
+    | ConsoleColor.DarkCyan
+    | ConsoleColor.Cyan -> "\u001b[36m"
+    | ConsoleColor.DarkGray
+    | ConsoleColor.Gray
+    | ConsoleColor.White -> "\u001b[37m"
     | _ -> ""
+
+  (* import sys
+     for i in range(0, 16):
+       for j in range(0, 16):
+         code = str(i * 16 + j)
+         sys.stdout.write(u"\u001b[38;5;" + code + "m " + code.ljust(4)) # [48;5;  +code for bg colour
+       print u"\u001b[0m"
+  *)
+
+  let private colour256BlackBG =
+    sprintf "\u001b[%sm" << function
+    | ConsoleColor.Black -> "38;5;232"
+    | ConsoleColor.DarkGray -> "38;5;234"
+    | ConsoleColor.Gray -> "38;5;245"
+    | ConsoleColor.DarkRed -> "38;5;52"
+    | ConsoleColor.Red -> "38;5;1"
+    | ConsoleColor.DarkGreen -> "38;5;28"
+    | ConsoleColor.Green -> "38;5;40"
+    | ConsoleColor.DarkYellow -> "38;5;220"
+    | ConsoleColor.Yellow -> "38;5;11"
+    | ConsoleColor.DarkBlue -> "38;5;18"
+    | ConsoleColor.Blue -> "38;5;26"
+    | ConsoleColor.DarkMagenta -> "38;5;55"
+    | ConsoleColor.Magenta -> "38;5;165"
+    | ConsoleColor.DarkCyan -> "38;5;31"
+    | ConsoleColor.Cyan -> "38;5;39"
+    | ConsoleColor.White -> "38;5;255"
+    | _ -> ""
+
+  let private colour256WhiteBG =
+    sprintf "\u001b[%sm" << function
+    | ConsoleColor.Black -> "38;5;255"
+    | ConsoleColor.DarkGray -> "38;5;251"
+    | ConsoleColor.Gray -> "38;5;245"
+    | ConsoleColor.DarkRed -> "38;5;204"
+    | ConsoleColor.Red -> "38;5;1"
+    | ConsoleColor.DarkGreen -> "38;5;120"
+    | ConsoleColor.Green -> "38;5;40"
+    | ConsoleColor.DarkYellow -> "38;5;229"
+    | ConsoleColor.Yellow -> "38;5;11"
+    | ConsoleColor.DarkBlue -> "38;5;12"
+    | ConsoleColor.Blue -> "38;5;26"
+    | ConsoleColor.DarkMagenta -> "38;5;219"
+    | ConsoleColor.Magenta -> "38;5;165"
+    | ConsoleColor.DarkCyan -> "38;5;159"
+    | ConsoleColor.Cyan -> "38;5;39"
+    | ConsoleColor.White -> "38;5;232"
+    | _ -> ""
+
+  let colour256 =
+    if Console.BackgroundColor = ConsoleColor.Black || int Console.BackgroundColor = -1 then
+      colour256BlackBG
+    else
+      colour256WhiteBG
 
   let private foregroundColor = Console.ForegroundColor
 
-  let private buffer = StringBuilder()
-
-  /// Unbuffered, unlocked write and flush to the original stdout file descriptor. Only use this when you are sure that
-  /// you want to be manipulating the state of the output buffer/console directly. Calls to this function does not
-  /// trigger the FlushStart/FlushEnd events.
-  let writeAndFlushRaw =
-    let fd = stdout
-    fun (value: string) ->
-      fd.Write value
-      fd.Flush()
-
-  // Invert control flow, from calling INTO the ProgressIndicator, to having the ProgressIndicator subscribe to the life
-  // cycle events of the ANSIOutputWriter.
-
-  let private flushStart = new Event<unit>()
-  /// This event is triggered when the ANSIOutputWriter is about to flush its internal buffer of characters to print to
-  /// STDOUT. Events are synchronously dispatched on the caller thread.
-  let [<CLIEvent>] FlushStart = flushStart.Publish
-
-  let private flushEnd = new Event<unit>()
-  /// This event is triggered when the ANSIOutputWriter has finished flusing its internal buffer of characters to to
-  /// STDOUT. Events are synchronously dispatched on the caller thread.
-  let [<CLIEvent>] FlushEnd = flushEnd.Publish
-
-  /// Flushes the built-up buffer and clears it. Calling this function will trigger FlushStart and FlushEnd, in that
-  /// order.
-  let flush =
-    let fd = stdout
-    fun () ->
-      lock buffer <| fun _ ->
-        flushStart.Trigger ()
-        buffer.ToString() |> fd.Write
-        buffer.Clear() |> ignore
-        flushEnd.Trigger ()
-
-  let mutable private incompleteTextOutput: (string * ConsoleColor) list = []
-
-  let private prettyPrint (autoFlush: bool) (fromStdOut: bool) (parts: (string * ConsoleColor) list) =
-    lock buffer <| fun _ ->
-      let hasEndLine =
-        parts
-        |> Seq.map fst
-        |> Seq.where (String.IsNullOrEmpty >> not)
-        |> Seq.tryLast
-        |> Option.bind Seq.tryLast
-        |> fun oc -> oc = Some '\n'
-
-      if fromStdOut && not hasEndLine then
-        incompleteTextOutput <- incompleteTextOutput @ parts
-      else
-        let parts =
-          if List.isEmpty incompleteTextOutput then parts
-          else
-            let parts = incompleteTextOutput @ parts
-            incompleteTextOutput <- []
-            parts
-        let mutable currentColour = foregroundColor
-        parts |> List.iter (fun (text, colour) ->
-          if currentColour <> colour then
-            colorANSI colour |> buffer.Append |> ignore
-            currentColour <- colour
-          buffer.Append text |> ignore
-        )
-        buffer.Append colorReset |> ignore
-        if autoFlush then flush ()
-
-  let close =
-    let origOut, origErr = stdout, stderr
-    fun () ->
-      flush ()
-      Console.SetOut origOut
-      Console.SetError origErr
-
-  module WindowsConsole =
+  module private WindowsConsole =
     open Microsoft.FSharp.NativeInterop
 
     [<DllImport("Kernel32")>]
@@ -966,7 +959,13 @@ module internal ANSIOutputWriter =
     [<DllImport("Kernel32")>]
     extern bool private SetConsoleMode(void* _hConsoleHandle, int _lpMode)
 
-    let enableVTMode() =
+    /// https://superuser.com/questions/413073/windows-console-with-ansi-colors-handling
+    let enableVTMode () =
+#if NETSTANDARD2_0
+      if not (RuntimeInformation.IsOSPlatform OSPlatform.Windows) then () else
+#else
+      if not (Environment.OSVersion.Platform = PlatformID.Win32NT) then () else
+#endif
       let INVALID_HANDLE_VALUE = nativeint -1
       let STD_OUTPUT_HANDLE = -11
       let ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
@@ -978,29 +977,164 @@ module internal ANSIOutputWriter =
           let value = value ||| ENABLE_VIRTUAL_TERMINAL_PROCESSING
           SetConsoleMode(handle, value) |> ignore
 
-  // The below executes when the code is loaded
-  do
-#if NETSTANDARD2_0
-    if RuntimeInformation.IsOSPlatform OSPlatform.Windows then
+  /// Lifecycle: (new T() -> t.init() -> t._ {0,*} -> (t :> IDisposable).Dispose()) {1,*}
+  [<Sealed>]
+  type T(origStdOut: TextWriter, origStdErr: TextWriter, sem: obj, _autoFlush: bool) =
+    // Invariants:
+    //  - For every non-private method that touches the origStdOut or origStdErr,
+    //    a lock on `sem` must be held.
+    //  - For every change to `buffer`, a lock on `buffer` must be held.
+    //  - Call order of locks must always be; 1. `lock sem ..`, 2. `lock buffer ..`,
+    //    or we may deadlock.
+    //  - The call order described in the docs of this type must be followed.
+    //  - No `..Inner` function declared below may take a lock on `sem`.
+    //  - All `..Inner` functions below must assert `inited` is valid.
+    //  - We must not throw if history init-dispose-(init | print) happens; reinitialising is allowed
+
+    let mutable incompleteTextOutput: (string * ConsoleColor) list = []
+    let mutable inited = false
+    let buffer = StringBuilder()
+    let flushStart = new Event<unit>()
+    let flushEnd = new Event<unit>()
+
+    let flushInner () =
+      if not inited then invalidOp "Cannot flush unless inited"
+      lock buffer <| fun _ ->
+        flushStart.Trigger ()
+        buffer.ToString() |> origStdOut.Write
+        buffer.Clear() |> ignore
+        flushEnd.Trigger ()
+
+    // Change parts to Array since we have all items available when calling
+    let rec prettyPrintInner (autoFlush, fromSysConsole) parts =
+      ignore (tryInitInner ())
+
+      lock buffer <| fun _ ->
+        let hasEndLine =
+          parts
+          |> Seq.map fst
+          |> Seq.where (String.IsNullOrEmpty >> not)
+          |> Seq.tryLast
+          |> Option.bind Seq.tryLast
+          |> fun oc -> oc = Some '\n'
+
+        if fromSysConsole && not hasEndLine then
+          incompleteTextOutput <- incompleteTextOutput @ parts
+        else
+          let parts =
+            if List.isEmpty incompleteTextOutput then parts
+            else
+              let parts = incompleteTextOutput @ parts
+              incompleteTextOutput <- []
+              parts
+
+          let mutable currentColour = foregroundColor
+          parts |> List.iter (fun (text, colour) ->
+            if currentColour <> colour then
+              colour256 colour |> buffer.Append |> ignore
+              currentColour <- colour
+            buffer.Append text |> ignore
+          )
+          buffer.Append colorReset |> ignore
+
+          if autoFlush then
+            flushInner ()
+
+    and initInner () =
+      if inited then invalidOp "Cannot init ANSIOutputWriter twice"
+      inited <- true
+
       WindowsConsole.enableVTMode()
-#else
-    if Environment.OSVersion.Platform = PlatformID.Win32NT then
-      WindowsConsole.enableVTMode()
-#endif
-    // since this executes on module load, it will be the original stdout
-    stdout.Flush()
-    let encoding = stdout.Encoding
-    let std s = prettyPrint true true [s, foregroundColor]
+      origStdOut.Flush()
 
-    Console.SetOut (new FuncTextWriter(encoding, std))
-    let errorEncoding = stderr.Encoding
-    let errorToOutput s = prettyPrint true true [s, ConsoleColor.Red]
+      let encoding = stdout.Encoding
+      let std s = prettyPrintInner (true, true) [s, foregroundColor]
+      Console.SetOut (new FuncTextWriter(encoding, std))
 
-    Console.SetError (new FuncTextWriter(errorEncoding, errorToOutput))
+      let errorEncoding = origStdErr.Encoding
+      let errorToOutput s = prettyPrintInner (true, true) [s, ConsoleColor.Red]
+      Console.SetError (new FuncTextWriter(errorEncoding, errorToOutput))
 
-  let textToOutput autoFlush (sem: obj) (parts: (string * ConsoleColor) list) =
-    lock sem <| fun _ ->
-      prettyPrint autoFlush false parts
+    and tryInitInner () =
+      if inited then false else
+      initInner ()
+      true
+
+    let disposeInner () =
+      // TODO: hunt down all usages of ANSIConsoleLogger and ensure they only init-use-dispose in that order
+      if not inited then () else // invalidOp "Cannot Dispose unless inited"
+      flushInner ()
+      Console.SetOut origStdOut
+      Console.SetError origStdErr
+      inited <- false
+
+    /// HERE BE DRAGONS
+    ///
+    /// Unbuffered, unlocked write and flush to the original stdout file descriptor. Only use this when you are sure that
+    /// you want to be manipulating the state of the output buffer/console directly. Calls to this function does not
+    /// trigger the FlushStart/FlushEnd events.
+    ///
+    /// This function is internal, because it needs to be guarded by a Monitor object; in the case of Expecto, this
+    /// guard is in Progress.fs, an is the lock on the ref cell `isRunning`.
+    member internal x.writeAndFlushRaw (value: string) =
+      origStdOut.Write value
+      origStdOut.Flush()
+
+    // Invert control flow, from calling INTO the ProgressIndicator, to having the ProgressIndicator subscribe to the life
+    // cycle events of the ANSIOutputWriter.
+
+    /// This event is triggered when the ANSIOutputWriter is about to flush its internal buffer of characters to print to
+    /// STDOUT. Events are synchronously dispatched on the caller thread.
+    [<CLIEvent>]
+    member internal x.FlushStart = flushStart.Publish
+
+    /// This event is triggered when the ANSIOutputWriter has finished flusing its internal buffer of characters to to
+    /// STDOUT. Events are synchronously dispatched on the caller thread.
+    [<CLIEvent>]
+    member internal x.FlushEnd = flushEnd.Publish
+
+    /// Flushes the built-up buffer and clears it. Calling this function will trigger FlushStart and FlushEnd, in that
+    /// order.
+    member x.flush() =
+      lock sem flushInner
+
+    member internal x.prettyPrint (parts: (string * ConsoleColor) list): unit =
+      lock sem (fun () -> prettyPrintInner (_autoFlush, false) parts)
+
+    /// During the time between calls x.init() -> IDisposable.Dispose(), there must be no other calls to `init`.
+    ///
+    /// This installs interceptors for both STDOUT and STDERR, having them go through this instance; `
+    member x.init() =
+      lock sem initInner
+
+    member x.tryInit() =
+      // don't take a lock unless we need to (test-lock-test pattern):
+      if inited then false else lock sem tryInitInner
+
+    interface IDisposable with
+      /// Must correspond to a previous init call.
+      member x.Dispose() =
+        lock sem disposeInner
+
+  let private instance: T option ref = ref None
+
+  let create autoFlush (sem: obj): T =
+    lock instance <| fun () ->
+    !instance |> Option.iter (fun i -> (i :> IDisposable).Dispose())
+    let x = new T(stdout, stderr, sem, autoFlush)
+    instance := Some x
+    x
+
+  let internal getInstance autoFlush sem =
+    !instance |> Option.defaultWith (fun () -> create autoFlush sem)
+
+  let prettyPrint autoFlush sem =
+    let i = getInstance autoFlush sem
+    i.prettyPrint
+
+  let flush () = !instance |> Option.iter (fun i -> i.flush())
+  let close () = !instance |> Option.iter (fun i -> (i :> IDisposable).Dispose())
+  let writeAndFlushRaw (value: string) = !instance |> Option.iter (fun i -> i.writeAndFlushRaw value)
 
 /// Logs a line in a format that is great for human consumption,
 /// using console colours to enhance readability.
@@ -1009,7 +1143,9 @@ type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?output
   let sem          = defaultArg consoleSemaphore (obj())
   let options      = defaultArg options (Literate.LiterateOptions.create())
   let tokenise     = defaultArg literateTokeniser LiterateTokenisation.tokeniseMessage
-  let colourWriter = defaultArg outputWriter (ANSIOutputWriter.textToOutput (minLevel <= Debug)) sem
+  let colourWriter = outputWriter |> Option.defaultWith (fun () ->
+    ANSIOutputWriter.prettyPrint (minLevel <= Debug) sem
+  )
 
   /// Converts the message to tokens, apply the theme, then output them using the `colourWriter`.
   let writeColourisedThenNewLine message =
@@ -1028,7 +1164,7 @@ type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?output
   /// `LiterateToken.MissingTemplateField`.
   new (name, minLevel, outputTemplate, ?options, ?outputWriter, ?consoleSemaphore) =
     let tokeniser = LiterateFormatting.tokeniserForOutputTemplate outputTemplate
-    LiterateConsoleTarget(name, minLevel, ?options=options, literateTokeniser=tokeniser, ?outputWriter=outputWriter, ?consoleSemaphore=consoleSemaphore)
+    new LiterateConsoleTarget(name, minLevel, ?options=options, literateTokeniser=tokeniser, ?outputWriter=outputWriter, ?consoleSemaphore=consoleSemaphore)
 
   interface Logger with
     member x.name = name
@@ -1096,71 +1232,52 @@ type CombiningTarget(name, otherLoggers: Logger list) =
       |> Async.Ignore // Async<unit>
 
 module Global =
-  /// This is the global semaphore for colourising the console output. Ensure
+  open DVar.Operators
+
+  /// This is the global semaphore for writing to the console output. Ensure
   /// that the same semaphore is used across libraries by using the Logary
   /// Facade Adapter in the final composing app/service.
-  let private consoleSemaphore = obj ()
+  let private semD = DVar.create (obj ())
+  let private getTimestampD = DVar.create (fun () -> DateTimeOffset.timestamp DateTimeOffset.UtcNow)
+  let private minLevelD = DVar.create Info
+  let private getLoggerInnerD = DVar.create (fun level name -> LiterateConsoleTarget(name, level) :> Logger)
+  let private getLoggerD = minLevelD |> DVar.apply getLoggerInnerD
+  let private cfgD = LoggingConfig.create <!> getTimestampD <*> getLoggerD <*> semD
 
-  /// The global default configuration, which logs to Console at Info level.
-  let defaultConfig =
-    { timestamp        = fun () -> DateTimeOffset.timestamp DateTimeOffset.UtcNow
-      getLogger        = fun name -> LiterateConsoleTarget(name, Info) :> Logger
-      consoleSemaphore = consoleSemaphore }
+  let defaultConfig = DVar.get cfgD
 
   let private config =
-    ref (defaultConfig, (* logical clock *) 1u)
+    let cfgR = ref defaultConfig in cfgD |> DVar.bindToRef cfgR
+    cfgR
 
-  /// The flyweight just references the current configuration. If you want
-  /// multiple per-process logging setups, then don't use the static methods,
-  /// but instead pass a Logger instance around, setting the name field of the
-  /// Message value you pass into the logger.
   type internal Flyweight(name: string[]) =
-    let updating = obj()
-    let mutable fwClock: uint32 = snd !config
-    let mutable logger: Logger = (fst !config).getLogger name
-
-    let withLogger action =
-      if snd !config <> fwClock then
-        lock updating <| fun _ ->
-          let cfg, cfgClock = !config
-          if cfgClock <> fwClock then
-            logger <- cfg.getLogger name
-            fwClock <- cfgClock
-      action logger
-
-    let ensureName (m: Message) =
-      if Array.isEmpty m.name then { m with name = name } else m
-
+    let loggerD = getLoggerD |> DVar.map (fun factory -> factory name)
+    let ensureName (m: Message) = if Array.isEmpty m.name then { m with name = name } else m
     interface Logger with
       member x.name = name
       member x.log level msgFactory =
-        withLogger (fun logger -> logger.log level (msgFactory >> ensureName))
-
+        let logger = DVar.get loggerD in logger.log level (msgFactory >> ensureName)
       member x.logWithAck level msgFactory =
-        withLogger (fun logger -> logger.logWithAck level (msgFactory >> ensureName))
+        let logger = DVar.get loggerD in logger.logWithAck level (msgFactory >> ensureName)
 
-  let internal getStaticLogger (name: string []) =
-    Flyweight name
+  let internal getStaticLogger (name: string[]) = Flyweight name :> Logger
 
   /// Gets the current timestamp.
-  let timestamp (): EpochNanoSeconds =
-    (fst !config).timestamp ()
+  let timestamp(): EpochNanoSeconds = let get = DVar.get getTimestampD in get ()
 
   /// Returns the synchronisation object to use when printing to the console.
-  let internal semaphore () =
-    (fst !config).consoleSemaphore
+  let internal semaphore () = DVar.get semD
 
   /// Run the passed function under the console semaphore lock.
-  let internal lockSem fn =
-    lock (semaphore ()) fn
+  let internal lockSem fn = lock (semaphore ()) fn
 
-  /// Call from the initialisation of your library. Initialises the
-  /// Logary.Facade globally/per process.
-  let initialise cfg =
-    config := (cfg, snd !config + 1u)
+  /// Call from the initialisation of your library. Initialises the Logary.Facade globally/per process.
+  let initialise (cfg: LoggingConfig) =
+    semD |> DVar.put cfg.consoleSemaphore
+    getTimestampD |> DVar.put cfg.timestamp
+    getLoggerInnerD |> DVar.put (fun _ name -> cfg.getLogger name)
 
-  let initialiseIfDefault cfg =
-    if snd !config = 1u then initialise cfg
+  let initialiseIfDefault cfg = if not (DVar.wasChanged cfgD) then initialise cfg
 
 /// "Shortcut" for creating targets; useful at the top-level configuration point of
 /// your library.
@@ -1184,19 +1301,17 @@ module Targets =
 /// pass loggers as values.
 module Log =
 
-  /// Create a named logger. Full stop (.) acts as segment delimiter in the
-  /// hierachy of namespaces and loggers.
-  let create (name: string) =
-    if name = null then invalidArg "name" "name is null"
-    Global.getStaticLogger (name.Split([|'.'|], StringSplitOptions.RemoveEmptyEntries))
-    :> Logger
-
   /// Create an hierarchically named logger
   let createHiera (name: string[]) =
     if name = null then invalidArg "name" "name is null"
     if name.Length = 0 then invalidArg "name" "must have >0 segments"
     Global.getStaticLogger name
-    :> Logger
+
+  /// Create a named logger. Full stop (.) acts as segment delimiter in the
+  /// hierachy of namespaces and loggers.
+  let create (name: string) =
+    if name = null then invalidArg "name" "name is null"
+    createHiera (name.Split([|'.'|], StringSplitOptions.RemoveEmptyEntries))
 
 /// The Message module contains functions that can help callers compose messages. This
 /// module is especially helpful to open to make calls into Logary's facade small.

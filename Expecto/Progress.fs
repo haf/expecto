@@ -40,7 +40,42 @@ module internal ProgressIndicator =
       | Percent p -> max p 0 |> min 100 |> Percent |> Some
       | f -> Some f
 
+  let clear (ansi: ANSIOutputWriter.T) =
+    let value = String(' ', currentLength) + backStart + showCursor
+    ansi.writeAndFlushRaw value
+
   let start () =
+    let ansi = ANSIOutputWriter.getInstance true (Global.semaphore ())
+
+    ansi.FlushStart |> Event.add (fun () ->
+      Monitor.Enter isRunning
+      if !isRunning then
+        isPaused <- true
+        clear ansi
+        // logically, now the caller will execute the flush
+    )
+
+    ansi.FlushEnd |> Event.add (fun () ->
+      // logically, now the caller has executed the flush
+      if !isRunning then
+        isPaused <- false
+      Monitor.Exit isRunning
+    )
+
+  (* The above corresponds to:
+
+      let pause f =
+        lock isRunning <| fun () ->
+          if !isRunning then
+            isPaused <- true
+            clear ()
+            f ()
+            isPaused <- false
+          else
+            f ()
+
+  *)
+
     lock isRunning (fun () ->
       if !isRunning then false
       else
@@ -77,43 +112,12 @@ module internal ProgressIndicator =
         true
     )
 
-  let clear () =
-    let value = String(' ', currentLength) + backStart + showCursor
-    ANSIOutputWriter.writeAndFlushRaw value
-
   let stop () =
     lock isRunning <| fun () ->
       if !isRunning then
         isRunning := false
-        if isEnabled then clear ()
+        if isEnabled then
+          let ansi = ANSIOutputWriter.getInstance true (Global.semaphore ())
+          clear ansi
 
   Console.CancelKeyPress |> Event.add (fun _ -> stop ())
-
-  ANSIOutputWriter.FlushStart |> Event.add (fun () ->
-    Monitor.Enter isRunning
-    if !isRunning then
-      isPaused <- true
-      clear ()
-      // logically, now the caller will execute the flush
-  )
-
-  ANSIOutputWriter.FlushEnd |> Event.add (fun () ->
-    // logically, now the caller has executed the flush
-    if !isRunning then
-      isPaused <- false
-    Monitor.Exit isRunning
-  )
-
-  (* The above corresponds to:
-
-      let pause f =
-        lock isRunning <| fun () ->
-          if !isRunning then
-            isPaused <- true
-            clear ()
-            f ()
-            isPaused <- false
-          else
-            f ()
-
-  *)

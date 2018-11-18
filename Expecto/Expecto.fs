@@ -1795,7 +1795,6 @@ module Tests =
           getLogger = fun name ->
             LiterateConsoleTarget(
               name, config.verbosity,
-              outputWriter = ANSIOutputWriter.textToOutput autoFlush,
               consoleSemaphore = Global.semaphore()) :> Logger }
     config.logName |> Option.iter setLogName
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
@@ -1826,27 +1825,30 @@ module Tests =
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithArgsAndCancel (ct:CancellationToken) config args tests =
     match ExpectoConfig.fillFromArgs config args with
-    | ArgsException (usage,message) ->
+    | ArgsException (usage, message) ->
       printfn "%s\n" message
-      printfn "EXPECTO version %s\n\n%s" ExpectoConfig.expectoVersion usage
+      printfn "EXPECTO! v%s\n\n%s" ExpectoConfig.expectoVersion usage
       1
-    | ArgsUsage (usage,errors) ->
-      if List.isEmpty errors |> not then
-        printfn "ERROR unknown options: %s\n" (String.Join(" ",errors))
 
-      printfn "EXPECTO version %s\n\n%s" ExpectoConfig.expectoVersion usage
+    | ArgsUsage (usage, errors) ->
+      if not (List.isEmpty errors) then
+        printfn "ERROR unknown options: %s\n" (String.Join(" ",errors))
+      printfn "EXPECTO! v%s\n\n%s" ExpectoConfig.expectoVersion usage
 
       if List.isEmpty errors then 0 else 1
+
     | ArgsList config ->
       let tests = config.filter tests
       listTests tests
       0
+
     | ArgsRun config ->
       runTests config tests
-    | ArgsVersion config ->
-      printfn "EXPECTO version %s\n" ExpectoConfig.expectoVersion
 
+    | ArgsVersion config ->
+      printfn "EXPECTO! v%s\n" ExpectoConfig.expectoVersion
       runTestsWithCancel ct config tests
+
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithArgs config args tests =
