@@ -1,3 +1,6 @@
+#### 8.6.1 - 2018-XXXX
+* Tweak colourised console colours, thanks @haf
+
 #### 8.6.0 - 2018-11-17
 * #266 Merge ANSI Output Writer back into Logary Facade, decouple it from Progress, thanks @haf
 * #290 Speed up Progress, thanks @haf
