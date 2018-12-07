@@ -18,38 +18,37 @@ module Performance =
     | MetricLessThan of s1:SampleStatistics * s2:SampleStatistics
     | MetricMoreThan of s1:SampleStatistics * s2:SampleStatistics
     | MetricEqual of s1:SampleStatistics * s2:SampleStatistics
-
   let inline private measureCompare metric f1 f2 =
     let r1 = f1 id
     let r2 = f2 id
     if r1 <> r2 then ResultNotTheSame (r1,r2)
     else
       let stats f = Seq.initInfinite (fun _ -> metric f) |> sampleStatistics
+      
+      let precision =
+        stats (fun m -> m (fun () -> Unchecked.defaultof<_>) ())
+        |> Seq.skip 3
+        |> Seq.head
 
-      let s1,s2,precision =
-        let seq = Seq.zip3 (stats f1) (stats f2) (stats (fun m -> m (fun () -> Unchecked.defaultof<_>) ()))
-        Seq.item 2 seq |> ignore
-        Seq.item 5 seq
+      Seq.zip (stats f1) (stats f2)
+      |> Seq.skip 10
+      |> Seq.pick (fun (s1,s2) ->
 
-      if max s1.mean s2.mean < precision.mean * 5.0 then
-        MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision)
-      else
-        Seq.zip (stats f1) (stats f2)
-        |> Seq.pick (fun (s1,s2) ->
+        let inline areCloseEnough() =
+          let s1,s2 = if s1.mean>s2.mean then s1,s2 else s2,s1
+          let numberOfSD = 2.325 // Equivalent to 99.99% confidence level
+          s1.mean + numberOfSD * s1.meanStandardError - (s2.mean - numberOfSD * s2.meanStandardError) < (s1.mean + s2.mean) * 0.5 * 0.005
 
-          let inline areCloseEnough() =
-            let s1,s2 = if s1.mean>s2.mean then s1,s2 else s2,s1
-            let numberOfSD = 2.325 // Equivalent to 99.99% confidence level
-            s1.mean + numberOfSD * s1.meanStandardError - (s2.mean - numberOfSD * s2.meanStandardError) < (s1.mean + s2.mean) * 0.5 * 0.005
-
-          if areCloseEnough() then MetricEqual (s1,s2) |> Some
-          else welchStatistic s1 s2 |> welchTest
-               |> Option.map (function
-                 | 0 -> MetricEqual (s1,s2)
-                 | 1 -> MetricMoreThan (s1,s2)
-                 | _ -> MetricLessThan (s1,s2)
-                 )
-            )
+        if max s1.mean s2.mean < precision.mean * 5.0 then
+          MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision) |> Some
+        elif areCloseEnough() then MetricEqual (s1,s2) |> Some
+        else welchStatistic s1 s2 |> welchTest
+             |> Option.map (function
+               | 0 -> MetricEqual (s1,s2)
+               | 1 -> MetricMoreThan (s1,s2)
+               | _ -> MetricLessThan (s1,s2)
+               )
+          )
 
   type Measurer<'a,'b> = ('a->'b) -> ('a->'b)
 

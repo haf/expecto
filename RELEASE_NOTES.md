@@ -1,5 +1,9 @@
-#### 8.6.1 - 2018-XXXX
+#### 8.6.1 - 2018-12-07
 * Tweak colourised console colours, thanks @haf
+* Xml summary can cause exception. #296 thanks @AnthonyLloyd
+* isFasterThan improve use of warm up runs. thanks @AnthonyLloyd
+* taskTask is missing my stack trace. #295 thanks @AnthonyLloyd
+* taskTask doesnt surface Task as valid do target. #293 thanks @AnthonyLloyd
 
 #### 8.6.0 - 2018-11-17
 * #266 Merge ANSI Output Writer back into Logary Facade, decouple it from Progress, thanks @haf

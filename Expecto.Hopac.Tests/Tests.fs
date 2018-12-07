@@ -19,6 +19,7 @@ let assertTestFails test =
     match result with
     | [(_,{ result = TestResult.Ignored _ })] -> ()
     | [(_,{ result = TestResult.Failed _ })] -> ()
+    | [(_,{ result = TestResult.Error _ })] -> ()
     | [x] -> failtestf "Should have failed, but was %A" x
     | _ -> failtestf "Should have one test to assert"
   } |> makeTest test

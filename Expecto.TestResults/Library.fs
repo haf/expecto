@@ -2,6 +2,7 @@ module Expecto.TestResults
 
 open System.IO
 open System.Xml.Linq
+open System.Xml
 
 /// Generate test results using NUnit v2 schema.
 let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
@@ -120,7 +121,9 @@ let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
     Path.GetDirectoryName path
     |> Directory.CreateDirectory
     |> ignore
-    doc.Save(path)
+    let settings = XmlWriterSettings(CheckCharacters=false)
+    let writer = XmlWriter.Create(path,settings)
+    doc.Save writer
 
 /// If using this with gitlab, set the third parameter 'handleErrorsLikeFailures' to true.
 let writeJUnitSummary (file, assemblyName, handleErrorsLikeFailures) (summary: Impl.TestRunSummary) =
@@ -202,4 +205,6 @@ let writeJUnitSummary (file, assemblyName, handleErrorsLikeFailures) (summary: I
     Path.GetDirectoryName path
     |> Directory.CreateDirectory
     |> ignore
-    doc.Save(path)
+    let settings = XmlWriterSettings(CheckCharacters=false)
+    let writer = XmlWriter.Create(path,settings)
+    doc.Save writer

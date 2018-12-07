@@ -1587,6 +1587,7 @@ module Tests =
     member __.Return(x) = task.Return(x)
     member __.ReturnFrom(x) = task.ReturnFrom(x)
     member __.Bind(p1:Task<'a>, p2:'a->_) = task.Bind(p1, p2)
+    member __.Bind(p1:Task, p2:unit->_) = task.Bind(p1, p2)
     member __.Using(g, p) = task.Using(g, p)
     member __.While(gd, prog) = task.While(gd, prog)
     member __.For(e, prog) = task.For(e, prog)
@@ -1595,11 +1596,7 @@ module Tests =
     member __.TryWith(p, cf) = task.TryWith(p, cf)
     member __.Run f =
       let a = async {
-        try
           do! task.Run f |> Async.AwaitTask
-        with
-          | :? AggregateException as e when e.InnerExceptions.Count = 1 ->
-            raise e.InnerException
       }
       match focusState with
       | Normal -> testCaseAsync name a
@@ -1789,7 +1786,6 @@ module Tests =
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
-    let autoFlush = config.verbosity <= LogLevel.Debug
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name ->
@@ -1814,7 +1810,6 @@ module Tests =
           eventX "Found duplicated test names, these names are: {duplicates}"
           >> setField "duplicates" duplicates.Value
         ) |> Async.RunSynchronously
-        ANSIOutputWriter.flush ()
         1
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1

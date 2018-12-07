@@ -1032,6 +1032,7 @@ let taskTests =
   testList "task" [
 
     testTask "simple" {
+      do! Task.Delay 1
       Expect.equal 1 1 "1=1"
     }
 

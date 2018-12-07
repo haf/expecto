@@ -49,6 +49,7 @@ module TestHelpers =
       match result with
       | [(_,{ result = Ignored _ })] -> ()
       | [(_,{ result = Failed _ })] -> ()
+      | [(_,{ result = Error _ })] -> ()
       | [x] -> failtestf "Should have failed, but was %A" x
       | _ -> failtestf "Should have one test to assert"
     } |> makeTest test
