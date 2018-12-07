@@ -162,7 +162,7 @@ Target.create "Pack" (fun _ ->
                 sprintf "/p:PackageTags=\"%s\"" tags
                 sprintf "/p:PackageProjectUrl=\"%s\"" projectUrl
                 sprintf "/p:PackageIconUrl=\"%s\"" iconUrl
-                sprintf "/p:PackageLicenseUrl=\"%s\"" licenceUrl
+                sprintf "/p:License=\"%s\"" licenceUrl
             ] |> String.concat " "
         "pack "+project+"/"+project+".fsproj -c "+configuration + " -o ../bin "
         + packParameters

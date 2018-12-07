@@ -229,6 +229,7 @@
               DevelopmentDependency="$(DevelopmentDependency)"
               BuildOutputInPackage="@(_BuildOutputInPackage)"
               TargetPathsToSymbols="@(_TargetPathsToSymbols)"
+              SymbolPackageFormat="symbols.nupkg"
               TargetFrameworks="@(_TargetFrameworks)"
               AssemblyName="$(AssemblyName)"
               PackageOutputPath="$(PackageOutputAbsolutePath)"
