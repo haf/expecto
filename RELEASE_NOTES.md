@@ -1,3 +1,6 @@
+#### 8.6.3 - 2018-12-08
+* isFasterThan machine resolution fix. thanks @AnthonyLloyd
+
 #### 8.6.2 - 2018-12-08
 * isFasterThan machine resolution fix. thanks @AnthonyLloyd
 

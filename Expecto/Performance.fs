@@ -24,9 +24,12 @@ module Performance =
     if r1 <> r2 then ResultNotTheSame (r1,r2)
     else
       let stats f = Seq.initInfinite (fun _ -> metric f) |> sampleStatistics
-      
+
+      let machinePrecisionFunction = (fun m -> m (fun () -> Unchecked.defaultof<_>) ())
+      stats machinePrecisionFunction |> Seq.item 2 |> ignore
+
       let precision =
-        stats (fun m -> m (fun () -> Unchecked.defaultof<_>) ())
+        stats machinePrecisionFunction
         |> Seq.skip 5
         |> Seq.head
 

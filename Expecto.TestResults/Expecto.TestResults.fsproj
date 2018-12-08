@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyName>Expecto.TestResults</AssemblyName>
     <PackageId>Expecto.TestResults</PackageId>
-    <Version>8.6.2</Version>
+    <Version>8.6.3</Version>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Optional: Declare that the Repository URL can be published to NuSpec -->
