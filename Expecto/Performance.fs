@@ -27,7 +27,7 @@ module Performance =
       
       let precision =
         stats (fun m -> m (fun () -> Unchecked.defaultof<_>) ())
-        |> Seq.skip 3
+        |> Seq.skip 5
         |> Seq.head
 
       Seq.zip (stats f1) (stats f2)

@@ -1,3 +1,6 @@
+#### 8.6.2 - 2018-12-08
+* isFasterThan machine resolution fix. thanks @AnthonyLloyd
+
 #### 8.6.1 - 2018-12-07
 * Tweak colourised console colours, thanks @haf
 * Xml summary can cause exception. #296 thanks @AnthonyLloyd
