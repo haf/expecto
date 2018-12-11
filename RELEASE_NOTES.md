@@ -1,3 +1,6 @@
+#### 8.6.4 - 2018-12-11
+* fix test results xml incomplete. thanks @AnthonyLloyd
+
 #### 8.6.3 - 2018-12-08
 * isFasterThan machine resolution fix. thanks @AnthonyLloyd
 
