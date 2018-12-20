@@ -1804,6 +1804,7 @@ module Tests =
           eventX "Found duplicated test names, these names are: {duplicates}"
           >> setField "duplicates" duplicates.Value
         ) |> Async.RunSynchronously
+        ANSIOutputWriter.close()
         1
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
