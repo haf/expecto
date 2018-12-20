@@ -155,10 +155,6 @@ module internal Helpers =
   let inline addFst a b = a,b
   let inline addSnd b a = a,b
   let inline commaString (i:int) = i.ToString("#,##0")
-  open System.Text.RegularExpressions
-  let rx = lazy Regex(" at (.*) in (.*):line (\d+)", RegexOptions.Compiled ||| RegexOptions.Multiline)
-  let stackTraceToString s = rx.Value.Replace(s, "$2($3,1): $1")
-  let exnToString (e: Exception) = stackTraceToString (e.ToString())
 
   module Seq =
     let cons x xs = seq { yield x; yield! xs }
@@ -413,7 +409,7 @@ module Impl =
       | Passed -> "Passed"
       | Ignored reason -> "Ignored: " + reason
       | Failed error -> "Failed: " + error
-      | Error e -> "Exception: " + exnToString e
+      | Error e -> "Exception: " + e.ToString()
     member x.tag =
       match x with
       | Passed -> 0
@@ -956,12 +952,10 @@ module Impl =
         | :? AssertException as e ->
           w.Stop()
           let msg =
-            (stackTraceToString e.StackTrace).Split('\n')
-            |> Seq.tryFind (fun q -> q.Contains ",1): ")
-            |> Option.defaultWith (fun () -> e.StackTrace.Split('\n')
-                                             |> Seq.truncate 10
-                                             |> String.concat "\n")
-            |> sprintf "\n%s\n%s\n" e.Message
+            "\n" + e.Message + "\n" +
+            (e.StackTrace.Split('\n')
+             |> Seq.truncate 10
+             |> String.concat "\n")
           return
             TestSummary.single (Failed msg) (float w.ElapsedMilliseconds)
         | :? FailedException as e ->
