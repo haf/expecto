@@ -1,3 +1,7 @@
+#### 8.6.5 - 2018-12-20
+* fix only getting Expectos stack trace. #298 thanks @AnthonyLloyd
+* fix Expecto fails silently on duplicate tests. #299 thanks @AnthonyLloyd
+
 #### 8.6.4 - 2018-12-11
 * fix test results xml incomplete. thanks @AnthonyLloyd
 
