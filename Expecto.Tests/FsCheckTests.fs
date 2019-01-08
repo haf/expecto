@@ -1,6 +1,5 @@
 module Expecto.FsCheckTests
 
-open FsCheck
 open Expecto
 open Expecto.Impl
 let properties =
@@ -88,9 +87,9 @@ let runFsCheckFocusedTests =
     match (getResult "FsCheck focused/Deliberately failing test").result with
     | TestResult.Failed actual ->
       let expected = "
-Failed after 1 test. Parameters:
-	1 0 -1
-Shrunk 2 times to:
+Failed after 5 tests. Parameters:
+	-3 -1 0
+Shrunk 4 times to:
 	1 0 0
 Result:
 	False
@@ -133,9 +132,9 @@ let runFsCheckConfigTests =
     match (getResult "FsCheck config/Deliberately failing test").result with
     | TestResult.Failed actual ->
       let expected = "
-Failed after 1 test. Parameters:
-	1 0 -1
-Shrunk 2 times to:
+Failed after 5 tests. Parameters:
+	-3 -1 0
+Shrunk 4 times to:
 	1 0 0
 Result:
 	False

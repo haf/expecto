@@ -1,3 +1,6 @@
+#### 8.7.0 - 2019-01-08
+* Upgrade dependencies inc Argu 5.2. #300 thanks @AnthonyLloyd
+
 #### 8.6.5 - 2018-12-20
 * fix only getting Expectos stack trace. #298 thanks @AnthonyLloyd
 * fix Expecto fails silently on duplicate tests. #299 thanks @AnthonyLloyd
