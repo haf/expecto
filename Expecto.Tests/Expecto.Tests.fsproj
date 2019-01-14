@@ -11,6 +11,7 @@
     <Compile Include="SummaryTests.fs" />
     <Compile Include="FocusedTests.fs" />
     <Compile Include="FsCheckTests.fs" />
+    <Compile Include="StatisticsTests.fs" />
     <Compile Include="PerformanceTests.fs" />
     <Compile Include="Main.fs" />
     <None Include="paket.references" />

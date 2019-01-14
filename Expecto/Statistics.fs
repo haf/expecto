@@ -1,6 +1,18 @@
 namespace Expecto
 
 open System
+open System.Collections.Generic
+
+type SortedList() =
+  let l = LinkedList<int64>()
+  member __.Add(i:int64) =
+    let rec add (node:LinkedListNode<int64>) =
+      if isNull node then l.AddLast i |> ignore
+      elif node.Value > i then l.AddBefore(node, i) |> ignore
+      else add node.Next
+    add l.First
+  member __.ToSeq() =
+      l :> int64 seq
 
 type SampleStatistics =
   { N:int
@@ -55,3 +67,30 @@ module internal Statistics =
     elif abs w.T > Array.get tInv01 (min w.DF (Array.length tInv01) - 1) then sign w.T |> Some
     elif abs w.T < Array.get tInv99 (min w.DF (Array.length tInv99) - 1) then Some 0
     else None
+
+  type RankCount = {mutable Count1:int; mutable Count2:int}
+  let mannWhitneyUTest (s:SortedList<_,RankCount>) =
+    let mutable n1 = 0
+    let mutable n2 = 0
+    let mutable r1 = 0
+    let mutable r2 = 0
+    let mutable st = 0
+    s.Values
+    |> Seq.iter (fun v ->
+      let c1 = v.Count1
+      let c2 = v.Count2
+      let c = c1 + c2
+      let r = (n1+n2) * 2 + c + 1
+      n1 <- n1 + c1
+      n2 <- n2 + c2
+      r1 <- r1 + r * c1
+      r2 <- r2 + r * c2
+      st <- st + c*c*c - c
+    )
+    let u1 = r1 - n1*(n1+1)
+    let u2 = r2 - n2*(n2+1)
+    let u = float(min u1 u2) * 0.5
+    let m = float(n1 * n2) * 0.5
+    let n = n1 + n2
+    let s = sqrt(m / 6.0 * (float(n+1) - float st / float(n*(n-1))))
+    u,m,s,(m-u)/s
