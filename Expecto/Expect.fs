@@ -653,11 +653,11 @@ let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) message =
   let rec compare pos =
     match s1.Read(buf, 0, 1), s2.Read(buf, 1, 1) with
     | x, y when x <> y ->
-      Tests.failtestf "%s. Not equal at pos %d" message pos
+      failtestf "%s. Not equal at pos %d" message pos
     | 0, _ ->
       ()
     | _ when buf.[0] <> buf.[1] ->
-      Tests.failtestf "%s. Not equal at pos %d" message pos
+      failtestf "%s. Not equal at pos %d" message pos
     | _ ->
       compare (pos + 1)
   compare 0
@@ -670,18 +670,18 @@ let isFasterThanSub (f1:Performance.Measurer<_,_>->'a) (f2:Performance.Measurer<
 
   match Performance.timeCompare f1 f2 with
   | Performance.ResultNotTheSame (r1, r2)->
-    Tests.failtestNoStackf
+    failtestNoStackf
       "%s. Expected function results to be the same (%A vs %A)." format r1 r2
   | Performance.MetricTooShort (s,p) ->
-    Tests.failtestNoStackf
+    failtestNoStackf
       "%s. Expected metric (%s) to be much longer than the machine resolution (%s)."
       format (toString s) (toString p)
   | Performance.MetricEqual (s1,s2) ->
-    Tests.failtestNoStackf
+    failtestNoStackf
       "%s. Expected f1 (%s) to be faster than f2 (%s) but are equal."
       format (toString s1) (toString s2)
   | Performance.MetricMoreThan (s1,s2) ->
-    Tests.failtestNoStackf
+    failtestNoStackf
       "%s. Expected f1 (%s) to be faster than f2 (%s) but is ~%.0f%% slower."
       format (toString s1) (toString s2) ((s1.mean/s2.mean-1.0)*100.0)
   | Performance.MetricLessThan (s1,s2) ->
@@ -699,3 +699,43 @@ let isFasterThan (f1:unit->'a) (f2:unit->'a) message =
   isFasterThanSub (fun measurer -> measurer f1 ())
                   (fun measurer -> measurer f2 ())
                   message
+
+/// Expects function `f1` is faster than `f2`. Measurer used to measure only a
+/// subset of the functions. Statistical test to 99.99% confidence level using
+/// the median and Mann-Whitney test.
+let isFasterThanSubMedian (f1:Performance.Measurer<_,_>->'a)
+                          (f2:Performance.Measurer<_,_>->'a) format =
+  let toString (s:SampleStatistics) =
+    sprintf "%.4f ± %.4f ms" s.mean s.meanStandardError
+
+  match Performance.timeCompareMedian f1 f2 with
+  | Performance.ResultNotTheSame (r1, r2)->
+    failtestNoStackf
+      "%s. Expected function results to be the same (%A vs %A)." format r1 r2
+  | Performance.MetricTooShort (s,p) ->
+    failtestNoStackf
+      "%s. Expected metric (%s) to be much longer than the machine resolution (%s)."
+      format (toString s) (toString p)
+  | Performance.MetricEqual (s1,s2) ->
+    failtestNoStackf
+      "%s. Expected f1 (%s) to be faster than f2 (%s) but are equal."
+      format (toString s1) (toString s2)
+  | Performance.MetricMoreThan (s1,s2) ->
+    failtestNoStackf
+      "%s. Expected f1 (%s) to be faster than f2 (%s) but is ~%.0f%% slower."
+      format (toString s1) (toString s2) ((s1.mean/s2.mean-1.0)*100.0)
+  | Performance.MetricLessThan (s1,s2) ->
+    Impl.logger.log Info (
+      eventX "{message}. f1 ({sample1}) is {percent} faster than f2 ({sample2})."
+      >> setField "message" format
+      >> setField "sample1" (toString s1)
+      >> setField "percent" (sprintf "~%.0f%%" ((1.0-s1.mean/s2.mean)*100.0))
+      >> setField "sample2" (toString s2))
+    |> Async.StartImmediate
+
+/// Expects function `f1` is faster than `f2`. Statistical test to 99.99%
+/// confidence level using the median and Mann-Whitney test.
+let isFasterThanMedian (f1:unit->'a) (f2:unit->'a) message =
+  isFasterThanSubMedian (fun measurer -> measurer f1 ())
+                        (fun measurer -> measurer f2 ())
+                        message

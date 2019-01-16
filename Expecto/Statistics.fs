@@ -69,7 +69,8 @@ module internal Statistics =
     else None
 
   type RankCount = {mutable Count1:int; mutable Count2:int}
-  let mannWhitneyUTest (s:SortedList<_,RankCount>) =
+
+  let mannWhitneyZScore (s:SortedList<_,RankCount>) =
     let mutable n1 = 0
     let mutable n2 = 0
     let mutable r1 = 0
@@ -89,8 +90,8 @@ module internal Statistics =
     )
     let u1 = r1 - n1*(n1+1)
     let u2 = r2 - n2*(n2+1)
-    let u = float(min u1 u2) * 0.5
-    let m = float(n1 * n2) * 0.5
+    let u = float(min u1 u2)
+    let m = float(n1 * n2)
     let n = n1 + n2
-    let s = sqrt(m / 6.0 * (float(n+1) - float st / float(n*(n-1))))
-    u,m,s,(m-u)/s
+    let s = sqrt(m / 3.0 * (float(n+1) - float st / float(n*(n-1))))
+    if u1>u2 then (m-u)/s else (u-m)/s

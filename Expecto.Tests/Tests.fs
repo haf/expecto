@@ -1071,25 +1071,29 @@ let performance =
   testSequenced <| testList "performance" [
 
     testCase "1 <> 2" (fun _ ->
-      Expect.isFasterThan (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
+      Expect.isFasterThanMedian
+        (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
     )
     |> assertTestFailsWithMsgContaining "same"
 
     testCase "half is faster" <| fun _ ->
-      Expect.isFasterThan (fun () -> repeat10000 log 76.0)
-                          (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
-                          "half is faster"
+      Expect.isFasterThanMedian
+        (fun () -> repeat10000 log 76.0)
+        (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
+        "half is faster"
 
     testCase "double is faster should fail" (fun _ ->
-      Expect.isFasterThan (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
-                          (fun () -> repeat10000 log 76.0)
-                          "double is faster should fail"
+      Expect.isFasterThanMedian
+        (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
+        (fun () -> repeat10000 log 76.0)
+        "double is faster should fail"
       ) |> assertTestFailsWithMsgContaining "slower"
 
     ptestCase "same function is faster should fail" (fun _ ->
-      Expect.isFasterThan (fun () -> repeat100000 log 76.0)
-                          (fun () -> repeat100000 log 76.0)
-                          "same function is faster should fail"
+      Expect.isFasterThanMedian
+        (fun () -> repeat100000 log 76.0)
+        (fun () -> repeat100000 log 76.0)
+        "same function is faster should fail"
       ) |> assertTestFailsWithMsgContaining "equal"
 
     testCase "matrix" <| fun _ ->
@@ -1117,9 +1121,10 @@ let performance =
             for j = 0 to n-1 do
               t <- t + a.[i,j] * b.[j,k]
             c.[i,k] <- t
-      Expect.isFasterThanSub (fun measurer -> reset(); measurer mulIKJ ())
-                             (fun measurer -> reset(); measurer mulIJK ())
-                             "ikj faster than ijk"
+      Expect.isFasterThanSubMedian
+        (fun measurer -> reset(); measurer mulIKJ ())
+        (fun measurer -> reset(); measurer mulIJK ())
+        "ikj faster than ijk"
 
 #if FSCHECK_TESTS
     testCase "popcount" (fun _ ->

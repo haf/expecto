@@ -20,19 +20,19 @@ let runSHA256() = sha256.ComputeHash data
 let performance =
   testSequenced <| testList "performance cryptography tests" [
 
-    ptestCase "md5 equals sha256" (fun _ ->
-      Expect.isFasterThan runMD5 runSHA256 "MD5 equals SHA256 should fail"
+    testCase "md5 equals sha256" (fun _ ->
+      Expect.isFasterThanMedian runMD5 runSHA256 "MD5 equals SHA256 should fail"
     ) |> assertTestFailsWithMsgContaining "same"
 
-    ptestCase "sha256 versus md5" (fun _ ->
-      Expect.isFasterThan
+    testCase "sha256 versus md5" (fun _ ->
+      Expect.isFasterThanMedian
         (runSHA256 >> ignore |> repeat10)
         (runMD5 >> ignore |> repeat10)
         "SHA256 is faster than MD5 should fail"
     ) |> assertTestFailsWithMsgContaining "slower"
 
-    ptestCase "md5 versus sha256" <| fun _ ->
-      Expect.isFasterThan
+    testCase "md5 versus sha256" <| fun _ ->
+      Expect.isFasterThanMedian
         (runMD5 >> ignore |> repeat10)
         (runSHA256 >> ignore |> repeat10)
         "MD5 is faster than SHA256"

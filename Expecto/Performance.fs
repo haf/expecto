@@ -1,6 +1,7 @@
 namespace Expecto
 
 open System
+open System.Collections.Generic
 open Expecto.Logging
 open Expecto.Logging.Message
 
@@ -18,7 +19,8 @@ module Performance =
     | MetricLessThan of s1:SampleStatistics * s2:SampleStatistics
     | MetricMoreThan of s1:SampleStatistics * s2:SampleStatistics
     | MetricEqual of s1:SampleStatistics * s2:SampleStatistics
-  let inline private measureCompare metric f1 f2 =
+
+  let private measureCompare metric f1 f2 =
     let r1 = f1 id
     let r2 = f2 id
     if r1 <> r2 then ResultNotTheSame (r1,r2)
@@ -53,6 +55,64 @@ module Performance =
                )
           )
 
+  let private measureCompareMedian metric f1 f2 =
+    let r1 = f1 id
+    let r2 = f2 id
+    if r1 <> r2 then ResultNotTheSame (r1,r2)
+    else
+
+      let rankCount = SortedList<int64,RankCount>()
+
+      let stats f = Seq.initInfinite (fun _ -> metric f) |> sampleStatistics
+      let stats1 f =
+        Seq.initInfinite (fun _ ->
+          let m = metric f
+          match rankCount.TryGetValue m with
+          | false,_ -> rankCount.Add(m, {Count1=1;Count2=0})
+          | true,r -> r.Count1 <- r.Count1 + 1
+          m
+        )
+        |> sampleStatistics
+
+      let stats2 f =
+        Seq.initInfinite (fun _ ->
+          let m = metric f
+          match rankCount.TryGetValue m with
+          | false,_ -> rankCount.Add(m, {Count1=0;Count2=1})
+          | true,r -> r.Count2 <- r.Count2 + 1
+          m
+        )
+        |> sampleStatistics
+
+
+      let machinePrecisionFunction = (fun m -> m (fun () -> Unchecked.defaultof<_>) ())
+      stats machinePrecisionFunction |> Seq.item 2 |> ignore
+
+      let precision =
+        stats machinePrecisionFunction
+        |> Seq.skip 5
+        |> Seq.head
+
+      Seq.zip (stats1 f1) (stats2 f2)
+      |> Seq.skip 10
+      |> Seq.pick (fun (s1,s2) ->
+
+        let inline areCloseEnough() =
+          let s1,s2 = if s1.mean>s2.mean then s1,s2 else s2,s1
+          let numberOfSD = 2.325 // Equivalent to 99.99% confidence level
+          s1.mean + numberOfSD * s1.meanStandardError - (s2.mean - numberOfSD * s2.meanStandardError) < (s1.mean + s2.mean) * 0.5 * 0.005
+
+        if max s1.mean s2.mean < precision.mean * 5.0 then
+          MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision) |> Some
+        elif areCloseEnough() then MetricEqual (s1,s2) |> Some
+        else
+          let z = mannWhitneyZScore rankCount
+          let zCritical = 3.890591886 // 99.99% two-tailed =NORM.S.INV(0.0001/2)
+          if z <= -zCritical then MetricLessThan (s1,s2) |> Some
+          elif z >= zCritical then MetricMoreThan (s1,s2) |> Some
+          else None
+        )
+
   type Measurer<'a,'b> = ('a->'b) -> ('a->'b)
 
   let inline private measureMetric startMetric endMetric (f:Measurer<_,_>->_) =
@@ -80,6 +140,15 @@ module Performance =
   /// Time comparison for two given functions to a 99.99% confidence level.
   let timeCompare (f1:Measurer<_,_> -> _) (f2:Measurer<_,_> -> _) =
     match measureCompare timeMetric f1 f2 with
+    | ResultNotTheSame (r1,r2) -> ResultNotTheSame (r1,r2)
+    | MetricTooShort (s,p) -> MetricTooShort (toMilliseconds s,toMilliseconds p)
+    | MetricEqual (s1,s2) -> MetricEqual (toMilliseconds s1,toMilliseconds s2)
+    | MetricMoreThan (s1,s2) -> MetricMoreThan (toMilliseconds s1,toMilliseconds s2)
+    | MetricLessThan (s1,s2) -> MetricLessThan (toMilliseconds s1,toMilliseconds s2)
+
+  /// Time comparison for two given functions to a 99.99% confidence level.
+  let timeCompareMedian (f1:Measurer<_,_> -> _) (f2:Measurer<_,_> -> _) =
+    match measureCompareMedian timeMetric f1 f2 with
     | ResultNotTheSame (r1,r2) -> ResultNotTheSame (r1,r2)
     | MetricTooShort (s,p) -> MetricTooShort (toMilliseconds s,toMilliseconds p)
     | MetricEqual (s1,s2) -> MetricEqual (toMilliseconds s1,toMilliseconds s2)
