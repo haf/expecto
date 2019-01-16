@@ -1,3 +1,6 @@
+#### 8.8.0 - 2019-02-01
+* add isFasterThanMedian thanks @AnthonyLloyd
+
 #### 8.7.0 - 2019-01-08
 * Upgrade dependencies inc Argu 5.2. #300 thanks @AnthonyLloyd
 
