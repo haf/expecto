@@ -38,9 +38,11 @@ module Performance =
       |> Seq.pick (fun (s1,s2) ->
 
         let inline areCloseEnough() =
-          let s1,s2 = if s1.mean>s2.mean then s1,s2 else s2,s1
-          let numberOfSD = 2.325 // Equivalent to 99.99% confidence level
-          s1.mean + numberOfSD * s1.meanStandardError - (s2.mean - numberOfSD * s2.meanStandardError) < (s1.mean + s2.mean) * 0.5 * 0.005
+          let meanPointFivePercent = (s1.mean + s2.mean) * 0.5 * 0.005
+          abs(s1.mean-s2.mean) < meanPointFivePercent
+          &&
+            let differenceSD = sqrt(s1.variance/float s1.N+s2.variance/float s2.N)
+            differenceSD * normInv99_995 < meanPointFivePercent
 
         if max s1.mean s2.mean < precision.mean * 5.0 then
           MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision) |> Some

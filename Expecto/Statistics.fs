@@ -38,6 +38,10 @@ module internal Statistics =
   /// Student's t-distribution inverse for the 99.99% probability by degrees of freedom.
   let private tInv99 = [|1.571E-04;1.414E-04;1.360E-04;1.333E-04;1.317E-04;1.306E-04;1.299E-04;1.293E-04;1.289E-04;1.285E-04;1.282E-04;1.280E-04;1.278E-04;1.276E-04;1.274E-04;1.273E-04;1.272E-04;1.271E-04;1.270E-04;1.269E-04;1.268E-04;1.268E-04;1.267E-04;1.266E-04;1.266E-04;1.265E-04;1.265E-04;1.265E-04;1.264E-04;1.264E-04;1.263E-04;1.263E-04;1.263E-04;1.263E-04;1.262E-04;1.262E-04;1.262E-04;1.262E-04;1.261E-04;1.261E-04;1.261E-04;1.261E-04;1.261E-04;1.260E-04;1.260E-04;1.260E-04;1.260E-04;1.260E-04;1.260E-04;1.260E-04;1.259E-04;1.259E-04;1.259E-04;1.259E-04;1.259E-04;1.259E-04;1.259E-04;1.259E-04;1.259E-04;1.259E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.258E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.257E-04;1.256E-04;1.256E-04|]
 
+  /// Inverse normal for 99.995%. Two-tailed 99.99% Z-Score.
+  [<Literal>]
+  let normInv99_995 = 3.890591886 // =NORM.S.INV(0.99995)
+
   type WelchStatistic = {T:float;DF:int}
 
   /// Welch's t-test statistic for two given sample statistics.
@@ -49,7 +53,7 @@ module internal Statistics =
           else sqr(f1+f2)/(sqr f1/float(s1.N-1)+sqr f2/float(s2.N-1)) |> int
     }
 
-  /// Welch's t-test for a given Welch statistic using a 0.01% confidence level.
+  /// Welch's t-test for a given Welch statistic using a 99.99% confidence level.
   let welchTest w =
     if Double.IsNaN w.T then None
     elif abs w.T > Array.get tInv01 (min w.DF (Array.length tInv01) - 1) then sign w.T |> Some
