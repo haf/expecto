@@ -68,6 +68,10 @@ module internal Statistics =
     elif abs w.T < Array.get tInv99 (min w.DF (Array.length tInv99) - 1) then Some 0
     else None
 
+  /// Inverse normal for 99.995%. Two-tailed 99.99% Z-Score.
+  [<Literal>]
+  let normInv99_995 = 3.890591886 // =NORM.S.INV(0.99995)
+
   type RankCount = {mutable Count1:int; mutable Count2:int}
 
   let mannWhitneyZScore (s:SortedList<_,RankCount>) =

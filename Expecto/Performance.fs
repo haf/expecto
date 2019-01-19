@@ -40,9 +40,11 @@ module Performance =
       |> Seq.pick (fun (s1,s2) ->
 
         let inline areCloseEnough() =
-          let s1,s2 = if s1.mean>s2.mean then s1,s2 else s2,s1
-          let numberOfSD = 2.325 // Equivalent to 99.99% confidence level
-          s1.mean + numberOfSD * s1.meanStandardError - (s2.mean - numberOfSD * s2.meanStandardError) < (s1.mean + s2.mean) * 0.5 * 0.005
+          let meanPointFivePercent = (s1.mean + s2.mean) * 0.5 * 0.005
+          abs(s1.mean-s2.mean) < meanPointFivePercent
+          &&
+            let differenceSD = sqrt(s1.variance/float s1.N+s2.variance/float s2.N)
+            differenceSD * normInv99_995 < meanPointFivePercent
 
         if max s1.mean s2.mean < precision.mean * 5.0 then
           MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision) |> Some
@@ -84,11 +86,10 @@ module Performance =
         )
         |> sampleStatistics
 
-
-      let machinePrecisionFunction = (fun m -> m (fun () -> Unchecked.defaultof<_>) ())
-      stats machinePrecisionFunction |> Seq.item 2 |> ignore
-
       let precision =
+        let machinePrecisionFunction =
+          (fun m -> m (fun () -> Unchecked.defaultof<_>) ())
+        stats machinePrecisionFunction |> Seq.item 2 |> ignore
         stats machinePrecisionFunction
         |> Seq.skip 5
         |> Seq.head
@@ -98,20 +99,21 @@ module Performance =
       |> Seq.pick (fun (s1,s2) ->
 
         let inline areCloseEnough() =
-          let s1,s2 = if s1.mean>s2.mean then s1,s2 else s2,s1
-          let numberOfSD = 2.325 // Equivalent to 99.99% confidence level
-          s1.mean + numberOfSD * s1.meanStandardError - (s2.mean - numberOfSD * s2.meanStandardError) < (s1.mean + s2.mean) * 0.5 * 0.005
+          let meanPointFivePercent = (s1.mean + s2.mean) * 0.5 * 0.005
+          abs(s1.mean-s2.mean) < meanPointFivePercent
+          &&
+            let differenceSD = sqrt(s1.variance/float s1.N+s2.variance/float s2.N)
+            differenceSD * normInv99_995 < meanPointFivePercent
 
         if max s1.mean s2.mean < precision.mean * 5.0 then
           MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision) |> Some
         elif areCloseEnough() then MetricEqual (s1,s2) |> Some
         else
           let z = mannWhitneyZScore rankCount
-          let zCritical = 3.890591886 // 99.99% two-tailed =NORM.S.INV(0.0001/2)
-          if z <= -zCritical then MetricLessThan (s1,s2) |> Some
-          elif z >= zCritical then MetricMoreThan (s1,s2) |> Some
+          if z < -normInv99_995 then MetricLessThan (s1,s2) |> Some
+          elif z > normInv99_995 then MetricMoreThan (s1,s2) |> Some
           else None
-        )
+      )
 
   type Measurer<'a,'b> = ('a->'b) -> ('a->'b)
 
