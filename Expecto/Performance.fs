@@ -44,7 +44,7 @@ module Performance =
           abs(s1.mean-s2.mean) < meanPointFivePercent
           &&
             let differenceSD = sqrt(s1.variance/float s1.N+s2.variance/float s2.N)
-            differenceSD * normInv99_995 < meanPointFivePercent
+            differenceSD * NormInv99_995 < meanPointFivePercent
 
         if max s1.mean s2.mean < precision.mean * 5.0 then
           MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision) |> Some
@@ -103,15 +103,15 @@ module Performance =
           abs(s1.mean-s2.mean) < meanPointFivePercent
           &&
             let differenceSD = sqrt(s1.variance/float s1.N+s2.variance/float s2.N)
-            differenceSD * normInv99_995 < meanPointFivePercent
+            differenceSD * NormInv99_995 < meanPointFivePercent
 
         if max s1.mean s2.mean < precision.mean * 5.0 then
           MetricTooShort ((if s1.mean<s2.mean then s2 else s1),precision) |> Some
         elif areCloseEnough() then MetricEqual (s1,s2) |> Some
         else
           let z = mannWhitneyZScore rankCount
-          if z < -normInv99_995 then MetricLessThan (s1,s2) |> Some
-          elif z > normInv99_995 then MetricMoreThan (s1,s2) |> Some
+          if z < -NormInv99_995 then MetricLessThan (s1,s2) |> Some
+          elif z > NormInv99_995 then MetricMoreThan (s1,s2) |> Some
           else None
       )
 

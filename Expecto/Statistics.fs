@@ -24,19 +24,17 @@ type SampleStatistics =
 module internal Statistics =
   let inline private sqr x = x*x
 
-
   /// Inverse normal for 99.995%. Two-tailed 99.99% Z-Score.
   [<Literal>]
-  let normInv99_995 = 3.890591886 // =NORM.S.INV(0.99995)
+  let NormInv99_995 = 3.890591886 // =NORM.S.INV(0.99995)
 
-  let initialIntermediateStatistics =
-    0,0.0,0.0
+  let initialIntermediateStatistics = 0,0.0,0.0
 
   let inline updateIntermediateStatistics (n,m,s) x =
     let m' = m+(x-m)/float(n+1)
     let s'= s+(x-m)*(x-m')
     // Reject as outlier if more than 4 s.d.
-    if (x-m')*(x-m') * float n > (normInv99_995 * normInv99_995) * s' then printfn "Removed %A from %A = %f" (n+1,x) (m',sqrt(s'/float(n-1))) (abs(x-m')/sqrt(s'/float n)); n,m,s
+    if (x-m')*(x-m') * float n > (NormInv99_995 * NormInv99_995) * s' then printfn "Removed %A from %A = %f" (n+1,x) (m',sqrt(s'/float(n-1))) (abs(x-m')/sqrt(s'/float n)); n,m,s
     else n+1,m',s'
 
   let inline intermediateToSampleStatistics (n,m,s) =
