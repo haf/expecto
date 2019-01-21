@@ -29,8 +29,11 @@ module internal Statistics =
     0,0.0,0.0
 
   let inline updateIntermediateStatistics (n,m,s) x =
-    let m'=m+(x-m)/float(n+1)
-    n+1,m',s+(x-m)*(x-m')
+    let m' = m+(x-m)/float(n+1)
+    let s'= s+(x-m)*(x-m')
+    // Reject as outlier if more than 4 s.d.
+    if (x-m')*(x-m') * float n > (3.890591886 * 3.890591886) * s' then printfn "Removed %A from %A = %f" (n+1,x) (m',sqrt(s'/float(n-1))) (abs(x-m')/sqrt(s'/float n)); n,m,s
+    else n+1,m',s'
 
   let inline intermediateToSampleStatistics (n,m,s) =
     {N=n;mean=m;variance=s/float(n-1)}
@@ -39,7 +42,6 @@ module internal Statistics =
   let inline sampleStatistics s =
     Seq.map float s
     |> Seq.scan updateIntermediateStatistics initialIntermediateStatistics
-    |> Seq.skip 3
     |> Seq.map intermediateToSampleStatistics
 
   /// Scale the statistics for the given underlying random variable change of scale.

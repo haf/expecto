@@ -249,7 +249,7 @@ let expecto =
     testSequenced <| testList "Timeout" [
       testCaseAsync "fail" <| async {
         let test = TestCase(Async.Sleep 100 |> Async |> Test.timeout 10, Normal)
-        let! result = Impl.evalTestsSilent test
+        let! result = evalTestsSilent test
         let summary = { results = result
                         duration = TimeSpan.Zero
                         maxMemory = 0L
@@ -259,7 +259,7 @@ let expecto =
       }
       testCaseAsync "pass" <| async {
         let test = TestCase(Sync ignore |> Test.timeout 1000, Normal)
-        let! result = Impl.evalTestsSilent test
+        let! result = evalTestsSilent test
         let summary = { results = result
                         duration = TimeSpan.Zero
                         maxMemory = 0L
@@ -897,7 +897,7 @@ let expecto =
 
         testCase "affine sequence pass" <| fun _ ->
           let bytes = Text.Encoding.UTF8.GetBytes("1\r\n2\r\n3\r\n")
-          use stream = new IO.MemoryStream(bytes)
+          use stream = new MemoryStream(bytes)
           let ofStreamByChunk chunkSize (stream: System.IO.Stream) =
             let buffer = Array.zeroCreate<byte> chunkSize
             seq { while stream.Length <> stream.Position do
@@ -1071,28 +1071,28 @@ let performance =
   testSequenced <| testList "performance" [
 
     testCase "1 <> 2" (fun _ ->
-      Expect.isFasterThanMedian
+      Expect.isFasterThan
         (fun () -> 1) (fun () -> 2) "1 equals 2 should fail"
     )
     |> assertTestFailsWithMsgContaining "same"
 
     testCase "half is faster" <| fun _ ->
-      Expect.isFasterThanMedian
+      Expect.isFasterThan
         (fun () -> repeat10000 log 76.0)
         (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
         "half is faster"
 
     testCase "double is faster should fail" (fun _ ->
-      Expect.isFasterThanMedian
+      Expect.isFasterThan
         (fun () -> repeat10000 log 76.0 |> ignore; repeat10000 log 76.0)
         (fun () -> repeat10000 log 76.0)
         "double is faster should fail"
       ) |> assertTestFailsWithMsgContaining "slower"
 
     ptestCase "same function is faster should fail" (fun _ ->
-      Expect.isFasterThanMedian
-        (fun () -> repeat100000 log 76.0)
-        (fun () -> repeat100000 log 76.0)
+      Expect.isFasterThan
+        (fun () -> repeat10000 log 76.0)
+        (fun () -> repeat10000 log 76.0)
         "same function is faster should fail"
       ) |> assertTestFailsWithMsgContaining "equal"
 
