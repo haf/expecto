@@ -446,23 +446,19 @@ module Impl =
     { result        : TestResult
       count         : int
       meanDuration  : float
-      maxDuration   : float
-      totalVariance : float }
+      maxDuration   : float }
     member x.duration = TimeSpan.FromMilliseconds x.meanDuration
     static member single result duration =
       { result        = result
         count         = 1
         meanDuration  = duration
-        maxDuration   = duration
-        totalVariance = 0.0 }
-    static member (+)(s:TestSummary,(r,d):TestResult*float) =
-      let n,m,v = Statistics.updateIntermediateStatistics
-                    (s.count,s.meanDuration,s.totalVariance) d
+        maxDuration   = duration }
+    static member (+)(s:TestSummary,(r,x):TestResult*float) =
       { result        = TestResult.max s.result r
-        count         = n
-        meanDuration  = m
-        maxDuration   = max s.maxDuration d
-        totalVariance = v }
+        count         = s.count + 1
+        meanDuration  =
+          s.meanDuration + (x-s.meanDuration)/float(s.count + 1)
+        maxDuration   = max s.maxDuration x }
 
   type TestRunSummary =
     { results   : (FlatTest*TestSummary) list
