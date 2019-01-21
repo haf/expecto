@@ -22,8 +22,12 @@ type SampleStatistics =
   member s.meanStandardError = sqrt(s.variance/float s.N)
 
 module internal Statistics =
-
   let inline private sqr x = x*x
+
+
+  /// Inverse normal for 99.995%. Two-tailed 99.99% Z-Score.
+  [<Literal>]
+  let normInv99_995 = 3.890591886 // =NORM.S.INV(0.99995)
 
   let initialIntermediateStatistics =
     0,0.0,0.0
@@ -32,7 +36,7 @@ module internal Statistics =
     let m' = m+(x-m)/float(n+1)
     let s'= s+(x-m)*(x-m')
     // Reject as outlier if more than 4 s.d.
-    if (x-m')*(x-m') * float n > (3.890591886 * 3.890591886) * s' then printfn "Removed %A from %A = %f" (n+1,x) (m',sqrt(s'/float(n-1))) (abs(x-m')/sqrt(s'/float n)); n,m,s
+    if (x-m')*(x-m') * float n > (normInv99_995 * normInv99_995) * s' then printfn "Removed %A from %A = %f" (n+1,x) (m',sqrt(s'/float(n-1))) (abs(x-m')/sqrt(s'/float n)); n,m,s
     else n+1,m',s'
 
   let inline intermediateToSampleStatistics (n,m,s) =
@@ -70,12 +74,7 @@ module internal Statistics =
     elif abs w.T < Array.get tInv99 (min w.DF (Array.length tInv99) - 1) then Some 0
     else None
 
-  /// Inverse normal for 99.995%. Two-tailed 99.99% Z-Score.
-  [<Literal>]
-  let normInv99_995 = 3.890591886 // =NORM.S.INV(0.99995)
-
   type RankCount = {mutable Count1:int; mutable Count2:int}
-
   let mannWhitneyZScore (s:SortedList<_,RankCount>) =
     let mutable n1 = 0
     let mutable n2 = 0
