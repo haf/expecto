@@ -1240,7 +1240,7 @@ module Impl =
       if progressStarted then
         ProgressIndicator.stop()
 
-      ANSIOutputWriter.close ()
+      ANSIOutputWriter.close()
 
       return testSummary.errorCode
     }
@@ -1436,6 +1436,13 @@ module Tests =
       | l -> List.toArray l |> AggregateException |> raise
     )
   Console.CancelKeyPress |> Event.add (fun _ -> afterRunTestsInvoke())
+
+  /// Expecto atomic printfn shadow function
+  let printfn format =
+    let sb = System.Text.StringBuilder()
+    Printf.kbprintf (fun () ->
+      sb.ToString() + "\n" |> Console.Write
+    ) sb format
 
   /// The full name of the currently running test
   let testName() = TestNameHolder.Name
@@ -1853,23 +1860,13 @@ module Tests =
   let runTestsInAssembly config args =
     runTestsInAssemblyWithCancel CancellationToken.None config args
 
-// TODO: docs
-type Accuracy =
-  { absolute: float
-    relative: float }
+type Accuracy = { absolute: float; relative: float }
 
-// TODO: docs
-[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Accuracy =
   let inline areCloseLhs a b = abs(a-b)
   let inline areCloseRhs m a b = m.absolute + m.relative * max (abs a) (abs b)
   let inline areClose m a b = areCloseLhs a b <= areCloseRhs m a b
-
-  let low =
-    {absolute=1e-6; relative=1e-3}
-  let medium =
-    {absolute=1e-8; relative=1e-5}
-  let high =
-    {absolute=1e-10; relative=1e-7}
-  let veryHigh =
-    {absolute=1e-12; relative=1e-9}
+  let low = {absolute=1e-6; relative=1e-3}
+  let medium = {absolute=1e-8; relative=1e-5}
+  let high = {absolute=1e-10; relative=1e-7}
+  let veryHigh = {absolute=1e-12; relative=1e-9}
