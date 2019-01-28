@@ -31,7 +31,7 @@ NUGET
       FSharp.Core (>= 3.1.2.5) - restriction: || (== net461) (&& (== netcoreapp2.0) (< netstandard1.6)) (&& (== netcoreapp2.1) (< netstandard1.6)) (&& (== netstandard2.0) (< netstandard1.6))
       FSharp.Core (>= 4.0.1.7-alpha) - restriction: || (&& (== net461) (>= netstandard1.6)) (== netcoreapp2.0) (== netcoreapp2.1) (== netstandard2.0)
       NETStandard.Library (>= 1.6) - restriction: || (&& (== net461) (>= netstandard1.6)) (== netcoreapp2.0) (== netcoreapp2.1) (== netstandard2.0)
-    Microsoft.CodeAnalysis.Analyzers (2.6.2) - restriction: || (== net461) (&& (== netcoreapp2.0) (>= net46)) (&& (== netcoreapp2.1) (>= net46)) (&& (== netstandard2.0) (>= net46))
+    Microsoft.CodeAnalysis.Analyzers (2.6.3) - restriction: || (== net461) (&& (== netcoreapp2.0) (>= net46)) (&& (== netcoreapp2.1) (>= net46)) (&& (== netstandard2.0) (>= net46))
     Microsoft.CodeAnalysis.Common (2.10) - restriction: || (== net461) (&& (== netcoreapp2.0) (>= net46)) (&& (== netcoreapp2.1) (>= net46)) (&& (== netstandard2.0) (>= net46))
       Microsoft.CodeAnalysis.Analyzers (>= 2.6.1)
       System.AppContext (>= 4.3)

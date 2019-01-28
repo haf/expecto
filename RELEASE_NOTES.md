@@ -1,3 +1,8 @@
+#### 8.8.0 - 2019-01-28
+* Better isFasterThan equal stopping criteria. thanks @AnthonyLloyd
+* Remove outliers in isFasterThan statistics. thanks @AnthonyLloyd
+* Add atomic printfn shadow function. #267 thanks @AnthonyLloyd
+
 #### 8.7.0 - 2019-01-08
 * Upgrade dependencies inc Argu 5.2. #300 thanks @AnthonyLloyd
 
