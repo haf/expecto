@@ -1613,6 +1613,23 @@ module Tests =
   /// The default configuration for Expecto.
   let defaultConfig = ExpectoConfig.defaultConfig
 
+  module Args =
+    type Parser<'a> = (string[] * int * int) -> 'a option
+    let none case : Parser<_> =
+      fun (_,_,l) -> if l=0 then Some case else None
+    let string case : Parser<_> =
+      fun (ss,i,l) -> if l=1 then Some(case ss.[i]) else None
+    let list (parser:_->Parser<_>) case : Parser<_> =
+        fun (ss,i,l) ->
+            List.init l (fun j -> (parser id (ss,i+j,1)).Value)
+            |> case |> Some
+    let inline private tryParse (s:string) =
+        let mutable r = Unchecked.defaultof<_>
+        if (^a : (static member TryParse: string * ^a byref -> bool) (s, &r)) then Some r else None
+    let inline parse case : Parser<_> =
+        fun (ss,i,l) ->
+            if l=1 then tryParse ss.[i] |> Option.map case else None
+
   /// The CLI arguments are the parameters that are possible to send to Expecto
   /// and change the runner's behaviour.
   type CLIArguments =
@@ -1666,6 +1683,32 @@ module Tests =
         | My_Spirit_Is_Weak -> "removes spirits from the output."
         | Allow_Duplicate_Names -> "allow duplicate test names."
         | No_Spinner -> "disable the spinner progress update."
+
+  let options = [
+      "--sequenced", "Doesn't run the tests in parallel.", Args.none Sequenced
+      "--parallel", "Runs all tests in parallel (default).", Args.none Parallel
+      "--parallel-workers", "Number of parallel workers (defaults to the number of logical processors).", Args.parse Parallel_Workers
+      "--stress", "Run the tests randomly for the given number of minutes.", Args.parse Stress
+      "--stress-timeout", "Time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).", Args.parse Stress_Timeout
+      "--stress_memory_limit", "Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).", Args.parse Stress_Memory_Limit
+      "--fail-on-focused-tests", "This will make the test runner fail if focused tests exist.", Args.none Fail_On_Focused_Tests
+      "--debug", "Extra verbose printing. Useful to combine with --sequenced.", Args.none Debug
+      "--log-name", "Process name to log under (default: \"Expecto\").", Args.string Log_Name
+      "--filter", "Filters the list of tests by a hierarchy that's slash (/) separated.", Args.string Filter
+      "--filter-test-list", "Filters the list of test lists by a substring.", Args.string Filter_Test_List
+      "--filter-test-case", "Filters the list of test cases by a substring.", Args.string Filter_Test_Case
+      "--run", "Runs only provided tests.", Args.list Args.string Run
+      "--list-tests", "Doesn't run tests, but prints out list of tests instead.", Args.none List_Tests
+      "--summary", "Prints out summary after all tests are finished.", Args.none Summary
+      "--version", "Prints out version information.", Args.none Version
+      "--summary-location", "Prints out summary after all tests are finished including their source code location.", Args.none Summary_Location
+      "--fscheck-max-tests", "FsCheck maximum number of tests (default: 100).", Args.parse FsCheck_Max_Tests
+      "--fscheck-start-size", "FsCheck start size (default: 1).", Args.parse FsCheck_Start_Size
+      "--fscheck-end-size", "FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.parse FsCheck_End_Size
+      "--my-spirit-is-weak", "Removes spirits from the output.", Args.none My_Spirit_Is_Weak
+      "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
+      "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
+  ]
 
   type FillFromArgsResult =
     | ArgsRun of ExpectoConfig
@@ -1859,14 +1902,3 @@ module Tests =
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
     runTestsInAssemblyWithCancel CancellationToken.None config args
-
-type Accuracy = { absolute: float; relative: float }
-
-module Accuracy =
-  let inline areCloseLhs a b = abs(a-b)
-  let inline areCloseRhs m a b = m.absolute + m.relative * max (abs a) (abs b)
-  let inline areClose m a b = areCloseLhs a b <= areCloseRhs m a b
-  let low = {absolute=1e-6; relative=1e-3}
-  let medium = {absolute=1e-8; relative=1e-5}
-  let high = {absolute=1e-10; relative=1e-7}
-  let veryHigh = {absolute=1e-12; relative=1e-9}
