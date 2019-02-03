@@ -168,6 +168,16 @@ module internal Helpers =
     let orDefault def =
       function | Some a -> a | None -> def
 
+  module Result =
+    let sequence list =
+        List.fold (fun s i ->
+            match s,i with
+            | Ok l, Ok h -> Ok (h::l)
+            | Error l, Ok _ -> Error l
+            | Ok _, Error e -> Error [e]
+            | Error l, Error h -> Error (h::l)
+        ) (Ok []) list
+
   type Type with
     static member TryGetType t =
       try
@@ -1614,21 +1624,46 @@ module Tests =
   let defaultConfig = ExpectoConfig.defaultConfig
 
   module Args =
-    type Parser<'a> = (string[] * int * int) -> 'a option
+    open Microsoft.FSharp.Core
+    type Parser<'a> = (string[] * int * int) -> Result<'a,string>
     let none case : Parser<_> =
-      fun (_,_,l) -> if l=0 then Some case else None
+      fun (ss,i,l) ->
+        if l=0 then Ok case
+        else "requires no parameters but given: " + String.Join(" ",ss,i,l)
+             |> Error
     let string case : Parser<_> =
-      fun (ss,i,l) -> if l=1 then Some(case ss.[i]) else None
+      fun (ss,i,l) ->
+        match l with
+        | 1 -> case ss.[i] |> Ok
+        | 0 -> Error "requires one string parameter but given none"
+        | _ -> "requires one string parameter but given: " + String.Join(" ",ss,i,l)
+               |> Error
     let list (parser:_->Parser<_>) case : Parser<_> =
-        fun (ss,i,l) ->
-            List.init l (fun j -> (parser id (ss,i+j,1)).Value)
-            |> case |> Some
+      fun (ss,i,l) ->
+        if l=0 then Error "requires a list of one or more parameters"
+        else
+          List.init l (fun j -> (parser id (ss,i+j,1)))
+          |> Result.sequence
+          |> Result.map case
+          |> Result.mapError (fun i -> String.Join(", ", i))
     let inline private tryParse (s:string) =
-        let mutable r = Unchecked.defaultof<_>
-        if (^a : (static member TryParse: string * ^a byref -> bool) (s, &r)) then Some r else None
-    let inline parse case : Parser<_> =
-        fun (ss,i,l) ->
-            if l=1 then tryParse ss.[i] |> Option.map case else None
+      let mutable r = Unchecked.defaultof<_>
+      if (^a : (static member TryParse: string * ^a byref -> bool) (s, &r))
+      then Some r else None
+    let inline parse case : Parser<'a> =
+      fun (ss,i,l) ->
+        match l with
+        | 1 ->
+          match tryParse ss.[i] with
+          | Some i -> case i |> Ok
+          | None -> "failed to parse " + ss.[i] + " as " + typeof<'a>.Name |> Error
+        | 0 -> "requires one " + typeof<'a>.Name + " parameter but given none" |> Error
+        | _ -> "requires one string parameter but given: " + String.Join(" ",ss,i,l)
+               |> Error
+    let parseOptions (options:(string * string * Parser<'a>)) (ss:string[])
+        : Result<'a list,string> =
+      failwith "hi"
+
 
   /// The CLI arguments are the parameters that are possible to send to Expecto
   /// and change the runner's behaviour.
