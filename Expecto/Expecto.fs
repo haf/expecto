@@ -1658,12 +1658,33 @@ module Tests =
           | Some i -> case i |> Ok
           | None -> "failed to parse " + ss.[i] + " as " + typeof<'a>.Name |> Error
         | 0 -> "requires one " + typeof<'a>.Name + " parameter but given none" |> Error
-        | _ -> "requires one string parameter but given: " + String.Join(" ",ss,i,l)
+        | _ -> "requires one " + typeof<'a>.Name + " parameter but given: "
+               + String.Join(" ",ss,i,l)
                |> Error
-    let parseOptions (options:(string * string * Parser<'a>)) (ss:string[])
-        : Result<'a list,string> =
-      failwith "hi"
-
+    let parseOptions (options:(string * string * Parser<_>) list) (strings:string[]) =
+      let rec collect help args paramCount i =
+        let argsWithUnknown() =
+          if paramCount=0 then args
+          else let s = "unknown options: " + String.Join(" ",strings,i+1,paramCount)
+               Error s :: args
+        if i > 0 then
+          match List.tryFind (fun (s,_,_) -> s = strings.[i]) options with
+          | Some(_,_,parser) ->
+            let args = parser (strings,i+1,paramCount) :: args
+            collect help args 0 (i-1)
+          | None ->
+            if strings.[i] = "--help" then
+              collect true (argsWithUnknown()) 0 (i-1)
+            else
+              collect help args (paramCount+1) (i-1)
+        else
+          match help, argsWithUnknown() |> Result.sequence with
+          | false, Ok os -> List.rev os |> Ok
+          | true, Ok _ -> Error ""
+          | _, Error es ->
+            String.Join(", ", List.rev es)
+            |> Error
+      collect false [] 0 (strings.Length-1)
 
   /// The CLI arguments are the parameters that are possible to send to Expecto
   /// and change the runner's behaviour.
@@ -1725,7 +1746,7 @@ module Tests =
       "--parallel-workers", "Number of parallel workers (defaults to the number of logical processors).", Args.parse Parallel_Workers
       "--stress", "Run the tests randomly for the given number of minutes.", Args.parse Stress
       "--stress-timeout", "Time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).", Args.parse Stress_Timeout
-      "--stress_memory_limit", "Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).", Args.parse Stress_Memory_Limit
+      "--stress-memory-limit", "Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).", Args.parse Stress_Memory_Limit
       "--fail-on-focused-tests", "This will make the test runner fail if focused tests exist.", Args.none Fail_On_Focused_Tests
       "--debug", "Extra verbose printing. Useful to combine with --sequenced.", Args.none Debug
       "--log-name", "Process name to log under (default: \"Expecto\").", Args.string Log_Name
