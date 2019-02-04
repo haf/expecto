@@ -154,8 +154,12 @@ module internal Helpers =
   let inline dispose (d:IDisposable) = d.Dispose()
   let inline addFst a b = a,b
   let inline addSnd b a = a,b
+  let inline fst3 (a,_,_) = a
   let inline commaString (i:int) = i.ToString("#,##0")
-
+  let inline tryParse (s:string) =
+    let mutable r = Unchecked.defaultof<_>
+    if (^a : (static member TryParse: string * ^a byref -> bool) (s, &r))
+    then Some r else None
   module Seq =
     let cons x xs = seq { yield x; yield! xs }
 
@@ -1625,66 +1629,56 @@ module Tests =
 
   module Args =
     open Microsoft.FSharp.Core
-    type Parser<'a> = (string[] * int * int) -> Result<'a,string>
+    type Parser<'a> = (string[] * int * int) -> Result<'a,string> * int
     let none case : Parser<_> =
-      fun (ss,i,l) ->
-        if l=0 then Ok case
-        else "requires no parameters but given: " + String.Join(" ",ss,i,l)
-             |> Error
+      fun (_,_,l) -> Ok case, l
     let string case : Parser<_> =
       fun (ss,i,l) ->
-        match l with
-        | 1 -> case ss.[i] |> Ok
-        | 0 -> Error "requires one string parameter but given none"
-        | _ -> "requires one string parameter but given: " + String.Join(" ",ss,i,l)
-               |> Error
+        if l>0 then Ok(case ss.[i]), l-1
+        else Error "requires a parameter", 0
     let list (parser:_->Parser<_>) case : Parser<_> =
       fun (ss,i,l) ->
-        if l=0 then Error "requires a list of one or more parameters"
-        else
-          List.init l (fun j -> (parser id (ss,i+j,1)))
-          |> Result.sequence
-          |> Result.map case
-          |> Result.mapError (fun i -> String.Join(", ", i))
-    let inline private tryParse (s:string) =
-      let mutable r = Unchecked.defaultof<_>
-      if (^a : (static member TryParse: string * ^a byref -> bool) (s, &r))
-      then Some r else None
+        List.init l (fun j -> parser id (ss,i+j,1) |> fst)
+        |> Result.sequence
+        |> Result.map (fun l -> case(List.rev l))
+        |> Result.mapError (fun i -> String.Join(", ", i))
+        , 0
     let inline parse case : Parser<'a> =
       fun (ss,i,l) ->
-        match l with
-        | 1 ->
-          match tryParse ss.[i] with
-          | Some i -> case i |> Ok
-          | None -> "failed to parse " + ss.[i] + " as " + typeof<'a>.Name |> Error
-        | 0 -> "requires one " + typeof<'a>.Name + " parameter but given none" |> Error
-        | _ -> "requires one " + typeof<'a>.Name + " parameter but given: "
-               + String.Join(" ",ss,i,l)
-               |> Error
-    let parseOptions (options:(string * string * Parser<_>) list) (strings:string[]) =
-      let rec collect help args paramCount i =
-        let argsWithUnknown() =
-          if paramCount=0 then args
-          else let s = "unknown options: " + String.Join(" ",strings,i+1,paramCount)
-               Error s :: args
-        if i > 0 then
-          match List.tryFind (fun (s,_,_) -> s = strings.[i]) options with
-          | Some(_,_,parser) ->
-            let args = parser (strings,i+1,paramCount) :: args
-            collect help args 0 (i-1)
-          | None ->
-            if strings.[i] = "--help" then
-              collect true (argsWithUnknown()) 0 (i-1)
-            else
-              collect help args (paramCount+1) (i-1)
+        if l=0 then Error "requires a parameter", 0
         else
-          match help, argsWithUnknown() |> Result.sequence with
-          | false, Ok os -> List.rev os |> Ok
-          | true, Ok _ -> Error ""
-          | _, Error es ->
-            String.Join(", ", List.rev es)
-            |> Error
-      collect false [] 0 (strings.Length-1)
+          match tryParse ss.[i] with
+          | Some i -> Ok(case i), l-1
+          | None -> Error("cannot parse parameter '" + ss.[i] + "'"), l-1
+    let parseOptions (options:(string * string * Parser<_>) list) (strings:string[]) =
+      let rec updateUnknown unknown last length =
+        if length=0 then unknown
+        else updateUnknown (strings.[last]::unknown) (last-1) (length-1)
+      let rec collect help unknown args paramCount i =
+        if i>=0 then
+          let si = strings.[i]
+          if si = "--help" then
+            collect true (updateUnknown unknown (i+paramCount) paramCount) args 0 (i-1)
+          else
+            match List.tryFind (fst3 >> (=)si) options with
+            | Some(option,_,parser) ->
+              let arg, unknownCount = parser (strings,i+1,paramCount)
+              collect help
+                (updateUnknown unknown (i+paramCount) unknownCount)
+                (Result.mapError (fun i -> option + " " + i) arg::args) 0 (i-1)
+            | None -> collect help unknown args (paramCount+1) (i-1)
+        else
+          let unknown =
+            match updateUnknown unknown (paramCount-1) paramCount with
+            | [] -> None
+            | l -> String.Join(" ","unknown options:" :: l) |> Some
+          match help, Result.sequence args, unknown with
+          | false, Ok os, None -> Ok(List.rev os)
+          | true, Ok _, None -> Error []
+          | _, Ok _, Some u -> Error [u]
+          | _, r, None -> r
+          | _, Error es, Some u -> List.rev (u::es) |> Error
+      collect false [] [] 0 (strings.Length-1)
 
   /// The CLI arguments are the parameters that are possible to send to Expecto
   /// and change the runner's behaviour.

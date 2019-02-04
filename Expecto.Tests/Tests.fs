@@ -181,6 +181,9 @@ let tests =
 
 [<Tests>]
 let expecto =
+
+  let testArgs i o = Expect.equal (Args.parseOptions options i) o "testArgs"
+  
   testList "expecto" [
     testList "Setup & teardown 2" [
       // just demoing how you can use a higher-order function as setup/teardown
@@ -292,6 +295,156 @@ let expecto =
       yield testCase "from empty type" <| fun _ ->
           let test = testFromType EmptyModule.thisModuleType.Value
           Expect.isNone test ""
+    ]
+
+    testList "args" [
+      testAsync "empty" {
+        testArgs [||] (Ok [])
+      }
+      testAsync "one" {
+        testArgs [|"--sequenced"|] (Ok [Sequenced])
+      }
+      testAsync "two" {
+        testArgs [|"--parallel";"--sequenced"|]
+          (Ok [Parallel;Sequenced])
+      }
+      testAsync "three" {
+        testArgs [|"--sequenced";"--stress";"1.2";"--parallel"|]
+          (Ok [Sequenced;Stress 1.2;Parallel;])
+      }
+      testAsync "int" {
+        testArgs [|"--parallel-workers";"3"|]
+          (Ok [Parallel_Workers 3])
+      }
+      testAsync "int error" {
+          testArgs [|"--fscheck-end-size";"1.2"|]
+            (Result.Error ["--fscheck-end-size cannot parse parameter '1.2'"])
+      }
+      testAsync "float" {
+          testArgs [|"--stress-memory-limit";"3"|]
+            (Ok [Stress_Memory_Limit 3.0])
+      }
+      testAsync "float error" {
+          testArgs [|"--stress-memory-limit";"3sd"|]
+            (Result.Error ["--stress-memory-limit cannot parse parameter '3sd'"])
+      }
+      testAsync "missing string" {
+        testArgs [|"--log-name";"--sequenced"|]
+          (Result.Error ["--log-name requires a parameter"])
+      }
+      testAsync "missing int" {
+          testArgs [|"--fscheck-max-tests";"--parallel"|]
+            (Result.Error ["--fscheck-max-tests requires a parameter"])
+        }
+      testAsync "many" {
+        testArgs [|"--run";"one";"two";"three"|]
+          (Ok [Run ["one";"two";"three"]])
+      }
+      testAsync "many end" {
+        testArgs [|"--run";"one";"two";"three";"--parallel"|]
+          (Ok [Run ["one";"two";"three"];Parallel])
+      }
+      testAsync "unknown start" {
+        testArgs [|"hello";"--parallel";"--sequenced"|]
+          (Result.Error ["unknown options: hello"])
+      }
+      testAsync "unknown middle" {
+        testArgs [|"--parallel";"hello";"--sequenced"|]
+          (Result.Error ["unknown options: hello"])
+      }
+      testAsync "unknown end" {
+        testArgs [|"--parallel";"--sequenced";"hello"|]
+          (Result.Error ["unknown options: hello"])
+      }
+      testAsync "unknown all" {
+        testArgs [|"one";"--parallel";"two";"--fscheck-max-tests";"42";"three"|]
+          (Result.Error ["unknown options: one two three"])
+      }
+      testAsync "help" {
+        testArgs [|"--help"|]
+          (Result.Error [])
+      }
+      testAsync "help start" {
+        testArgs [|"--help";"--sequenced"|]
+          (Result.Error [])
+      }
+      testAsync "help end" {
+        testArgs [|"--sequenced";"--help"|]
+          (Result.Error [])
+      }
+      testAsync "help middle" {
+        testArgs [|"--sequenced";"--help";"--parallel"|]
+          (Result.Error [])
+      }
+      testAsync "help and unknown" {
+        testArgs [|"one";"--sequenced";"two";"--help";"three";"--parallel";"four"|]
+          (Result.Error ["unknown options: one two three four"])
+      }
+      testAsync "two errors" {
+        testArgs [|"one";"--filter"|]
+          (Result.Error ["--filter requires a parameter";"unknown options: one"])
+      }
+      testAsync "three errors" {
+        testArgs [|"--fscheck-start-size";"bb";"one";"--filter"|]
+          (Result.Error [
+            "--fscheck-start-size cannot parse parameter 'bb'"
+            "--filter requires a parameter"
+            "unknown options: one"
+          ])
+      }
+      testAsync "lots" {
+        let args = [|
+            "--sequenced"
+            "--parallel"
+            "--parallel-workers"; "3"
+            "--stress"; "0.1"
+            "--stress-timeout"; "100.1"
+            "--stress-memory-limit"; "128"
+            "--fail-on-focused-tests"
+            "--debug"
+            "--log-name"; "fred"
+            "--filter"; "phil"
+            "--filter-test-list"; "f list"
+            "--filter-test-case"; "f case"
+            "--run"; "a"; "b"; "c"
+            "--list-tests"
+            "--summary"
+            "--version"
+            "--summary-location"
+            "--fscheck-max-tests"; "5"
+            "--fscheck-start-size"; "10"
+            "--fscheck-end-size"; "20"
+            "--my-spirit-is-weak"
+            "--allow-duplicate-names"
+            "--no-spinner"
+        |]
+        let ok = [
+          Sequenced
+          Parallel
+          Parallel_Workers 3
+          Stress 0.1
+          Stress_Timeout 100.1
+          Stress_Memory_Limit 128.0
+          Fail_On_Focused_Tests
+          Debug
+          Log_Name "fred"
+          Filter "phil"
+          Filter_Test_List "f list"
+          Filter_Test_Case "f case"
+          Run ["a";"b";"c"]
+          List_Tests
+          Summary
+          Version
+          Summary_Location
+          FsCheck_Max_Tests 5
+          FsCheck_Start_Size 10
+          FsCheck_End_Size 20
+          My_Spirit_Is_Weak
+          Allow_Duplicate_Names
+          No_Spinner
+        ]
+        testArgs args (Ok ok)
+      }
     ]
 
     testList "parse args" [
