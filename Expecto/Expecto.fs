@@ -1662,20 +1662,18 @@ module Tests =
       collect false [] [] 0 (strings.Length-1)
 
     let usage commandName (options:(string * string * Parser<_>) list) =
-
-      let sb = Text.StringBuilder("USAGE:\n")
-      let spaces = "  "
+      let sb = Text.StringBuilder("USAGE: ")
       let add (text:string) = sb.Append(text) |> ignore
-      add spaces
       add commandName
-      add "[OPTIONS] ...\n\nOPTIONS:\n"
-
+      add " [OPTIONS] ...\n\nOPTIONS:\n"
       let maxLength =
         options |> Seq.map (fun (s,_,_) -> s.Length) |> Seq.max
-      options |> List.iter (fun (s,d,_) ->
-        add spaces
-        add (s.PadRight(maxLength))
-        add spaces
+      ["--help","Show this help message."]
+      |> Seq.append (Seq.map (fun (s,d,_) -> s,d) options)
+      |> Seq.iter (fun (s,d) ->
+        add "  "
+        add (s.PadRight maxLength)
+        add "  "
         add d
         add "\n"
       )
@@ -1733,26 +1731,26 @@ module Tests =
     | No_Spinner
 
   let options = [
-      "--sequenced", "Doesn't run the tests in parallel.", Args.none Sequenced
-      "--parallel", "Runs all tests in parallel (default).", Args.none Parallel
-      "--parallel-workers", "Number of parallel workers (defaults to the number of logical processors).", Args.parse Parallel_Workers
+      "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
+      "--parallel", "Run all tests in parallel (default).", Args.none Parallel
+      "--parallel-workers", "Set the number of parallel workers (defaults to the number of logical processors).", Args.parse Parallel_Workers
       "--stress", "Run the tests randomly for the given number of minutes.", Args.parse Stress
-      "--stress-timeout", "Time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).", Args.parse Stress_Timeout
-      "--stress-memory-limit", "Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).", Args.parse Stress_Memory_Limit
+      "--stress-timeout", "Set the time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).", Args.parse Stress_Timeout
+      "--stress-memory-limit", "Set the Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).", Args.parse Stress_Memory_Limit
       "--fail-on-focused-tests", "This will make the test runner fail if focused tests exist.", Args.none Fail_On_Focused_Tests
       "--debug", "Extra verbose printing. Useful to combine with --sequenced.", Args.none Debug
-      "--log-name", "Process name to log under (default: \"Expecto\").", Args.string Log_Name
+      "--log-name", "Set the process name to log under (default: \"Expecto\").", Args.string Log_Name
       "--filter", "Filters the list of tests by a hierarchy that's slash (/) separated.", Args.string Filter
-      "--filter-test-list", "Filters the list of test lists by a substring.", Args.string Filter_Test_List
-      "--filter-test-case", "Filters the list of test cases by a substring.", Args.string Filter_Test_Case
-      "--run", "Runs only provided tests.", Args.list Args.string Run
-      "--list-tests", "Doesn't run tests, but prints out list of tests instead.", Args.none List_Tests
-      "--summary", "Prints out summary after all tests are finished.", Args.none Summary
-      "--version", "Prints out version information.", Args.none Version
-      "--summary-location", "Prints out summary after all tests are finished including their source code location.", Args.none Summary_Location
-      "--fscheck-max-tests", "FsCheck maximum number of tests (default: 100).", Args.parse FsCheck_Max_Tests
-      "--fscheck-start-size", "FsCheck start size (default: 1).", Args.parse FsCheck_Start_Size
-      "--fscheck-end-size", "FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.parse FsCheck_End_Size
+      "--filter-test-list", "Filters the list of test lists by a given substring.", Args.string Filter_Test_List
+      "--filter-test-case", "Filters the list of test cases by a given substring.", Args.string Filter_Test_Case
+      "--run", "Runs only provided list of tests.", Args.list Args.string Run
+      "--list-tests", "Don't run tests, but prints out list of tests instead.", Args.none List_Tests
+      "--summary", "Print out a summary after all tests are finished.", Args.none Summary
+      "--version", "Print out version information.", Args.none Version
+      "--summary-location", "Print out a summary after all tests are finished including their source code location.", Args.none Summary_Location
+      "--fscheck-max-tests", "Set FsCheck maximum number of tests (default: 100).", Args.parse FsCheck_Max_Tests
+      "--fscheck-start-size", "Set FsCheck start size (default: 1).", Args.parse FsCheck_Start_Size
+      "--fscheck-end-size", "Set FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.parse FsCheck_End_Size
       "--my-spirit-is-weak", "Removes spirits from the output.", Args.none My_Spirit_Is_Weak
       "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
       "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
@@ -1775,17 +1773,14 @@ module Tests =
     /// Also checks if tests should be run or only listed
     let fillFromArgs baseConfig args =
       let getTestList (s:string) =
-        let all = s.Split ('/')
+        let all = s.Split('/')
         match all with
-        | [||] -> [||]
-        | [|_|] -> [||]
-        | xs -> xs.[0 .. all.Length - 2]
+        | [||] | [|_|] -> [||]
+        | xs -> xs.[0..all.Length-2]
 
       let getTestCase (s:string) =
-        let all = s.Split ('/')
-        match all with
-        | [||] -> ""
-        | xs -> xs.Last()
+        let i = s.LastIndexOf('/')
+        if i= -1 then s else s.Substring(i+1)
 
       let reduceKnown =
         function
@@ -1826,7 +1821,9 @@ module Tests =
           else
             ArgsRun config
       | Result.Error errors ->
-        let commandName = System.Environment.GetCommandLineArgs().[0]
+        let commandName =
+          System.Environment.GetCommandLineArgs().[0]
+          |> System.IO.Path.GetFileName
         ArgsUsage (Args.usage commandName options, errors)
 
   /// Prints out names of all tests for given test suite.

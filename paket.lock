@@ -95,7 +95,7 @@ NUGET
       System.Memory (>= 4.5) - restriction: || (&& (== net461) (< net46) (>= netstandard2.0)) (&& (== net461) (>= netcoreapp2.0)) (&& (== net461) (>= uap10.1)) (== netcoreapp2.0) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (== netstandard2.0)
       System.Security.AccessControl (>= 4.5)
       System.Security.Principal.Windows (>= 4.5)
-    Mono.Cecil (0.10.1)
+    Mono.Cecil (0.10.3)
       System.Collections (>= 4.0.11) - restriction: || (&& (== net461) (< net35)) (== netcoreapp2.0) (== netcoreapp2.1) (== netstandard2.0)
       System.IO.FileSystem (>= 4.0.1) - restriction: || (&& (== net461) (< net35)) (== netcoreapp2.0) (== netcoreapp2.1) (== netstandard2.0)
       System.IO.FileSystem.Primitives (>= 4.0.1) - restriction: || (&& (== net461) (< net35)) (== netcoreapp2.0) (== netcoreapp2.1) (== netstandard2.0)
