@@ -1762,6 +1762,43 @@ module Tests =
     | ArgsVersion of ExpectoConfig
     | ArgsUsage of usage:string * errors:string list
 
+  let private getTestList (s:string) =
+    let all = s.Split('/')
+    match all with
+    | [||] | [|_|] -> [||]
+    | xs -> xs.[0..all.Length-2]
+
+  let private getTestCase (s:string) =
+    let i = s.LastIndexOf('/')
+    if i= -1 then s else s.Substring(i+1)
+
+  let private foldCLIArgumentToConfig = function
+    | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
+    | Parallel -> fun o -> { o with parallel = true }
+    | Parallel_Workers n -> fun o -> { o with parallelWorkers = n }
+    | Stress n -> fun o  -> {o with
+                                stress = TimeSpan.FromMinutes n |> Some
+                                printer = TestPrinters.stressPrinter }
+    | Stress_Timeout n -> fun o -> { o with stressTimeout = TimeSpan.FromMinutes n }
+    | Stress_Memory_Limit n -> fun o -> { o with stressMemoryLimit = n }
+    | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
+    | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
+    | Log_Name name -> fun o -> { o with logName = Some name }
+    | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
+    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
+    | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
+    | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
+    | List_Tests -> id
+    | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
+    | Version -> id
+    | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter o.printer}
+    | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
+    | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
+    | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
+    | My_Spirit_Is_Weak -> id
+    | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
+    | No_Spinner -> fun o -> { o with noSpinner = true }
+
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
 
@@ -1772,48 +1809,10 @@ module Tests =
     /// to go into the compiled code to change how they are being run.
     /// Also checks if tests should be run or only listed
     let fillFromArgs baseConfig args =
-      let getTestList (s:string) =
-        let all = s.Split('/')
-        match all with
-        | [||] | [|_|] -> [||]
-        | xs -> xs.[0..all.Length-2]
-
-      let getTestCase (s:string) =
-        let i = s.LastIndexOf('/')
-        if i= -1 then s else s.Substring(i+1)
-
-      let reduceKnown =
-        function
-        | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
-        | Parallel -> fun o -> { o with parallel = true }
-        | Parallel_Workers n -> fun o -> { o with parallelWorkers = n }
-        | Stress n -> fun o  -> {o with
-                                    stress = TimeSpan.FromMinutes n |> Some
-                                    printer = TestPrinters.stressPrinter }
-        | Stress_Timeout n -> fun o -> { o with stressTimeout = TimeSpan.FromMinutes n }
-        | Stress_Memory_Limit n -> fun o -> { o with stressMemoryLimit = n }
-        | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
-        | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
-        | Log_Name name -> fun o -> { o with logName = Some name }
-        | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
-        | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
-        | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
-        | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
-        | List_Tests -> id
-        | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
-        | Version -> id
-        | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter o.printer}
-        | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
-        | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
-        | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
-        | My_Spirit_Is_Weak -> id
-        | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
-        | No_Spinner -> fun o -> { o with noSpinner = true }
-
       match Args.parseOptions options args with
       | Ok cliArguments ->
           let config =
-            Seq.fold (fun s a -> reduceKnown a s) baseConfig cliArguments
+            Seq.fold (fun s a -> foldCLIArgumentToConfig a s) baseConfig cliArguments
           if List.contains List_Tests cliArguments then
             ArgsList config
           elif List.contains Version cliArguments then
@@ -1884,19 +1883,32 @@ module Tests =
       printfn "EXPECTO! v%s\n\n%s" ExpectoConfig.expectoVersion usage
       if List.isEmpty errors then 0 else 1
     | ArgsList config ->
-      let tests = config.filter tests
-      listTests tests
+      config.filter tests
+      |> listTests
       0
     | ArgsRun config ->
-      runTests config tests
+      runTestsWithCancel ct config tests
     | ArgsVersion config ->
       printfn "EXPECTO! v%s\n" ExpectoConfig.expectoVersion
       runTestsWithCancel ct config tests
+
+  /// Runs all given tests with the supplied typed command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsWithCLIArgsAndCancel (ct:CancellationToken) args tests =
+    let config =
+      Seq.fold (fun s a -> foldCLIArgumentToConfig a s)
+        ExpectoConfig.defaultConfig args
+    runTestsWithCancel ct config tests
 
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithArgs config args tests =
     runTestsWithArgsAndCancel CancellationToken.None config args tests
+
+  /// Runs all given tests with the supplied typed command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsWithCLIArgs args tests =
+    runTestsWithCLIArgsAndCancel CancellationToken.None args tests
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
@@ -1908,5 +1920,19 @@ module Tests =
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
+  let runTestsInAssemblyWithCLIArgsAndCancel (ct:CancellationToken) args =
+    let config = { ExpectoConfig.defaultConfig
+                    with locate = getLocation (Assembly.GetEntryAssembly()) }
+    let config = Seq.fold (fun s a -> foldCLIArgumentToConfig a s) config args
+    let tests = testFromThisAssembly() |> Option.orDefault (TestList ([], Normal))
+    runTestsWithCancel ct config tests
+
+  /// Runs tests in this assembly with the supplied command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
     runTestsInAssemblyWithCancel CancellationToken.None config args
+
+  /// Runs tests in this assembly with the supplied command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsInAssemblyWithCLIArgs args =
+    runTestsInAssemblyWithCLIArgsAndCancel CancellationToken.None args
