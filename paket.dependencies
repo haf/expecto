@@ -3,7 +3,6 @@ framework net461, netstandard2.0, netcoreapp2.0, netcoreapp2.1
 storage:none
 
 nuget FSharp.Core 4.3.4
-nuget Argu ~> 5.1
 nuget FsCheck ~> 2.10
 nuget Hopac ~> 0.3
 nuget Mono.Cecil ~> 0.10

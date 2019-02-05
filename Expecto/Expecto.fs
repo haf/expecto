@@ -1423,7 +1423,6 @@ module Impl =
 module Tests =
   open Impl
   open Helpers
-  open Argu
   open Expecto.Logging
   open Expecto.Logging.Message
   open FSharp.Control.Tasks.CopiedDoNotReference.V2
@@ -1629,27 +1628,9 @@ module Tests =
 
   module Args =
     open Microsoft.FSharp.Core
+
     type Parser<'a> = (string[] * int * int) -> Result<'a,string> * int
-    let none case : Parser<_> =
-      fun (_,_,l) -> Ok case, l
-    let string case : Parser<_> =
-      fun (ss,i,l) ->
-        if l>0 then Ok(case ss.[i]), l-1
-        else Error "requires a parameter", 0
-    let list (parser:_->Parser<_>) case : Parser<_> =
-      fun (ss,i,l) ->
-        List.init l (fun j -> parser id (ss,i+j,1) |> fst)
-        |> Result.sequence
-        |> Result.map (fun l -> case(List.rev l))
-        |> Result.mapError (fun i -> String.Join(", ", i))
-        , 0
-    let inline parse case : Parser<'a> =
-      fun (ss,i,l) ->
-        if l=0 then Error "requires a parameter", 0
-        else
-          match tryParse ss.[i] with
-          | Some i -> Ok(case i), l-1
-          | None -> Error("cannot parse parameter '" + ss.[i] + "'"), l-1
+
     let parseOptions (options:(string * string * Parser<_>) list) (strings:string[]) =
       let rec updateUnknown unknown last length =
         if length=0 then unknown
@@ -1680,6 +1661,50 @@ module Tests =
           | _, Error es, Some u -> List.rev (u::es) |> Error
       collect false [] [] 0 (strings.Length-1)
 
+    let usage commandName (options:(string * string * Parser<_>) list) =
+
+      let sb = Text.StringBuilder("USAGE:\n")
+      let spaces = "  "
+      let add (text:string) = sb.Append(text) |> ignore
+      add spaces
+      add commandName
+      add "[OPTIONS] ...\n\nOPTIONS:\n"
+
+      let maxLength =
+        options |> Seq.map (fun (s,_,_) -> s.Length) |> Seq.max
+      options |> List.iter (fun (s,d,_) ->
+        add spaces
+        add (s.PadRight(maxLength))
+        add spaces
+        add d
+        add "\n"
+      )
+      sb.ToString()
+
+    let none case : Parser<_> =
+      fun (_,_,l) -> Ok case, l
+
+    let string case : Parser<_> =
+      fun (ss,i,l) ->
+        if l>0 then Ok(case ss.[i]), l-1
+        else Error "requires a parameter", 0
+
+    let list (parser:_->Parser<_>) case : Parser<_> =
+      fun (ss,i,l) ->
+        List.init l (fun j -> parser id (ss,i+j,1) |> fst)
+        |> Result.sequence
+        |> Result.map (fun l -> case(List.rev l))
+        |> Result.mapError (fun i -> String.Join(", ", i))
+        , 0
+
+    let inline parse case : Parser<'a> =
+      fun (ss,i,l) ->
+        if l=0 then Error "requires a parameter", 0
+        else
+          match tryParse ss.[i] with
+          | Some i -> Ok(case i), l-1
+          | None -> Error("cannot parse parameter '" + ss.[i] + "'"), l-1
+
   /// The CLI arguments are the parameters that are possible to send to Expecto
   /// and change the runner's behaviour.
   type CLIArguments =
@@ -1706,33 +1731,6 @@ module Tests =
     | My_Spirit_Is_Weak
     | Allow_Duplicate_Names
     | No_Spinner
-
-    interface IArgParserTemplate with
-      member s.Usage =
-        match s with
-        | Sequenced -> "doesn't run the tests in parallel."
-        | Parallel -> "runs all tests in parallel (default)."
-        | Parallel_Workers _ -> "number of parallel workers (defaults to the number of logical processors)."
-        | Stress _ -> "run the tests randomly for the given number of minutes."
-        | Stress_Timeout _ -> "time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins)."
-        | Stress_Memory_Limit _ -> "stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB)."
-        | Fail_On_Focused_Tests -> "this will make the test runner fail if focused tests exist."
-        | Debug -> "extra verbose printing. Useful to combine with --sequenced."
-        | Log_Name _ -> "process name to log under (default: \"Expecto\")"
-        | Filter _ -> "filters the list of tests by a hierarchy that's slash (/) separated."
-        | Filter_Test_List _ -> "filters the list of test lists by a substring."
-        | Filter_Test_Case _ -> "filters the list of test cases by a substring."
-        | Run _ -> "runs only provided tests."
-        | List_Tests -> "doesn't run tests, but prints out list of tests instead."
-        | Summary -> "prints out summary after all tests are finished."
-        | Version -> "prints out version information."
-        | Summary_Location -> "prints out summary after all tests are finished including their source code location."
-        | FsCheck_Max_Tests _ -> "FsCheck maximum number of tests (default: 100)."
-        | FsCheck_Start_Size _ -> "FsCheck start size (default: 1)."
-        | FsCheck_End_Size _ -> "FsCheck end size (default: 100 for testing and 10,000 for stress testing)."
-        | My_Spirit_Is_Weak -> "removes spirits from the output."
-        | Allow_Duplicate_Names -> "allow duplicate test names."
-        | No_Spinner -> "disable the spinner progress update."
 
   let options = [
       "--sequenced", "Doesn't run the tests in parallel.", Args.none Sequenced
@@ -1764,10 +1762,8 @@ module Tests =
     | ArgsRun of ExpectoConfig
     | ArgsList of ExpectoConfig
     | ArgsVersion of ExpectoConfig
-    | ArgsUsage of usage:string * optionErrors:string list
-    | ArgsException of usage:string * exceptionMessage:string
+    | ArgsUsage of usage:string * errors:string list
 
-  // TODO: docs
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
 
@@ -1778,23 +1774,20 @@ module Tests =
     /// to go into the compiled code to change how they are being run.
     /// Also checks if tests should be run or only listed
     let fillFromArgs baseConfig args =
-      let parser = ArgumentParser.Create<CLIArguments>()
-      let flip f a b = f b a
-
-      let getTestList (s : string) =
+      let getTestList (s:string) =
         let all = s.Split ('/')
         match all with
         | [||] -> [||]
         | [|_|] -> [||]
         | xs -> xs.[0 .. all.Length - 2]
 
-      let getTastCase (s : string) =
+      let getTestCase (s:string) =
         let all = s.Split ('/')
         match all with
         | [||] -> ""
         | xs -> xs.Last()
 
-      let reduceKnown : CLIArguments -> (_ -> ExpectoConfig) =
+      let reduceKnown =
         function
         | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
         | Parallel -> fun o -> { o with parallel = true }
@@ -1809,7 +1802,7 @@ module Tests =
         | Log_Name name -> fun o -> { o with logName = Some name }
         | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
         | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
-        | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}
+        | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
         | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
         | List_Tests -> id
         | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
@@ -1822,56 +1815,33 @@ module Tests =
         | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
         | No_Spinner -> fun o -> { o with noSpinner = true }
 
-      let parsed =
-        try
-          parser.Parse(
-            args,
-            ignoreMissing = true,
-            ignoreUnrecognized = true,
-            raiseOnUsage = false)
-          |> Choice1Of2
-        with
-        | e -> Choice2Of2 e.Message
-
-      match parsed with
-      | Choice1Of2 parsed ->
-        if parsed.IsUsageRequested || List.isEmpty parsed.UnrecognizedCliParams |> not then
-          ArgsUsage (parser.PrintUsage(), parsed.UnrecognizedCliParams)
-        else
+      match Args.parseOptions options args with
+      | Ok cliArguments ->
           let config =
-            parsed.GetAllResults()
-            |> Seq.fold (flip reduceKnown) baseConfig
-          if parsed.Contains <@ List_Tests @> then
+            Seq.fold (fun s a -> reduceKnown a s) baseConfig cliArguments
+          if List.contains List_Tests cliArguments then
             ArgsList config
-          elif parsed.Contains <@ Version @> then
+          elif List.contains Version cliArguments then
             ArgsVersion config
           else
             ArgsRun config
-      | Choice2Of2 error ->
-        let upTo (s1:string) (s2:string) =
-          let i = s2.IndexOf(s1)
-          if i<0 then s2
-          else
-            s2.Substring(0,i)
-        ArgsException (parser.PrintUsage(), upTo "\n" error)
+      | Result.Error errors ->
+        let commandName = System.Environment.GetCommandLineArgs().[0]
+        ArgsUsage (Args.usage commandName options, errors)
 
   /// Prints out names of all tests for given test suite.
   let listTests test =
-    test
-    |> Test.toTestCodeList
+    Test.toTestCodeList test
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
   /// Prints out names of all tests for given test suite.
   let duplicatedNames test =
-    test
-    |> Test.toTestCodeList
+    Test.toTestCodeList test
     |> Seq.toList
     |> List.groupBy (fun t -> t.name)
-    |> List.choose ( function
-      | _, x :: _ :: _ ->
-        Some x.name
-      | _ ->
-        None
+    |> List.choose (function
+        | _, x :: _ :: _ -> Some x.name
+        | _ -> None
     )
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
@@ -1911,26 +1881,17 @@ module Tests =
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithArgsAndCancel (ct:CancellationToken) config args tests =
     match ExpectoConfig.fillFromArgs config args with
-    | ArgsException (usage, message) ->
-      printfn "%s\n" message
-      printfn "EXPECTO! v%s\n\n%s" ExpectoConfig.expectoVersion usage
-      1
-
     | ArgsUsage (usage, errors) ->
       if not (List.isEmpty errors) then
-        printfn "ERROR unknown options: %s\n" (String.Join(" ",errors))
+        printfn "ERROR: %s\n" (String.Join(" ",errors))
       printfn "EXPECTO! v%s\n\n%s" ExpectoConfig.expectoVersion usage
-
       if List.isEmpty errors then 0 else 1
-
     | ArgsList config ->
       let tests = config.filter tests
       listTests tests
       0
-
     | ArgsRun config ->
       runTests config tests
-
     | ArgsVersion config ->
       printfn "EXPECTO! v%s\n" ExpectoConfig.expectoVersion
       runTestsWithCancel ct config tests
