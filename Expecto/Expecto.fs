@@ -173,14 +173,15 @@ module internal Helpers =
       function | Some a -> a | None -> def
 
   module Result =
-    let sequence list =
-        List.fold (fun s i ->
-            match s,i with
-            | Ok l, Ok h -> Ok (h::l)
-            | Error l, Ok _ -> Error l
-            | Ok _, Error e -> Error [e]
-            | Error l, Error h -> Error (h::l)
-        ) (Ok []) list
+    let traverse f list =
+      List.fold (fun s i ->
+          match s,f i with
+          | Ok l, Ok h -> Ok (h::l)
+          | Error l, Ok _ -> Error l
+          | Ok _, Error e -> Error [e]
+          | Error l, Error h -> Error (h::l)
+      ) (Ok []) list
+    let sequence list = traverse id list
 
   type Type with
     static member TryGetType t =
@@ -1627,7 +1628,7 @@ module Tests =
   let defaultConfig = ExpectoConfig.defaultConfig
 
   module Args =
-    open Microsoft.FSharp.Core
+    open FSharp.Core
 
     type Parser<'a> = (string[] * int * int) -> Result<'a,string> * int
 
@@ -1635,25 +1636,25 @@ module Tests =
       let rec updateUnknown unknown last length =
         if length=0 then unknown
         else updateUnknown (strings.[last]::unknown) (last-1) (length-1)
-      let rec collect help unknown args paramCount i =
+      let rec collect isHelp unknown args paramCount i =
         if i>=0 then
-          let si = strings.[i]
-          if si = "--help" then
+          let currentArg = strings.[i]
+          if currentArg = "--help" then
             collect true (updateUnknown unknown (i+paramCount) paramCount) args 0 (i-1)
           else
-            match List.tryFind (fst3 >> (=)si) options with
+            match List.tryFind (fst3 >> (=)currentArg) options with
             | Some(option,_,parser) ->
               let arg, unknownCount = parser (strings,i+1,paramCount)
-              collect help
+              collect isHelp
                 (updateUnknown unknown (i+paramCount) unknownCount)
                 (Result.mapError (fun i -> option + " " + i) arg::args) 0 (i-1)
-            | None -> collect help unknown args (paramCount+1) (i-1)
+            | None -> collect isHelp unknown args (paramCount+1) (i-1)
         else
           let unknown =
             match updateUnknown unknown (paramCount-1) paramCount with
             | [] -> None
             | l -> String.Join(" ","unknown options:" :: l) |> Some
-          match help, Result.sequence args, unknown with
+          match isHelp, Result.sequence args, unknown with
           | false, Ok os, None -> Ok(List.rev os)
           | true, Ok _, None -> Error []
           | _, Ok _, Some u -> Error [u]
@@ -1689,8 +1690,8 @@ module Tests =
 
     let list (parser:_->Parser<_>) case : Parser<_> =
       fun (ss,i,l) ->
-        List.init l (fun j -> parser id (ss,i+j,1) |> fst)
-        |> Result.sequence
+        [i..i+l-1]
+        |> Result.traverse (fun j -> parser id (ss,j,1) |> fst)
         |> Result.map (fun l -> case(List.rev l))
         |> Result.mapError (fun i -> String.Join(", ", i))
         , 0
@@ -1823,6 +1824,7 @@ module Tests =
         let commandName =
           System.Environment.GetCommandLineArgs().[0]
           |> System.IO.Path.GetFileName
+          |> fun f -> if f.EndsWith(".dll") then "dotnet " + f else f
         ArgsUsage (Args.usage commandName options, errors)
 
   /// Prints out names of all tests for given test suite.
