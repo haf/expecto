@@ -154,8 +154,12 @@ module internal Helpers =
   let inline dispose (d:IDisposable) = d.Dispose()
   let inline addFst a b = a,b
   let inline addSnd b a = a,b
+  let inline fst3 (a,_,_) = a
   let inline commaString (i:int) = i.ToString("#,##0")
-
+  let inline tryParse (s:string) =
+    let mutable r = Unchecked.defaultof<_>
+    if (^a : (static member TryParse: string * ^a byref -> bool) (s, &r))
+    then Some r else None
   module Seq =
     let cons x xs = seq { yield x; yield! xs }
 
@@ -167,6 +171,17 @@ module internal Helpers =
       function | Some a -> a | None -> fn()
     let orDefault def =
       function | Some a -> a | None -> def
+
+  module Result =
+    let traverse f list =
+      List.fold (fun s i ->
+          match s,f i with
+          | Ok l, Ok h -> Ok (h::l)
+          | Error l, Ok _ -> Error l
+          | Ok _, Error e -> Error [e]
+          | Error l, Error h -> Error (h::l)
+      ) (Ok []) list
+    let sequence list = traverse id list
 
   type Type with
     static member TryGetType t =
@@ -1409,7 +1424,6 @@ module Impl =
 module Tests =
   open Impl
   open Helpers
-  open Argu
   open Expecto.Logging
   open Expecto.Logging.Message
   open FSharp.Control.Tasks.CopiedDoNotReference.V2
@@ -1613,6 +1627,83 @@ module Tests =
   /// The default configuration for Expecto.
   let defaultConfig = ExpectoConfig.defaultConfig
 
+  module Args =
+    open FSharp.Core
+
+    type Parser<'a> = (string[] * int * int) -> Result<'a,string> * int
+
+    let parseOptions (options:(string * string * Parser<_>) list) (strings:string[]) =
+      let rec updateUnknown unknown last length =
+        if length=0 then unknown
+        else updateUnknown (strings.[last]::unknown) (last-1) (length-1)
+      let rec collect isHelp unknown args paramCount i =
+        if i>=0 then
+          let currentArg = strings.[i]
+          if currentArg = "--help" then
+            collect true (updateUnknown unknown (i+paramCount) paramCount) args 0 (i-1)
+          else
+            match List.tryFind (fst3 >> (=)currentArg) options with
+            | Some(option,_,parser) ->
+              let arg, unknownCount = parser (strings,i+1,paramCount)
+              collect isHelp
+                (updateUnknown unknown (i+paramCount) unknownCount)
+                (Result.mapError (fun i -> option + " " + i) arg::args) 0 (i-1)
+            | None -> collect isHelp unknown args (paramCount+1) (i-1)
+        else
+          let unknown =
+            match updateUnknown unknown (paramCount-1) paramCount with
+            | [] -> None
+            | l -> String.Join(" ","unknown options:" :: l) |> Some
+          match isHelp, Result.sequence args, unknown with
+          | false, Ok os, None -> Ok(List.rev os)
+          | true, Ok _, None -> Error []
+          | _, Ok _, Some u -> Error [u]
+          | _, r, None -> r
+          | _, Error es, Some u -> List.rev (u::es) |> Error
+      collect false [] [] 0 (strings.Length-1)
+
+    let usage commandName (options:(string * string * Parser<_>) list) =
+      let sb = Text.StringBuilder("USAGE: ")
+      let add (text:string) = sb.Append(text) |> ignore
+      add commandName
+      add " [OPTIONS] ...\n\nOPTIONS:\n"
+      let maxLength =
+        options |> Seq.map (fun (s,_,_) -> s.Length) |> Seq.max
+      ["--help","Show this help message."]
+      |> Seq.append (Seq.map (fun (s,d,_) -> s,d) options)
+      |> Seq.iter (fun (s,d) ->
+        add "  "
+        add (s.PadRight maxLength)
+        add "  "
+        add d
+        add "\n"
+      )
+      sb.ToString()
+
+    let none case : Parser<_> =
+      fun (_,_,l) -> Ok case, l
+
+    let string case : Parser<_> =
+      fun (ss,i,l) ->
+        if l>0 then Ok(case ss.[i]), l-1
+        else Error "requires a parameter", 0
+
+    let list (parser:_->Parser<_>) case : Parser<_> =
+      fun (ss,i,l) ->
+        [i..i+l-1]
+        |> Result.traverse (fun j -> parser id (ss,j,1) |> fst)
+        |> Result.map (fun l -> case(List.rev l))
+        |> Result.mapError (fun i -> String.Join(", ", i))
+        , 0
+
+    let inline parse case : Parser<'a> =
+      fun (ss,i,l) ->
+        if l=0 then Error "requires a parameter", 0
+        else
+          match tryParse ss.[i] with
+          | Some i -> Ok(case i), l-1
+          | None -> Error("cannot parse parameter '" + ss.[i] + "'"), l-1
+
   /// The CLI arguments are the parameters that are possible to send to Expecto
   /// and change the runner's behaviour.
   type CLIArguments =
@@ -1640,41 +1731,75 @@ module Tests =
     | Allow_Duplicate_Names
     | No_Spinner
 
-    interface IArgParserTemplate with
-      member s.Usage =
-        match s with
-        | Sequenced -> "doesn't run the tests in parallel."
-        | Parallel -> "runs all tests in parallel (default)."
-        | Parallel_Workers _ -> "number of parallel workers (defaults to the number of logical processors)."
-        | Stress _ -> "run the tests randomly for the given number of minutes."
-        | Stress_Timeout _ -> "time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins)."
-        | Stress_Memory_Limit _ -> "stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB)."
-        | Fail_On_Focused_Tests -> "this will make the test runner fail if focused tests exist."
-        | Debug -> "extra verbose printing. Useful to combine with --sequenced."
-        | Log_Name _ -> "process name to log under (default: \"Expecto\")"
-        | Filter _ -> "filters the list of tests by a hierarchy that's slash (/) separated."
-        | Filter_Test_List _ -> "filters the list of test lists by a substring."
-        | Filter_Test_Case _ -> "filters the list of test cases by a substring."
-        | Run _ -> "runs only provided tests."
-        | List_Tests -> "doesn't run tests, but prints out list of tests instead."
-        | Summary -> "prints out summary after all tests are finished."
-        | Version -> "prints out version information."
-        | Summary_Location -> "prints out summary after all tests are finished including their source code location."
-        | FsCheck_Max_Tests _ -> "FsCheck maximum number of tests (default: 100)."
-        | FsCheck_Start_Size _ -> "FsCheck start size (default: 1)."
-        | FsCheck_End_Size _ -> "FsCheck end size (default: 100 for testing and 10,000 for stress testing)."
-        | My_Spirit_Is_Weak -> "removes spirits from the output."
-        | Allow_Duplicate_Names -> "allow duplicate test names."
-        | No_Spinner -> "disable the spinner progress update."
+  let options = [
+      "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
+      "--parallel", "Run all tests in parallel (default).", Args.none Parallel
+      "--parallel-workers", "Set the number of parallel workers (defaults to the number of logical processors).", Args.parse Parallel_Workers
+      "--stress", "Run the tests randomly for the given number of minutes.", Args.parse Stress
+      "--stress-timeout", "Set the time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).", Args.parse Stress_Timeout
+      "--stress-memory-limit", "Set the Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).", Args.parse Stress_Memory_Limit
+      "--fail-on-focused-tests", "This will make the test runner fail if focused tests exist.", Args.none Fail_On_Focused_Tests
+      "--debug", "Extra verbose printing. Useful to combine with --sequenced.", Args.none Debug
+      "--log-name", "Set the process name to log under (default: \"Expecto\").", Args.string Log_Name
+      "--filter", "Filters the list of tests by a hierarchy that's slash (/) separated.", Args.string Filter
+      "--filter-test-list", "Filters the list of test lists by a given substring.", Args.string Filter_Test_List
+      "--filter-test-case", "Filters the list of test cases by a given substring.", Args.string Filter_Test_Case
+      "--run", "Runs only provided list of tests.", Args.list Args.string Run
+      "--list-tests", "Don't run tests, but prints out list of tests instead.", Args.none List_Tests
+      "--summary", "Print out a summary after all tests are finished.", Args.none Summary
+      "--version", "Print out version information.", Args.none Version
+      "--summary-location", "Print out a summary after all tests are finished including their source code location.", Args.none Summary_Location
+      "--fscheck-max-tests", "Set FsCheck maximum number of tests (default: 100).", Args.parse FsCheck_Max_Tests
+      "--fscheck-start-size", "Set FsCheck start size (default: 1).", Args.parse FsCheck_Start_Size
+      "--fscheck-end-size", "Set FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.parse FsCheck_End_Size
+      "--my-spirit-is-weak", "Removes spirits from the output.", Args.none My_Spirit_Is_Weak
+      "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
+      "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
+  ]
 
   type FillFromArgsResult =
     | ArgsRun of ExpectoConfig
     | ArgsList of ExpectoConfig
     | ArgsVersion of ExpectoConfig
-    | ArgsUsage of usage:string * optionErrors:string list
-    | ArgsException of usage:string * exceptionMessage:string
+    | ArgsUsage of usage:string * errors:string list
 
-  // TODO: docs
+  let private getTestList (s:string) =
+    let all = s.Split('/')
+    match all with
+    | [||] | [|_|] -> [||]
+    | xs -> xs.[0..all.Length-2]
+
+  let private getTestCase (s:string) =
+    let i = s.LastIndexOf('/')
+    if i= -1 then s else s.Substring(i+1)
+
+  let private foldCLIArgumentToConfig = function
+    | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
+    | Parallel -> fun o -> { o with parallel = true }
+    | Parallel_Workers n -> fun o -> { o with parallelWorkers = n }
+    | Stress n -> fun o  -> {o with
+                                stress = TimeSpan.FromMinutes n |> Some
+                                printer = TestPrinters.stressPrinter }
+    | Stress_Timeout n -> fun o -> { o with stressTimeout = TimeSpan.FromMinutes n }
+    | Stress_Memory_Limit n -> fun o -> { o with stressMemoryLimit = n }
+    | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
+    | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
+    | Log_Name name -> fun o -> { o with logName = Some name }
+    | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
+    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
+    | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
+    | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
+    | List_Tests -> id
+    | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
+    | Version -> id
+    | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter o.printer}
+    | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
+    | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
+    | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
+    | My_Spirit_Is_Weak -> id
+    | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
+    | No_Spinner -> fun o -> { o with noSpinner = true }
+
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
 
@@ -1685,100 +1810,36 @@ module Tests =
     /// to go into the compiled code to change how they are being run.
     /// Also checks if tests should be run or only listed
     let fillFromArgs baseConfig args =
-      let parser = ArgumentParser.Create<CLIArguments>()
-      let flip f a b = f b a
-
-      let getTestList (s : string) =
-        let all = s.Split ('/')
-        match all with
-        | [||] -> [||]
-        | [|_|] -> [||]
-        | xs -> xs.[0 .. all.Length - 2]
-
-      let getTastCase (s : string) =
-        let all = s.Split ('/')
-        match all with
-        | [||] -> ""
-        | xs -> xs.Last()
-
-      let reduceKnown : CLIArguments -> (_ -> ExpectoConfig) =
-        function
-        | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
-        | Parallel -> fun o -> { o with parallel = true }
-        | Parallel_Workers n -> fun o -> { o with parallelWorkers = n }
-        | Stress n -> fun o  -> {o with
-                                    stress = TimeSpan.FromMinutes n |> Some
-                                    printer = TestPrinters.stressPrinter }
-        | Stress_Timeout n -> fun o -> { o with stressTimeout = TimeSpan.FromMinutes n }
-        | Stress_Memory_Limit n -> fun o -> { o with stressMemoryLimit = n }
-        | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
-        | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
-        | Log_Name name -> fun o -> { o with logName = Some name }
-        | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
-        | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
-        | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTastCase |> fun s -> s.Contains name )}
-        | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
-        | List_Tests -> id
-        | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
-        | Version -> id
-        | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter o.printer}
-        | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
-        | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
-        | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
-        | My_Spirit_Is_Weak -> id
-        | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
-        | No_Spinner -> fun o -> { o with noSpinner = true }
-
-      let parsed =
-        try
-          parser.Parse(
-            args,
-            ignoreMissing = true,
-            ignoreUnrecognized = true,
-            raiseOnUsage = false)
-          |> Choice1Of2
-        with
-        | e -> Choice2Of2 e.Message
-
-      match parsed with
-      | Choice1Of2 parsed ->
-        if parsed.IsUsageRequested || List.isEmpty parsed.UnrecognizedCliParams |> not then
-          ArgsUsage (parser.PrintUsage(), parsed.UnrecognizedCliParams)
-        else
+      match Args.parseOptions options args with
+      | Ok cliArguments ->
           let config =
-            parsed.GetAllResults()
-            |> Seq.fold (flip reduceKnown) baseConfig
-          if parsed.Contains <@ List_Tests @> then
+            Seq.fold (fun s a -> foldCLIArgumentToConfig a s) baseConfig cliArguments
+          if List.contains List_Tests cliArguments then
             ArgsList config
-          elif parsed.Contains <@ Version @> then
+          elif List.contains Version cliArguments then
             ArgsVersion config
           else
             ArgsRun config
-      | Choice2Of2 error ->
-        let upTo (s1:string) (s2:string) =
-          let i = s2.IndexOf(s1)
-          if i<0 then s2
-          else
-            s2.Substring(0,i)
-        ArgsException (parser.PrintUsage(), upTo "\n" error)
+      | Result.Error errors ->
+        let commandName =
+          System.Environment.GetCommandLineArgs().[0]
+          |> System.IO.Path.GetFileName
+          |> fun f -> if f.EndsWith(".dll") then "dotnet " + f else f
+        ArgsUsage (Args.usage commandName options, errors)
 
   /// Prints out names of all tests for given test suite.
   let listTests test =
-    test
-    |> Test.toTestCodeList
+    Test.toTestCodeList test
     |> Seq.iter (fun t -> printfn "%s" t.name)
 
   /// Prints out names of all tests for given test suite.
   let duplicatedNames test =
-    test
-    |> Test.toTestCodeList
+    Test.toTestCodeList test
     |> Seq.toList
     |> List.groupBy (fun t -> t.name)
-    |> List.choose ( function
-      | _, x :: _ :: _ ->
-        Some x.name
-      | _ ->
-        None
+    |> List.choose (function
+        | _, x :: _ :: _ -> Some x.name
+        | _ -> None
     )
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
@@ -1818,34 +1879,38 @@ module Tests =
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithArgsAndCancel (ct:CancellationToken) config args tests =
     match ExpectoConfig.fillFromArgs config args with
-    | ArgsException (usage, message) ->
-      printfn "%s\n" message
-      printfn "EXPECTO! v%s\n\n%s" ExpectoConfig.expectoVersion usage
-      1
-
     | ArgsUsage (usage, errors) ->
       if not (List.isEmpty errors) then
-        printfn "ERROR unknown options: %s\n" (String.Join(" ",errors))
+        printfn "ERROR: %s\n" (String.Join(" ",errors))
       printfn "EXPECTO! v%s\n\n%s" ExpectoConfig.expectoVersion usage
-
       if List.isEmpty errors then 0 else 1
-
     | ArgsList config ->
-      let tests = config.filter tests
-      listTests tests
+      config.filter tests
+      |> listTests
       0
-
     | ArgsRun config ->
-      runTests config tests
-
+      runTestsWithCancel ct config tests
     | ArgsVersion config ->
       printfn "EXPECTO! v%s\n" ExpectoConfig.expectoVersion
       runTestsWithCancel ct config tests
+
+  /// Runs all given tests with the supplied typed command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsWithCLIArgsAndCancel (ct:CancellationToken) args tests =
+    let config =
+      Seq.fold (fun s a -> foldCLIArgumentToConfig a s)
+        ExpectoConfig.defaultConfig args
+    runTestsWithCancel ct config tests
 
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithArgs config args tests =
     runTestsWithArgsAndCancel CancellationToken.None config args tests
+
+  /// Runs all given tests with the supplied typed command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsWithCLIArgs args tests =
+    runTestsWithCLIArgsAndCancel CancellationToken.None args tests
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
@@ -1857,16 +1922,19 @@ module Tests =
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
+  let runTestsInAssemblyWithCLIArgsAndCancel (ct:CancellationToken) args =
+    let config = { ExpectoConfig.defaultConfig
+                    with locate = getLocation (Assembly.GetEntryAssembly()) }
+    let config = Seq.fold (fun s a -> foldCLIArgumentToConfig a s) config args
+    let tests = testFromThisAssembly() |> Option.orDefault (TestList ([], Normal))
+    runTestsWithCancel ct config tests
+
+  /// Runs tests in this assembly with the supplied command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssembly config args =
     runTestsInAssemblyWithCancel CancellationToken.None config args
 
-type Accuracy = { absolute: float; relative: float }
-
-module Accuracy =
-  let inline areCloseLhs a b = abs(a-b)
-  let inline areCloseRhs m a b = m.absolute + m.relative * max (abs a) (abs b)
-  let inline areClose m a b = areCloseLhs a b <= areCloseRhs m a b
-  let low = {absolute=1e-6; relative=1e-3}
-  let medium = {absolute=1e-8; relative=1e-5}
-  let high = {absolute=1e-10; relative=1e-7}
-  let veryHigh = {absolute=1e-12; relative=1e-9}
+  /// Runs tests in this assembly with the supplied command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsInAssemblyWithCLIArgs args =
+    runTestsInAssemblyWithCLIArgsAndCancel CancellationToken.None args

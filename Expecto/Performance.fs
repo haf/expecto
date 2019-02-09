@@ -4,6 +4,17 @@ open System
 open Expecto.Logging
 open Expecto.Logging.Message
 
+type Accuracy = { absolute: float; relative: float }
+
+module Accuracy =
+  let inline areCloseLhs a b = abs(a-b)
+  let inline areCloseRhs m a b = m.absolute + m.relative * max (abs a) (abs b)
+  let inline areClose m a b = areCloseLhs a b <= areCloseRhs m a b
+  let low = {absolute=1e-6; relative=1e-3}
+  let medium = {absolute=1e-8; relative=1e-5}
+  let high = {absolute=1e-10; relative=1e-7}
+  let veryHigh = {absolute=1e-12; relative=1e-9}
+
 module Performance =
   open Statistics
   open System.Diagnostics
