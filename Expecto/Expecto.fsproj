@@ -25,8 +25,5 @@
     <Compile Include="CSharp.fs" />
     <Compile Include="Flip.Expect.fs" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'!='net461'">
-    <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />
-  </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
