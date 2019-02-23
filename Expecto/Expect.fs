@@ -51,8 +51,8 @@ let private printVerses (firstName:string) first (secondName:string) second =
     then '\n' else ' '
   let diffs = allDiffs first second
   sprintf "\n%s:%c%s\n%s:%c%s"
-    firstName prefix (highlightAllRed diffs first)
-    secondName prefix (highlightAllGreen diffs second)
+    firstName prefix (highlightAllGreen diffs first)
+    secondName prefix (highlightAllRed diffs second)
 
 /// Expects f to throw an exception.
 let throws f message =

@@ -82,7 +82,7 @@ let tests =
 
       test "fail - different content" {
         Expect.equal "Test" "Tes2" "Failing - string with different content"
-      } |> assertTestFailsWithMsgStarting "Failing - string with different content. String does not match at position 3. Expected char: '2', but got 't'.\nexpected: Tes\u001b[91m2\u001b[38;5;165m\n  actual: Tes\u001b[92mt\u001b[38;5;165m"
+      } |> assertTestFailsWithMsgStarting "Failing - string with different content. String does not match at position 3. Expected char: '2', but got 't'.\nexpected: Tes\u001b[92m2\u001b[38;5;165m\n  actual: Tes\u001b[91mt\u001b[38;5;165m"
     ]
 
     testList "record comparison" [
@@ -92,7 +92,7 @@ let tests =
 
       test "fail - different content" {
         Expect.equal {a = "dd"; b = "de" } {a = "dd"; b = "dw" } "Failing - record with different content"
-      } |> assertTestFailsWithMsgStarting "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\nexpected:\n{a = \"dd\";\n b = \"d\u001b[91mw\u001b[38;5;165m\";}\n  actual:\n{a = \"dd\";\n b = \"d\u001b[92me\u001b[38;5;165m\";}"
+      } |> assertTestFailsWithMsgStarting "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\nexpected:\n{a = \"dd\";\n b = \"d\u001b[92mw\u001b[38;5;165m\";}\n  actual:\n{a = \"dd\";\n b = \"d\u001b[91me\u001b[38;5;165m\";}"
     ]
 
     testList "sumTestResults" [
