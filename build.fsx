@@ -36,7 +36,7 @@ let owners = "Anthony Lloyd & Henrik Feldt (cloned from Fuchu by @mausch)"
 let projectUrl = "https://github.com/haf/expecto"
 let iconUrl = "https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png"
 let licenceUrl = "https://github.com/haf/expecto/blob/master/LICENSE"
-let copyright = "Copyright 2018"
+let copyright = "Copyright 2019"
 let mutable dotnetExePath = "dotnet"
 
 BuildServer.install [

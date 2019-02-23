@@ -97,10 +97,13 @@ let all =
         ]
 
       // check if we can fail on focused tests
-      if runTests { defaultConfig with
-                      failOnFocusedTests = true
-                      printer = TestPrinters.silent
-                      verbosity = Logging.LogLevel.Fatal } localList
+      if runTestsWithCLIArgs
+          [
+            Fail_On_Focused_Tests
+            Printer TestPrinters.silent
+            Verbosity Fatal
+            No_Spinner
+          ] [||] localList
          <> 1 then
         failwith "focused test check didn't fail"
     testCase "can run if no focused test was found" <| fun _ ->
@@ -112,11 +115,13 @@ let all =
         ]
 
       // check if we pass if no focused tests exist
-      if runTests { defaultConfig with
-                      failOnFocusedTests = true
-                      printer = TestPrinters.silent
-                      verbosity = Logging.LogLevel.Fatal
-                      noSpinner = true } localList
+      if runTestsWithCLIArgs
+          [
+            Fail_On_Focused_Tests
+            Printer TestPrinters.silent
+            Verbosity Fatal
+            No_Spinner
+          ] [||] localList
          <> 0 then
         failwith "focused test check didn't fail"
 ]
@@ -149,34 +154,32 @@ let configTests =
       testCase "same name" ignore
     ]
 
-  let silentConfig = {
-    defaultConfig with
-      verbosity = Fatal
-      printer = TestPrinters.silent
-      noSpinner = true
-   }
+  let silentConfig = [
+    Verbosity Fatal
+    Printer TestPrinters.silent
+    No_Spinner
+   ]
 
   testList "config tests" [
     testCase "parallel config works" <| fun _ ->
-      let retCode = runTests { silentConfig with ``parallel`` = false } dummyTests
+      let retCode = runTestsWithCLIArgs (Sequenced::silentConfig) [||] dummyTests
       Expect.equal retCode 0 "return code zero"
 
     testCase "parallel config overrides" <| fun _ ->
-      let retCode = runTests { silentConfig with
-                                ``parallel`` = false
-                                parallelWorkers = 8 } dummyTests
+      let retCode = runTestsWithCLIArgs (Parallel_Workers 8::Sequenced::silentConfig) [||]
+                      dummyTests
       Expect.equal retCode 0 "return code zero"
 
     testCase "none duplicate names are fine" <| fun _ ->
-      let retCode = runTests silentConfig nonDuplicateNamesTests
+      let retCode = runTestsWithCLIArgs silentConfig [||] nonDuplicateNamesTests
       Expect.equal retCode 0 "return code zero"
 
     testCase "duplicate names fails by default" <| fun _ ->
-      let retCode = runTests silentConfig duplicateNamesTests
+      let retCode = runTestsWithCLIArgs silentConfig [||] duplicateNamesTests
       Expect.equal retCode 1 "return code one"
 
     testCase "duplicate names ok if set in config" <| fun _ ->
-      let retCode = runTests { silentConfig with allowDuplicateNames = true }
+      let retCode = runTestsWithCLIArgs (Allow_Duplicate_Names::silentConfig) [||]
                       duplicateNamesTests
       Expect.equal retCode 0 "return code zero"
   ]

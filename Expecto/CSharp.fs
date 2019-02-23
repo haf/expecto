@@ -48,7 +48,9 @@ module Runner =
 
   let RunTests(config, tests) = runEval config tests
   let RunTestsWithArgs(config, args, tests) = runTestsWithArgs config args tests
+  let RunTestsWithCLIArgs(cliArgs, args, tests) = runTestsWithCLIArgs cliArgs args tests
   let RunTestsInAssembly(config, args) = runTestsInAssembly config args
+  let RunTestsInAssemblyWithCLIArgs(cliArgs, args) = runTestsInAssemblyWithCLIArgs cliArgs args
   let ListTests(tests) = listTests tests
   let TestList(name, tests: IEnumerable<Test>) = testList name (List.ofSeq tests)
   [<CompiledName("TestCase")>]

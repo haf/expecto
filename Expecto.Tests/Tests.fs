@@ -74,15 +74,15 @@ let tests =
 
       test "different length, actual is shorter" {
         Expect.equal "Test" "Test2" "Failing - string with different length"
-      } |> assertTestFailsWithMsgStarting "Failing - string with different length.\nExpected string to equal:\nTest2\n    ↑\nThe string differs at index 4.\nTest\n    ↑\nString `actual` was shorter than expected, at pos 4 for expected item '2'."
+      } |> assertTestFailsWithMsgStarting "Failing - string with different length. String actual was shorter than expected, at pos 4 for expected item '2'.\nexpected: Test2\n  actual: Test"
 
       test "different length, actual is longer" {
         Expect.equal "Test2" "Test" "Failing - string with different length"
-      } |> assertTestFailsWithMsgStarting "Failing - string with different length.\nExpected string to equal:\nTest\n    ↑\nThe string differs at index 4.\nTest2\n    ↑\nString `actual` was longer than expected, at pos 4 found item '2'."
+      } |> assertTestFailsWithMsgStarting "Failing - string with different length. String actual was longer than expected, at pos 4 found item '2'.\nexpected: Test\n  actual: Test2"
 
       test "fail - different content" {
         Expect.equal "Test" "Tes2" "Failing - string with different content"
-      } |> assertTestFailsWithMsgStarting "Failing - string with different content.\nExpected string to equal:\nTes2\n   ↑\nThe string differs at index 3.\nTest\n   ↑\nString does not match at position 3. Expected char: '2', but got 't'."
+      } |> assertTestFailsWithMsgStarting "Failing - string with different content. String does not match at position 3. Expected char: '2', but got 't'.\nexpected: Tes\u001b[4m2\u001b[24m\n  actual: Tes\u001b[4mt\u001b[24m"
     ]
 
     testList "record comparison" [
@@ -92,7 +92,7 @@ let tests =
 
       test "fail - different content" {
         Expect.equal {a = "dd"; b = "de" } {a = "dd"; b = "dw" } "Failing - record with different content"
-      } |> assertTestFailsWithMsgStarting "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\nExpected:\n{a = \"dd\";\n b = \"dw\";}\nActual:\n{a = \"dd\";\n b = \"de\";}"
+      } |> assertTestFailsWithMsgStarting "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\nexpected:\n{a = \"dd\";\n b = \"d\u001b[4mw\u001b[24m\";}\n  actual:\n{a = \"dd\";\n b = \"d\u001b[4me\u001b[24m\";}"
     ]
 
     testList "sumTestResults" [
@@ -527,31 +527,26 @@ let expecto =
         yield testCase "run with filter" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          Tests.runTestsWithArgs { defaultConfig with noSpinner = true }
-            [|"--filter"; "c/f"|] test ==? 0
+          runTestsWithCLIArgs [No_Spinner] [|"--filter"; "c/f"|] test ==? 0
           !count ==? 2
 
         yield testCase "run with filter test case" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          Tests.runTestsWithArgs { defaultConfig with noSpinner = true }
-            [|"--filter-test-case"; "a"|] test ==? 0
+          runTestsWithCLIArgs [No_Spinner] [|"--filter-test-case"; "a"|] test ==? 0
           !count ==? 2
 
         yield testCase "run with filter test list" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          Tests.runTestsWithArgs { defaultConfig with noSpinner = true }
-            [|"--filter-test-list"; "f"|] test ==? 0
+          runTestsWithCLIArgs [No_Spinner] [|"--filter-test-list"; "f"|] test ==? 0
           !count ==? 2
 
         yield testCase "run with run" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          Tests.runTestsWithArgs { defaultConfig with noSpinner = true }
-            [|"--run"; "a"; "c/d"; "c/f/h"|] test ==? 0
+          runTestsWithCLIArgs [No_Spinner] [|"--run"; "a"; "c/d"; "c/f/h"|] test ==? 0
           !count ==? 3
-
       ]
 
     ]
@@ -1389,126 +1384,126 @@ let stress =
       ]
 
     yield testAsync "single" {
-      let config =
-        { defaultConfig with
-            parallelWorkers = 8
-            stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal
-            noSpinner = true }
-      Expect.equal (runTests config (singleTest "single test")) 0 "one"
+      let config = [
+        Parallel_Workers 8
+        Stress 0.002
+        Stress_Timeout 0.2
+        Printer TestPrinters.silent
+        Verbosity Logging.LogLevel.Fatal
+        No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] (singleTest "single test")) 0 "one"
     }
 
     yield testAsync "memory" {
-      let config =
-        { defaultConfig with
-            parallelWorkers = 8
-            stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            stressMemoryLimit = 0.001
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal
-            noSpinner = true }
-      Expect.equal (runTests config (singleTest "single test") &&& 4) 4 "memory"
+      let config = [
+        Parallel_Workers 8
+        Stress 0.002
+        Stress_Timeout 0.2
+        Stress_Memory_Limit 0.001
+        Printer TestPrinters.silent
+        Verbosity Logging.LogLevel.Fatal
+        No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] (singleTest "single test") &&& 4) 4 "memory"
     }
 
     yield testAsync "never ending" {
-      let config =
-        { defaultConfig with
-            parallelWorkers = 8
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal
-            noSpinner = true }
-      Expect.equal (runTests config neverEndingTest) 8 "timeout"
+      let config = [
+        Parallel_Workers 8
+        Stress 0.1
+        Stress_Timeout 0.2
+        Printer TestPrinters.silent
+        Verbosity Logging.LogLevel.Fatal
+        No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] neverEndingTest) 8 "timeout"
     }
 
     yield testAsync "deadlock" {
       if Environment.ProcessorCount > 2 then
-        let config =
-          { defaultConfig with
-              parallelWorkers = 8
-              stress = TimeSpan.FromMilliseconds 10000.0 |> Some
-              stressTimeout = TimeSpan.FromMilliseconds 10000.0
-              printer = TestPrinters.silent
-              verbosity = Logging.LogLevel.Fatal
-              noSpinner = true }
-        Expect.equal (runTests config (deadlockTest "deadlock")) 8 "timeout"
+        let config = [
+          Parallel_Workers 8
+          Stress 0.1
+          Stress_Timeout 0.2
+          Printer TestPrinters.silent
+          Verbosity Logging.LogLevel.Fatal
+          No_Spinner
+        ]
+        Expect.equal (runTestsWithCLIArgs config [||] (deadlockTest "deadlock")) 8 "timeout"
     }
 
     yield testAsync "sequenced group" {
-      let config =
-        { defaultConfig with
-            parallelWorkers = 8
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal
-            noSpinner = true }
-      Expect.equal (runTests config (sequencedGroup())) 0 "no timeout"
+      let config = [
+        Parallel_Workers 8
+        Stress 0.1
+        Stress_Timeout 0.2
+        Printer TestPrinters.silent
+        Verbosity Logging.LogLevel.Fatal
+        No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] (sequencedGroup())) 0 "no timeout"
     }
 
     yield testAsync "two sequenced groups" {
-      let config =
-        { defaultConfig with
-            parallelWorkers = 8
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal
-            noSpinner = true }
-      Expect.equal (runTests config (twoSequencedGroups())) 0 "no timeout"
+      let config = [
+        Parallel_Workers 8
+        Stress 0.1
+        Stress_Timeout 0.2
+        Printer TestPrinters.silent
+        Verbosity Logging.LogLevel.Fatal
+        No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] (twoSequencedGroups())) 0 "no timeout"
     }
 
     yield testAsync "single sequenced" {
-      let config =
-        { defaultConfig with
-            ``parallel`` = false
-            stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal
-            noSpinner = true }
-      Expect.equal (runTests config (singleTest "single test")) 0 "one"
+      let config = [
+          Sequenced
+          Stress 0.002
+          Stress_Timeout 0.2
+          Printer TestPrinters.silent
+          Verbosity Logging.LogLevel.Fatal
+          No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] (singleTest "single test")) 0 "one"
     }
 
     yield testAsync "memory sequenced" {
-      let config =
-        { defaultConfig with
-            ``parallel`` = false
-            stress = TimeSpan.FromMilliseconds 100.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            stressMemoryLimit = 0.001
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal
-            noSpinner = true }
-      Expect.equal (runTests config (singleTest "single test")) 4 "memory"
+      let config = [
+          Sequenced
+          Stress 0.002
+          Stress_Timeout 0.2
+          Stress_Memory_Limit 0.001
+          Printer TestPrinters.silent
+          Verbosity Logging.LogLevel.Fatal
+          No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] (singleTest "single test")) 4 "memory"
     }
 
     yield testAsync "never ending sequenced" {
-      let config =
-        { defaultConfig with
-            ``parallel`` = false
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal
-            noSpinner = true }
-      Expect.equal (runTests config neverEndingTest) 8 "timeout"
+      let config = [
+          Sequenced
+          Stress 0.1
+          Stress_Timeout 0.2
+          Printer TestPrinters.silent
+          Verbosity Logging.LogLevel.Fatal
+          No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] neverEndingTest) 8 "timeout"
     }
 
     yield testAsync "deadlock sequenced" {
-      let config =
-        { defaultConfig with
-            ``parallel`` = false
-            stress = TimeSpan.FromMilliseconds 10000.0 |> Some
-            stressTimeout = TimeSpan.FromMilliseconds 10000.0
-            printer = TestPrinters.silent
-            verbosity = Logging.LogLevel.Fatal
-            noSpinner = true }
-      Expect.equal (runTests config (deadlockTest "deadlock")) 0 "no deadlock"
+      let config = [
+          Sequenced
+          Stress 0.1
+          Stress_Timeout 0.2
+          Printer TestPrinters.silent
+          Verbosity Logging.LogLevel.Fatal
+          No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] (deadlockTest "deadlock")) 0 "no deadlock"
     }
   ]
 

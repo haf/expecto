@@ -579,6 +579,7 @@ module Impl =
       >> setField "erroredCount" (align erroredCount 0))
 
   /// Hooks to print report through test run
+  [<ReferenceEquality>]
   type TestPrinters =
     { /// Called before a test run (e.g. at the top of your main function)
       beforeRun: Test -> Async<unit>
@@ -1662,15 +1663,18 @@ module Tests =
           | _, Error es, Some u -> List.rev (u::es) |> Error
       collect false [] [] 0 (strings.Length-1)
 
+    let depricated = "Depricated"
+
     let usage commandName (options:(string * string * Parser<_>) list) =
-      let sb = Text.StringBuilder("USAGE: ")
+      let sb = Text.StringBuilder("Usage: ")
       let add (text:string) = sb.Append(text) |> ignore
       add commandName
-      add " [OPTIONS] ...\n\nOPTIONS:\n"
+      add " [options]\n\nOptions:\n"
       let maxLength =
         options |> Seq.map (fun (s,_,_) -> s.Length) |> Seq.max
       ["--help","Show this help message."]
       |> Seq.append (Seq.map (fun (s,d,_) -> s,d) options)
+      |> Seq.where (snd >> (<>)depricated)
       |> Seq.iter (fun (s,d) ->
         add "  "
         add (s.PadRight maxLength)
@@ -1704,32 +1708,66 @@ module Tests =
           | Some i -> Ok(case i), l-1
           | None -> Error("cannot parse parameter '" + ss.[i] + "'"), l-1
 
+
+  [<ReferenceEquality>]
+  type SummaryHandler =
+    | SummaryHandler of (TestRunSummary -> unit)
+
   /// The CLI arguments are the parameters that are possible to send to Expecto
   /// and change the runner's behaviour.
   type CLIArguments =
+    /// Don't run the tests in parallel.
     | Sequenced
+    /// Run all tests in parallel (default).
     | Parallel
+    /// Set the number of parallel workers (defaults to the number of logical processors).
     | Parallel_Workers of int
+    /// Set FsCheck maximum number of tests (default: 100).
     | FsCheck_Max_Tests of int
+    /// Set FsCheck start size (default: 1).
     | FsCheck_Start_Size of int
+    /// Set FsCheck end size (default: 100 for testing and 10,000 for stress testing).
     | FsCheck_End_Size of int
+    /// Run the tests randomly for the given number of minutes.
     | Stress of float
+    /// Set the time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).
     | Stress_Timeout of float
+    /// Set the Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).
     | Stress_Memory_Limit of float
+    /// This will make the test runner fail if focused tests exist.
     | Fail_On_Focused_Tests
+    /// Extra verbose printing. Useful to combine with --sequenced.
     | Debug
+    /// Set the process name to log under (default: "Expecto").
     | Log_Name of name:string
+    /// Filters the list of tests by a hierarchy that's slash (/) separated.
     | Filter of hiera:string
+    /// Filters the list of test lists by a given substring.
     | Filter_Test_List of substring:string
+    /// Filters the list of test cases by a given substring.
     | Filter_Test_Case of substring:string
+    /// Runs only provided list of tests.
     | Run of tests:string list
+    /// Don't run tests, but prints out list of tests instead.
     | List_Tests
+    /// Print out a summary after all tests are finished.
     | Summary
+    /// Print out a summary after all tests are finished including their source code location.
     | Summary_Location
+    /// Print out version information.
     | Version
+    /// Depricated
     | My_Spirit_Is_Weak
+    /// Allow duplicate test names.
     | Allow_Duplicate_Names
+    /// Disable the spinner progress update.
     | No_Spinner
+    /// Adds a test printer.
+    | Printer of TestPrinters
+    /// Sets the verbosity level.
+    | Verbosity of LogLevel
+    /// Append a summary handler.
+    | Append_Summary_Handler of SummaryHandler
 
   let options = [
       "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
@@ -1752,7 +1790,7 @@ module Tests =
       "--fscheck-max-tests", "Set FsCheck maximum number of tests (default: 100).", Args.parse FsCheck_Max_Tests
       "--fscheck-start-size", "Set FsCheck start size (default: 1).", Args.parse FsCheck_Start_Size
       "--fscheck-end-size", "Set FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.parse FsCheck_End_Size
-      "--my-spirit-is-weak", "Removes spirits from the output.", Args.none My_Spirit_Is_Weak
+      "--my-spirit-is-weak", Args.depricated, Args.none My_Spirit_Is_Weak
       "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
       "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
   ]
@@ -1799,6 +1837,9 @@ module Tests =
     | My_Spirit_Is_Weak -> id
     | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
     | No_Spinner -> fun o -> { o with noSpinner = true }
+    | Printer p -> fun o -> { o with printer = p }
+    | Verbosity l -> fun o -> { o with verbosity = l }
+    | Append_Summary_Handler (SummaryHandler h) -> fun o -> o.appendSummaryHandler h
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
@@ -1896,11 +1937,11 @@ module Tests =
 
   /// Runs all given tests with the supplied typed command-line options.
   /// Returns 0 if all tests passed, otherwise 1
-  let runTestsWithCLIArgsAndCancel (ct:CancellationToken) args tests =
+  let runTestsWithCLIArgsAndCancel (ct:CancellationToken) cliArgs args tests =
     let config =
       Seq.fold (fun s a -> foldCLIArgumentToConfig a s)
-        ExpectoConfig.defaultConfig args
-    runTestsWithCancel ct config tests
+        ExpectoConfig.defaultConfig cliArgs
+    runTestsWithArgsAndCancel ct config args tests
 
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
@@ -1909,8 +1950,8 @@ module Tests =
 
   /// Runs all given tests with the supplied typed command-line options.
   /// Returns 0 if all tests passed, otherwise 1
-  let runTestsWithCLIArgs args tests =
-    runTestsWithCLIArgsAndCancel CancellationToken.None args tests
+  let runTestsWithCLIArgs cliArgs args tests =
+    runTestsWithCLIArgsAndCancel CancellationToken.None cliArgs args tests
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
@@ -1922,12 +1963,12 @@ module Tests =
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
-  let runTestsInAssemblyWithCLIArgsAndCancel (ct:CancellationToken) args =
+  let runTestsInAssemblyWithCLIArgsAndCancel (ct:CancellationToken) cliArgs args =
     let config = { ExpectoConfig.defaultConfig
                     with locate = getLocation (Assembly.GetEntryAssembly()) }
-    let config = Seq.fold (fun s a -> foldCLIArgumentToConfig a s) config args
+    let config = Seq.fold (fun s a -> foldCLIArgumentToConfig a s) config cliArgs
     let tests = testFromThisAssembly() |> Option.orDefault (TestList ([], Normal))
-    runTestsWithCancel ct config tests
+    runTestsWithArgsAndCancel ct config args tests
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
@@ -1936,5 +1977,5 @@ module Tests =
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
-  let runTestsInAssemblyWithCLIArgs args =
-    runTestsInAssemblyWithCLIArgsAndCancel CancellationToken.None args
+  let runTestsInAssemblyWithCLIArgs cliArgs args =
+    runTestsInAssemblyWithCLIArgsAndCancel CancellationToken.None cliArgs args

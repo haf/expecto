@@ -117,5 +117,5 @@ let tests =
   ]
 
 [<EntryPoint>]
-let main argv =
-  Tests.runTestsInAssembly defaultConfig argv
+let main args =
+  runTestsInAssemblyWithCLIArgs [] args

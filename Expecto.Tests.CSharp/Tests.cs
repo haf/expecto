@@ -84,15 +84,14 @@ namespace Test.CSharp
                 }))
             });
 
-        public static int Main(string[] argv)
+        public static int Main(string[] args)
         {
             var config =
                 Runner.DefaultConfig
-                    .WithMySpiritIsWeak(false)
                     .AddPrinter(new CSharpPrinter())
                     .AddNUnitSummary("bin/Expecto.Tests.CSharp.TestResults.xml", "Expecto.Tests.CSharp")
                     .AddJUnitSummary("bin/Expecto.Tests.CSharp.TestResults.junit.xml", "Expecto.Tests.CSharp", handleErrorsLikeFailures: true);
-            return Runner.RunTestsInAssembly(config, argv);
+            return Runner.RunTestsInAssembly(config, args);
         }
     }
 }

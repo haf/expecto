@@ -1,3 +1,8 @@
+#### 8.9.0 - 2019-02-23
+* Args replacement for Argu. #303 thanks @AnthonyLloyd
+* New runTests CLI args functions. Please migrate to rather than using ExpectoConfig. thanks @AnthonyLloyd
+* Easier to read error output, highlight differences. #304 thanks @AnthonyLloyd
+
 #### 8.8.0 - 2019-01-28
 * Better isFasterThan equal stopping criteria. thanks @AnthonyLloyd
 * Remove outliers in isFasterThan statistics. thanks @AnthonyLloyd
