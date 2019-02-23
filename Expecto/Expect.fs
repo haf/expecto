@@ -286,11 +286,11 @@ let stringStarts subject prefix message =
   | i,None,Some p ->
     failtestf
       "%s. Expected subject string to be longer or equal to prefix. Differs at position %i with char '%c'.%s"
-      message i p (printVerses "subject" subject " prefix" prefix)
+      message i p (printVerses " prefix" prefix "subject" subject)
   | i,Some s,Some p ->
     failtestf
       "%s. Expected subject string to start with the prefix. Differs at position %i with subject '%c' and prefix '%c'.%s"
-      message i s p (printVerses "subject" subject " prefix" prefix)
+      message i s p (printVerses " prefix" prefix "subject" subject)
 
 /// Expects the two values to equal each other.
 let equal (actual : 'a) (expected : 'a) message =
