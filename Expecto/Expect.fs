@@ -32,8 +32,11 @@ let private allDiffs s1 s2 =
   ) (None,[])
   |> snd
 
-let private highlightAll diffs s =
-  List.fold (fun (s:string) (i,j) -> s.Insert(j,"\u001b[24m").Insert(i,"\u001b[4m")) s diffs
+let private highlightAllRed diffs s =
+  List.fold (fun (s:string) (i,j) -> s.Insert(j,"\u001b[38;5;165m").Insert(i,"\u001b[91m")) s diffs
+
+let private highlightAllGreen diffs s =
+  List.fold (fun (s:string) (i,j) -> s.Insert(j,"\u001b[38;5;165m").Insert(i,"\u001b[92m")) s diffs
 
 let private printVerses (firstName:string) first (secondName:string) second =
   let first,second =
@@ -48,8 +51,8 @@ let private printVerses (firstName:string) first (secondName:string) second =
     then '\n' else ' '
   let diffs = allDiffs first second
   sprintf "\n%s:%c%s\n%s:%c%s"
-    firstName prefix (highlightAll diffs first)
-    secondName prefix (highlightAll diffs second)
+    firstName prefix (highlightAllRed diffs first)
+    secondName prefix (highlightAllGreen diffs second)
 
 /// Expects f to throw an exception.
 let throws f message =
