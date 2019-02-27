@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyName>Expecto.Hopac</AssemblyName>
     <PackageId>Expecto.Hopac</PackageId>
-    <Version>8.9.0</Version>
+    <Version>8.9.1</Version>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Optional: Declare that the Repository URL can be published to NuSpec -->

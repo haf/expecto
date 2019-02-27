@@ -1,3 +1,6 @@
+#### 8.9.1 - 2019-02-27
+* Colors are a bit off bug fix. #305 thanks @AnthonyLloyd
+
 #### 8.9.0 - 2019-02-23
 * Args replacement for Argu. #303 thanks @AnthonyLloyd
 * New runTests CLI args functions. Please migrate to rather than using ExpectoConfig. thanks @AnthonyLloyd

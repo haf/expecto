@@ -33,10 +33,10 @@ let private allDiffs s1 s2 =
   |> snd
 
 let private highlightAllRed diffs s =
-  List.fold (fun (s:string) (i,j) -> s.Insert(j,"\u001b[38;5;165m").Insert(i,"\u001b[91m")) s diffs
+  List.fold (fun (s:string) (i,j) -> s.Insert(j,"\u001b[0m\u001b[38;5;165m").Insert(i,"\u001b[91m")) s diffs
 
 let private highlightAllGreen diffs s =
-  List.fold (fun (s:string) (i,j) -> s.Insert(j,"\u001b[38;5;165m").Insert(i,"\u001b[92m")) s diffs
+  List.fold (fun (s:string) (i,j) -> s.Insert(j,"\u001b[0m\u001b[38;5;165m").Insert(i,"\u001b[92m")) s diffs
 
 let private printVerses (firstName:string) first (secondName:string) second =
   let first,second =
