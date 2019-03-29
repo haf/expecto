@@ -22,3 +22,4 @@ any/
 *.orig
 tools/nuget-workaround/obj/
 .ionide
+**/.DS_Store
