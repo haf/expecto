@@ -966,6 +966,7 @@ module Impl =
           let msg =
             "\n" + e.Message + "\n" +
             (e.StackTrace.Split('\n')
+             |> Seq.skipWhile (fun l -> l.StartsWith("   at Expecto.Expect."))
              |> Seq.truncate 10
              |> String.concat "\n")
           return
