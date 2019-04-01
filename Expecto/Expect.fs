@@ -647,9 +647,9 @@ let stringHasLength (subject : string) (length : int) message =
 /// on failure so it's easier to debug.
 let hasLength (seq: 'a seq) expectedLength message =
   let actualLength = Seq.length seq
-  if actualLength = expectedLength then ()
-  else failtestf "%s. Expected list to have length %d, but length was %d. List:\n%A"
-                      message expectedLength actualLength seq
+  if actualLength <> expectedLength then
+    failtestf "%s. Expected list to have length %d, but length was %d. Seq:\n%A"
+      message expectedLength actualLength seq
 
 /// Expect the streams to byte-wise equal.
 let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) message =

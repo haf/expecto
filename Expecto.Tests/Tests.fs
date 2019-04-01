@@ -889,6 +889,15 @@ let expecto =
         ) |> assertTestFails
       ]
 
+      testList "seq has length" [
+          testCase "pass" <| fun _ ->
+            Expect.hasLength [1;2;3;4;5] 5 "Seq actually has length"
+
+          testCase "fail" (fun _ ->
+            Expect.hasLength [1;2;3;4;5] 4 "Deliberately failing"
+          ) |> assertTestFails
+        ]
+
       testList "list is empty" [
         testCase "pass" <| fun _ ->
           Expect.isEmpty [] "list is empty"
