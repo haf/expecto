@@ -75,15 +75,26 @@ let tests =
 
       test "different length, actual is shorter" {
         Expect.equal "Test" "Test2" "Failing - string with different length"
-      } |> assertTestFailsWithMsgStarting "Failing - string with different length. String actual was shorter than expected, at pos 4 for expected item '2'.\nexpected: Test2\n  actual: Test"
+      } |> assertTestFailsWithMsgStarting (
+            "Failing - string with different length. String actual was shorter than expected, at pos 4 for expected item '2'.\n"+
+            Expect.greenStart+"expected"+Expect.greenEnd+": Test"+Expect.greenStart+"2"+Expect.greenEnd+"\n"+
+            Expect.redStart+"  actual"+Expect.redEnd+": Test"
+          )
 
       test "different length, actual is longer" {
         Expect.equal "Test2" "Test" "Failing - string with different length"
-      } |> assertTestFailsWithMsgStarting "Failing - string with different length. String actual was longer than expected, at pos 4 found item '2'.\nexpected: Test\n  actual: Test2"
-
+      } |> assertTestFailsWithMsgStarting (
+            "Failing - string with different length. String actual was longer than expected, at pos 4 found item '2'.\n"+
+            Expect.greenStart+"expected"+Expect.greenEnd+": Test\n"+
+            Expect.redStart+"  actual"+Expect.redEnd+": Test"+Expect.redStart+"2"+Expect.redEnd
+          )
       test "fail - different content" {
         Expect.equal "Test" "Tes2" "Failing - string with different content"
-      } |> assertTestFailsWithMsgStarting "Failing - string with different content. String does not match at position 3. Expected char: '2', but got 't'.\nexpected: Tes\u001b[92m2\u001b[0m\u001b[38;5;165m\n  actual: Tes\u001b[91mt\u001b[0m\u001b[38;5;165m"
+      } |> assertTestFailsWithMsgStarting (
+            "Failing - string with different content. String does not match at position 3. Expected char: '2', but got 't'.\n"+
+            Expect.greenStart+"expected"+Expect.greenEnd+": Tes"+Expect.greenStart+"2"+Expect.greenEnd + "\n"+
+            Expect.redStart+"  actual"+Expect.redEnd+": Tes"+Expect.redStart+"t"+Expect.redEnd
+          )
     ]
 
     testList "record comparison" [
@@ -93,7 +104,11 @@ let tests =
 
       test "fail - different content" {
         Expect.equal {a = "dd"; b = "de" } {a = "dd"; b = "dw" } "Failing - record with different content"
-      } |> assertTestFailsWithMsgStarting "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\nexpected:\n{a = \"dd\";\n b = \"d\u001b[92mw\u001b[0m\u001b[38;5;165m\";}\n  actual:\n{a = \"dd\";\n b = \"d\u001b[91me\u001b[0m\u001b[38;5;165m\";}"
+      } |> assertTestFailsWithMsgStarting (
+            "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\n"+
+            Expect.greenStart+"expected"+Expect.greenEnd+":\n{a = \"dd\";\n b = \"d"+Expect.greenStart+"w"+Expect.greenEnd+"\";}\n"+
+            Expect.redStart+"  actual"+Expect.redEnd+":\n{a = \"dd\";\n b = \"d"+Expect.redStart+"e"+Expect.redEnd+"\";}"
+          )
     ]
 
     testList "sumTestResults" [

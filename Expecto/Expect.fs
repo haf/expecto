@@ -19,24 +19,38 @@ let private firstDiff s1 s2 =
   Seq.mapi2 (fun i s p -> i,s,p) s1 s2
   |> Seq.find (function |_,Some s,Some p when s=p -> false |_-> true)
 
-let private allDiffs s1 s2 =
-  let s1 = Seq.append (Seq.map Some s1) [None]
-  let s2 = Seq.append (Seq.map Some s2) [None]
-  Seq.mapi2 (fun i s p -> i,s,p) s1 s2
+let private allDiffs (s1:string) (s2:string) =
+  let q1 = Seq.append (Seq.map Some s1) (Seq.initInfinite (fun _ -> None))
+  let q2 = Seq.append (Seq.map Some s2) (Seq.initInfinite (fun _ -> None))
+  Seq.mapi2 (fun i s p -> i,s,p) q1 q2
+  |> Seq.take (1+max s1.Length s2.Length)
   |> Seq.fold (fun (onFrom,l) v ->
       match onFrom, v with
-      | None,(i,Some s,Some p) when s<>p -> Some i, l
-      | Some i,(j,Some s,Some p) when s=p -> None, (i,j)::l
-      | Some i,(j,None,_) | Some i,(j,_,None) -> None, (i,j)::l
+      | None,(i,f,s) when f<>s -> Some i, l
+      | Some i,(j,f,s) when f=s -> None, (i,j)::l
       | onFrom,_ -> onFrom, l
   ) (None,[])
   |> snd
 
-let private highlightAllRed diffs s =
-  List.fold (fun (s:string) (i,j) -> s.Insert(j,"\u001b[0m\u001b[38;5;165m").Insert(i,"\u001b[91m")) s diffs
+let redStart = "\u001b[91m"
+let redEnd = "\u001b[0m\u001b[38;5;165m"
 
-let private highlightAllGreen diffs s =
-  List.fold (fun (s:string) (i,j) -> s.Insert(j,"\u001b[0m\u001b[38;5;165m").Insert(i,"\u001b[92m")) s diffs
+let private highlightAllRed diffs (s:string) =
+  let l = s.Length
+  List.fold (fun (s:string) (i,j) ->
+    if i>=l then s
+    else s.Insert(min j l,redEnd).Insert(i,redStart)
+  ) s diffs
+
+let greenStart = "\u001b[92m"
+let greenEnd = "\u001b[0m\u001b[38;5;165m"
+
+let private highlightAllGreen diffs (s:string) =
+  let l = s.Length
+  List.fold (fun (s:string) (i,j) ->
+    if i>=l then s
+    else s.Insert(min j l,greenEnd).Insert(i,greenStart)
+  ) s diffs
 
 let private printVerses (firstName:string) first (secondName:string) second =
   let first,second =
@@ -49,10 +63,10 @@ let private printVerses (firstName:string) first (secondName:string) second =
     if  first.Length > 100 || second.Length > 100
      || Seq.exists ((=)'\n') first || Seq.exists ((=)'\n') second
     then '\n' else ' '
+  let first = sprintf "\n%s:%c%s" firstName prefix first
+  let second = sprintf "\n%s:%c%s" secondName prefix second
   let diffs = allDiffs first second
-  sprintf "\n%s:%c%s\n%s:%c%s"
-    firstName prefix (highlightAllGreen diffs first)
-    secondName prefix (highlightAllRed diffs second)
+  String.Concat(highlightAllGreen diffs first, highlightAllRed diffs second)
 
 /// Expects f to throw an exception.
 let throws f message =
