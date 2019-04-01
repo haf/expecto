@@ -1455,10 +1455,15 @@ module Tests =
 
   /// Expecto atomic printfn shadow function
   let printfn format =
-    let sb = System.Text.StringBuilder()
-    Printf.kbprintf (fun () ->
-      sb.ToString() + "\n" |> Console.Write
-    ) sb format
+    Printf.ksprintf (fun s ->
+        Console.Write(s.PadRight 40 + "\n")
+      ) format
+
+  /// Expecto atomic eprintfn shadow function
+  let eprintfn format =
+    Printf.ksprintf (fun s ->
+      Console.Error.Write(s.PadRight 40 + "\n")
+    ) format
 
   /// The full name of the currently running test
   let testName() = TestNameHolder.Name
