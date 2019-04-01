@@ -589,7 +589,7 @@ let sequenceContainsOrder (actual: seq<'t>) (expected: seq<'t>) msg =
   use ae = actual.GetEnumerator()
   let nl = Environment.NewLine
   let al = ResizeArray<'t>()
-  let missingFail expected iter missing = 
+  let missingFail expected iter missing =
     failtestf "%s. Remainder of expected enumerable:%s%s%sWent through actual enumerable (%i items):%s%s%s" msg nl (printSeq expected) nl iter (printSeq missing) nl nl
 
   let rec check i =
@@ -642,6 +642,14 @@ let stringHasLength (subject : string) (length : int) message =
   if subject.Length <> length then
     failtestf "%s. Expected subject string '%s' to have length '%d'."
                     message subject length
+
+/// Expect length of a list/array/seq to be exactly length. Print out the whole seq
+/// on failure so it's easier to debug.
+let hasLength (seq: 'a seq) expectedLength message =
+  let actualLength = Seq.length seq
+  if actualLength = expectedLength then ()
+  else failtestf "%s. Expected list to have length %d, but length was %d. List:\n%A"
+                      message expectedLength actualLength seq
 
 /// Expect the streams to byte-wise equal.
 let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) message =
