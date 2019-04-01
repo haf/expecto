@@ -2,9 +2,6 @@ namespace Expecto
 
 open System
 open System.Threading
-open System.IO
-open System.Text
-open System.Runtime.InteropServices
 open Expecto.Logging
 
 #nowarn "9"
@@ -18,7 +15,7 @@ module internal ProgressIndicator =
   let private showCursor = "\u001b[?25h"
   let private animation = @"|/-\"
 
-  let private color = "\u001b[1;30m"
+  let private color = "\u001b[30;1m"
   let private colorReset = "\u001b[0m"
 
   let private backStart = "\u001b[1000D"

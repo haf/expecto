@@ -872,23 +872,42 @@ module internal ANSIOutputWriter =
 
   let private colorReset = "\u001b[0m"
 
-  let private colour8 = function
-    | ConsoleColor.Black -> "\u001b[30m"
+  let private colour8BlackBG = function
+    | ConsoleColor.Black -> "\u001b[30;1m"
     | ConsoleColor.DarkRed
-    | ConsoleColor.Red -> "\u001b[31m"
+    | ConsoleColor.Red -> "\u001b[31;1m"
     | ConsoleColor.DarkGreen
-    | ConsoleColor.Green -> "\u001b[32m"
+    | ConsoleColor.Green -> "\u001b[32;1m"
     | ConsoleColor.DarkYellow
-    | ConsoleColor.Yellow -> "\u001b[33m"
+    | ConsoleColor.Yellow -> "\u001b[33;1m"
     | ConsoleColor.DarkBlue
-    | ConsoleColor.Blue -> "\u001b[34m"
+    | ConsoleColor.Blue -> "\u001b[34;1m"
     | ConsoleColor.DarkMagenta
-    | ConsoleColor.Magenta -> "\u001b[35m"
+    | ConsoleColor.Magenta -> "\u001b[35;1m"
     | ConsoleColor.DarkCyan
-    | ConsoleColor.Cyan -> "\u001b[36m"
+    | ConsoleColor.Cyan -> "\u001b[36;1m"
     | ConsoleColor.DarkGray
     | ConsoleColor.Gray
-    | ConsoleColor.White -> "\u001b[37m"
+    | ConsoleColor.White -> "\u001b[37;1m"
+    | _ -> ""
+
+  let private colour8WhiteBG = function
+    | ConsoleColor.Black -> "\u001b[30;1m"
+    | ConsoleColor.DarkRed
+    | ConsoleColor.Red -> "\u001b[31;1m"
+    | ConsoleColor.DarkGreen
+    | ConsoleColor.Green -> "\u001b[32;1m"
+    | ConsoleColor.DarkYellow
+    | ConsoleColor.Yellow -> "\u001b[33;1m"
+    | ConsoleColor.DarkBlue
+    | ConsoleColor.Blue -> "\u001b[34;1m"
+    | ConsoleColor.DarkMagenta
+    | ConsoleColor.Magenta -> "\u001b[35;1m"
+    | ConsoleColor.DarkCyan
+    | ConsoleColor.Cyan -> "\u001b[36;1m"
+    | ConsoleColor.DarkGray
+    | ConsoleColor.Gray
+    | ConsoleColor.White -> "\u001b[30;1m"
     | _ -> ""
 
   let private colour256BlackBG =
@@ -933,9 +952,9 @@ module internal ANSIOutputWriter =
 
   let colour256 =
       if Console.BackgroundColor = ConsoleColor.Black || int Console.BackgroundColor = -1 then
-        fun c -> colour8 c //+ colour256BlackBG c
+        fun c -> colour8BlackBG c //+ colour256BlackBG c
       else
-        fun c -> colour8 c //+ colour256WhiteBG c
+        fun c -> colour8WhiteBG c //+ colour256WhiteBG c
 
   let private foregroundColor = Console.ForegroundColor
 
