@@ -967,26 +967,21 @@ module Impl =
             "\n" + e.Message + "\n" +
             (e.StackTrace.Split('\n')
              |> Seq.skipWhile (fun l -> l.StartsWith("   at Expecto.Expect."))
-             |> Seq.truncate 10
+             |> Seq.truncate 5
              |> String.concat "\n")
-          return
-            TestSummary.single (Failed msg) (float w.ElapsedMilliseconds)
+          return TestSummary.single (Failed msg) (float w.ElapsedMilliseconds)
         | :? FailedException as e ->
           w.Stop()
-          return
-            TestSummary.single (Failed ("\n"+e.Message)) (float w.ElapsedMilliseconds)
+          return TestSummary.single (Failed ("\n"+e.Message)) (float w.ElapsedMilliseconds)
         | :? IgnoreException as e ->
           w.Stop()
-          return
-            TestSummary.single (Ignored e.Message) (float w.ElapsedMilliseconds)
+          return TestSummary.single (Ignored e.Message) (float w.ElapsedMilliseconds)
         | :? AggregateException as e when e.InnerExceptions.Count = 1 ->
           w.Stop()
-          return
-            TestSummary.single (TestResult.Error e.InnerException) (float w.ElapsedMilliseconds)
+          return TestSummary.single (Error e.InnerException) (float w.ElapsedMilliseconds)
         | e ->
           w.Stop()
-          return
-            TestSummary.single (TestResult.Error e) (float w.ElapsedMilliseconds)
+          return TestSummary.single (Error e) (float w.ElapsedMilliseconds)
     }
 
   let private numberOfWorkers limit config =
