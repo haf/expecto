@@ -891,14 +891,6 @@ module internal ANSIOutputWriter =
     | ConsoleColor.White -> "\u001b[37m"
     | _ -> ""
 
-  (* import sys
-     for i in range(0, 16):
-       for j in range(0, 16):
-         code = str(i * 16 + j)
-         sys.stdout.write(u"\u001b[38;5;" + code + "m " + code.ljust(4)) # [48;5;  +code for bg colour
-       print u"\u001b[0m"
-  *)
-
   let private colour256BlackBG =
     sprintf "\u001b[%sm" << function
     | ConsoleColor.Black -> "38;5;232"
@@ -940,10 +932,10 @@ module internal ANSIOutputWriter =
     | _ -> ""
 
   let colour256 =
-    if Console.BackgroundColor = ConsoleColor.Black || int Console.BackgroundColor = -1 then
-      colour256BlackBG
-    else
-      colour256WhiteBG
+      if Console.BackgroundColor = ConsoleColor.Black || int Console.BackgroundColor = -1 then
+        fun c -> colour8 c + colour256BlackBG c
+      else
+        fun c -> colour8 c + colour256WhiteBG c
 
   let private foregroundColor = Console.ForegroundColor
 
