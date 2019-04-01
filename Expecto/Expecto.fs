@@ -1640,7 +1640,7 @@ module Tests =
       let rec collect isHelp unknown args paramCount i =
         if i>=0 then
           let currentArg = strings.[i]
-          if currentArg = "--help" then
+          if currentArg = "--help" || currentArg = "-h" || currentArg = "-?" || currentArg = "/?" then
             collect true (updateUnknown unknown (i+paramCount) paramCount) args 0 (i-1)
           else
             match List.tryFind (fst3 >> (=)currentArg) options with
