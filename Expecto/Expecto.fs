@@ -888,6 +888,8 @@ module Impl =
       allowDuplicateNames: bool
       /// Disable spinner progress update.
       noSpinner: bool
+      /// Set the level of colours to use.
+      colour: ColourLevel
     }
     static member defaultConfig =
       { parallel = true
@@ -912,6 +914,7 @@ module Impl =
         mySpiritIsWeak = false
         allowDuplicateNames = false
         noSpinner = false
+        colour = Colour8
       }
 
     member x.appendSummaryHandler handleSummary =
@@ -1065,7 +1068,10 @@ module Impl =
         if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
           do! config.printer.info "Starting sequenced tests..."
 
-        return! Async.foldSequentiallyWithCancel ct cons parallelResults sequenced
+        let! results = Async.foldSequentiallyWithCancel ct cons parallelResults sequenced
+        return List.sortBy (fun (t,_) ->
+                  List.tryFindIndex (LanguagePrimitives.PhysicalEquality t) tests
+               ) results
       }
 
   /// Evaluates tests.
@@ -1763,6 +1769,8 @@ module Tests =
     | Allow_Duplicate_Names
     /// Disable the spinner progress update.
     | No_Spinner
+    // Set the level of colours to use. Can be 0, 8 (default) or 256.
+    | Colours of int
     /// Adds a test printer.
     | Printer of TestPrinters
     /// Sets the verbosity level.
@@ -1793,6 +1801,7 @@ module Tests =
       "--fscheck-end-size", "Set FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.parse FsCheck_End_Size
       "--my-spirit-is-weak", Args.depricated, Args.none My_Spirit_Is_Weak
       "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
+      "--colours", "Set the level of colours to use. Can be 0, 8 (default) or 256.", Args.parse Colours
       "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
   ]
 
@@ -1838,6 +1847,11 @@ module Tests =
     | My_Spirit_Is_Weak -> id
     | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
     | No_Spinner -> fun o -> { o with noSpinner = true }
+    | Colours i -> fun o -> { o with colour =
+                                      if i >= 256 then Colour256
+                                      elif i >= 8 then Colour8
+                                      else Colour0
+                  }
     | Printer p -> fun o -> { o with printer = p }
     | Verbosity l -> fun o -> { o with verbosity = l }
     | Append_Summary_Handler (SummaryHandler h) -> fun o -> o.appendSummaryHandler h
@@ -1864,8 +1878,8 @@ module Tests =
             ArgsRun config
       | Result.Error errors ->
         let commandName =
-          System.Environment.GetCommandLineArgs().[0]
-          |> System.IO.Path.GetFileName
+          Environment.GetCommandLineArgs().[0]
+          |> IO.Path.GetFileName
           |> fun f -> if f.EndsWith(".dll") then "dotnet " + f else f
         ArgsUsage (Args.usage commandName options, errors)
 
@@ -1886,12 +1900,14 @@ module Tests =
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
+    ANSIOutputWriter.setColourLevel config.colour
     Global.initialiseIfDefault
       { Global.defaultConfig with
           getLogger = fun name ->
             LiterateConsoleTarget(
               name, config.verbosity,
-              consoleSemaphore = Global.semaphore()) :> Logger }
+              consoleSemaphore = Global.semaphore()) :> Logger
+      }
     config.logName |> Option.iter setLogName
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
       1

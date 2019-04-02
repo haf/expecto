@@ -32,20 +32,18 @@ let private allDiffs (s1:string) (s2:string) =
   ) (None,[])
   |> snd
 
-let redStart = "\u001b[31;1m"
-let redEnd = "\u001b[0m\u001b[38;5;165m"
-
 let private highlightAllRed diffs (s:string) =
+  let redStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Red
+  let redEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
   let l = s.Length
   List.fold (fun (s:string) (i,j) ->
     if i>=l then s
     else s.Insert(min j l,redEnd).Insert(i,redStart)
   ) s diffs
 
-let greenStart = "\u001b[32;1m"
-let greenEnd = "\u001b[0m\u001b[38;5;165m"
-
 let private highlightAllGreen diffs (s:string) =
+  let greenStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Green
+  let greenEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
   let l = s.Length
   List.fold (fun (s:string) (i,j) ->
     if i>=l then s

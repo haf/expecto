@@ -17,6 +17,11 @@ namespace Expecto.Logging
 open System
 open System.Text
 
+type ColourLevel =
+  | Colour0
+  | Colour8
+  | Colour256
+
 /// The log level denotes how 'important' the gauge or event message is.
 [<CustomEquality; CustomComparison>]
 type LogLevel =
@@ -294,9 +299,13 @@ module LoggerEx =
 type LoggingConfig =
   { timestamp: unit -> int64
     getLogger: string[] -> Logger
-    consoleSemaphore: obj }
-  static member create u2ts n2l sem =
-    { timestamp = u2ts; getLogger = n2l; consoleSemaphore = sem }
+    consoleSemaphore: obj
+  }
+  static member create u2ts n2l sem = {
+    timestamp = u2ts
+    getLogger = n2l
+    consoleSemaphore = sem
+  }
 
 module Literate =
   /// The output tokens, which can be potentially coloured.
@@ -671,7 +680,6 @@ module internal Formatting =
   open Literals
   open Literate
   open LiterateTokenisation
-  open System.Text
 
   let formatValue (fields: Map<string, obj>) (pv: PointValue) =
     let matchedFields, themedParts =
@@ -870,7 +878,10 @@ module internal ANSIOutputWriter =
     override __.WriteLine (s:string) = s + "\n" |> write
     override __.WriteLine() = write "\n"
 
-  let private colorReset = "\u001b[0m"
+  let mutable internal colours = None
+  let internal setColourLevel c = if colours.IsNone then colours <- Some c
+
+  let colourReset = "\u001b[0m"
 
   let private colour8BlackBG = function
     | ConsoleColor.Black -> "\u001b[30,1m"
@@ -950,11 +961,14 @@ module internal ANSIOutputWriter =
     | ConsoleColor.White -> "38;5;232"
     | _ -> ""
 
-  let colour256 =
-      if Console.BackgroundColor = ConsoleColor.Black || int Console.BackgroundColor = -1 then
-        fun c -> colour8BlackBG c //+ colour256BlackBG c
-      else
-        fun c -> colour8WhiteBG c //+ colour256WhiteBG c
+  let private isBlackBG = Console.BackgroundColor = ConsoleColor.Black
+                          || int Console.BackgroundColor = -1
+
+  let colourText colourLevel colour =
+    match colourLevel with
+    | Colour0 -> String.Empty
+    | Colour8 -> if isBlackBG then colour8BlackBG colour else colour8WhiteBG colour
+    | Colour256 -> if isBlackBG then colour256BlackBG colour else colour256WhiteBG colour
 
   let private foregroundColor = Console.ForegroundColor
 
@@ -1007,7 +1021,7 @@ module internal ANSIOutputWriter =
     let buffer = StringBuilder()
     let flushStart = new Event<unit>()
     let flushEnd = new Event<unit>()
-
+    
     let flushInner () =
       if not inited then invalidOp "Cannot flush unless inited"
       lock buffer <| fun _ ->
@@ -1042,11 +1056,11 @@ module internal ANSIOutputWriter =
           let mutable currentColour = foregroundColor
           parts |> List.iter (fun (text, colour) ->
             if currentColour <> colour then
-              colour256 colour |> buffer.Append |> ignore
+              colourText colours.Value colour |> buffer.Append |> ignore
               currentColour <- colour
             buffer.Append text |> ignore
           )
-          buffer.Append colorReset |> ignore
+          buffer.Append colourReset |> ignore
 
           if autoFlush then
             flushInner ()
@@ -1087,7 +1101,7 @@ module internal ANSIOutputWriter =
     ///
     /// This function is internal, because it needs to be guarded by a Monitor object; in the case of Expecto, this
     /// guard is in Progress.fs, an is the lock on the ref cell `isRunning`.
-    member internal x.writeAndFlushRaw (value: string) =
+    member internal __.writeAndFlushRaw (value: string) =
       origStdOut.Write value
       origStdOut.Flush()
 
@@ -1097,39 +1111,39 @@ module internal ANSIOutputWriter =
     /// This event is triggered when the ANSIOutputWriter is about to flush its internal buffer of characters to print to
     /// STDOUT. Events are synchronously dispatched on the caller thread.
     [<CLIEvent>]
-    member internal x.FlushStart = flushStart.Publish
+    member internal __.FlushStart = flushStart.Publish
 
     /// This event is triggered when the ANSIOutputWriter has finished flusing its internal buffer of characters to to
     /// STDOUT. Events are synchronously dispatched on the caller thread.
     [<CLIEvent>]
-    member internal x.FlushEnd = flushEnd.Publish
+    member internal __.FlushEnd = flushEnd.Publish
 
     /// Flushes the built-up buffer and clears it. Calling this function will trigger FlushStart and FlushEnd, in that
     /// order.
     member x.flush() =
       lock sem flushInner
 
-    member internal x.prettyPrint (parts: (string * ConsoleColor) list): unit =
+    member internal __.prettyPrint (parts : (string * ConsoleColor) list) : unit =
       lock sem (fun () -> prettyPrintInner (_autoFlush, false) parts)
 
     /// During the time between calls x.init() -> IDisposable.Dispose(), there must be no other calls to `init`.
     ///
     /// This installs interceptors for both STDOUT and STDERR, having them go through this instance; `
-    member x.init() =
+    member __.init() =
       lock sem initInner
 
-    member x.tryInit() =
+    member __.tryInit() =
       // don't take a lock unless we need to (test-lock-test pattern):
       if inited then false else lock sem tryInitInner
 
     interface IDisposable with
       /// Must correspond to a previous init call.
-      member x.Dispose() =
+      member __.Dispose() =
         lock sem disposeInner
 
   let private instance: T option ref = ref None
 
-  let create autoFlush (sem: obj): T =
+  let create autoFlush (sem: obj) : T =
     lock instance <| fun () ->
     !instance |> Option.iter (fun i -> (i :> IDisposable).Dispose())
     let x = new T(stdout, stderr, sem, autoFlush)
@@ -1175,34 +1189,35 @@ type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?output
   /// `LiterateToken.MissingTemplateField`.
   new (name, minLevel, outputTemplate, ?options, ?outputWriter, ?consoleSemaphore) =
     let tokeniser = LiterateFormatting.tokeniserForOutputTemplate outputTemplate
-    new LiterateConsoleTarget(name, minLevel, ?options=options, literateTokeniser=tokeniser, ?outputWriter=outputWriter, ?consoleSemaphore=consoleSemaphore)
+    new LiterateConsoleTarget(name, minLevel,
+          ?options=options, literateTokeniser=tokeniser, ?outputWriter=outputWriter, ?consoleSemaphore=consoleSemaphore)
 
   interface Logger with
-    member x.name = name
-    member x.logWithAck level msgFactory =
+    member __.name = name
+    member __.logWithAck level msgFactory =
       if level >= minLevel then
         async { do writeColourisedThenNewLine (msgFactory level) }
       else
         async.Return ()
-    member x.log level msgFactory =
+    member __.log level msgFactory =
       if level >= minLevel then
         async { do writeColourisedThenNewLine (msgFactory level) }
       else
         async.Return ()
 
-type TextWriterTarget(name, minLevel, writer: System.IO.TextWriter, ?formatter) =
+type TextWriterTarget(name, minLevel, writer: IO.TextWriter, ?formatter) =
   let formatter = defaultArg formatter Formatting.defaultFormatter
   let log msg = writer.WriteLine(formatter msg)
 
   interface Logger with
-    member x.name = name
-    member x.log level messageFactory =
+    member __.name = name
+    member __.log level messageFactory =
       if level >= minLevel then
         async { do log (messageFactory level) }
       else
         async.Return ()
 
-    member x.logWithAck level messageFactory =
+    member __.logWithAck level messageFactory =
       if level >= minLevel then
         async { log (messageFactory level) }
       else
@@ -1213,14 +1228,14 @@ type OutputWindowTarget(name, minLevel, ?formatter) =
   let log msg = System.Diagnostics.Debug.WriteLine(formatter msg)
 
   interface Logger with
-    member x.name = name
-    member x.log level messageFactory =
+    member __.name = name
+    member __.log level messageFactory =
       if level >= minLevel then
         async { do log (messageFactory level) }
       else
         async.Return ()
 
-    member x.logWithAck level messageFactory =
+    member __.logWithAck level messageFactory =
       if level >= minLevel then
         async { do log (messageFactory level) }
       else
@@ -1229,14 +1244,14 @@ type OutputWindowTarget(name, minLevel, ?formatter) =
 /// A logger to use for combining a number of other loggers
 type CombiningTarget(name, otherLoggers: Logger list) =
   interface Logger with
-    member x.name = name
-    member x.logWithAck level messageFactory =
+    member __.name = name
+    member __.logWithAck level messageFactory =
       otherLoggers
       |> List.map (fun l -> l.logWithAck level messageFactory)
       |> Async.Parallel
       |> Async.Ignore // Async<unit>
 
-    member x.log level messageFactory =
+    member __.log level messageFactory =
       otherLoggers
       |> List.map (fun l -> l.log level messageFactory)
       |> Async.Parallel
@@ -1251,9 +1266,14 @@ module Global =
   let private semD = DVar.create (obj ())
   let private getTimestampD = DVar.create (fun () -> DateTimeOffset.timestamp DateTimeOffset.UtcNow)
   let private minLevelD = DVar.create Info
-  let private getLoggerInnerD = DVar.create (fun level name -> LiterateConsoleTarget(name, level) :> Logger)
-  let private getLoggerD = minLevelD |> DVar.apply getLoggerInnerD
-  let private cfgD = LoggingConfig.create <!> getTimestampD <*> getLoggerD <*> semD
+  let private getLoggerInnerD =
+    DVar.create (fun level name ->
+      LiterateConsoleTarget(name, level) :> Logger
+    )
+  let private getLoggerD : DVar<string[]->Logger> =
+    DVar.apply getLoggerInnerD minLevelD
+
+  let private cfgD : DVar<LoggingConfig> = LoggingConfig.create <!> getTimestampD <*> getLoggerD <*> semD
 
   let defaultConfig = DVar.get cfgD
 
@@ -1265,10 +1285,10 @@ module Global =
     let loggerD = getLoggerD |> DVar.map (fun factory -> factory name)
     let ensureName (m: Message) = if Array.isEmpty m.name then { m with name = name } else m
     interface Logger with
-      member x.name = name
-      member x.log level msgFactory =
+      member __.name = name
+      member __.log level msgFactory =
         let logger = DVar.get loggerD in logger.log level (msgFactory >> ensureName)
-      member x.logWithAck level msgFactory =
+      member __.logWithAck level msgFactory =
         let logger = DVar.get loggerD in logger.logWithAck level (msgFactory >> ensureName)
 
   let internal getStaticLogger (name: string[]) = Flyweight name :> Logger
@@ -1299,7 +1319,7 @@ module Targets =
   /// Will log to console (colourised) by default, and also to the output window
   /// in your IDE if you specify a level below Info.
   let create level name =
-    if level >= LogLevel.Info then
+    if level >= Info then
       LiterateConsoleTarget(name, level, consoleSemaphore = Global.semaphore()) :> Logger
     else
       CombiningTarget(
@@ -1327,7 +1347,7 @@ module Log =
 /// The Message module contains functions that can help callers compose messages. This
 /// module is especially helpful to open to make calls into Logary's facade small.
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module Message =
+module Message =  
   open Literals
 
   /// Create a new event log message.

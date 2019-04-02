@@ -42,7 +42,7 @@ module internal ProgressIndicator =
     ansi.writeAndFlushRaw value
 
   let start () =
-    let ansi = ANSIOutputWriter.getInstance true (Global.semaphore ())
+    let ansi = ANSIOutputWriter.getInstance true (Global.semaphore())
 
     ansi.FlushStart |> Event.add (fun () ->
       Monitor.Enter isRunning
@@ -114,7 +114,7 @@ module internal ProgressIndicator =
       if !isRunning then
         isRunning := false
         if isEnabled then
-          let ansi = ANSIOutputWriter.getInstance true (Global.semaphore ())
+          let ansi = ANSIOutputWriter.getInstance true (Global.semaphore())
           clear ansi
 
   Console.CancelKeyPress |> Event.add (fun _ -> stop ())

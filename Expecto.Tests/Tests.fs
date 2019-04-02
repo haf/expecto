@@ -8,6 +8,7 @@ open System.IO
 open System.Reflection
 open Expecto
 open Expecto.Impl
+open Expecto.Logging
 open System.Globalization
 
 module Dummy =
@@ -75,25 +76,37 @@ let tests =
 
       test "different length, actual is shorter" {
         Expect.equal "Test" "Test2" "Failing - string with different length"
-      } |> assertTestFailsWithMsgStarting (
+      } |> assertTestFailsWithMsgStartingDelay (fun () ->
+            let redStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
             "Failing - string with different length. String actual was shorter than expected, at pos 4 for expected item '2'.\n"+
-            Expect.greenStart+"expected"+Expect.greenEnd+": Test"+Expect.greenStart+"2"+Expect.greenEnd+"\n"+
-            Expect.redStart+"  actual"+Expect.redEnd+": Test"
+            greenStart+"expected"+greenEnd+": Test"+greenStart+"2"+greenEnd+"\n"+
+            redStart+"  actual"+redEnd+": Test"
           )
 
       test "different length, actual is longer" {
         Expect.equal "Test2" "Test" "Failing - string with different length"
-      } |> assertTestFailsWithMsgStarting (
+      } |> assertTestFailsWithMsgStartingDelay (fun () ->
+            let redStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
             "Failing - string with different length. String actual was longer than expected, at pos 4 found item '2'.\n"+
-            Expect.greenStart+"expected"+Expect.greenEnd+": Test\n"+
-            Expect.redStart+"  actual"+Expect.redEnd+": Test"+Expect.redStart+"2"+Expect.redEnd
+            greenStart+"expected"+greenEnd+": Test\n"+
+            redStart+"  actual"+redEnd+": Test"+redStart+"2"+redEnd
           )
       test "fail - different content" {
         Expect.equal "Test" "Tes2" "Failing - string with different content"
-      } |> assertTestFailsWithMsgStarting (
+      } |> assertTestFailsWithMsgStartingDelay (fun () ->
+            let redStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
             "Failing - string with different content. String does not match at position 3. Expected char: '2', but got 't'.\n"+
-            Expect.greenStart+"expected"+Expect.greenEnd+": Tes"+Expect.greenStart+"2"+Expect.greenEnd + "\n"+
-            Expect.redStart+"  actual"+Expect.redEnd+": Tes"+Expect.redStart+"t"+Expect.redEnd
+            greenStart+"expected"+greenEnd+": Tes"+greenStart+"2"+greenEnd + "\n"+
+            redStart+"  actual"+redEnd+": Tes"+redStart+"t"+redEnd
           )
     ]
 
@@ -104,10 +117,14 @@ let tests =
 
       test "fail - different content" {
         Expect.equal {a = "dd"; b = "de" } {a = "dd"; b = "dw" } "Failing - record with different content"
-      } |> assertTestFailsWithMsgStarting (
+      } |> assertTestFailsWithMsgStartingDelay (fun () ->
+            let redStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
             "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\n"+
-            Expect.greenStart+"expected"+Expect.greenEnd+":\n{a = \"dd\";\n b = \"d"+Expect.greenStart+"w"+Expect.greenEnd+"\";}\n"+
-            Expect.redStart+"  actual"+Expect.redEnd+":\n{a = \"dd\";\n b = \"d"+Expect.redStart+"e"+Expect.redEnd+"\";}"
+            greenStart+"expected"+greenEnd+":\n{a = \"dd\";\n b = \"d"+greenStart+"w"+greenEnd+"\";}\n"+
+            redStart+"  actual"+redEnd+":\n{a = \"dd\";\n b = \"d"+redStart+"e"+redEnd+"\";}"
           )
     ]
 
@@ -433,6 +450,7 @@ let expecto =
             "--my-spirit-is-weak"
             "--allow-duplicate-names"
             "--no-spinner"
+            "--colours"; "256"
         |]
         let ok = [
           Sequenced
@@ -442,7 +460,7 @@ let expecto =
           Stress_Timeout 100.1
           Stress_Memory_Limit 128.0
           Fail_On_Focused_Tests
-          Debug
+          CLIArguments.Debug
           Log_Name "fred"
           Filter "phil"
           Filter_Test_List "f list"
@@ -458,6 +476,7 @@ let expecto =
           My_Spirit_Is_Weak
           Allow_Duplicate_Names
           No_Spinner
+          Colours 256
         ]
         testArgs args (Ok ok)
       }
@@ -1525,7 +1544,7 @@ let stress =
           Stress 0.1
           Stress_Timeout 0.2
           Printer TestPrinters.silent
-          Verbosity Logging.LogLevel.Fatal
+          Verbosity Fatal
           No_Spinner
       ]
       Expect.equal (runTestsWithCLIArgs config [||] (deadlockTest "deadlock")) 0 "no deadlock"

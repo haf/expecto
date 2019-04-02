@@ -54,17 +54,20 @@ module TestHelpers =
       | _ -> failtestf "Should have one test to assert"
     } |> makeTest test
 
+  let assertTestFailsWithMsgStartingDelay (msg : unit->string) test =
+      async {
+        let! result = evalTestsSilent test
+        match result with
+        | [(_,{ result = Ignored _ })] -> ()
+        | [(_,{ result = Failed x })] ->
+          let removeCR = x.Replace("\r","").Trim('\n')
+          Expect.stringStarts removeCR (msg()) "Test failure strings should equal"
+        | [x] -> failtestf "Should have failed, but was %A" x
+        | _ -> failtestf "Should have one test to assert"
+      } |> makeTest test
+
   let assertTestFailsWithMsgStarting (msg : string) test =
-    async {
-      let! result = evalTestsSilent test
-      match result with
-      | [(_,{ result = Ignored _ })] -> ()
-      | [(_,{ result = Failed x })] ->
-        let removeCR = x.Replace("\r","").Trim('\n')
-        Expect.stringStarts removeCR msg "Test failure strings should equal"
-      | [x] -> failtestf "Should have failed, but was %A" x
-      | _ -> failtestf "Should have one test to assert"
-    } |> makeTest test
+    assertTestFailsWithMsgStartingDelay (fun () -> msg) test
 
   let assertTestFailsWithMsgContaining (msg : string) test =
     async {

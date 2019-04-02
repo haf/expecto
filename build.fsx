@@ -62,6 +62,7 @@ Target.create "AssemblyInfo" (fun _ ->
             AssemblyInfo.Description description
             AssemblyInfo.Version release.AssemblyVersion
             AssemblyInfo.FileVersion release.AssemblyVersion
+            AssemblyInfo.InternalsVisibleTo "Expecto.Tests"
         ] (AssemblyInfoFileConfig(true,false,"Expecto.AssemblyInfo"))
         normaliseFileToLFEnding filename
     createAssemblyInfo "Expecto"
