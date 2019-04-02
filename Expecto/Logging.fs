@@ -873,41 +873,41 @@ module internal ANSIOutputWriter =
   let private colorReset = "\u001b[0m"
 
   let private colour8BlackBG = function
-    | ConsoleColor.Black -> "\u001b[30;1m"
+    | ConsoleColor.Black -> "\u001b[30,1m"
     | ConsoleColor.DarkRed
-    | ConsoleColor.Red -> "\u001b[31;1m"
+    | ConsoleColor.Red -> "\u001b[31m"
     | ConsoleColor.DarkGreen
-    | ConsoleColor.Green -> "\u001b[32;1m"
+    | ConsoleColor.Green -> "\u001b[32m"
     | ConsoleColor.DarkYellow
-    | ConsoleColor.Yellow -> "\u001b[33;1m"
+    | ConsoleColor.Yellow -> "\u001b[33m"
     | ConsoleColor.DarkBlue
-    | ConsoleColor.Blue -> "\u001b[34;1m"
+    | ConsoleColor.Blue -> "\u001b[34m"
     | ConsoleColor.DarkMagenta
-    | ConsoleColor.Magenta -> "\u001b[35;1m"
+    | ConsoleColor.Magenta -> "\u001b[35m"
     | ConsoleColor.DarkCyan
-    | ConsoleColor.Cyan -> "\u001b[36;1m"
+    | ConsoleColor.Cyan -> "\u001b[36m"
     | ConsoleColor.DarkGray
     | ConsoleColor.Gray
-    | ConsoleColor.White -> "\u001b[37;1m"
+    | ConsoleColor.White -> "\u001b[37m"
     | _ -> ""
 
   let private colour8WhiteBG = function
-    | ConsoleColor.Black -> "\u001b[30;1m"
+    | ConsoleColor.Black -> "\u001b[30m"
     | ConsoleColor.DarkRed
-    | ConsoleColor.Red -> "\u001b[31;1m"
+    | ConsoleColor.Red -> "\u001b[31m"
     | ConsoleColor.DarkGreen
-    | ConsoleColor.Green -> "\u001b[32;1m"
+    | ConsoleColor.Green -> "\u001b[32m"
     | ConsoleColor.DarkYellow
-    | ConsoleColor.Yellow -> "\u001b[33;1m"
+    | ConsoleColor.Yellow -> "\u001b[33m"
     | ConsoleColor.DarkBlue
-    | ConsoleColor.Blue -> "\u001b[34;1m"
+    | ConsoleColor.Blue -> "\u001b[34m"
     | ConsoleColor.DarkMagenta
-    | ConsoleColor.Magenta -> "\u001b[35;1m"
+    | ConsoleColor.Magenta -> "\u001b[35m"
     | ConsoleColor.DarkCyan
-    | ConsoleColor.Cyan -> "\u001b[36;1m"
+    | ConsoleColor.Cyan -> "\u001b[36m"
     | ConsoleColor.DarkGray
     | ConsoleColor.Gray
-    | ConsoleColor.White -> "\u001b[30;1m"
+    | ConsoleColor.White -> "\u001b[30,1m"
     | _ -> ""
 
   let private colour256BlackBG =
