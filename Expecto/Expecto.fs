@@ -690,7 +690,7 @@ module Impl =
 
           logger.logWithAck Info (
             eventX "EXPECTO! {total} tests run in {duration} for {name} – {passes} passed, {ignores} ignored, {failures} failed, {errors} errored. {spirit}"
-            >> setField "total" (List.sumBy (fun (_,r) -> r.count) summary.results |> commaString)
+            >> setField "total" (List.sumBy (fun (_,r) -> if r.result.isIgnored then 0 else r.count) summary.results |> commaString)
             >> setField "name" commonAncestor
             >> setField "duration" summary.duration
             >> setField "passes" (List.sumBy (fun (_,r) -> r.count) summary.passed |> commaString)

@@ -952,9 +952,9 @@ module internal ANSIOutputWriter =
 
   let colour256 =
       if Console.BackgroundColor = ConsoleColor.Black || int Console.BackgroundColor = -1 then
-        fun c -> colour8BlackBG c + colour256BlackBG c
+        fun c -> colour8BlackBG c //+ colour256BlackBG c
       else
-        fun c -> colour8WhiteBG c + colour256WhiteBG c
+        fun c -> colour8WhiteBG c //+ colour256WhiteBG c
 
   let private foregroundColor = Console.ForegroundColor
 
