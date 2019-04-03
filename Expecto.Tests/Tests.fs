@@ -1256,6 +1256,10 @@ let taskTests =
         let! m = Task.FromResult (3*n)
         Expect.equal m 6 "m=6"
     } |> assertTestFails
+
+    testTask "inner skip" {
+      skiptest "skipped"
+    }
   ]
 
 [<Tests>]
