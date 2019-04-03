@@ -1,3 +1,10 @@
+#### 8.10.0 - 2019-04-03
+* Add Expecto.hasLength. #312 thanks @drhumlen
+* Count when focusing on any test is off. #308 thanks @AnthonyLloyd
+* Reported error is unreadable in TeamCity. #309 thanks @AnthonyLloyd
+* Add colours switch. #306 thanks @AnthonyLloyd
+* Number of other small items. #306 thanks @AnthonyLloyd
+
 #### 8.9.1 - 2019-02-27
 * Colors are a bit off bug fix. #305 thanks @AnthonyLloyd
 

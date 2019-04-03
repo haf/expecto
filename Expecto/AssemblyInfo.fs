@@ -7,8 +7,8 @@ open System.Runtime.CompilerServices
 [<assembly: AssemblyProductAttribute("Expecto")>]
 [<assembly: AssemblyCopyrightAttribute("Copyright 2019")>]
 [<assembly: AssemblyDescriptionAttribute("Advanced testing library for F#")>]
-[<assembly: AssemblyVersionAttribute("8.9.1")>]
-[<assembly: AssemblyFileVersionAttribute("8.9.1")>]
+[<assembly: AssemblyVersionAttribute("8.10.0")>]
+[<assembly: AssemblyFileVersionAttribute("8.10.0")>]
 [<assembly: InternalsVisibleToAttribute("Expecto.Tests")>]
 do ()
 
@@ -17,6 +17,6 @@ module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyProduct = "Expecto"
     let [<Literal>] AssemblyCopyright = "Copyright 2019"
     let [<Literal>] AssemblyDescription = "Advanced testing library for F#"
-    let [<Literal>] AssemblyVersion = "8.9.1"
-    let [<Literal>] AssemblyFileVersion = "8.9.1"
+    let [<Literal>] AssemblyVersion = "8.10.0"
+    let [<Literal>] AssemblyFileVersion = "8.10.0"
     let [<Literal>] InternalsVisibleTo = "Expecto.Tests"
