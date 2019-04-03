@@ -1059,78 +1059,20 @@ let findFastest =
   ]
 ```
 
-## `main argv` – how to run console apps
+## `main args` and command line – how to run console apps examples
 
-Parameters available if you use `Tests.runTestsInAssembly defaultConfig argv` in your code:
-
-- `--debug`: Extra verbose output for your tests.
-- `--sequenced`: Run all tests in sequence.
-- `--parallel`: (default) Run all tests in parallel.
-- `--parallel-workers`: Number of parallel workers (defaults to the number of logical processors).
-- `--filter <hiera>`: Filter a specific hierarchy to run.
-- `--filter-test-list <substring>`: Filter a specific test list to run.
-- `--filter-test-case <substring>`: Filter a specific test case to run.
-- `--run [<tests1> <test2> ...]`: Run only provided tests.
-- `--stress`: Run the tests randomly for the given number of minutes.
-- `--stress-timeout`: Time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).
-- `--stress-memory-limit`: Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).
-- `--fscheck-max-tests`: FsCheck maximum number of tests (default: 100).
-- `--fscheck-start-size`: FsCheck start size (default: 1).
-- `--fscheck-end-size`: FsCheck end size (default: 100 for testing and 10,000 for stress testing).
-- `--list-tests`: Doesn't run tests, print out list of tests instead.
-- `--summary`: Prints out summary after all tests are finished.
-- `--allow-duplicate-names`: Allow duplicate test names.
-- `--my-spirit-is-weak`: Don't print UTF8 emojis in the output.
-
-### The config
-
-If you prefer using F# to configure the tests, you can set the properties of the
-ExpectoConfig record, that looks like:
+From code you can run:
 
 ```fsharp
-{ /// Whether to run the tests in parallel. Defaults to
-  /// true, because your code should not mutate global
-  /// state by default.
-  parallel : bool
-  /// Number of parallel workers. Defaults to the number of
-  /// logical processors.
-  parallelWorkers : int
-  /// Stress test by running tests randomly for the given TimeSpan.
-  /// Can be sequenced or parallel depending on the config.
-  stress : TimeSpan option
-  /// Stress test deadlock timeout TimeSpan to wait after stress TimeSpan
-  /// before stopping and reporting as a deadlock (default 5 mins).
-  stressTimeout : TimeSpan
-  /// Stress test memory limit in MB to stop the test and report as
-  /// a memory leak (default 100 MB).
-  stressMemoryLimit : float
-  /// Whether to make the test runner fail if focused tests exist.
-  /// This can be used from CI servers to ensure no focused tests are
-  /// commited and therefor all tests are run.
-  failOnFocusedTests : bool
-  /// An optional filter function. Useful if you only would
-  /// like to run a subset of all the tests defined in your assembly.
-  filter   : Test -> Test
-  /// Allows the test printer to be parametised to your liking.
-  printer : TestPrinters
-  /// Verbosity level (default: Info).
-  verbosity : LogLevel
-  /// Optional function used for finding source code location of test
-  /// Defaults to empty source code.
-  locate : TestCode -> SourceLocation
-  /// FsCheck maximum number of tests (default: 100).
-  fsCheckMaxTests: int
-  /// FsCheck start size (default: 1).
-  fsCheckStartSize: int
-  /// FsCheck end size (default: 100 for testing and 10,000 for
-  /// stress testing).
-  fsCheckEndSize: int option
-  /// Allows duplicate test names.
-  allowDuplicateNames: bool
-}
+Tests.runTestsInAssembly [Stress 0.1;Stress_Timeout 0.2] [||]
 ```
 
-By doing a `let config = { defaultConfig with parallel = true }`, for example.
+From the command line you can run:
+
+```
+dotnet run -p Expecto.Tests -f netcoreapp2.1 -c release -- --help
+dotnet watch -p Expecto.Tests run -f netcoreapp2.1 -c release -- --colours 256
+```
 
 ## Contributing and building
 
