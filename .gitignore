@@ -13,6 +13,11 @@ packages/*
 .nuget/*.exe
 *.sln.ide
 project.lock.json
+
+.paket/*
+!.paket/*.proj
+!.paket/*.props
+!.paket/*.targets
 paket-files/
 any/
 BenchmarkDotNet.Artifacts/
