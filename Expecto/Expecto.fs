@@ -914,7 +914,7 @@ module Impl =
         mySpiritIsWeak = false
         allowDuplicateNames = false
         noSpinner = false
-        colour = Colour8
+        colour = Colour256
       }
 
     member x.appendSummaryHandler handleSummary =
@@ -1772,7 +1772,7 @@ module Tests =
     | Allow_Duplicate_Names
     /// Disable the spinner progress update.
     | No_Spinner
-    // Set the level of colours to use. Can be 0, 8 (default) or 256.
+    // Set the level of colours to use. Can be 0, 8 or 256 (default).
     | Colours of int
     /// Adds a test printer.
     | Printer of TestPrinters
@@ -1804,7 +1804,7 @@ module Tests =
       "--fscheck-end-size", "Set FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.parse FsCheck_End_Size
       "--my-spirit-is-weak", Args.depricated, Args.none My_Spirit_Is_Weak
       "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
-      "--colours", "Set the level of colours to use. Can be 0, 8 (default) or 256.", Args.parse Colours
+      "--colours", "Set the level of colours to use. Can be 0, 8 or 256 (default).", Args.parse Colours
       "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
   ]
 
