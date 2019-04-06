@@ -1004,7 +1004,7 @@ module internal ANSIOutputWriter =
 
   /// Lifecycle: (new T() -> t.init() -> t._ {0,*} -> (t :> IDisposable).Dispose()) {1,*}
   [<Sealed>]
-  type T(origStdOut: TextWriter, origStdErr: TextWriter, sem: obj, _autoFlush: bool) =
+  type T(origStdOut: TextWriter, origStdErr: TextWriter, sem: obj) =
     // Invariants:
     //  - For every non-private method that touches the origStdOut or origStdErr,
     //    a lock on `sem` must be held.
@@ -1015,7 +1015,6 @@ module internal ANSIOutputWriter =
     //  - No `..Inner` function declared below may take a lock on `sem`.
     //  - All `..Inner` functions below must assert `inited` is valid.
     //  - We must not throw if history init-dispose-(init | print) happens; reinitialising is allowed
-
     let mutable incompleteTextOutput: (string * ConsoleColor) list = []
     let mutable inited = false
     let buffer = StringBuilder()
@@ -1023,12 +1022,12 @@ module internal ANSIOutputWriter =
     let flushEnd = new Event<unit>()
     
     let flushInner () =
-      if not inited then invalidOp "Cannot flush unless inited"
-      lock buffer <| fun _ ->
-        flushStart.Trigger ()
-        buffer.ToString() |> origStdOut.Write
-        buffer.Clear() |> ignore
-        flushEnd.Trigger ()
+      if inited then
+        lock buffer <| fun _ ->
+          flushStart.Trigger ()
+          buffer.ToString() |> origStdOut.Write
+          buffer.Clear() |> ignore
+          flushEnd.Trigger ()
 
     // Change parts to Array since we have all items available when calling
     let rec prettyPrintInner (autoFlush, fromSysConsole) parts =
@@ -1062,8 +1061,7 @@ module internal ANSIOutputWriter =
           )
           buffer.Append colourReset |> ignore
 
-          if autoFlush then
-            flushInner ()
+          if autoFlush then flushInner ()
 
     and initInner () =
       if inited then invalidOp "Cannot init ANSIOutputWriter twice"
@@ -1123,8 +1121,8 @@ module internal ANSIOutputWriter =
     member x.flush() =
       lock sem flushInner
 
-    member internal __.prettyPrint (parts : (string * ConsoleColor) list) : unit =
-      lock sem (fun () -> prettyPrintInner (_autoFlush, false) parts)
+    member internal __.prettyPrint autoFlush (parts : (string * ConsoleColor) list) : unit =
+      lock sem (fun () -> prettyPrintInner (autoFlush, false) parts)
 
     /// During the time between calls x.init() -> IDisposable.Dispose(), there must be no other calls to `init`.
     ///
@@ -1143,19 +1141,19 @@ module internal ANSIOutputWriter =
 
   let private instance: T option ref = ref None
 
-  let create autoFlush (sem: obj) : T =
+  let create (sem: obj) : T =
     lock instance <| fun () ->
     !instance |> Option.iter (fun i -> (i :> IDisposable).Dispose())
-    let x = new T(stdout, stderr, sem, autoFlush)
+    let x = new T(stdout, stderr, sem)
     instance := Some x
     x
 
-  let internal getInstance autoFlush sem =
-    !instance |> Option.defaultWith (fun () -> create autoFlush sem)
+  let internal getInstance sem =
+    !instance |> Option.defaultWith (fun () -> create sem)
 
   let prettyPrint autoFlush sem =
-    let i = getInstance autoFlush sem
-    i.prettyPrint
+    let i = getInstance sem
+    i.prettyPrint autoFlush
 
   let flush () = !instance |> Option.iter (fun i -> i.flush())
   let close () = !instance |> Option.iter (fun i -> (i :> IDisposable).Dispose())

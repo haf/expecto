@@ -1498,7 +1498,7 @@ module Tests =
   /// Labels the passed test with a text segment. In Expecto, tests are slash-separated (`/`), so this wraps the passed
   /// tests in such a label. Useful when you don't want lots of indentation in your tests (the code would become hard to
   /// modify and read, due to all the whitespace), and you want to do `testList "..." [ ] |> testLabel "api"`.
-  let inline testLabel name test = TestLabel(name, test, FocusState.Normal)
+  let inline testLabel name test = TestLabel(name, test, Normal)
 
   /// Builds a test case that will be ignored by Expecto if exists focused
   /// tests and none of the parents is focused
