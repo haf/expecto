@@ -120,7 +120,7 @@ Target.create "RunTest" (fun _ ->
         |> fun r -> if r.ExitCode<>0 then project+".dll failed" |> failwith
         let exeName = project+"/bin/"+configuration+"/net461/"+project+".exe"
         let filename, arguments =
-            if Environment.isWindows then exeName, "--summary"
+            if Environment.isWindows then exeName, "--colours 0 --summary"
             else "mono", exeName + " --summary"
         Process.shellExec
           { ExecParams.Empty with

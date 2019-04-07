@@ -1,3 +1,7 @@
+#### 8.10.1 - 2019-04-07
+* Skipping results in an exception report. #313 thanks @AnthonyLloyd
+* Progress log does not flush during tests. #314 thanks @AnthonyLloyd
+
 #### 8.10.0 - 2019-04-03
 * Add Expecto.hasLength. #312 thanks @drhumlen
 * Count when focusing on any test is off. #308 thanks @AnthonyLloyd
