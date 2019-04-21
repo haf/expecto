@@ -463,7 +463,7 @@ This can be useful for timeout and performance testing.
 ```fsharp
 [<Tests>]
 let timeout =
-  ptestSequenced <| testList "Timeout" [
+  testSequenced <| testList "Timeout" [
     test "fail" {
       let test = TestCase(Test.timeout 10 (fun () -> Thread.Sleep 100), Normal)
       let result = evalSilent test |> sumTestResults
