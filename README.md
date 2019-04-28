@@ -764,7 +764,7 @@ property based test).
 
 FsCheck `Arb.Register` can't be used with Expecto because it is thread local and
 Expecto runs multithreaded by default. This could be worked around but
-`Arb.Register` is being depricated by FsCheck. The recommended way to register
+`Arb.Register` is being deprecated by FsCheck. The recommended way to register
 and use custom generators is to define `testPropertyWithConfig` functions like
 `testProp` above for each area with common generator use. This ensures the
 library will always be used in a thread safe way.
@@ -777,7 +777,7 @@ systems with property-based testing.
 - [An introduction to property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing/) with [slides and video](http://fsharpforfunandprofit.com/pbt/)
 - [Choosing properties for property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing-2/)
 - [(video) Race conditions, distribution and interactions](https://vimeo.com/68383317)
-- [Test data: generators, schrinkers and instances](https://fscheck.github.io/FsCheck/TestData.html)
+- [Test data: generators, shrinkers and Arbitrary instances](https://fscheck.github.io/FsCheck/TestData.html)
 - [Model based testing](https://fscheck.github.io/FsCheck/StatefulTesting.html)
 - [Testing and quality assurance in Haskell](http://book.realworldhaskell.org/read/testing-and-quality-assurance.html)
 - [Property-based testing for better code](https://www.youtube.com/watch?v=shngiiBfD80)
@@ -823,7 +823,7 @@ This module is your main entry-point when asserting.
 - `isFalse`
 - `isTrue`
 - `exists` - Expect that some element from `actual` sequence satisfies the given `asserter`
-- `all` - Expect that all elements from `actual` satisfies the given `asserter`
+- `all` - Expect that all elements from `actual` satisfy the given `asserter`
 - `allEqual` - Expect that all elements from `actual` are equal to `equalTo`
 - `sequenceEqual`
 - `floatClose : Accuracy -> float -> float -> string -> unit` - Expect the
@@ -877,12 +877,12 @@ This module is your main entry-point when asserting.
 - `streamsEqual` – Expect the streams to be byte-wise identical.
 - `isFasterThan : (unit -> 'a) -> (unit -> 'a) -> string -> unit` – Expect the
     first function to be faster than the second function with the passed string
-    message, printed on failure. See the next section on Performance for example
+    message, printed on failure. See the next section on [Performance](#performance-module) for example
     usage.
 - `isFasterThanSub` – Like the above but with passed function signature of
    `Performance.Measurer<unit,'a> -> 'a`, allowing you to do setup and teardown
-   of your subject under test (the function) before calling the Measurer. See
-   the next section on Performance for example usage.
+   of your subject under test (the function) before calling the `measurer`. See
+   the next section on [Performance](#performance-module) for example usage.
 
 Also note, that there's a "fluent" API, with which you can pipe the test-subject
 value into the expectation:
@@ -929,11 +929,11 @@ normally be run across all configurations as part of unit testing.
 The functions must return the same result for same input. Note that since
 Expecto also has a FsCheck integration, your outer (sequenced) test could be
 the property test, generating random data, and your TestCode/function body/
-actual test could be an assertion that for the same (random instance) of test-
+actual test could be an assertion that for the same (random instance) of test
 data, one function should be faster than the other.
 
 From `Expect.isFasterThanSub`, these results are possible (all of which generate
-a test failure, except the MetricLessThan case):
+a test failure, except the `MetricLessThan` case):
 
 ```fsharp
   type 'a CompareResult =
@@ -1027,7 +1027,7 @@ double is faster. Expected f1 (0.3067 ± 0.0123 ms) to be faster than f2 (0.1513
 
 ### Performance.findFastest
 
-Expecto can use `isFasterThan` to find the fastest version of a function for a given int input.
+Expecto can use `isFasterThan` to find the fastest version of a function for a given `int` input.
 This can be useful for optimising algorithm constants such as buffer size.
 
 ```fsharp
