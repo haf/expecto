@@ -77,10 +77,10 @@ let tests =
       test "different length, actual is shorter" {
         Expect.equal "Test" "Test2" "Failing - string with different length"
       } |> assertTestFailsWithMsgStartingDelay (fun () ->
-            let redStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Red
-            let redEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
-            let greenStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Green
-            let greenEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
+            let redStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
             "Failing - string with different length. String actual was shorter than expected, at pos 4 for expected item '2'.\n"+
             greenStart+"expected"+greenEnd+": Test"+greenStart+"2"+greenEnd+"\n"+
             redStart+"  actual"+redEnd+": Test"
@@ -89,10 +89,10 @@ let tests =
       test "different length, actual is longer" {
         Expect.equal "Test2" "Test" "Failing - string with different length"
       } |> assertTestFailsWithMsgStartingDelay (fun () ->
-            let redStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Red
-            let redEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
-            let greenStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Green
-            let greenEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
+            let redStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
             "Failing - string with different length. String actual was longer than expected, at pos 4 found item '2'.\n"+
             greenStart+"expected"+greenEnd+": Test\n"+
             redStart+"  actual"+redEnd+": Test"+redStart+"2"+redEnd
@@ -100,10 +100,10 @@ let tests =
       test "fail - different content" {
         Expect.equal "Test" "Tes2" "Failing - string with different content"
       } |> assertTestFailsWithMsgStartingDelay (fun () ->
-            let redStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Red
-            let redEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
-            let greenStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Green
-            let greenEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
+            let redStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
             "Failing - string with different content. String does not match at position 3. Expected char: '2', but got 't'.\n"+
             greenStart+"expected"+greenEnd+": Tes"+greenStart+"2"+greenEnd + "\n"+
             redStart+"  actual"+redEnd+": Tes"+redStart+"t"+redEnd
@@ -118,10 +118,10 @@ let tests =
       test "fail - different content" {
         Expect.equal {a = "dd"; b = "de" } {a = "dd"; b = "dw" } "Failing - record with different content"
       } |> assertTestFailsWithMsgStartingDelay (fun () ->
-            let redStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Red
-            let redEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
-            let greenStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Green
-            let greenEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
+            let redStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
             "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\n"+
             greenStart+"expected"+greenEnd+":\n{a = \"dd\";\n b = \"d"+greenStart+"w"+greenEnd+"\";}\n"+
             redStart+"  actual"+redEnd+":\n{a = \"dd\";\n b = \"d"+redStart+"e"+redEnd+"\";}"

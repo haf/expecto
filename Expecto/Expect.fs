@@ -33,8 +33,8 @@ let private allDiffs (s1:string) (s2:string) =
   |> snd
 
 let private highlightAllRed diffs (s:string) =
-  let redStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Red
-  let redEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
+  let redStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Red
+  let redEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
   let l = s.Length
   List.fold (fun (s:string) (i,j) ->
     if i>=l then s
@@ -42,8 +42,8 @@ let private highlightAllRed diffs (s:string) =
   ) s diffs
 
 let private highlightAllGreen diffs (s:string) =
-  let greenStart = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Green
-  let greenEnd = ANSIOutputWriter.colourText ANSIOutputWriter.colours.Value ConsoleColor.Cyan
+  let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
+  let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
   let l = s.Length
   List.fold (fun (s:string) (i,j) ->
     if i>=l then s
