@@ -3,6 +3,8 @@ module Expecto.Hopac.Tests
 open Hopac
 open Expecto
 open Expecto.Impl
+open System
+open System.Threading.Tasks
 
 let rec private makeTest originalTest asyncTestFn =
   match originalTest with
@@ -39,14 +41,14 @@ let tests =
   ]
 
 [<Tests>]
-let jobTests =
-  testList "job" [
+let testCaseJobTests =
+  testList "testCaseJob" [
 
     testCaseJob "simple job" <| job {
       Expect.equal 1 1 "1=1"
     }
 
-    testCaseJob "let job" <| job {
+    testCaseJob "let! job" <| job {
       let! n = job { return 1 }
       Expect.equal 1 n "1=n"
     }
@@ -58,3 +60,40 @@ let jobTests =
 
   ]
 
+let emptyDisposeable = {
+  new IDisposable with
+    member __.Dispose () = ()
+}
+
+let oneShotObservable value = {
+  new IObservable<_> with
+    member __.Subscribe(obs : IObserver<_>) =
+      obs.OnNext value
+      obs.OnCompleted ()
+      emptyDisposeable
+}
+
+[<Tests>]
+let testJobTests =
+  testList "testJob" [
+
+    testJob "let! observable"  {
+      let! n = oneShotObservable 1
+      Expect.equal 1 n "1=n"
+    }
+
+    testJob "let! job"  {
+      let! n = job { return 1 }
+      Expect.equal 1 n "1=n"
+    }
+
+    testJob "let! async"  {
+      let! n = async { return 1 }
+      Expect.equal 1 n "1=n"
+    }
+
+    testJob "let! task"  {
+      let! n = Task.FromResult 1
+      Expect.equal 1 n "1=n"
+    }
+  ]

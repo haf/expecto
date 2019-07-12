@@ -1,7 +1,9 @@
 namespace Expecto
 open Expecto
 open Hopac
+open System
 open System.Runtime.CompilerServices
+open System.Threading.Tasks
 
 [<AutoOpen; Extension>]
 module Tests =
@@ -13,17 +15,23 @@ module Tests =
   let inline ptestCaseJob name (test : #Job<unit>) = TestLabel(name, TestCase (Async (test |> Job.toAsync), Pending), Pending)
 
   type TestJobBuilder(name, focusState) =
-    member __.Zero() = job.Zero()
-    member __.Delay(f) = Job.delay f
-    member __.Return(x) = job.Return(x)
-    member __.ReturnFrom(x : Job<_>) = job.ReturnFrom(x)
-    member __.Bind(p1 : Job<_>, p2) = job.Bind(p1, p2)
-    member __.Using(g, p) = job.Using(g, p)
-    member __.While(gd, prog) = job.While(gd, prog)
-    member __.For(e, prog) = job.For(e, prog)
-    member __.Combine(p1, p2) = job.Combine(p1, p2)
-    member __.TryFinally(p, cf) = job.TryFinally(p, cf)
-    member __.TryWith(p, cf) = job.TryWith(p, cf)
+    member inline __.Zero() = job.Zero()
+    member inline __.Delay(f) = Job.delay f
+    member inline __.Return(x) = job.Return(x)
+    member inline __.ReturnFrom (x: IObservable<'x>) =job.ReturnFrom(x)
+    member inline __.ReturnFrom (x: Async<'x>) =job.ReturnFrom(x)
+    member inline __.ReturnFrom (x: Task<'x>) =job.ReturnFrom(x)
+    member inline __.ReturnFrom(x : Job<_>) = job.ReturnFrom(x)
+    member inline __.Bind (p1: IObservable<'x>, p2) = job.Bind(p1, p2)
+    member inline __.Bind (p1: Async<'x>, p2) = job.Bind(p1,p2)
+    member inline __.Bind (p1: Task<'x>, p2) = job.Bind(p1,p2)
+    member inline __.Bind(p1 : Job<_>, p2) = job.Bind(p1, p2)
+    member inline __.Using(g, p) = job.Using(g, p)
+    member inline __.While(gd, prog) = job.While(gd, prog)
+    member inline __.For(e, prog) = job.For(e, prog)
+    member inline __.Combine(p1, p2) = job.Combine(p1, p2)
+    member inline __.TryFinally(p, cf) = job.TryFinally(p, cf)
+    member inline __.TryWith(p, cf) = job.TryWith(p, cf)
     member __.Run f =
       match focusState with
       | Normal -> testCaseJob name f
