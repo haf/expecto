@@ -257,6 +257,54 @@ let expecto =
             Expect.isLessThan value 1444 "Should be less than"
     ] |> List.ofSeq)
 
+    testList "shuffle" [
+      testAsync "array sort same" {
+        let a = [|1;2;3;4;5;6;7|]
+        let b = Array.copy a
+        Array.shuffleInPlace b
+        Array.sortInPlace b
+        Expect.sequenceEqual a b "ordered"
+      }
+      testAsync "array different" {
+          let a = [|1;2;3;4;5;6;7|]
+          let b = Array.copy a
+          let rec shuffle() =
+            Array.shuffleInPlace a
+            Array.shuffleInPlace b
+            if a=b then shuffle()
+          shuffle()
+          Array.sortInPlace a
+          Array.sortInPlace b
+          Expect.sequenceEqual a b "same sorted"
+      }
+      testAsync "test shuffle" {
+        let test =
+          testList "1" [
+            testList "2" [
+              testCase "4" ignore
+              ptestCase "5" ignore
+              ftestCase "6" ignore
+            ]
+            testList "3" [
+              testCase "7" ignore |> testSequenced
+              ptestCase "8" ignore |> testSequencedGroup "g"
+            ]
+          ]
+        let tests =
+          Test.shuffle test
+          |> Test.toTestCodeList
+          |> List.sortBy (fun i -> i.name)
+          |> List.map (fun t -> t.name,t.state,t.focusOn,t.sequenced)
+        Expect.sequenceEqual tests [
+          "1/2/4",Normal,true,InParallel
+          "1/2/5",Pending,true,InParallel
+          "1/2/6",Focused,true,InParallel
+          "1/3/7",Normal,true,Synchronous
+          "1/3/8",Pending,true,SynchronousGroup "g"
+        ] "flat tests"
+      }
+    ]
+
     testList "Test filter" [
       let tests =
         TestList (

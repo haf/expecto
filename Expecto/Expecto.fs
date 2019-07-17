@@ -166,6 +166,16 @@ module internal Helpers =
   module List =
     let inline singleton x = [x]
 
+  module Array =
+    let shuffleInPlace (a:_ array) =
+      let rand = Random()
+      for i = Array.length a - 1 downto 1 do
+        let j = rand.Next(i+1)
+        if i<>j then
+            let temp = a.[j]
+            a.[j] <- a.[i]
+            a.[i] <- temp
+
   module Option =
     let orFun fn =
       function | Some a -> a | None -> fn()
@@ -337,6 +347,21 @@ module Test =
       | TestList (tests, state) -> List.collect (loop parentName testList (computeChildFocusState parentState state) sequenced) tests
       | Sequenced (sequenced,test) -> loop parentName testList parentState sequenced test
     loop null [] Normal InParallel test
+
+  let fromFlatTests (tests:FlatTest list) =
+    TestList(
+      List.map (fun t ->
+        TestLabel(t.name, Sequenced(t.sequenced, TestCase (t.test, t.state)), t.state)
+      ) tests
+    , Normal)
+
+  let shuffle (test:Test) =
+    let tests =
+      toTestCodeList test
+      |> List.toArray
+    Array.shuffleInPlace tests
+    Array.toList tests
+    |> fromFlatTests
 
   /// Change the FocusState by appling the old state to a new state
   /// Note: this is not state replacement!!!
