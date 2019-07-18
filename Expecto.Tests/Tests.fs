@@ -271,7 +271,7 @@ let expecto =
           let rec shuffle() =
             Array.shuffleInPlace a
             Array.shuffleInPlace b
-            if a=b then shuffle()
+            if Array.exists2 (=) a b then shuffle()
           shuffle()
           Array.sortInPlace a
           Array.sortInPlace b
