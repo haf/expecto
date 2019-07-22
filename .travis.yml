@@ -1,7 +1,7 @@
 language: csharp
 dist: trusty
 sudo: false
-dotnet: 2.2.300
+dotnet: 2.2.202
 
 matrix:
   fast_finish: true
