@@ -1,7 +1,7 @@
 language: csharp
-dist: bionic
+dist: xenial
 sudo: false
-dotnet: 2.2.202
+dotnet: 2.1.505
 
 matrix:
   fast_finish: true
