@@ -1,3 +1,10 @@
+#### 8.11.0 - 2019-07-22
+* Update typo in README.md. #323 thanks @MarneeDear
+* Several typos. #325 thanks @milbrandt
+* Default coloors to 8 if not set in config. #330 thanks @AnthonyLloyd
+* Aligns TestJobBuilder closer to Hopacs JobBuilder. #333 thanks @TheAngryByrd
+* Add Test.shuffle function. thanks @AnthonyLloyd
+
 #### 8.10.1 - 2019-04-07
 * Skipping results in an exception report. #313 thanks @AnthonyLloyd
 * Progress log does not flush during tests. #314 thanks @AnthonyLloyd

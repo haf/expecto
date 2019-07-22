@@ -14,6 +14,7 @@ nuget Fake.Core.ReleaseNotes //"
 #load "./.fake/build.fsx/intellisense.fsx"
 #if !FAKE
 #r "netstandard"
+#r "facades/netstandard"
 #endif
 
 open System

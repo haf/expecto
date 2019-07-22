@@ -880,9 +880,7 @@ module internal ANSIOutputWriter =
 
   let mutable internal colours = None
   let internal setColourLevel c = if colours.IsNone then colours <- Some c
-  let internal getColour() =
-    let def = if Environment.OSVersion.Platform = PlatformID.Win32NT then Colour0 else Colour8
-    Option.defaultValue def colours
+  let internal getColour() = Option.defaultValue Colour8 colours
 
   let colourReset = "\u001b[0m"
 

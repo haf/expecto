@@ -47,8 +47,11 @@ documentation for the project.
 - [Running tests](#running-tests)
   * [`runTests`](#runtests)
   * [`runTestsWithArgs`](#runtestswithargs)
+  * [`runTestsWithCLIArgs`](#runtestswithcliargs)
   * [`runTestsInAssembly`](#runtestsinassembly)
+  * [`runTestsInAssemblyWithCLIArgs`](#runtestsinassemblywithcliargs)
   * [Filtering with `filter`](#filtering-with-filter)
+  * [Shuffling with `shuffle`](#shuffling-with-shuffle)
   * [Stress testing](#stress-testing)
 - [Writing tests](#writing-tests)
   * [Normal tests](#normal-tests)
@@ -230,17 +233,30 @@ testCase "A simple test" (fun () ->
 ### `runTests`
 
 Signature `ExpectoConfig -> Test -> int`. Runs the passed tests with the passed
-configuration record.
+configuration record. Note: now depricated please use CLIArgs below.
 
 ### `runTestsWithArgs`
 
 Signature `ExpectoConfig -> string[] -> Test -> int`. Runs the passed tests
 and also overrides the passed `ExpectoConfig` with the command line parameters.
+Note: now depricated please use CLIArgs below.
+
+### `runTestsWithCLIArgs`
+
+Signature `CLIArguments seq -> string[] -> Test -> int`. Runs the passed tests
+and also overrides the passed `CLIArguments` with the command line parameters.
 
 ### `runTestsInAssembly`
 
 Signature `ExpectoConfig -> string[] -> int`. Runs the tests in the current
 assembly and also overrides the passed `ExpectoConfig` with the command line
+parameters. All tests need to be marked with the `[<Tests>]` attribute.
+Note: now depricated please use CLIArgs below.
+
+### `runTestsInAssemblyWithCLIArgs`
+
+Signature `CLIArguments seq -> string[] -> int`. Runs the tests in the current
+assembly and also overrides the passed `CLIArguments` with the command line
 parameters. All tests need to be marked with the `[<Tests>]` attribute.
 
 ### Filtering with `filter`
@@ -253,8 +269,22 @@ open Expecto
 open MyLib.Tests
 integrationTests // from MyLib.Tests
 |> Test.filter (fun s -> s.EndsWith "another test") // the filtering function
-|> runTests defaultConfig
+|> runTestsWithCLIArgs [] [||]
 ```
+
+### Shuffling with `shuffle`
+
+You can shuffle the tests randomly to help ensure there are no run order dependencies.
+For example:
+
+```fsharp
+open Expecto
+open MyLib.Tests
+myTests // from MyLib.Tests
+|> Test.shuffle
+|> runTestsWithCLIArgs [] [||]
+```
+
 ### Stress testing
 
 Tests can also be run randomly for a fixed length of time.
