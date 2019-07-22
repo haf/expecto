@@ -1,7 +1,7 @@
 #### 8.11.0 - 2019-07-22
 * Update typo in README.md. #323 thanks @MarneeDear
 * Several typos. #325 thanks @milbrandt
-* Default coloors to 8 if not set in config. #330 thanks @AnthonyLloyd
+* Default colours to 8 if not set in config. #330 thanks @AnthonyLloyd
 * Aligns TestJobBuilder closer to Hopacs JobBuilder. #333 thanks @TheAngryByrd
 * Add Test.shuffle function. thanks @AnthonyLloyd
 
