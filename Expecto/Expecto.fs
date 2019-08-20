@@ -1950,10 +1950,9 @@ module Tests =
         afterRunTestsInvoke()
         retCode
       else
-        logger.errorWithBP (
-          eventX "Found duplicated test names, these names are: {duplicates}"
-          >> setField "duplicates" duplicates.Value
-        ) |> Async.RunSynchronously
+        sprintf "Found duplicated test names, these names are: %A" duplicates.Value
+        |> config.printer.info
+        |> Async.RunSynchronously
         ANSIOutputWriter.close()
         1
   /// Runs tests with the supplied config.
