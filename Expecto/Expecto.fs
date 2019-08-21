@@ -501,7 +501,7 @@ module Impl =
         maxDuration   = max s.maxDuration x }
 
   type TestRunSummary =
-    { results   : (FlatTest*TestSummary) list
+    { results   : (FlatTest * TestSummary) list
       duration  : TimeSpan
       maxMemory : int64
       memoryLimit : int64

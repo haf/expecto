@@ -135,6 +135,11 @@ module ExpectoFsCheck =
     propertyTest "etestPropertyWithConfigs" Focused
                  (Some(testConfig,stressConfig)) name
 
+  let testPropertyWithConfigsStdGen stdGen testConfig stressConfig name =
+    let testConfig = { testConfig with replay = Some stdGen }
+    let stressConfig = { stressConfig with replay = Some stdGen }
+    propertyTest "testPropertyWithConfigsStdGen" Normal (Some (testConfig,stressConfig)) name
+
   /// Builds a test property with config
   let testPropertyWithConfig config name =
     propertyTest "etestPropertyWithConfig" Normal (Some (config,config)) name
@@ -154,6 +159,11 @@ module ExpectoFsCheck =
     let config = { config with replay = Some stdGen }
     propertyTest "etestPropertyWithConfig" Focused (Some(config,config)) name
 
+  /// Builds a test property with a config and a random seed number to ensure FsCheck runs identically every time.
+  let testPropertyWithConfigStdGen stdGen config name =
+    let config = { config with replay = Some stdGen }
+    propertyTest "testPropertyWithConfigStdGen" Normal (Some(config,config)) name
+
   /// Builds a test property.
   let testProperty name =
     propertyTest "etestProperty" Normal None name
@@ -165,7 +175,7 @@ module ExpectoFsCheck =
   /// Builds a test property that will make Expecto to ignore other unfocused tests.
   let ftestProperty name =
     propertyTest "etestProperty" Focused None name
-  
+
   /// Builds a test property that will make Expecto focus on this test use an error stdGen.
   let etestProperty stdGen name =
     let config = { FsCheckConfig.defaultConfig with replay = Some stdGen }

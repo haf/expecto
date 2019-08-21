@@ -313,7 +313,8 @@ Expecto supports the following test constructors:
 - testCases with the workflow builder `test`, `ptest`, `ftest` supporting
    deterministic disposal, loops and such
 - property based tests with `testProperty`, `testPropertyWithConfig` and
-   `testPropertyWithConfigs` from `Expecto.FsCheck`
+  `testPropertyWithConfigs`, `testPropertyWithConfigsStdGen`,
+  `testPropertyWithConfigStdGen` from `Expecto.FsCheck`
 - performance tests with `Expecto.BenchmarkDotNet` and `benchmark<TBench> :
    string -> Test`.
 - wrapping your test with a label with `testLabel`. If your root label is the
