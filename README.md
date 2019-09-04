@@ -536,7 +536,7 @@ let timeout =
   ]
 ```
 
-### Parametised tests with `testParam`
+### Parametrised tests with `testParam`
 
 - `testParam`
 
