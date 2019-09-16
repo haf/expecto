@@ -10,15 +10,12 @@ matrix:
     - os: linux
       mono: 5.8.0
     - os: linux
-      mono: weekly
-    - os: linux
       mono: latest
     - os: osx
       osx_image: xcode9.3
       mono: latest
 
   allow_failures:
-    - mono: weekly
     - mono: latest
 
 env:
