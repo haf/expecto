@@ -9,3 +9,5 @@ nuget FsCheck ~> 2.10
 nuget Hopac ~> 0.3
 nuget Mono.Cecil ~> 0.10
 nuget BenchmarkDotNet 0.10.14
+
+github eiriktsarpalis/snippets SlnTools/SlnTools.fs

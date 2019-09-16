@@ -12,12 +12,14 @@ nuget Fake.BuildServer.AppVeyor
 nuget Fake.BuildServer.Travis
 nuget Fake.Core.ReleaseNotes //"
 #load "./.fake/build.fsx/intellisense.fsx"
+#load "paket-files/eiriktsarpalis/snippets/SlnTools/SlnTools.fs"
 #if !FAKE
 #r "netstandard"
 #r "facades/netstandard"
 #endif
 
 open System
+open System.IO
 open Fake.Core
 open Fake.DotNet
 open Fake.Tools
@@ -40,14 +42,30 @@ let licenceUrl = "https://github.com/haf/expecto/blob/master/LICENSE"
 let copyright = "Copyright 2019"
 let mutable dotnetExePath = "dotnet"
 
+let envRequired k =
+  let v = Environment.GetEnvironmentVariable k
+  if isNull v then failwithf "Missing environment key '%s'." k
+  v
+
 BuildServer.install [
-    Travis.Installer
-    AppVeyor.Installer
+  Travis.Installer
+  AppVeyor.Installer
 ]
 
-Target.create "Clean" (fun _ ->
-    !!"./**/bin/" ++ "./**/obj/" |> Shell.cleanDirs
-)
+let libProjects =
+  !! "Expecto/*.fsproj"
+  ++ "Expecto.FsCheck/*.fsproj"
+  ++ "Expecto.BenchmarkDotNet/*.fsproj"
+  ++ "Expecto.Hopac/*.fsproj"
+  ++ "Expecto.TestResults/*.fsproj"
+
+let pkgPath = Path.GetFullPath "./pkg"
+
+Target.create "Clean" <| fun _ ->
+  !!"./**/bin/"
+  ++ "./**/obj/"
+  |> Shell.cleanDirs
+
 let normaliseFileToLFEnding filename =
     let s = File.readAsString filename
     s.Replace(String.WindowsLineBreaks,String.LinuxLineBreaks)
@@ -112,8 +130,8 @@ Target.create "BuildTest" (fun _ ->
     build "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj"
 )
 
-Target.create "RunTest" (fun _ ->
-    
+Target.create "RunTest" <| fun _ ->
+
     let runTest project =
         DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
              (project+"/bin/"+configuration+"/netcoreapp2.1/"+project+".dll")
@@ -130,7 +148,7 @@ Target.create "RunTest" (fun _ ->
               CommandLine = arguments
           }
         |> fun r -> if r<>0 then project+".exe failed" |> failwith
-    
+
     runTest "Expecto.Tests"
 
     "Expecto.Tests.TestResults.xml"
@@ -138,49 +156,54 @@ Target.create "RunTest" (fun _ ->
     |> Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
 
     runTest "Expecto.Tests.CSharp"
-    
+
     "Expecto.Tests.CSharp.TestResults.xml"
     |> Path.combine (Path.combine __SOURCE_DIRECTORY__ "bin")
     |> Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
 
     runTest "Expecto.Hopac.Tests"
     runTest "Expecto.Focused.Tests"
-)
 
-Target.create "Pack" (fun _ ->
-    let pack project =
-        let packParameters =
-            [
-                "--no-build"
-                "--no-restore"
-                sprintf "/p:Title=\"%s\"" project
-                "/p:PackageVersion=" + release.NugetVersion
-                sprintf "/p:Authors=\"%s\"" authors
-                sprintf "/p:Owners=\"%s\"" owners
-                "/p:PackageRequireLicenseAcceptance=false"
-                sprintf "/p:Description=\"%s\"" description
-                sprintf "/p:PackageReleaseNotes=\"%O\""
-                    ((String.toLines release.Notes).Replace(",",""))
-                sprintf "/p:Copyright=\"%s\"" copyright
-                sprintf "/p:PackageTags=\"%s\"" tags
-                sprintf "/p:PackageProjectUrl=\"%s\"" projectUrl
-                sprintf "/p:PackageIconUrl=\"%s\"" iconUrl
-                sprintf "/p:License=\"%s\"" licenceUrl
-            ] |> String.concat " "
-        "pack "+project+"/"+project+".fsproj -c "+configuration + " -o ../bin "
-        + packParameters
-        |> DotNet.exec id <| ""
-        |> ignore
-    pack "Expecto"
-    pack "Expecto.FsCheck"
-    pack "Expecto.BenchmarkDotNet"
-    pack "Expecto.Hopac"
-    pack "Expecto.TestResults"
-)
+Target.create "Pack" <| fun _ ->
+  let args =
+    { MSBuild.CliArguments.Create() with
+        NoLogo = true
+        DoRestore = false
+        Properties =
+          [ "PackageVersion", release.NugetVersion
+            "Authors", authors
+            "Owners", owners
+            "PackageRequireLicenseAcceptance", "true"
+            "Description", description.Replace(",","")
+            "PackageReleaseNotes", (release.Notes |> String.toLines).Replace(",","").Replace(";", "—")
+            "Copyright", copyright
+            "PackageTags", tags
+            "PackageProjectUrl", projectUrl
+            "PackageIconUrl", iconUrl
+            "PackageLicenseUrl", licenceUrl
+          ]
+    }
+  let pkgSln = SlnTools.createTempSolutionFile libProjects
+  let setParams (p: DotNet.PackOptions) =
+    { p with
+        OutputPath = Some pkgPath
+        Configuration = configuration
+        MSBuildParams = args }
+  DotNet.pack setParams pkgSln
 
-Target.create "Push" (fun _ ->
-    Paket.push (fun p -> { p with WorkingDir = "bin" })
-)
+Target.create "Push" <| fun _ ->
+  let setParams (p: Paket.PaketPushParams) =
+    { p with
+        ToolPath = Path.GetFullPath "./.paket/paket"
+        WorkingDir = pkgPath
+        ApiKey = envRequired "NUGET_TOKEN" }
+  // for f in *.nupkg; do ../.paket/paket push  --api-key $NUGET_TOKEN $f; done
+  Paket.push setParams
+
+Target.create "CheckEnv" <| fun _ ->
+  ignore (envRequired "GITHUB_TOKEN")
+  ignore (envRequired "NUGET_TOKEN")
+
 
 Target.create "Release" (fun _ ->
     let gitOwner = "haf"
@@ -209,16 +232,19 @@ Target.create "Release" (fun _ ->
 
 Target.create "All" ignore
 
+"CheckEnv"
+  ==> "Release"
+
 "Clean"
-==> "AssemblyInfo"
-==> "ProjectVersion"
-==> "BuildExpecto"
-==> "BuildBenchmarkDotNet"
-==> "BuildTest"
-==> "RunTest"
-==> "Pack"
-==> "All"
-==> "Push"
-==> "Release"
+  ==> "AssemblyInfo"
+  ==> "ProjectVersion"
+  ==> "BuildExpecto"
+  ==> "BuildBenchmarkDotNet"
+  ==> "BuildTest"
+  ==> "RunTest"
+  ==> "Pack"
+  ==> "All"
+  ==> "Push"
+  ==> "Release"
 
 Target.runOrDefaultWithArguments "All"
