@@ -3,6 +3,7 @@ image:
   - Visual Studio 2017
 
 install:
+  - dotnet tool install paket --tool-path .paket --version 5.219.0
   - dotnet tool install fake-cli -g
 
 build_script:
