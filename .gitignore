@@ -23,3 +23,5 @@ any/
 tools/nuget-workaround/obj/
 .ionide
 **/.DS_Store
+.paket/
+.fake/

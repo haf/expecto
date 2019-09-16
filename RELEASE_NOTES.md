@@ -1,3 +1,6 @@
+#### 8.12.0 - 2019-09-16
+* Fix #330 - a possible null ref in coloured logging, thanks @haf
+
 #### 8.11.0 - 2019-07-22
 * Update typo in README.md. #323 thanks @MarneeDear
 * Several typos. #325 thanks @milbrandt

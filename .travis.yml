@@ -26,11 +26,5 @@ env:
     - DOTNET_CLI_TELEMETRY_OPTOUT: 1
     - DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
-before_install:
-  - dotnet tool install fake-cli -g
-  - export PATH="$PATH:/home/travis/.dotnet/tools"
-  - export FrameworkPathOverride=$(dirname $(which mono))/../lib/mono/4.6.1-api
-  - mono .paket/paket.exe restore
-
 script:
-  - fake build
+  - ./fake.sh build

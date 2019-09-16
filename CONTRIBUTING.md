@@ -16,11 +16,8 @@
 
  1. Set up of compiler state:
 
-    ```
-    dotnet tool install fake-cli -g
-    export FrameworkPathOverride=$(dirname $(which mono))/../lib/mono/4.6.1-api
-    mono .paket/paket.exe restore
-    fake build
+    ```bash
+    ./fake build
     ```
 
  1. New features:

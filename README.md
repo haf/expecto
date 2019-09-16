@@ -6,36 +6,30 @@
 
 Expecto is an advanced testing library for F#.
 
-Expecto tests are parallel and async by default, so that you can use all your
-cores for testing your software.  This also opens up a new way of catching
-threading and memory issues for free using stress testing.
+Expecto tests are parallel and async by default, so that you can use all your cores for testing your software.  This
+also opens up a new way of catching threading and memory issues for free using stress testing.
 
 ![Parallel by default](./docs/stress.jpg)
 
-With Expecto you write tests as values. Tests can be composed, reduced,
-filtered, repeated and passed as values, because they are values. This gives the
-programmer a lot of leverage when writing tests.  Setup and teardown are just
-simple functions, no need for attributes.
+With Expecto you write tests as values. Tests can be composed, reduced, filtered, repeated and passed as values, because
+they are values. This gives the programmer a lot of leverage when writing tests.  Setup and teardown are just simple
+functions, no need for attributes.
 
-Expecto comes with batteries included with an integrated test runner, but it's
-still open for extension due to its compositional model.
+Expecto comes with batteries included with an integrated test runner, but it's still open for extension due to its
+compositional model.
 
-Expecto comes with performance testing, making statistically sound performance
-comparison simple.
+Expecto comes with performance testing, making statistically sound performance comparison simple.
 
 Expecto also provides a simple API for property based testing using FsCheck.
 
-VSCode and Ionide integrate out-of-the-box with Expecto's command-line output.
-There's also a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio
-integration.
+VSCode and Ionide integrate out-of-the-box with Expecto's command-line output.  There's also a nuget
+`Expecto.VisualStudio.TestAdapter` for Visual Studio integration.
 
 Or simply `dotnet run` or `dotnet watch` from the command line:
-```
-dotnet watch -p MyProject.Tests run -f netcoreapp2.1
-```
 
-What follows is the Table of Contents for this README, which also serves as the
-documentation for the project.
+    dotnet watch -p MyProject.Tests run -f netcoreapp2.1
+
+What follows is the Table of Contents for this README, which also serves as the documentation for the project.
 
 <!-- toc -->
 
@@ -87,14 +81,12 @@ documentation for the project.
 
 ## Installing
 
-In your paket.dependencies:
+In your `paket.dependencies`:
 
-```
-nuget Expecto
-nuget Expecto.BenchmarkDotNet
-nuget Expecto.FsCheck
-nuget Expecto.Hopac
-```
+    nuget Expecto
+    nuget Expecto.BenchmarkDotNet
+    nuget Expecto.FsCheck
+    nuget Expecto.Hopac
 
 Tests should be first-class values so that you can move them around and execute
 them in any context that you want.
@@ -109,9 +101,7 @@ with Expecto:
 To get a [complete logging solution][logary] and stacktrace highlighting, parsing and
 the ability to ship your build logs somewhere, also add these:
 
-```
-nuget Logary.Adapters.Facade prerelease
-```
+    nuget Logary.Adapters.Facade prerelease
 
 And in your tests:
 
@@ -141,9 +131,7 @@ and the output won't be interlaced due to concurrency.
 
 ### TestResults file
 
-```
-nuget Expecto.TestResults
-```
+    nuget Expecto.TestResults
 
 and configure it to generate the tests result file (nunit v2 format)
 
@@ -159,9 +147,8 @@ let main args =
 
 ## .Net Core support
 
-[Expecto has it's own .net core template](https://github.com/MNie/Expecto.Template)!
-You could create a base .net core project with expecto.
-How to do that? Simply write following lines:
+[Expecto has it's own .net core template](https://github.com/MNie/Expecto.Template)! You could create a base .Net core
+project with expecto.  How to do that? Simply write following lines:
 
     dotnet new -i Expecto.Template::*
     dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
@@ -175,8 +162,8 @@ How to run it?
 
 ## Testing "Hello world"
 
-The test runner is the test assembly itself. It's recommended to compile your
-test assembly as a console application. You can run a test directly like this:
+The test runner is the test assembly itself. It's recommended to compile your test assembly as a console application.
+You can run a test directly like this:
 
 ```fsharp
 open Expecto
@@ -398,9 +385,8 @@ testList "Setup & teardown 3" [
 - `ptestTask`
 - `ptestCaseAsync`
 
-You can mark an individual spec or container as Pending. This will prevent the
-spec (or specs within the list) from running.  You do this by adding a `p`
-before *testCase* or *testList* or `P` before *Tests* attribute (when reflection
+You can mark an individual spec or container as Pending. This will prevent the spec (or specs within the list) from
+running.  You do this by adding a `p` before *testCase* or *testList* or `P` before *Tests* attribute (when reflection
 tests discovery is used).
 
 ```fsharp
@@ -444,14 +430,12 @@ Focusing can be done with
 - `ftestAsync`
 - `ftestTask`
 
-It is often convenient, when developing to be able to run a subset of specs.
-Expecto allows you to focus specific test cases or tests list by putting `f`
-before *testCase* or *testList* or `F` before attribute *Tests*(when reflection
-tests discovery is used).
+It is often convenient, when developing to be able to run a subset of specs.  Expecto allows you to focus specific test
+cases or tests list by putting `f` before *testCase* or *testList* or `F` before attribute *Tests*(when reflection tests
+discovery is used).
 
 ```fsharp
 open Expecto
-
 [<FTests>]
 let someFocusedTest = test "will run" { Expect.equal (2+2) 4 "2+2" }
 [<Tests>]
@@ -481,15 +465,13 @@ let focusedTests =
   ]
 ```
 
-Expecto accepts the command line argument `--fail-on-focused-tests`, which
-checks if focused tests exist.  This parameter can be set in build scripts and
-allows CI servers to reject commits that accidentally included focused tests.
+Expecto accepts the command line argument `--fail-on-focused-tests`, which checks if focused tests exist.  This
+parameter can be set in build scripts and allows CI servers to reject commits that accidentally included focused tests.
 
 ### Sequenced tests
 
-You can mark an individual spec or container as Sequenced.
-This will make sure these tests are run sequentially.
-This can be useful for timeout and performance testing.
+You can mark an individual spec or container as Sequenced.  This will make sure these tests are run sequentially.  This
+can be useful for timeout and performance testing.
 
 ```fsharp
 [<Tests>]
@@ -508,8 +490,8 @@ let timeout =
   ]
 ```
 
-You can also mark a test list as a Sequenced Group.
-This will make sure the tests in this group are not run at the same time.
+You can also mark a test list as a Sequenced Group.  This will make sure the tests in this group are not run at the same
+time.
 
 ```fsharp
 [<Tests>]
@@ -608,8 +590,7 @@ let clientIntegrationTests =
 
 ### Property based tests
 
-Reference [FsCheck](https://github.com/fscheck/FsCheck) and Expecto.FsCheck to
-test properties.
+Reference [FsCheck](https://github.com/fscheck/FsCheck) and Expecto.FsCheck to test properties.
 
 ```fsharp
 module MyApp.Tests
@@ -672,7 +653,7 @@ type FsCheckConfig =
   }
 ```
 
-Here is another example of testing with custom generated data
+Here is another example of testing with custom generated data:
 
 ```fsharp
 module MyApp.Tests
@@ -771,10 +752,10 @@ module Tests =
         ]
 ```
 
-It will be translated to the FsCheck-specific configuration at runtime. You can
-pass your own callbacks and use `Expecto.Logging` like shown in the
-[Sample](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sample.fs#L23)
-to get inputs for tests and tests printed.
+It will be translated to the FsCheck-specific configuration at runtime. You can pass your own callbacks and use
+`Expecto.Logging` like shown in the
+[Sample](https://github.com/haf/expecto/blob/master/Expecto.Sample/Expecto.Sample.fs#L23) to get inputs for tests and
+tests printed.
 
 If a property fails, the output could look like this.
 
@@ -788,22 +769,18 @@ If a property fails, the output could look like this.
     Focus on error:
       etestProperty (1865288075, 296281834) "addition is not commutative (should fail)"
 
-The output that Expecto gives you, lets you recreate the exact test (that's from
-the 18..., 29... seed numbers). It's also a good idea to lift inputs and the
-test-case/parameter combination that failed into its *own* test (which isn't a
+The output that Expecto gives you, lets you recreate the exact test (that's from the 18..., 29... seed numbers). It's
+also a good idea to lift inputs and the test-case/parameter combination that failed into its *own* test (which isn't a
 property based test).
 
-FsCheck `Arb.Register` can't be used with Expecto because it is thread local and
-Expecto runs multithreaded by default. This could be worked around but
-`Arb.Register` is being deprecated by FsCheck. The recommended way to register
-and use custom generators is to define `testPropertyWithConfig` functions like
-`testProp` above for each area with common generator use. This ensures the
-library will always be used in a thread safe way.
+FsCheck `Arb.Register` can't be used with Expecto because it is thread local and Expecto runs multithreaded by default.
+This could be worked around but `Arb.Register` is being deprecated by FsCheck. The recommended way to register and use
+custom generators is to define `testPropertyWithConfig` functions like `testProp` above for each area with common
+generator use. This ensures the library will always be used in a thread safe way.
 
 #### Link collection
 
-These are a few resources that will get you on your way towards fully-specified
-systems with property-based testing.
+These are a few resources that will get you on your way towards fully-specified systems with property-based testing.
 
 - [An introduction to property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing/) with [slides and video](http://fsharpforfunandprofit.com/pbt/)
 - [Choosing properties for property-based testing](http://fsharpforfunandprofit.com/posts/property-based-testing-2/)
@@ -1105,7 +1082,7 @@ dotnet run -p Expecto.Tests -f netcoreapp2.1 -c release -- --help
 dotnet watch -p Expecto.Tests run -f netcoreapp2.1 -c release -- --colours 256
 ```
 
-## Contributing and building
+## Contributing and building 
 
 Please review the [guidelines for contributing](./CONTRIBUTING.md) to Expecto;
 this document also includes instructions on how to build.
@@ -1173,7 +1150,6 @@ Happy benchmarking!
 
 Others have discovered the beauty of tests-as-values in easy-to-read F#.
 
-* [Suave](https://github.com/SuaveIO/suave/tree/master/src/Suave.Tests)
 * [Logary](https://github.com/logary/logary)
 * [Unquote has built-in support](https://github.com/SwensenSoftware/unquote/pull/128)
 * [Visual Studio Plugin for
@@ -1266,11 +1242,6 @@ testCase "reading prop" <| fun () ->
     >> setField "property" subject.property)
   Expect.equal subject.property "Goodbye" "Should have goodbye as its property"
 ```
-
-## About upgrading from Fuchu
-
-In VsCode, search files for: `Assert.Equal\s*\(\s*((;|.)+?)\s*,\s*(.*?),\s*(.*?)\)`
-and replace with `Expect.equal $4 $3 $1`.
 
 ### What does 'expected to have type TestCode' mean?
 
