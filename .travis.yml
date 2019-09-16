@@ -10,8 +10,6 @@ matrix:
     - os: linux
       mono: 5.8.0
     - os: linux
-      mono: 5.20.0
-    - os: linux
       mono: 6.0.0
     - os: linux
       mono: latest
@@ -22,7 +20,6 @@ matrix:
   allow_failures:
     - mono: latest
     - mono: 5.8.0
-    - mono: 6.0.0
 
 env:
   global:
