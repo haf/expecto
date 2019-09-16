@@ -17,6 +17,7 @@
  1. Set up of compiler state:
 
     ```bash
+    source .env
     ./fake build
     ```
 

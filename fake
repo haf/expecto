@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source .env
 set -eu
 set -o pipefail
 
@@ -15,7 +16,5 @@ if ! [[ -x .paket/paket ]]; then
   PAKET_VERSION=$(cat paket.dependencies| head -n 5 | grep version | cut -d ' ' -f2)
   dotnet tool install paket --tool-path .paket --version $PAKET_VERSION
 fi
-
-export FrameworkPathOverride=$(dirname $(which mono))/../lib/mono/4.6.1-api
 
 "$FAKE" "$@"
