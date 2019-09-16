@@ -10,7 +10,7 @@ if ! [ -e "$FAKE" ]; then
   dotnet tool install fake-cli --tool-path "$TOOL_PATH"
 fi
 
-if ! [[ -d .paket ]]; then
+if ! [[ -x .paket/paket ]]; then
   echo "Installing Paket"
   PAKET_VERSION=$(cat paket.dependencies| head -n 5 | grep version | cut -d ' ' -f2)
   dotnet tool install paket --tool-path .paket --version $PAKET_VERSION
