@@ -1,18 +1,7 @@
-#r "paket:
-nuget Fake.Core.Xml
-nuget Fake.DotNet.Cli
-nuget Fake.DotNet.Paket
-nuget Fake.Tools.Git
-nuget Fake.Api.GitHub
-nuget Fake.Core.Target
-nuget Fake.Core.Environment
-nuget Fake.Core.UserInput
-nuget Fake.DotNet.AssemblyInfoFile
-nuget Fake.BuildServer.AppVeyor
-nuget Fake.BuildServer.Travis
-nuget Fake.Core.ReleaseNotes //"
+#r "paket: groupref Build //"
+
 #load "./.fake/build.fsx/intellisense.fsx"
-#load "paket-files/eiriktsarpalis/snippets/SlnTools/SlnTools.fs"
+#load "paket-files/build/eiriktsarpalis/snippets/SlnTools/SlnTools.fs"
 #if !FAKE
 #r "netstandard"
 #r "facades/netstandard"
@@ -30,7 +19,11 @@ open Fake.IO.Globbing.Operators
 open Fake.BuildServer
 
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
-let configuration = Environment.environVarOrDefault "Configuration" "Release"
+
+let configuration =
+  Environment.environVarOrDefault "CONFIGURATION" "Release"
+  |> DotNet.BuildConfiguration.fromString
+
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
 let description = "Advanced testing library for F#"
 let tags = "test testing fsharp assert expect stress performance unit random property"
@@ -58,6 +51,16 @@ let libProjects =
   ++ "Expecto.BenchmarkDotNet/*.fsproj"
   ++ "Expecto.Hopac/*.fsproj"
   ++ "Expecto.TestResults/*.fsproj"
+
+let testProjects =
+  !! "Expecto.Tests/*.Tests.fsproj"
+  ++ "Expecto.Hopac.Tests/*.Tests.fsproj"
+  ++ "Expecto.Tests.CSharp/*.Tests.CSharp.csproj"
+  ++ "Expecto.Focused.Tests/*.Tests.fsproj"
+
+let benchmarkProjects =
+  !! "Expecto.BenchmarkDotNet/*.fsproj"
+  ++ "Expecto.BenchmarkDotNet.Tests/*.fsproj"
 
 let pkgPath = Path.GetFullPath "./pkg"
 
@@ -103,41 +106,33 @@ Target.create "ProjectVersion" (fun _ ->
     setProjectVersion "Expecto.Hopac"
     setProjectVersion "Expecto.TestResults"
 )
+
 let build project =
-    DotNet.build (fun p ->
-    { p with
-        Configuration = DotNet.BuildConfiguration.Custom configuration
-        Common = DotNet.Options.withDotNetCliPath dotnetExePath p.Common
-                 |> DotNet.Options.withCustomParams (Some "--no-dependencies")
-    }) project
+  DotNet.build (fun p ->
+    { p with Configuration = configuration
+             Common = DotNet.Options.withDotNetCliPath dotnetExePath p.Common })
+    project
 
 Target.create "BuildExpecto" (fun _ ->
-    build "Expecto/Expecto.fsproj"
-    build "Expecto.TestResults/Expecto.TestResults.fsproj"
-    build "Expecto.Hopac/Expecto.Hopac.fsproj"
-    build "Expecto.FsCheck/Expecto.FsCheck.fsproj"
+  build (SlnTools.createTempSolutionFile libProjects)
 )
 
 Target.create "BuildBenchmarkDotNet" (fun _ ->
-    build "Expecto.BenchmarkDotNet/Expecto.BenchmarkDotNet.fsproj"
-    build "Expecto.BenchmarkDotNet.Tests/Expecto.BenchmarkDotNet.Tests.fsproj"
+  build (SlnTools.createTempSolutionFile benchmarkProjects)
 )
 
 Target.create "BuildTest" (fun _ ->
-    build "Expecto.Tests/Expecto.Tests.fsproj"
-    build "Expecto.Hopac.Tests/Expecto.Hopac.Tests.fsproj"
-    build "Expecto.Tests.CSharp/Expecto.Tests.CSharp.csproj"
-    build "Expecto.Focused.Tests/Expecto.Focused.Tests.fsproj"
+  build (SlnTools.createTempSolutionFile testProjects)
 )
 
 Target.create "RunTest" <| fun _ ->
 
     let runTest project =
         DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
-             (project+"/bin/"+configuration+"/netcoreapp2.1/"+project+".dll")
+             (sprintf "%s/bin/%O/netcoreapp2.1/%s.dll" project configuration project)
              "--summary"
         |> fun r -> if r.ExitCode<>0 then project+".dll failed" |> failwith
-        let exeName = project+"/bin/"+configuration+"/net461/"+project+".exe"
+        let exeName = sprintf "%s/bin/%O/net461/%s.exe" project configuration project
         let filename, arguments =
             let args = "--colours 0 --summary"
             if Environment.isWindows then exeName, args
@@ -203,7 +198,6 @@ Target.create "Push" <| fun _ ->
 Target.create "CheckEnv" <| fun _ ->
   ignore (envRequired "GITHUB_TOKEN")
   ignore (envRequired "NUGET_TOKEN")
-
 
 Target.create "Release" (fun _ ->
     let gitOwner = "haf"

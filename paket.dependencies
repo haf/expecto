@@ -1,6 +1,6 @@
 source https://api.nuget.org/v3/index.json
 framework net461, netstandard2.0, netcoreapp2.0, netcoreapp2.1
-storage:none
+storage: none
 clitool paket
 version 5.219.0
 
@@ -10,4 +10,24 @@ nuget Hopac ~> 0.3
 nuget Mono.Cecil ~> 0.10
 nuget BenchmarkDotNet 0.10.14
 
-github eiriktsarpalis/snippets SlnTools/SlnTools.fs
+group Build
+  source https://api.nuget.org/v3/index.json
+  storage none
+  framework auto-detect
+
+  nuget FSharp.Core ~> 4.6.0
+  nuget Fake.Api.GitHub
+  nuget Fake.BuildServer.AppVeyor
+  nuget Fake.BuildServer.Travis
+  nuget Fake.Core.ReleaseNotes
+  nuget Fake.Core.Target
+  nuget Fake.Core.Xml
+  nuget Fake.DotNet.AssemblyInfoFile
+  nuget Fake.DotNet.Cli
+  nuget Fake.DotNet.Paket
+  nuget Fake.IO.FileSystem
+  nuget Fake.IO.Zip
+  nuget Fake.Tools.Git
+  nuget Fake.Tools.Octo
+
+  github eiriktsarpalis/snippets SlnTools/SlnTools.fs
