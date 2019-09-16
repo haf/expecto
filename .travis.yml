@@ -27,4 +27,4 @@ env:
     - DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
 script:
-  - ./fake.sh build
+  - ./fake build
