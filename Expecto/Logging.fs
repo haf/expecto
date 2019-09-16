@@ -1021,7 +1021,7 @@ module internal ANSIOutputWriter =
     let buffer = StringBuilder()
     let flushStart = new Event<unit>()
     let flushEnd = new Event<unit>()
-    
+
     let flushInner () =
       if inited then
         lock buffer <| fun _ ->
@@ -1056,7 +1056,7 @@ module internal ANSIOutputWriter =
           let mutable currentColour = foregroundColor
           parts |> List.iter (fun (text, colour) ->
             if currentColour <> colour then
-              colourText colours.Value colour |> buffer.Append |> ignore
+              colourText (getColour ()) colour |> buffer.Append |> ignore
               currentColour <- colour
             buffer.Append text |> ignore
           )
@@ -1346,7 +1346,7 @@ module Log =
 /// The Message module contains functions that can help callers compose messages. This
 /// module is especially helpful to open to make calls into Logary's facade small.
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module Message =  
+module Message =
   open Literals
 
   /// Create a new event log message.
