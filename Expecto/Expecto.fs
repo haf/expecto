@@ -1,4 +1,5 @@
 namespace Expecto
+open System.Globalization
 
 #nowarn "46"
 
@@ -156,9 +157,13 @@ module internal Helpers =
   let inline addSnd b a = a,b
   let inline fst3 (a,_,_) = a
   let inline commaString (i:int) = i.ToString("#,##0")
-  let inline tryParse (s:string) =
+  let inline tryParse (s: string) =
     let mutable r = Unchecked.defaultof<_>
     if (^a : (static member TryParse: string * ^a byref -> bool) (s, &r))
+    then Some r else None
+  let inline tryParseNumber (s: string) =
+    let mutable r = Unchecked.defaultof<_>
+    if (^a : (static member TryParse: string * NumberStyles * IFormatProvider * ^a byref -> bool) (s, NumberStyles.Any, CultureInfo.InvariantCulture, &r))
     then Some r else None
   module Seq =
     let cons x xs = seq { yield x; yield! xs }
@@ -1670,7 +1675,7 @@ module Tests =
 
     let parseOptions (options:(string * string * Parser<_>) list) (strings:string[]) =
       let rec updateUnknown unknown last length =
-        if length=0 then unknown
+        if length = 0 then unknown
         else updateUnknown (strings.[last]::unknown) (last-1) (length-1)
       let rec collect isHelp unknown args paramCount i =
         if i>=0 then
@@ -1678,9 +1683,9 @@ module Tests =
           if currentArg = "--help" || currentArg = "-h" || currentArg = "-?" || currentArg = "/?" then
             collect true (updateUnknown unknown (i+paramCount) paramCount) args 0 (i-1)
           else
-            match List.tryFind (fst3 >> (=)currentArg) options with
-            | Some(option,_,parser) ->
-              let arg, unknownCount = parser (strings,i+1,paramCount)
+            match List.tryFind (fst3 >> (=) currentArg) options with
+            | Some (option, _, parser) ->
+              let arg, unknownCount = parser (strings, i+1, paramCount)
               collect isHelp
                 (updateUnknown unknown (i+paramCount) unknownCount)
                 (Result.mapError (fun i -> option + " " + i) arg::args) 0 (i-1)
@@ -1698,9 +1703,10 @@ module Tests =
           | _, Error es, Some u -> List.rev (u::es) |> Error
       collect false [] [] 0 (strings.Length-1)
 
-    let depricated = "Depricated"
+    let [<Obsolete "Use 'deprecated', not 'depricated">] depricated = "Deprecated"
+    let deprecated = "Deprecated"
 
-    let usage commandName (options:(string * string * Parser<_>) list) =
+    let usage commandName (options: (string * string * Parser<_>) list) =
       let sb = Text.StringBuilder("Usage: ")
       let add (text:string) = sb.Append(text) |> ignore
       add commandName
@@ -1709,7 +1715,7 @@ module Tests =
         options |> Seq.map (fun (s,_,_) -> s.Length) |> Seq.max
       ["--help","Show this help message."]
       |> Seq.append (Seq.map (fun (s,d,_) -> s,d) options)
-      |> Seq.where (snd >> (<>)depricated)
+      |> Seq.where (snd >> (<>)deprecated)
       |> Seq.iter (fun (s,d) ->
         add "  "
         add (s.PadRight maxLength)
@@ -1735,13 +1741,17 @@ module Tests =
         |> Result.mapError (fun i -> String.Join(", ", i))
         , 0
 
-    let inline parse case : Parser<'a> =
-      fun (ss,i,l) ->
-        if l=0 then Error "requires a parameter", 0
+    let inline private parseWith tryParseFn case: Parser<'a> =
+      fun (args, i, l) ->
+        if l = 0 then Error "requires a parameter", 0
         else
-          match tryParse ss.[i] with
+          match tryParseFn args.[i] with
           | Some i -> Ok(case i), l-1
-          | None -> Error("cannot parse parameter '" + ss.[i] + "'"), l-1
+          | None -> Error("Cannot parse parameter '" + args.[i] + "'"), l-1
+
+
+    let inline parse case: Parser<'a> = parseWith tryParse case
+    let inline number case: Parser<'a> = parseWith tryParseNumber case
 
 
   [<ReferenceEquality>]
@@ -1809,10 +1819,10 @@ module Tests =
   let options = [
       "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
       "--parallel", "Run all tests in parallel (default).", Args.none Parallel
-      "--parallel-workers", "Set the number of parallel workers (defaults to the number of logical processors).", Args.parse Parallel_Workers
-      "--stress", "Run the tests randomly for the given number of minutes.", Args.parse Stress
-      "--stress-timeout", "Set the time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).", Args.parse Stress_Timeout
-      "--stress-memory-limit", "Set the Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).", Args.parse Stress_Memory_Limit
+      "--parallel-workers", "Set the number of parallel workers (defaults to the number of logical processors).", Args.number Parallel_Workers
+      "--stress", "Run the tests randomly for the given number of minutes.", Args.number Stress
+      "--stress-timeout", "Set the time to wait in minutes after the stress test before reporting as a deadlock (default 5 mins).", Args.number Stress_Timeout
+      "--stress-memory-limit", "Set the Stress test memory limit in MB to stop the test and report as a memory leak (default 100 MB).", Args.number Stress_Memory_Limit
       "--fail-on-focused-tests", "This will make the test runner fail if focused tests exist.", Args.none Fail_On_Focused_Tests
       "--debug", "Extra verbose printing. Useful to combine with --sequenced.", Args.none Debug
       "--log-name", "Set the process name to log under (default: \"Expecto\").", Args.string Log_Name
@@ -1824,12 +1834,12 @@ module Tests =
       "--summary", "Print out a summary after all tests are finished.", Args.none Summary
       "--version", "Print out version information.", Args.none Version
       "--summary-location", "Print out a summary after all tests are finished including their source code location.", Args.none Summary_Location
-      "--fscheck-max-tests", "Set FsCheck maximum number of tests (default: 100).", Args.parse FsCheck_Max_Tests
-      "--fscheck-start-size", "Set FsCheck start size (default: 1).", Args.parse FsCheck_Start_Size
-      "--fscheck-end-size", "Set FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.parse FsCheck_End_Size
-      "--my-spirit-is-weak", Args.depricated, Args.none My_Spirit_Is_Weak
+      "--fscheck-max-tests", "Set FsCheck maximum number of tests (default: 100).", Args.number FsCheck_Max_Tests
+      "--fscheck-start-size", "Set FsCheck start size (default: 1).", Args.number FsCheck_Start_Size
+      "--fscheck-end-size", "Set FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.number FsCheck_End_Size
+      "--my-spirit-is-weak", Args.deprecated, Args.none My_Spirit_Is_Weak
       "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
-      "--colours", "Set the level of colours to use. Can be 0, 8 (default) or 256.", Args.parse Colours
+      "--colours", "Set the level of colours to use. Can be 0, 8 (default) or 256.", Args.number Colours
       "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
   ]
 
