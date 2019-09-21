@@ -216,7 +216,7 @@ let tests =
 let expecto =
 
   let testArgs i o = Expect.equal (Args.parseOptions options i) o "testArgs"
-  
+
   testList "expecto" [
     testList "Setup & teardown 2" [
       // just demoing how you can use a higher-order function as setup/teardown
@@ -399,7 +399,7 @@ let expecto =
       }
       testAsync "int error" {
           testArgs [|"--fscheck-end-size";"1.2"|]
-            (Result.Error ["--fscheck-end-size cannot parse parameter '1.2'"])
+            (Result.Error ["--fscheck-end-size Cannot parse parameter '1.2'"])
       }
       testAsync "float" {
           testArgs [|"--stress-memory-limit";"3"|]
@@ -407,7 +407,7 @@ let expecto =
       }
       testAsync "float error" {
           testArgs [|"--stress-memory-limit";"3sd"|]
-            (Result.Error ["--stress-memory-limit cannot parse parameter '3sd'"])
+            (Result.Error ["--stress-memory-limit Cannot parse parameter '3sd'"])
       }
       testAsync "missing string" {
         testArgs [|"--log-name";"--sequenced"|]
@@ -468,7 +468,7 @@ let expecto =
       testAsync "three errors" {
         testArgs [|"--fscheck-start-size";"bb";"one";"--filter"|]
           (Result.Error [
-            "--fscheck-start-size cannot parse parameter 'bb'"
+            "--fscheck-start-size Cannot parse parameter 'bb'"
             "--filter requires a parameter"
             "unknown options: one"
           ])
