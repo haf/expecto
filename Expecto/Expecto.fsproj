@@ -4,7 +4,7 @@
     <AssemblyName>Expecto</AssemblyName>
     <PackageId>Expecto</PackageId>
     <Version>8.12.0</Version>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Optional: Declare that the Repository URL can be published to NuSpec -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -24,6 +24,9 @@
     <Compile Include="Expect.fs" />
     <Compile Include="CSharp.fs" />
     <Compile Include="Flip.Expect.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="DiffPlex" Version="1.4.4" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
