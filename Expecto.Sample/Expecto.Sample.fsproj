@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Expecto.Sample</AssemblyName>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFrameworks>netcoreapp2.1;net461</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Expecto.Flip.Sample.fs" />
