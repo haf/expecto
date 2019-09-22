@@ -110,6 +110,7 @@ open Hopac
 open Logary
 open Logary.Configuration
 open Logary.Adapters.Facade
+open Logary.Targets
 
 [<EntryPoint>]
 let main argv =
