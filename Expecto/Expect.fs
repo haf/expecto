@@ -64,26 +64,34 @@ let private printVerses (firstName:string) first (secondName:string) second =
   let differ = SideBySideDiffBuilder(Differ())
   let diff = differ.BuildDiffModel(first, second)
 
+  let colorSprintf color text =
+    sprintf "%s%s%s"
+      (ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) color)
+      text
+      ANSIOutputWriter.colourReset
+
   let coloredText typ text =
-    let colorSprintf color =
-      sprintf "%s%s%s"
-        (ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) color)
-        text
-        ANSIOutputWriter.colourReset
     match typ with
-    | ChangeType.Inserted -> colorSprintf ConsoleColor.Green
-    | ChangeType.Deleted -> colorSprintf ConsoleColor.Red
-    | ChangeType.Modified -> colorSprintf ConsoleColor.Blue
+    | ChangeType.Inserted -> colorSprintf ConsoleColor.Green text
+    | ChangeType.Deleted -> colorSprintf ConsoleColor.Red text
+    | ChangeType.Modified -> colorSprintf ConsoleColor.Blue text
+    | ChangeType.Imaginary -> colorSprintf ConsoleColor.Yellow text
     | ChangeType.Unchanged | ChangeType.Imaginary | _ -> text
 
   let colorizedDiff (lines: DiffPiece seq) =
     lines
     |> Seq.map (fun line ->
+      let styledLineNumber =
+        match line.Position |> Option.ofNullable with
+        | Some num ->
+          (string num).PadLeft(2)
+          |> coloredText line.Type
+        | None -> "~~~"
       if line.SubPieces.Count = 0 then
-        coloredText line.Type line.Text
+        styledLineNumber + "  " + coloredText line.Type line.Text
       else
         let coloredPieces = line.SubPieces |> Seq.map (fun piece -> coloredText piece.Type piece.Text)
-        coloredPieces |> fun x -> String.Join("", x)
+        coloredPieces |> fun x -> styledLineNumber + "  " + String.Join("", x)
       )
     |> fun x -> String.Join("\n", x)
 

@@ -75,16 +75,17 @@ module ColorizationTests =
       }
 
       test "Testing diff with texts" {
-        let oldText = "
+        let actualText = "
           We the people
           of the united states of america
           establish justice
           ensure domestic tranquility
           provide for the very nice common defence and
           secure the blessing of liberty
+          ADDED A LINE IN HERE
           to ourselves and our posterity"
 
-        let newText = "
+        let expectedText = "
           We the people
           in order to form a more perfect union
           establish justice
@@ -95,7 +96,7 @@ module ColorizationTests =
           do ordain and establish this constitution
           for the United States of America"
 
-        Expect.equal oldText newText "Highlight added, missing and modified lines/words"
+        Expect.equal actualText expectedText "Highlight added, missing and modified lines/words"
       }
     ]
 
