@@ -57,18 +57,18 @@ module ColorizationTests =
       test "Testing diff colorization" {
         let personA = {Name = "Kesam"; Age = 30}
         let personB = {Name = "Charles"; Age = 42}
-        Expect.equal ( [personA; personB; personB]) ( [personA; {personB with Name = "Cname"; Age = 104210}; personA]) "."
+        Expecto.Differ.equals ( [personA; personB; personB]) ( [personA; {personB with Name = "Cname"; Age = 104210}; personA]) "."
       }
 
       test "Testing diff colorization II" {
-        Expect.equal
+        Expecto.Differ.equals
           { A = 12; Nom = "fsmlksdf"; Weather = { Type="Clody"; Precipitation="2mm" }; Tweets = 101 }
           { A = 13; Nom = "fsmlksdf"; Weather = { Type="Thunderstorms"; Precipitation="5mm" }; Tweets = 101 }
           "..."
       }
 
       test "Testing diff colorization III" {
-        Expect.equal
+        Expecto.Differ.equals
           { A = 12; Nom = "James"; Weather = { Type="Clody"; Precipitation="2mm" }; Tweets = 101 }
           { A = 13; Nom = "Bond"; Weather = { Type="Thunderstorms"; Precipitation="5mm" }; Tweets = 101 }
           "..."
@@ -96,7 +96,7 @@ module ColorizationTests =
           do ordain and establish this constitution
           for the United States of America"
 
-        Expect.equal actualText expectedText "Highlight added, missing and modified lines/words"
+        Expecto.Differ.equals actualText expectedText "Highlight added, missing and modified lines/words"
       }
     ]
 

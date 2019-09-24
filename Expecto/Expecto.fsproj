@@ -25,8 +25,5 @@
     <Compile Include="CSharp.fs" />
     <Compile Include="Flip.Expect.fs" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="DiffPlex" Version="1.4.4" />
-  </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

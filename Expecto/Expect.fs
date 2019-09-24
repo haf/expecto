@@ -4,9 +4,6 @@ module Expecto.Expect
 [<assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Expecto.BenchmarkDotNet")>]
 ()
 
-open DiffPlex
-open DiffPlex.DiffBuilder
-open DiffPlex.DiffBuilder.Model
 open System
 open System.Text.RegularExpressions
 open Expecto.Logging
@@ -54,48 +51,20 @@ let private highlightAllGreen diffs (s:string) =
   ) s diffs
 
 let private printVerses (firstName:string) first (secondName:string) second =
-  let first, second =
+  let first,second =
     match box first, box second with
     | (:? string as f), (:? string as s) ->
       string f, string s
     | f, s ->
       sprintf "%A" f, sprintf "%A" s
-
-  let differ = SideBySideDiffBuilder(Differ())
-  let diff = differ.BuildDiffModel(first, second)
-
-  let colorSprintf color text =
-    sprintf "%s%s%s"
-      (ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) color)
-      text
-      ANSIOutputWriter.colourReset
-
-  let coloredText typ text =
-    match typ with
-    | ChangeType.Inserted -> colorSprintf ConsoleColor.Green text
-    | ChangeType.Deleted -> colorSprintf ConsoleColor.Red text
-    | ChangeType.Modified -> colorSprintf ConsoleColor.Blue text
-    | ChangeType.Imaginary -> colorSprintf ConsoleColor.Yellow text
-    | ChangeType.Unchanged | ChangeType.Imaginary | _ -> text
-
-  let colorizedDiff (lines: DiffPiece seq) =
-    lines
-    |> Seq.map (fun line ->
-      let styledLineNumber =
-        match line.Position |> Option.ofNullable with
-        | Some num ->
-          (string num).PadLeft(2)
-          |> coloredText line.Type
-        | None -> "~~~"
-      if line.SubPieces.Count = 0 then
-        styledLineNumber + "  " + coloredText line.Type line.Text
-      else
-        let coloredPieces = line.SubPieces |> Seq.map (fun piece -> coloredText piece.Type piece.Text)
-        coloredPieces |> fun x -> styledLineNumber + "  " + String.Join("", x)
-      )
-    |> fun x -> String.Join("\n", x)
-
-  sprintf "%s\n---------- Actual: --------------------\n%s\n---------- Expected: ------------------\n%s\n" ANSIOutputWriter.colourReset (colorizedDiff diff.OldText.Lines) (colorizedDiff diff.NewText.Lines)
+  let prefix =
+    if  first.Length > 100 || second.Length > 100
+     || Seq.exists ((=)'\n') first || Seq.exists ((=)'\n') second
+    then '\n' else ' '
+  let first = sprintf "\n%s:%c%s" firstName prefix first
+  let second = sprintf "\n%s:%c%s" secondName prefix second
+  let diffs = allDiffs first second
+  String.Concat(highlightAllGreen diffs first, highlightAllRed diffs second)
 
 /// Expects f to throw an exception.
 let throws f message =
@@ -335,8 +304,7 @@ let stringStarts subject prefix message =
       "%s. Expected subject string to start with the prefix. Differs at position %i with subject '%c' and prefix '%c'.%s"
       message i s p (printVerses " prefix" prefix "subject" subject)
 
-/// Expects the two values to equal each other.
-let equal (actual : 'a) (expected : 'a) message =
+let equalDiffer differ (actual : 'a) (expected : 'a) message =
   match box actual, box expected with
   | (:? string as a), (:? string as e) ->
     stringEquals a e message
@@ -358,11 +326,15 @@ let equal (actual : 'a) (expected : 'a) message =
             let currentE = value ei.Current e
             if currentA = currentE then ()
             else
-              failtestf "%s.\nRecord does not match at position %i for field named `%s`. Expected field with value: %A, but got %A.%s"
-                message (i + 1) (name()) currentE currentA (printVerses "expected" expected "  actual" actual)
+              failtestf "%s.
+Record does not match at position %i for field named `%s`. Expected field with value: %A, but got %A.%s"
+                message (i + 1) (name()) currentE currentA (differ expected actual)
           i <- i + 1
       else
-        failtestf "%s.\n%s" message (printVerses "expected" expected "\nactual" actual)
+        failtestf "%s.%s" message (differ expected actual)
+
+/// Expects the two values to equal each other.
+let equal actual expected message = equalDiffer (fun expected actual -> printVerses "expected" expected "  actual" actual) actual expected message
 
 /// Expects the two values not to equal each other.
 let notEqual (actual : 'a) (expected : 'a) message =
