@@ -304,6 +304,12 @@ let stringStarts subject prefix message =
       "%s. Expected subject string to start with the prefix. Differs at position %i with subject '%c' and prefix '%c'.%s"
       message i s p (printVerses " prefix" prefix "subject" subject)
 
+let colorizeString (color:ConsoleColor) text : string =
+  sprintf "%s%s%s"
+      (ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) color)
+      text
+      ANSIOutputWriter.colourReset
+
 let equalDiffer differ (actual : 'a) (expected : 'a) message =
   match box actual, box expected with
   | (:? string as a), (:? string as e) ->
@@ -328,13 +334,13 @@ let equalDiffer differ (actual : 'a) (expected : 'a) message =
             else
               failtestf "%s.
 Record does not match at position %i for field named `%s`. Expected field with value: %A, but got %A.%s"
-                message (i + 1) (name()) currentE currentA (differ expected actual)
+                message (i + 1) (name()) currentE currentA (differ colorizeString expected actual)
           i <- i + 1
       else
-        failtestf "%s.%s" message (differ expected actual)
+        failtestf "%s.%s" message (differ colorizeString expected actual)
 
 /// Expects the two values to equal each other.
-let equal actual expected message = equalDiffer (fun expected actual -> printVerses "expected" expected "  actual" actual) actual expected message
+let equal actual expected message = equalDiffer (fun colorizer expected actual -> printVerses "expected" expected "  actual" actual) actual expected message
 
 /// Expects the two values not to equal each other.
 let notEqual (actual : 'a) (expected : 'a) message =
