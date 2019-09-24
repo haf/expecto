@@ -5,18 +5,24 @@
         <PackageId>Expecto.Differ</PackageId>
         <Version>8.12.0</Version>
         <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <!-- Optional: Declare that the Repository URL can be published to NuSpec -->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <!-- Optional: Embed source files that are not tracked by the source control manager to the PDB -->
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <!-- Optional: Include PDB in the built .nupkg -->
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Library.fs" />
+        <ProjectReference Include="..\Expecto\Expecto.fsproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="DiffPlex" Version="1.4.4" />
+        <Compile Include="Library.fs"/>
+        <None Include="paket.references"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Expecto\Expecto.fsproj" />
-    </ItemGroup>
+    <Import Project="..\.paket\Paket.Restore.targets"/>
 
 </Project>

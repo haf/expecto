@@ -42,4 +42,7 @@ let colorizedDiff (colorizeText: ConsoleColor -> string -> string) first second 
   sprintf "\n---------- Actual: --------------------\n%s\n---------- Expected: ------------------\n%s\n" (colorizedDiff diff.OldText.Lines) (colorizedDiff diff.NewText.Lines)
 
 let equals actual expected message =
+//  printfn "Called with actual %A %A -- %s" actual expected message
+  printfn " ___________________________ I WAS CLALLED __________________________"
+  //Expect.equalDiffer (fun e a -> "hello world") actual expected message
   Expect.equalDiffer (fun expected actual -> colorizedDiff (fun color s -> s) expected actual) actual expected message
