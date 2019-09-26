@@ -60,6 +60,7 @@ module ColourisationTests =
     Nom: string
     Weather: Weather
     Tweets: int
+    Person: Person option
   }
 
   let colourisationTests =
@@ -72,15 +73,16 @@ module ColourisationTests =
 
       test "Diff medium-sized object" {
         Expect.equal
-          { A = 12; Nom = "James"; Weather = { Type="Clody"; Precipitation="2mm" }; Tweets = 101 }
-          { A = 13; Nom = "Bond"; Weather = { Type="Thunderstorms"; Precipitation="5mm" }; Tweets = 101 }
+          { A = 12; Nom = "James"; Weather = { Type = "Cloudy"; Precipitation = "2mm" }; Tweets = 101; Person = None}
+          { A = 13; Nom = "Bond"; Weather = { Type = "Thunderstorms"; Precipitation = "5mm" }; Tweets = 101; Person = None}
           ""
       }
 
       test "Diff for big object with many changes" {
-        let personA = {Name = "Kesam"; Age = 30; CreditCard = Some ({Number = "892348923498"; CCV = "1232"; PrintedName = "Kesam McLovin"})}
-        let personB = {Name = "Charles Cardless"; Age = 30; CreditCard = None}
-        Expect.equal personA personB ""
+        Expect.equal
+          { A = 12; Nom = "Cloudy McKesam"; Weather = { Type = "Cloudy"; Precipitation = "2mm" }; Tweets = 101; Person = Some ({Name = "Kesam"; Age = 30; CreditCard = Some ({Number = "892348923498"; CCV = "1232"; PrintedName = "Kesam McLovin"})})}
+          { A = 4385; Nom = "Charles Thunder"; Weather = { Type = "Thunderstorms"; Precipitation = "5mm" }; Tweets = 101; Person = Some ({Name = "Charles Cardless"; Age = 30; CreditCard = None}) }
+          ""
       }
 
       test "Multi-lined text with some lines added, removed and modified" {

@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <AssemblyName>Expecto.Diff</AssemblyName>
-        <PackageId>Expecto.Differ</PackageId>
+        <PackageId>Expecto.Diff</PackageId>
         <Version>8.12.0</Version>
         <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
