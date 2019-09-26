@@ -276,18 +276,18 @@ let hasCountOf (actual : _ seq) (expected : uint32) (selector : _ -> bool) messa
     actual |> Seq.fold (fun acc element -> if selector element then acc + 1u else acc) 0u
   if hits <> expected then failtestf "%s. Should be of count: %d, but was: %d" message expected hits
 
-let private stringEquals actual expected message =
+let private stringEquals diffPrinter actual expected message =
   match firstDiff actual expected with
   | _,None,None -> ()
   | i,Some a,Some e ->
     failtestf "%s. String does not match at position %i. Expected char: %A, but got %A.%s"
-      message i e a (printVerses "expected" expected "  actual" actual)
+      message i e a (diffPrinter expected actual)
   | i,None,Some e ->
     failtestf "%s. String actual was shorter than expected, at pos %i for expected item %A.%s"
-      message i e (printVerses "expected" expected "  actual" actual)
+      message i e (diffPrinter expected actual)
   | i,Some a,None ->
     failtestf "%s. String actual was longer than expected, at pos %i found item %A.%s"
-      message i a (printVerses "expected" expected "  actual" actual)
+      message i a (diffPrinter expected actual)
 
 /// Expect the string `subject` to start with `prefix`. If it does not
 /// then fail with `message` as an error message together with a description
@@ -304,10 +304,10 @@ let stringStarts subject prefix message =
       "%s. Expected subject string to start with the prefix. Differs at position %i with subject '%c' and prefix '%c'.%s"
       message i s p (printVerses " prefix" prefix "subject" subject)
 
-let equalWithDiffPrinter diffPrinter (actual: 'a) (expected: 'a) message =
+let equalWithDiffPrinter (diffPrinter: obj -> obj -> string) (actual: 'a) (expected: 'a) message =
   match box actual, box expected with
   | (:? string as a), (:? string as e) ->
-    stringEquals a e message
+    stringEquals diffPrinter a e message
   | (:? float as a), (:? float as e) ->
     if a <> e then
       failtestf "%s. Actual value was %f but had expected it to be %f." message a e
@@ -333,8 +333,11 @@ Record does not match at position %i for field named `%s`. Expected field with v
       else
         failtestf "%s.%s" message (diffPrinter expected actual)
 
+let private printVersesDiff expected actual = printVerses "expected" expected "  actual" actual
+let mutable defaultDiffPrinter: obj -> obj -> string = printVersesDiff
+
 /// Expects the two values to equal each other.
-let equal actual expected message = equalWithDiffPrinter (fun expected actual -> printVerses "expected" expected "  actual" actual) actual expected message
+let equal (actual: 'a) (expected: 'a) message = equalWithDiffPrinter defaultDiffPrinter actual expected message
 
 /// Expects the two values not to equal each other.
 let notEqual (actual : 'a) (expected : 'a) message =

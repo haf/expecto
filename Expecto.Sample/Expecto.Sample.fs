@@ -25,6 +25,10 @@ module Utils =
 open Utils
 open Expecto
 
+// SETUP: Use improved differ from Expecto.Diff
+Expecto.Expect.defaultDiffPrinter <- Expecto.Diff.colourisedDiff
+
+
 let printingFsCheck =
   { FsCheckConfig.defaultConfig with
       receivedArgs = fun _ name no args ->
@@ -54,14 +58,14 @@ module ColourisationTests =
 
   let colourisationTests =
     testList "Colorization tests. These should all fail to diplay the diff" [
-      test "Testing diff colourisation" {
+      test "Diff for an array with small changes" {
         let personA = {Name = "Kesam"; Age = 30}
         let personB = {Name = "Charles"; Age = 42}
-        Expecto.Diff.equals ( [personA; personB; personB]) ( [personA; {personB with Name = "Cname"; Age = 104210}; personA]) "."
+        Expect.equal ( [personA; personB; personB]) ( [personA; {personB with Name = "Cname"; Age = 104210}; personA]) "."
       }
 
-      test "Testing diff colourisation III" {
-        Expecto.Diff.equals
+      test "Diff medium-sized object" {
+        Expect.equal
           { A = 12; Nom = "James"; Weather = { Type="Clody"; Precipitation="2mm" }; Tweets = 101 }
           { A = 13; Nom = "Bond"; Weather = { Type="Thunderstorms"; Precipitation="5mm" }; Tweets = 101 }
           "..."
@@ -89,7 +93,7 @@ module ColourisationTests =
           do ordain and establish this constitution
           for the United States of America"
 
-        Expecto.Diff.equals actualText expectedText "Highlight added, missing and modified lines/words"
+        Expect.equal actualText expectedText "Highlight added, missing and modified lines/words"
       }
     ]
 
