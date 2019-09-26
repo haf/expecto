@@ -1,4 +1,4 @@
-module Expecto.Differ
+module Expecto.Diff
 open System
 open DiffPlex.DiffBuilder
 open DiffPlex.DiffBuilder.Model
@@ -43,4 +43,4 @@ let colourisedDiff first second =
   sprintf "\n---------- Actual: --------------------\n%s\n---------- Expected: ------------------\n%s\n" (colourisedDiff diff.OldText.Lines) (colourisedDiff diff.NewText.Lines)
 
 let equals actual expected message =
-  Expect.equalDiffer (fun expected actual -> colourisedDiff expected actual) actual expected message
+  Expect.equalWithDiffPrinter colourisedDiff actual expected message
