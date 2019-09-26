@@ -41,13 +41,19 @@ let printingFsCheck =
   }
 
 module ColourisationTests =
-  type Person = {
-    Name: string
-    Age: int
-  }
   type Weather = {
     Type: string
     Precipitation: string
+  }
+  type CreditCard = {
+    Number: string;
+    CCV: string;
+    PrintedName: string
+  }
+  type Person = {
+    Name: string
+    CreditCard: CreditCard option
+    Age: int
   }
   type SillyTestType = {
     A: int
@@ -59,16 +65,22 @@ module ColourisationTests =
   let colourisationTests =
     testList "Colorization tests. These should all fail to diplay the diff" [
       test "Diff for an array with small changes" {
-        let personA = {Name = "Kesam"; Age = 30}
-        let personB = {Name = "Charles"; Age = 42}
-        Expect.equal ( [personA; personB; personB]) ( [personA; {personB with Name = "Cname"; Age = 104210}; personA]) "."
+        let personA = {Name = "Kesam"; Age = 30; CreditCard = None}
+        let personB = {Name = "Charles"; Age = 42; CreditCard = None}
+        Expect.equal ( [personA; personB; personB]) ( [personA; {personB with Name = "Cname"; Age = 104210}; personA]) ""
       }
 
       test "Diff medium-sized object" {
         Expect.equal
           { A = 12; Nom = "James"; Weather = { Type="Clody"; Precipitation="2mm" }; Tweets = 101 }
           { A = 13; Nom = "Bond"; Weather = { Type="Thunderstorms"; Precipitation="5mm" }; Tweets = 101 }
-          "..."
+          ""
+      }
+
+      test "Diff for big object with many changes" {
+        let personA = {Name = "Kesam"; Age = 30; CreditCard = Some ({Number = "892348923498"; CCV = "1232"; PrintedName = "Kesam McLovin"})}
+        let personB = {Name = "Charles Cardless"; Age = 30; CreditCard = None}
+        Expect.equal personA personB ""
       }
 
       test "Multi-lined text with some lines added, removed and modified" {
