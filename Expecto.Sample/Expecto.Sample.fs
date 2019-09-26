@@ -36,7 +36,7 @@ let printingFsCheck =
       maxTest = 128
   }
 
-module ColorizationTests =
+module ColourisationTests =
   type Person = {
     Name: string
     Age: int
@@ -52,22 +52,22 @@ module ColorizationTests =
     Tweets: int
   }
 
-  let colorizationTests =
+  let colourisationTests =
     testList "Colorization tests. These should all fail to diplay the diff" [
-      test "Testing diff colorization" {
+      test "Testing diff colourisation" {
         let personA = {Name = "Kesam"; Age = 30}
         let personB = {Name = "Charles"; Age = 42}
         Expecto.Differ.equals ( [personA; personB; personB]) ( [personA; {personB with Name = "Cname"; Age = 104210}; personA]) "."
       }
 
-      test "Testing diff colorization II" {
+      test "Testing diff colourisation II" {
         Expecto.Differ.equals
           { A = 12; Nom = "fsmlksdf"; Weather = { Type="Clody"; Precipitation="2mm" }; Tweets = 101 }
           { A = 13; Nom = "fsmlksdf"; Weather = { Type="Thunderstorms"; Precipitation="5mm" }; Tweets = 101 }
           "..."
       }
 
-      test "Testing diff colorization III" {
+      test "Testing diff colourisation III" {
         Expecto.Differ.equals
           { A = 12; Nom = "James"; Weather = { Type="Clody"; Precipitation="2mm" }; Tweets = 101 }
           { A = 13; Nom = "Bond"; Weather = { Type="Thunderstorms"; Precipitation="5mm" }; Tweets = 101 }
@@ -179,7 +179,7 @@ let tests =
       fun a b c ->
         a * (b + c) = a * b + a * c
 
-    ColorizationTests.colorizationTests
+    ColourisationTests.colourisationTests
   ]
 
 [<EntryPoint>]
