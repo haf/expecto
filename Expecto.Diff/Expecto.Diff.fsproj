@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <AssemblyName>Expecto.Differ</AssemblyName>
+        <AssemblyName>Expecto.Diff</AssemblyName>
         <PackageId>Expecto.Differ</PackageId>
         <Version>8.12.0</Version>
         <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
@@ -12,17 +12,18 @@
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <!-- Optional: Include PDB in the built .nupkg -->
         <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+        <RootNamespace>Expecto.Diff</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Expecto\Expecto.fsproj"/>
+        <ProjectReference Include="..\Expecto\Expecto.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Include="Library.fs"/>
-        <None Include="paket.references"/>
+        <Compile Include="Library.fs" />
+        <None Include="paket.references" />
     </ItemGroup>
 
-    <Import Project="..\.paket\Paket.Restore.targets"/>
+    <Import Project="..\.paket\Paket.Restore.targets" />
 
 </Project>
