@@ -15,8 +15,8 @@ module internal ProgressIndicator =
   let private showCursor = "\u001b[?25h"
   let private animation = @"|/-\"
 
-  let private color = "\u001b[30;1m"
-  let private colorReset = "\u001b[0m"
+  let private colour = "\u001b[30;1m"
+  let private colourReset = "\u001b[0m"
 
   let private backStart = "\u001b[1000D"
 
@@ -101,7 +101,7 @@ module internal ProgressIndicator =
                         String.Empty
                     currentLength <- textValue.Length + progress.Length
 
-                    let value = color + textValue + progress + backStart + colorReset + hideCursor
+                    let value = colour + textValue + progress + backStart + colourReset + hideCursor
                     ANSIOutputWriter.writeAndFlushRaw value
                 )
               Thread.Sleep 60

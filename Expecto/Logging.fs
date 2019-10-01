@@ -1160,6 +1160,13 @@ module internal ANSIOutputWriter =
   let close () = !instance |> Option.iter (fun i -> (i :> IDisposable).Dispose())
   let writeAndFlushRaw (value: string) = !instance |> Option.iter (fun i -> i.writeAndFlushRaw value)
 
+module ColourText =
+  let colouriseText (colour: ConsoleColor) text : string =
+    sprintf "%s%s%s"
+      (ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) colour)
+      text
+      ANSIOutputWriter.colourReset
+
 /// Logs a line in a format that is great for human consumption,
 /// using console colours to enhance readability.
 /// Sample: [10:30:49 INF] User "AdamC" began the "checkout" process with 100 cart items

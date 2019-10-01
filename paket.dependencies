@@ -7,6 +7,7 @@ version 5.219.0
 nuget FSharp.Core 4.3.4
 nuget FsCheck ~> 2.10
 nuget Hopac ~> 0.3
+nuget DiffPlex ~> 1.4.4
 nuget Mono.Cecil ~> 0.10
 nuget BenchmarkDotNet 0.10.14
 
