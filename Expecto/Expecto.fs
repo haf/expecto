@@ -454,7 +454,18 @@ module Impl =
       | Passed -> "Passed"
       | Ignored reason -> "Ignored: " + reason
       | Failed error -> "Failed: " + error
-      | Error e -> "Exception: " + e.ToString()
+      | Error e -> 
+        let rec printInner (ex: exn) msg =
+          let currentMsg = 
+            msg + (sprintf "%s%s" Environment.NewLine (ex.ToString()))
+          if isNull ex.InnerException then
+            currentMsg
+          else
+            printInner ex.InnerException currentMsg
+
+        let exMsg = printInner e ""
+        
+        "Exception: " + exMsg
     member x.tag =
       match x with
       | Passed -> 0
@@ -842,10 +853,18 @@ module Impl =
 
         exn = fun n e d -> async {
           do! innerPrinter.beforeEach n
+          let rec msgWithInner (ex: exn) msg =
+            let currentMsg = 
+              msg + (sprintf "%s%s" (ex.Message) Environment.NewLine)
+            if isNull ex.InnerException then
+              currentMsg
+            else
+              msgWithInner ex.InnerException currentMsg
+
           tcLog "testFailed" [
             "flowId", formatName n
             "name", formatName n
-            "message", e.Message
+            "message", msgWithInner e ""
             "details", e.StackTrace ]
           tcLog "testFinished" [
             "flowId", formatName n
