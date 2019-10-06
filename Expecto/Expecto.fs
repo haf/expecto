@@ -444,6 +444,14 @@ module Impl =
   let mutable logger = Log.create "Expecto"
   let setLogName name = logger <- Log.create name
 
+  let rec private exnWithInnerMsg (ex: exn) msg =
+    let currentMsg = 
+      msg + (sprintf "%s%s" Environment.NewLine (ex.ToString()))
+    if isNull ex.InnerException then
+      currentMsg
+    else
+      exnWithInnerMsg ex.InnerException currentMsg
+
   type TestResult =
     | Passed
     | Ignored of string
@@ -454,7 +462,7 @@ module Impl =
       | Passed -> "Passed"
       | Ignored reason -> "Ignored: " + reason
       | Failed error -> "Failed: " + error
-      | Error e -> "Exception: " + e.ToString()
+      | Error e -> "Exception: " + exnWithInnerMsg e ""
     member x.tag =
       match x with
       | Passed -> 0
