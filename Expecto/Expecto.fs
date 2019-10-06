@@ -444,6 +444,14 @@ module Impl =
   let mutable logger = Log.create "Expecto"
   let setLogName name = logger <- Log.create name
 
+  let rec private exnWithInnerMsg (ex: exn) msg =
+    let currentMsg = 
+      msg + (sprintf "%s%s" Environment.NewLine (ex.ToString()))
+    if isNull ex.InnerException then
+      currentMsg
+    else
+      exnWithInnerMsg ex.InnerException currentMsg
+
   type TestResult =
     | Passed
     | Ignored of string
@@ -454,18 +462,7 @@ module Impl =
       | Passed -> "Passed"
       | Ignored reason -> "Ignored: " + reason
       | Failed error -> "Failed: " + error
-      | Error e -> 
-        let rec printInner (ex: exn) msg =
-          let currentMsg = 
-            msg + (sprintf "%s%s" Environment.NewLine (ex.ToString()))
-          if isNull ex.InnerException then
-            currentMsg
-          else
-            printInner ex.InnerException currentMsg
-
-        let exMsg = printInner e ""
-        
-        "Exception: " + exMsg
+      | Error e -> "Exception: " + exnWithInnerMsg e ""
     member x.tag =
       match x with
       | Passed -> 0
@@ -853,18 +850,10 @@ module Impl =
 
         exn = fun n e d -> async {
           do! innerPrinter.beforeEach n
-          let rec msgWithInner (ex: exn) msg =
-            let currentMsg = 
-              msg + (sprintf "%s%s" (ex.Message) Environment.NewLine)
-            if isNull ex.InnerException then
-              currentMsg
-            else
-              msgWithInner ex.InnerException currentMsg
-
           tcLog "testFailed" [
             "flowId", formatName n
             "name", formatName n
-            "message", msgWithInner e ""
+            "message", e.Message
             "details", e.StackTrace ]
           tcLog "testFinished" [
             "flowId", formatName n
