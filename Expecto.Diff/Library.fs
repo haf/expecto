@@ -1,4 +1,5 @@
 module Expecto.Diff
+
 open System
 open DiffPlex.DiffBuilder
 open DiffPlex.DiffBuilder.Model

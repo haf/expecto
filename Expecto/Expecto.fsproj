@@ -19,6 +19,9 @@
     <Compile Include="Logging.fs" />
     <Compile Include="Progress.fs" />
     <Compile Include="Statistics.fs" />
+    <Compile Include="Model.fs" />
+    <Compile Include="Helpers.fs" />
+    <Compile Include="Async.fs" />
     <Compile Include="Expecto.fs" />
     <Compile Include="Performance.fs" />
     <Compile Include="Expect.fs" />
