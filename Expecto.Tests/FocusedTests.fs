@@ -158,7 +158,7 @@ let configTests =
     Verbosity Fatal
     Printer TestPrinters.silent
     No_Spinner
-   ]
+  ]
 
   testList "config tests" [
     testCase "parallel config works" <| fun _ ->

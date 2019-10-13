@@ -16,7 +16,7 @@ module internal ProgressIndicator =
   let private animation = @"|/-\"
 
   let private colour = "\u001b[30;1m"
-  let private colourReset = "\u001b[0m"
+  let private colourReset = ANSIOutputWriter.colourReset
 
   let private backStart = "\u001b[1000D"
 
@@ -42,7 +42,7 @@ module internal ProgressIndicator =
     ansi.writeAndFlushRaw value
 
   let start () =
-    let ansi = ANSIOutputWriter.getInstance (Global.semaphore())
+    let ansi = DVar.get ANSIOutputWriter.ansiD
 
     ansi.FlushStart |> Event.add (fun () ->
       Monitor.Enter isRunning
@@ -114,7 +114,7 @@ module internal ProgressIndicator =
       if !isRunning then
         isRunning := false
         if isEnabled then
-          let ansi = ANSIOutputWriter.getInstance (Global.semaphore())
+          let ansi = DVar.get ANSIOutputWriter.ansiD
           clear ansi
 
   Console.CancelKeyPress |> Event.add (fun _ -> stop ())

@@ -7,6 +7,7 @@ module Expecto.Expect
 open System
 open System.Text.RegularExpressions
 open Expecto.Logging
+open Expecto.Logging
 open Expecto.Logging.Message
 open Microsoft.FSharp.Reflection
 open System.Reflection
@@ -32,9 +33,9 @@ let private allDiffs (s1:string) (s2:string) =
   ) (None,[])
   |> snd
 
-let private highlightAllRed diffs (s:string) =
-  let redStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Red
-  let redEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
+let private highlightAllRed diffs (s: string) =
+  let redStart = ANSIOutputWriter.colouriseText (DVar.get GlobalConfig.colourLevelD) ConsoleColor.Red
+  let redEnd = ANSIOutputWriter.colouriseText (DVar.get GlobalConfig.colourLevelD) ConsoleColor.Cyan
   let l = s.Length
   List.fold (fun (s:string) (i,j) ->
     if i>=l then s
@@ -42,8 +43,8 @@ let private highlightAllRed diffs (s:string) =
   ) s diffs
 
 let private highlightAllGreen diffs (s:string) =
-  let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
-  let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
+  let greenStart = ANSIOutputWriter.colouriseText (DVar.get GlobalConfig.colourLevelD) ConsoleColor.Green
+  let greenEnd = ANSIOutputWriter.colouriseText (DVar.get GlobalConfig.colourLevelD) ConsoleColor.Cyan
   let l = s.Length
   List.fold (fun (s:string) (i,j) ->
     if i>=l then s
@@ -333,7 +334,10 @@ Record does not match at position %i for field named `%s`. Expected field with v
       else
         failtestf "%s.%s" message (diffPrinter expected actual)
 
-let private printVersesDiff expected actual = printVerses "expected" expected "  actual" actual
+let private printVersesDiff expected actual =
+  printVerses "expected" expected "  actual" actual
+
+// TODO: remove mutable
 let mutable defaultDiffPrinter: obj -> obj -> string = printVersesDiff
 
 /// Expects the two values to equal each other.
@@ -671,8 +675,8 @@ let streamsEqual (s1 : IO.Stream) (s2 : IO.Stream) message =
 
 /// Expects function `f1` is faster than `f2`. Measurer used to measure only a
 /// subset of the functions. Statistical test to 99.99% confidence level.
-let isFasterThanSub (f1:Performance.Measurer<_,_>->'a) (f2:Performance.Measurer<_,_>->'a) format =
-  let toString (s:SampleStatistics) =
+let isFasterThanSub (f1: Performance.Measurer<_,_>->'a) (f2: Performance.Measurer<_,_> -> 'a) format =
+  let toString (s: SampleStatistics) =
     sprintf "%.4f ± %.4f ms" s.mean s.meanStandardError
 
   match Performance.timeCompare f1 f2 with

@@ -152,13 +152,13 @@ module Test =
 
 
 
-// TODO: make internal?
 module Impl =
   open Expecto.Logging
   open Expecto.Logging.Message
   open Helpers
   open Mono.Cecil
 
+  // TODO: remove mutable and also move the logger to the config!
   let mutable logger = Log.create "Expecto"
   let setLogName name = logger <- Log.create name
 
@@ -355,7 +355,7 @@ module Impl =
       /// Prints a summary given the test result counts
       summary : ExpectoConfig -> TestRunSummary -> Async<unit> }
 
-    static member printResult config (test:FlatTest) (result:TestSummary) =
+    static member printResult config (test: FlatTest) (result: TestSummary) =
       match result.result with
       | Passed -> config.printer.passed test.name result.duration
       | Failed message -> config.printer.failed test.name message result.duration
@@ -501,7 +501,6 @@ module Impl =
             innerPrinter.summary config summary
             |> Async.bind (fun () -> logSummaryWithLocation config.locate summary) }
 
-
     static member teamCityPrinter innerPrinter =
       let formatName (n:string) =
         n.Replace( "/", "." ).Replace( " ", "_" )
@@ -583,7 +582,8 @@ module Impl =
           do! innerPrinter.summary c s
           tcLog "testSuiteFinished" [
             "name", "ExpectoTestSuite" ] } }
-    static member internal mergePrinters (first:TestPrinters, second:TestPrinters) =
+
+    static member internal mergePrinters (first: TestPrinters, second: TestPrinters) =
       let runTwoAsyncs a b = async {
         do! a
         do! b
@@ -603,35 +603,35 @@ module Impl =
     { /// Whether to run the tests in parallel. Defaults to
       /// true, because your code should not mutate global
       /// state by default.
-      parallel : bool
+      parallel: bool
       /// Number of parallel workers. Defaults to the number of
       /// logical processors.
-      parallelWorkers : int
+      parallelWorkers: int
       /// Stress test by running tests randomly for the given TimeSpan.
       /// Can be sequenced or parallel depending on the config.
-      stress : TimeSpan option
+      stress: TimeSpan option
       /// Stress test deadlock timeout TimeSpan to wait after stress TimeSpan
       /// before stopping and reporting as a deadlock (default 5 mins).
-      stressTimeout : TimeSpan
+      stressTimeout: TimeSpan
       /// Stress test memory limit in MB to stop the test and report as
       /// a memory leak (default 100 MB).
-      stressMemoryLimit : float
+      stressMemoryLimit: float
       /// Whether to make the test runner fail if focused tests exist.
       /// This can be used from CI servers to ensure no focused tests are
       /// commited and therefor all tests are run.
-      failOnFocusedTests : bool
+      failOnFocusedTests: bool
       /// An optional filter function. Useful if you only would
       /// like to run a subset of all the tests defined in your assembly.
-      filter   : Test -> Test
+      filter: Test -> Test
       /// Allows the test printer to be parametised to your liking.
-      printer : TestPrinters
+      printer: TestPrinters
       /// Verbosity level (default: Info).
-      verbosity : LogLevel
+      verbosity: LogLevel
       /// Process name to log under (default: "Expecto")
-      logName : string option
+      logName: string option
       /// Optional function used for finding source code location of test
       /// Defaults to empty source code.
-      locate : TestCode -> SourceLocation
+      locate: TestCode -> SourceLocation
       /// FsCheck maximum number of tests (default: 100).
       fsCheckMaxTests: int
       /// FsCheck start size (default: 1).
@@ -685,7 +685,7 @@ module Impl =
               }
       }
 
-  let execTestAsync (ct:CancellationToken) config (test:FlatTest) : Async<TestSummary> =
+  let execTestAsync (ct:CancellationToken) config (test:FlatTest): Async<TestSummary> =
     async {
       let w = Stopwatch.StartNew()
       try
@@ -693,7 +693,7 @@ module Impl =
         | Some ignoredMessage ->
           return TestSummary.single (Ignored ignoredMessage) 0.0
         | None ->
-          TestNameHolder.Name <- test.name
+          TestNameHolder.name.Value <- test.name
           match test.test with
           | Sync test ->
             test()
@@ -1188,6 +1188,7 @@ module Tests =
   open Expecto.Logging
   open FSharp.Control.Tasks.CopiedDoNotReference.V2
 
+  // TODO: remove mutable
   let mutable private afterRunTestsList = []
   let private afterRunTestsListLock = obj()
   /// Add a function that will be called after all testing has finished.
@@ -1223,12 +1224,15 @@ module Tests =
       Console.Error.Write(s.PadRight 40 + "\n")
     ) format
 
-  /// The full name of the currently running test
-  let testName() = TestNameHolder.Name
+  /// The full name of the currently running test; if you call this from outside a test, the behaviour is
+  /// undefined.
+  let testName () =
+    let res = TestNameHolder.name.Value
+    if isNull res then "" else res
 
   /// Fail this test
   let inline failtest msg = raise <| AssertException msg
-  /// Fail this test
+  /// Fail this test with a format string
   let inline failtestf fmt = Printf.ksprintf (AssertException >> raise) fmt
   /// Fail this test
   let inline failtestNoStack msg = raise <| FailedException msg
@@ -1661,16 +1665,15 @@ module Tests =
     )
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
-  let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
-    ANSIOutputWriter.setColourLevel config.colour
+  let runTestsWithCancel (ct: CancellationToken) (config: ExpectoConfig) (tests: Test) =
     Global.initialiseIfDefault
       { Global.defaultConfig with
+          colourLevel = config.colour
           getLogger = fun name ->
-            LiterateConsoleTarget(
-              name, config.verbosity,
-              consoleSemaphore = Global.semaphore()) :> Logger
+            LiterateConsoleTarget(name, config.verbosity) :> Logger
       }
     config.logName |> Option.iter setLogName
+
     if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
       1
     else

@@ -119,10 +119,5 @@ type PTestsAttribute() = inherit Attribute()
 [<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
 type FTestsAttribute() = inherit Attribute()
 
-type private TestNameHolder() =
-  [<ThreadStatic;DefaultValue>]
-  static val mutable private name : string
-  static member Name
-      with get () = TestNameHolder.name
-      and  set name = TestNameHolder.name <- name
-
+module internal TestNameHolder =
+  let name: AsyncLocal<string> = new AsyncLocal<string>()

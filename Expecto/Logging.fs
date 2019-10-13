@@ -234,7 +234,7 @@ module LoggerEx =
       with
       | :? TimeoutException ->
         Console.Error.WriteLine(
-          "Logary (facade) message timed out. This means that you have an underperforming target. (Reevaluated) message name '{0}'.",
+          "Logary (facade) message timed out. This means that you have an under-performing target. (Reevaluated) message name '{0}'.",
           String.concat "." (messageFactory level).name)
     }
 
@@ -300,12 +300,12 @@ type LoggingConfig =
   { timestamp: unit -> int64
     getLogger: string[] -> Logger
     consoleSemaphore: obj
-  }
-  static member create u2ts n2l sem = {
-    timestamp = u2ts
-    getLogger = n2l
-    consoleSemaphore = sem
-  }
+    colourLevel: ColourLevel }
+  static member create u2ts n2l sem colours =
+    { timestamp = u2ts
+      getLogger = n2l
+      consoleSemaphore = sem
+      colourLevel = colours }
 
 module Literate =
   /// The output tokens, which can be potentially coloured.
@@ -372,18 +372,27 @@ module Literals =
   [<Literal>]
   let FieldErrorsKey = "errors"
 
-type DVar<'a> = private { mutable cell: 'a; event: Event<'a>; mutable changed: bool }
+type DVar<'a> =
+  private {
+    mutable cell: 'a
+    newValue: Event<'a>
+    mutable changed: bool
+    dispose: bool
+  }
 
 module DVar =
   open System.Threading
-  let create (x: 'x) = { cell = x; event = new Event<'x>(); changed = false }
+  let create (x: 'x) = { cell = x; newValue = new Event<'x>(); changed = false; dispose = false }
+  let createDisposable (x: #IDisposable) = { create x with dispose = true }
   let get (xD: DVar<'x>) = xD.cell
+  let iter x2u (xD: DVar<'x>) = x2u (get xD)
   let wasChanged (xD: DVar<'x>) = xD.changed
   let put (x: 'x) (xD: DVar<'x>) =
     let prevX = Interlocked.Exchange (&xD.cell, x) // last writer wins
+    if xD.dispose then (box prevX :?> IDisposable).Dispose()
     xD.changed <- true // monotonically reaches true, hence thread safe
-    xD.event.Trigger x
-  let changes (xD: DVar<'x>) = xD.event.Publish
+    xD.newValue.Trigger x
+  let changes (xD: DVar<'x>) = xD.newValue.Publish
   let subs (xD: DVar<'x>) (x2u: 'x -> unit) = xD |> changes |> Event.add x2u
   let apply (a2bD: DVar<'a -> 'b>) (aD: DVar<'a>): DVar<'b> =
     let b = (get a2bD) (get aD)
@@ -397,9 +406,16 @@ module DVar =
     let (<!>) = map
     let (<*>) = apply
 
-module internal FsMtParser =
-  open System.Text
+module internal GlobalConfig =
+  /// This is the global semaphore for writing to the console output. Ensure
+  /// that the same semaphore is used across libraries by using the Logary
+  /// Facade Adapter in the final composing app/service.
+  let internal semD = DVar.create (obj ())
+  let internal getTimestampD = DVar.create (fun () -> DateTimeOffset.timestamp DateTimeOffset.UtcNow)
+  let internal minLevelD = DVar.create Info
+  let internal colourLevelD: DVar<ColourLevel> = DVar.create Colour8
 
+module internal FsMtParser =
   type Property(name: string, format: string) =
     static let emptyInstance = Property("", null)
     static member empty = emptyInstance
@@ -556,7 +572,6 @@ module internal MessageTemplates =
 
 /// Internal module for converting message parts into theme-able tokens.
 module internal LiterateTokenisation =
-  open System.Text
   open Literals
   open Literate
 
@@ -767,8 +782,9 @@ module internal LiterateFormatting =
     let tokeniseExtraFields (options: LiterateOptions) (message: Message) (templateFieldNames: Set<string>) =
       let fieldsToExclude = Set.union templateFieldNames exceptionFieldNames
       let extraFields = message.fields |> Map.filter (fun key _ -> not (fieldsToExclude.Contains key))
-      let mutable isFirst = true
       seq {
+        // must be inside Seq or re-iterations will receive different results
+        let mutable isFirst = true
         for field in extraFields do
           if isFirst then isFirst <- false
           else yield Environment.NewLine, Text
@@ -878,10 +894,6 @@ module internal ANSIOutputWriter =
     override __.WriteLine (s:string) = s + "\n" |> write
     override __.WriteLine() = write "\n"
 
-  let mutable internal colours = None
-  let internal setColourLevel c = if colours.IsNone then colours <- Some c
-  let internal getColour() = Option.defaultValue Colour8 colours
-
   let colourReset = "\u001b[0m"
 
   let private colour8BlackBG = function
@@ -962,10 +974,11 @@ module internal ANSIOutputWriter =
     | ConsoleColor.White -> "38;5;232"
     | _ -> ""
 
-  let private isBlackBG = Console.BackgroundColor = ConsoleColor.Black
-                          || int Console.BackgroundColor = -1
+  let private isBlackBG =
+    Console.BackgroundColor = ConsoleColor.Black
+    || int Console.BackgroundColor = -1
 
-  let colourText colourLevel colour =
+  let colouriseText colourLevel colour =
     match colourLevel with
     | Colour0 -> String.Empty
     | Colour8 -> if isBlackBG then colour8BlackBG colour else colour8WhiteBG colour
@@ -1005,7 +1018,7 @@ module internal ANSIOutputWriter =
 
   /// Lifecycle: (new T() -> t.init() -> t._ {0,*} -> (t :> IDisposable).Dispose()) {1,*}
   [<Sealed>]
-  type T(origStdOut: TextWriter, origStdErr: TextWriter, sem: obj) =
+  type T(origStdOut: TextWriter, origStdErr: TextWriter, semD: DVar<obj>, colourLevelD: DVar<ColourLevel>) =
     // Invariants:
     //  - For every non-private method that touches the origStdOut or origStdErr,
     //    a lock on `sem` must be held.
@@ -1056,7 +1069,7 @@ module internal ANSIOutputWriter =
           let mutable currentColour = foregroundColor
           parts |> List.iter (fun (text, colour) ->
             if currentColour <> colour then
-              colourText (getColour ()) colour |> buffer.Append |> ignore
+              colouriseText (DVar.get colourLevelD) colour |> buffer.Append |> ignore
               currentColour <- colour
             buffer.Append text |> ignore
           )
@@ -1085,12 +1098,11 @@ module internal ANSIOutputWriter =
       true
 
     let disposeInner () =
-      // TODO: hunt down all usages of ANSIConsoleLogger and ensure they only init-use-dispose in that order
-      if not inited then () else // invalidOp "Cannot Dispose unless inited"
-      flushInner ()
-      Console.SetOut origStdOut
-      Console.SetError origStdErr
-      inited <- false
+      if inited then
+        flushInner ()
+        Console.SetOut origStdOut
+        Console.SetError origStdErr
+        inited <- false
 
     /// HERE BE DRAGONS
     ///
@@ -1104,8 +1116,8 @@ module internal ANSIOutputWriter =
       origStdOut.Write value
       origStdOut.Flush()
 
-    // Invert control flow, from calling INTO the ProgressIndicator, to having the ProgressIndicator subscribe to the life
-    // cycle events of the ANSIOutputWriter.
+    // Invert control flow, from calling INTO the ProgressIndicator, to having the ProgressIndicator subscribe to the
+    // life cycle events of the ANSIOutputWriter.
 
     /// This event is triggered when the ANSIOutputWriter is about to flush its internal buffer of characters to print to
     /// STDOUT. Events are synchronously dispatched on the caller thread.
@@ -1120,62 +1132,66 @@ module internal ANSIOutputWriter =
     /// Flushes the built-up buffer and clears it. Calling this function will trigger FlushStart and FlushEnd, in that
     /// order.
     member x.flush() =
-      lock sem flushInner
+      lock (DVar.get semD) flushInner
 
-    member internal __.prettyPrint autoFlush (parts : (string * ConsoleColor) list) : unit =
-      lock sem (fun () -> prettyPrintInner (autoFlush, false) parts)
+    member internal __.prettyPrint autoFlush (parts: (string * ConsoleColor) list) : unit =
+      lock (DVar.get semD) (fun () -> prettyPrintInner (autoFlush, false) parts)
 
     /// During the time between calls x.init() -> IDisposable.Dispose(), there must be no other calls to `init`.
     ///
     /// This installs interceptors for both STDOUT and STDERR, having them go through this instance; `
     member __.init() =
-      lock sem initInner
+      lock (DVar.get semD) initInner
 
     member __.tryInit() =
       // don't take a lock unless we need to (test-lock-test pattern):
-      if inited then false else lock sem tryInitInner
+      if inited then false
+      else lock (DVar.get semD) tryInitInner
 
     interface IDisposable with
       /// Must correspond to a previous init call.
       member __.Dispose() =
-        lock sem disposeInner
+        lock (DVar.get semD) disposeInner
 
-  let private instance: T option ref = ref None
+  open GlobalConfig
 
-  let create (sem: obj) : T =
-    lock instance <| fun () ->
-    !instance |> Option.iter (fun i -> (i :> IDisposable).Dispose())
-    let x = new T(stdout, stderr, sem)
-    instance := Some x
-    x
+  let private create () =
+    new T(stdout, stderr, semD, colourLevelD)
 
-  let internal getInstance sem =
-    !instance |> Option.defaultWith (fun () -> create sem)
+  let ansiD =
+    DVar.createDisposable (create ())
 
-  let prettyPrint autoFlush sem =
-    let i = getInstance sem
-    i.prettyPrint autoFlush
+  let prettyPrint autoFlush parts =
+    ansiD |> DVar.iter (fun i ->
+    i.prettyPrint autoFlush parts)
 
-  let flush () = !instance |> Option.iter (fun i -> i.flush())
-  let close () = !instance |> Option.iter (fun i -> (i :> IDisposable).Dispose())
-  let writeAndFlushRaw (value: string) = !instance |> Option.iter (fun i -> i.writeAndFlushRaw value)
+  let flush () =
+    ansiD |> DVar.iter (fun i ->
+    i.flush ())
+
+  let close () =
+    ansiD |> DVar.put (create ())
+
+  let writeAndFlushRaw (value: string) =
+    ansiD |> DVar.iter (fun i ->
+    i.writeAndFlushRaw value)
 
 module ColourText =
-  let colouriseText (colour: ConsoleColor) text : string =
+  let colouriseText (colour: ConsoleColor) text: string =
+    let colourLevel = DVar.get GlobalConfig.colourLevelD
     sprintf "%s%s%s"
-      (ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) colour)
+      (ANSIOutputWriter.colouriseText colourLevel colour)
       text
       ANSIOutputWriter.colourReset
 
 /// Logs a line in a format that is great for human consumption,
 /// using console colours to enhance readability.
 /// Sample: [10:30:49 INF] User "AdamC" began the "checkout" process with 100 cart items
-type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?outputWriter, ?consoleSemaphore) =
-  let sem          = defaultArg consoleSemaphore (obj())
+type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?outputWriter) =
   let options      = defaultArg options (Literate.LiterateOptions.create())
   let tokenise     = defaultArg literateTokeniser LiterateTokenisation.tokeniseMessage
   let colourWriter = outputWriter |> Option.defaultWith (fun () ->
-    ANSIOutputWriter.prettyPrint (minLevel <= Debug) sem
+    ANSIOutputWriter.prettyPrint (minLevel <= Debug)
   )
 
   /// Converts the message to tokens, apply the theme, then output them using the `colourWriter`.
@@ -1193,10 +1209,13 @@ type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?output
   /// A special field named `newLineIfNext` will output a new line if the next field renders
   /// anything (i.e. non-empty). Any other property names will become a
   /// `LiterateToken.MissingTemplateField`.
-  new (name, minLevel, outputTemplate, ?options, ?outputWriter, ?consoleSemaphore) =
+  new (name, minLevel, outputTemplate, ?options, ?outputWriter) =
     let tokeniser = LiterateFormatting.tokeniserForOutputTemplate outputTemplate
-    new LiterateConsoleTarget(name, minLevel,
-          ?options=options, literateTokeniser=tokeniser, ?outputWriter=outputWriter, ?consoleSemaphore=consoleSemaphore)
+    new LiterateConsoleTarget(
+      name, minLevel,
+      ?options=options,
+      literateTokeniser=tokeniser,
+      ?outputWriter=outputWriter)
 
   interface Logger with
     member __.name = name
@@ -1264,22 +1283,17 @@ type CombiningTarget(name, otherLoggers: Logger list) =
       |> Async.Ignore // Async<unit>
 
 module Global =
+  open GlobalConfig
   open DVar.Operators
 
-  /// This is the global semaphore for writing to the console output. Ensure
-  /// that the same semaphore is used across libraries by using the Logary
-  /// Facade Adapter in the final composing app/service.
-  let private semD = DVar.create (obj ())
-  let private getTimestampD = DVar.create (fun () -> DateTimeOffset.timestamp DateTimeOffset.UtcNow)
-  let private minLevelD = DVar.create Info
-  let private getLoggerInnerD =
-    DVar.create (fun level name ->
-      LiterateConsoleTarget(name, level) :> Logger
-    )
-  let private getLoggerD : DVar<string[]->Logger> =
-    DVar.apply getLoggerInnerD minLevelD
-
-  let private cfgD : DVar<LoggingConfig> = LoggingConfig.create <!> getTimestampD <*> getLoggerD <*> semD
+  let internal getLoggerInnerD = DVar.create (fun level name -> LiterateConsoleTarget(name, level) :> Logger)
+  let internal getLoggerD: DVar<string[] -> Logger> = DVar.apply getLoggerInnerD minLevelD
+  let private cfgD: DVar<LoggingConfig> =
+        LoggingConfig.create
+    <!> getTimestampD
+    <*> getLoggerD
+    <*> semD
+    <*> colourLevelD
 
   let defaultConfig = DVar.get cfgD
 
@@ -1293,9 +1307,9 @@ module Global =
     interface Logger with
       member __.name = name
       member __.log level msgFactory =
-        let logger = DVar.get loggerD in logger.log level (msgFactory >> ensureName)
+        loggerD |> DVar.iter (fun logger -> logger.log level (msgFactory >> ensureName))
       member __.logWithAck level msgFactory =
-        let logger = DVar.get loggerD in logger.logWithAck level (msgFactory >> ensureName)
+        loggerD |> DVar.iter (fun logger -> logger.logWithAck level (msgFactory >> ensureName))
 
   let internal getStaticLogger (name: string[]) = Flyweight name :> Logger
 
@@ -1313,6 +1327,7 @@ module Global =
     semD |> DVar.put cfg.consoleSemaphore
     getTimestampD |> DVar.put cfg.timestamp
     getLoggerInnerD |> DVar.put (fun _ name -> cfg.getLogger name)
+    colourLevelD |> DVar.put cfg.colourLevel
 
   let initialiseIfDefault cfg = if not (DVar.wasChanged cfgD) then initialise cfg
 
@@ -1326,11 +1341,11 @@ module Targets =
   /// in your IDE if you specify a level below Info.
   let create level name =
     if level >= Info then
-      LiterateConsoleTarget(name, level, consoleSemaphore = Global.semaphore()) :> Logger
+      LiterateConsoleTarget(name, level) :> Logger
     else
       CombiningTarget(
         name,
-        [ LiterateConsoleTarget(name, level, consoleSemaphore = Global.semaphore())
+        [ LiterateConsoleTarget(name, level)
           OutputWindowTarget(name, level) ])
       :> Logger
 

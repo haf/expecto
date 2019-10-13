@@ -54,9 +54,9 @@ let tests =
 
     testList "testName tests" [
       testCase "one test" <| fun _ ->
-        Expect.equal (testName()) "all/testName tests/one test" "one name"
+        Expect.equal (testName ()) "all/testName tests/one test" "one name"
       testCase "two test" <| fun _ ->
-        Expect.equal (testName()) "all/testName tests/two test" "two name"
+        Expect.equal (testName ()) "all/testName tests/two test" "two name"
     ]
 
     testList "null comparison" [
@@ -70,40 +70,42 @@ let tests =
     ]
 
     testList "string comparison" [
-      test "string equal" {
+      yield test "string equal" {
         Expect.equal "Test string" "Test string" "Test string"
       }
 
-      test "different length, actual is shorter" {
+      let cl = GlobalConfig.colourLevelD |> DVar.get
+
+      yield test "different length, actual is shorter" {
         Expect.equal "Test" "Test2" "Failing - string with different length"
       } |> assertTestFailsWithMsgStartingDelay (fun () ->
-            let redStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Red
-            let redEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
-            let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
-            let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
+            let redStart = ANSIOutputWriter.colouriseText cl ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colouriseText cl ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colouriseText cl ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colouriseText cl ConsoleColor.Cyan
             "Failing - string with different length. String actual was shorter than expected, at pos 4 for expected item '2'.\n"+
             greenStart+"expected"+greenEnd+": Test"+greenStart+"2"+greenEnd+"\n"+
             redStart+"  actual"+redEnd+": Test"
           )
 
-      test "different length, actual is longer" {
+      yield test "different length, actual is longer" {
         Expect.equal "Test2" "Test" "Failing - string with different length"
       } |> assertTestFailsWithMsgStartingDelay (fun () ->
-            let redStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Red
-            let redEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
-            let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
-            let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
+            let redStart = ANSIOutputWriter.colouriseText cl ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colouriseText cl ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colouriseText cl ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colouriseText cl ConsoleColor.Cyan
             "Failing - string with different length. String actual was longer than expected, at pos 4 found item '2'.\n"+
             greenStart+"expected"+greenEnd+": Test\n"+
             redStart+"  actual"+redEnd+": Test"+redStart+"2"+redEnd
           )
-      test "fail - different content" {
+      yield test "fail - different content" {
         Expect.equal "Test" "Tes2" "Failing - string with different content"
       } |> assertTestFailsWithMsgStartingDelay (fun () ->
-            let redStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Red
-            let redEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
-            let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
-            let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
+            let redStart = ANSIOutputWriter.colouriseText cl ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colouriseText cl ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colouriseText cl ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colouriseText cl ConsoleColor.Cyan
             "Failing - string with different content. String does not match at position 3. Expected char: '2', but got 't'.\n"+
             greenStart+"expected"+greenEnd+": Tes"+greenStart+"2"+greenEnd + "\n"+
             redStart+"  actual"+redEnd+": Tes"+redStart+"t"+redEnd
@@ -111,17 +113,19 @@ let tests =
     ]
 
     testList "record comparison" [
-      test "record equal" {
+      yield test "record equal" {
         Expect.equal { a = "dd" } { a = "dd" } "Test record"
       }
 
-      test "fail - different content" {
+      let cl = GlobalConfig.colourLevelD |> DVar.get
+
+      yield test "fail - different content" {
         Expect.equal {a = "dd"; b = "de" } {a = "dd"; b = "dw" } "Failing - record with different content"
       } |> assertTestFailsWithMsgStartingDelay (fun () ->
-            let redStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Red
-            let redEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
-            let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
-            let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
+            let redStart = ANSIOutputWriter.colouriseText cl ConsoleColor.Red
+            let redEnd = ANSIOutputWriter.colouriseText cl ConsoleColor.Cyan
+            let greenStart = ANSIOutputWriter.colouriseText cl ConsoleColor.Green
+            let greenEnd = ANSIOutputWriter.colouriseText cl ConsoleColor.Cyan
             "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\n"+
             greenStart+"expected"+greenEnd+":\n{a = \"dd\";\n b = \"d"+greenStart+"w"+greenEnd+"\";}\n"+
             redStart+"  actual"+redEnd+":\n{a = \"dd\";\n b = \"d"+redStart+"e"+redEnd+"\";}"
@@ -742,7 +746,7 @@ let expecto =
         testCase "do not call 'cont' if exception is not raised" <| fun _ ->
           let mutable contCalled = false
           try
-            Expect.throwsC ignore (fun e -> contCalled <- true)
+            Expect.throwsC ignore (fun _ -> contCalled <- true)
           with
             _ -> ()
 
