@@ -1,301 +1,17 @@
 namespace Expecto
-open System.Globalization
 
 #nowarn "46"
-
 open System
-open System.Linq
-open System.Runtime.CompilerServices
-open System.Reflection
 open System.Diagnostics
+open System.Reflection
+open System.Runtime.CompilerServices
 open System.Threading
 open System.Threading.Tasks
 
 // When exposing Extension Methods, you should declare an assembly-level attribute (in addition to class and method)
-[<assembly:Extension>]
-do
-  ()
+[<assembly: Extension>]
+do ()
 
-
-// TODO: move to internal
-type SourceLocation =
-  { sourcePath : string
-    lineNumber : int }
-with
-  static member empty =
-    { sourcePath = ""
-      lineNumber = 0 }
-
-type FsCheckConfig =
-    /// The maximum number of tests that are run.
-  { maxTest: int
-    /// The size to use for the first test.
-    startSize: int
-    /// The size to use for the last test, when all the tests are passing. The size increases linearly between Start- and EndSize.
-    endSize: int
-    /// If set, the seed to use to start testing. Allows reproduction of previous runs.
-    replay: (int * int) option
-    /// The Arbitrary instances on this class will be merged in back to front order, i.e. instances for the same generated type at the front
-    /// of the list will override those at the back. The instances on Arb.Default are always known, and are at the back (so they can always be
-    /// overridden)
-    arbitrary: Type list
-    /// Callback when the test case had input parameters generated.
-    receivedArgs: FsCheckConfig
-               -> (* test name *) string
-               -> (* test number *) int
-               -> (* generated arguments *) obj list
-               -> Async<unit>
-    /// Callback when the test case was successfully shrunk
-    successfulShrink: FsCheckConfig
-                   -> (* test name *) string
-                   -> (* shrunk new arguments *) obj list
-                   -> Async<unit>
-    /// Callback when the test case has finished
-    finishedTest: FsCheckConfig
-               -> (* test name *) string
-               -> Async<unit>
-  }
-
-  static member defaultConfig =
-    { maxTest = 200
-      startSize = 1
-      endSize = 100
-      replay = None
-      arbitrary = []
-      receivedArgs = fun _ _ _ _ -> async.Return ()
-      successfulShrink = fun _ _ _ -> async.Return ()
-      finishedTest = fun _ _ -> async.Return ()
-    }
-
-/// Actual test function; either an async one, or a synchronous one.
-type TestCode =
-  | Sync of stest: (unit -> unit)
-  | SyncWithCancel of stest: (CancellationToken -> unit)
-  | Async of atest: Async<unit>
-  | AsyncFsCheck of testConfig: FsCheckConfig option *
-                    stressConfig: FsCheckConfig option *
-                    test: (FsCheckConfig -> Async<unit>)
-
-/// The parent state (watching the tests as a tree structure) will influence
-/// the child tests state. By following rules, if parent test state is:
-///     - Focused will elevate all Normal child tests to Focused.
-///              Focused and Pending child tests will not change state(behavior)
-///     - Normal will not influence the child tests states(behavior).
-///     - Pending will elevate all Normal and Focused child tests to Pending.
-///              Pending child test will not change state(behavior)
-type FocusState =
-  /// The default state of a test that will be evaluated
-  | Normal
-  /// The state of a test that will be ignored by Expecto
-  | Pending
-  /// The state of a test that will be evaluated
-  /// All other test marked with Normal or Pending will be ignored
-  | Focused
-
-type SequenceMethod =
-  | Synchronous
-  | SynchronousGroup of string
-  | InParallel
-
-/// Test tree – this is how you compose your tests as values. Since
-/// any of these can act as a test, you can pass any of these DU cases
-/// into a function that takes a Test.
-type Test =
-  /// A test case is a function from unit to unit, that can be executed
-  /// by Expecto to run the test code.
-  | TestCase of code:TestCode * state:FocusState
-  /// A collection/list of tests.
-  | TestList of tests:Test list * state:FocusState
-  /// A labelling of a Test (list or test code).
-  | TestLabel of label:string * test:Test * state:FocusState
-  /// Require sequenced for a Test (list or test code).
-  | Sequenced of SequenceMethod * Test
-
-// TODO: move to internal namespace
-type ExpectoException(msg) = inherit Exception(msg)
-// TODO: move to internal namespace
-type AssertException(msg) = inherit ExpectoException(msg)
-// TODO: move to internal namespace
-type FailedException(msg) = inherit ExpectoException(msg)
-// TODO: move to internal namespace
-type IgnoreException(msg) = inherit ExpectoException(msg)
-/// Represents an error during test discovery.
-type TestDiscoveryException(msg) = inherit ExpectoException(msg)
-/// Represents a null test value during test discovery.
-type NullTestDiscoveryException(msg) = inherit TestDiscoveryException(msg)
-
-/// Marks a top-level test for scanning
-/// The test will run even if PTest is also present.
-[<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
-type TestsAttribute() = inherit Attribute()
-
-/// Allows to mark a test as Pending (will be skipped/ignored if no other TestAttribute is present)
-/// Is a fast way to exclude some tests from running.
-/// If FTest or Test is also present then this attribute will be ignored.
-[<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
-type PTestsAttribute() = inherit Attribute()
-
-/// Allows to mark a test as FocusState.Focused (will be run and will change the behavior for
-/// all other tests marked as FocusState.Normal to be ignored)
-/// Is a fast way to exclude some tests from running.
-/// The test will run even if PTest is also present. Have priority over TestAttribute.
-[<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
-type FTestsAttribute() = inherit Attribute()
-
-type private TestNameHolder() =
-  [<ThreadStatic;DefaultValue>]
-  static val mutable private name : string
-  static member Name
-      with get () = TestNameHolder.name
-      and  set name = TestNameHolder.name <- name
-
-
-[<AutoOpen>]
-module internal Helpers =
-  let inline dispose (d:IDisposable) = d.Dispose()
-  let inline addFst a b = a,b
-  let inline addSnd b a = a,b
-  let inline fst3 (a,_,_) = a
-  let inline commaString (i:int) = i.ToString("#,##0")
-  let inline tryParse (s: string) =
-    let mutable r = Unchecked.defaultof<_>
-    if (^a : (static member TryParse: string * ^a byref -> bool) (s, &r))
-    then Some r else None
-  let inline tryParseNumber (s: string) =
-    let mutable r = Unchecked.defaultof<_>
-    if (^a : (static member TryParse: string * NumberStyles * IFormatProvider * ^a byref -> bool) (s, NumberStyles.Any, CultureInfo.InvariantCulture, &r))
-    then Some r else None
-  module Seq =
-    let cons x xs = seq { yield x; yield! xs }
-
-  module List =
-    let inline singleton x = [x]
-
-  module Array =
-    let shuffleInPlace (a:_ array) =
-      let rand = Random()
-      for i = Array.length a - 1 downto 1 do
-        let j = rand.Next(i+1)
-        if i<>j then
-            let temp = a.[j]
-            a.[j] <- a.[i]
-            a.[i] <- temp
-
-  module Option =
-    let orFun fn =
-      function | Some a -> a | None -> fn()
-    let orDefault def =
-      function | Some a -> a | None -> def
-
-  module Result =
-    let traverse f list =
-      List.fold (fun s i ->
-          match s,f i with
-          | Ok l, Ok h -> Ok (h::l)
-          | Error l, Ok _ -> Error l
-          | Ok _, Error e -> Error [e]
-          | Error l, Error h -> Error (h::l)
-      ) (Ok []) list
-    let sequence list = traverse id list
-
-  type Type with
-    static member TryGetType t =
-      try
-        Type.GetType(t, true) |> Some
-      with _ ->
-        None
-
-  type ResizeMap<'k,'v> = Collections.Generic.Dictionary<'k,'v>
-
-  let matchFocusAttributes = function
-    | "Expecto.FTestsAttribute" -> Some (1, Focused)
-    | "Expecto.TestsAttribute" -> Some (2, Normal)
-    | "Expecto.PTestsAttribute" -> Some (3, Pending)
-    | _ -> None
-
-  let allTestAttributes = Set.ofList [  (typeof<FTestsAttribute>).FullName
-                                        (typeof<TestsAttribute>).FullName
-                                        (typeof<PTestsAttribute>).FullName]
-
-  type MemberInfo with
-    member m.HasAttributePred (pred: Type -> bool) =
-      m.GetCustomAttributes true
-      |> Seq.filter (fun a -> pred(a.GetType()))
-      |> Seq.length |> (<) 0
-
-    member m.HasAttributeType (attr: Type) =
-      m.HasAttributePred ((=) attr)
-
-    member m.HasAttribute (attr: string) =
-      m.HasAttributePred (fun (t: Type) -> t.FullName = attr)
-
-    member m.GetAttributes (attr: string) : Attribute seq =
-      m.GetCustomAttributes true
-      |> Seq.filter (fun a -> a.GetType().FullName = attr)
-      |> Seq.cast
-
-    member m.MatchTestsAttributes () =
-      m.GetCustomAttributes true
-      |> Seq.map (fun t -> t.GetType().FullName)
-      |> Set.ofSeq
-      |> Set.intersect allTestAttributes
-      |> Set.toList
-      |> List.choose matchFocusAttributes
-      |> List.sortBy fst
-      |> List.map snd
-      |> List.tryFind (fun _ -> true)
-
-
-module internal Async =
-  let map fn a =
-    async {
-      let! v = a
-      return fn v
-    }
-
-  let bind fn a =
-    async.Bind(a, fn)
-
-  let foldSequentiallyWithCancel (ct:CancellationToken) folder state (s:_ seq) =
-    async {
-      let mutable state = state
-      let tcs = TaskCompletionSource()
-      use _ = Action tcs.SetResult |> ct.Register
-      let tasks : Task[] = [| null; tcs.Task |]
-      use e = s.GetEnumerator()
-      while not ct.IsCancellationRequested && e.MoveNext() do
-        let task = Async.StartAsTask e.Current
-        tasks.[0] <- task :> Task
-        if Task.WaitAny tasks = 0 then
-          state <- folder state task.Result
-      return state
-    }
-
-  let foldSequentially folder state (s:_ seq) =
-    foldSequentiallyWithCancel CancellationToken.None folder state s
-
-  let foldParallelWithCancel maxParallelism (ct:CancellationToken) folder state (s:_ seq) =
-    async {
-      let mutable state = state
-      use e = s.GetEnumerator()
-      if e.MoveNext() then
-        let mutable tasks = [Async.StartAsTask e.Current]
-        while not(ct.IsCancellationRequested || List.isEmpty tasks) do
-          if List.length tasks = maxParallelism || not(e.MoveNext()) then
-            while not( tasks |> List.exists (fun t -> t.IsCompleted)
-                    || ct.IsCancellationRequested) do
-              do! Async.Sleep 10
-            tasks |> List.tryFindIndex (fun t -> t.IsCompleted)
-            |> Option.iter (fun i ->
-              let a,b = List.splitAt i tasks
-              state <- (List.head b).Result |> folder state
-              tasks <- a @ List.tail b
-            )
-          else tasks <- Async.StartAsTask e.Current :: tasks
-      return state
-    }
-
-// TODO: move to internal
 [<ReferenceEquality>]
 type FlatTest =
   { name      : string
@@ -368,11 +84,13 @@ module Test =
     Array.toList tests
     |> fromFlatTests
 
-  /// Change the FocusState by appling the old state to a new state
+  /// Change the FocusState by applying the old state to a new state
   /// Note: this is not state replacement!!!
+  ///
   /// Used in replaceTestCode and the order is intended for scenario:
   ///  1. User wants to automate some tests and his intent is not to change
   ///      the test state (use Normal), so this way the current state will be preserved
+  ///
   /// Don't see the use case: the user wants to automate some tests and wishes
   /// to change the test states
   let rec translateFocusState newFocusState =
@@ -445,7 +163,7 @@ module Impl =
   let setLogName name = logger <- Log.create name
 
   let rec private exnWithInnerMsg (ex: exn) msg =
-    let currentMsg = 
+    let currentMsg =
       msg + (sprintf "%s%s" Environment.NewLine (ex.ToString()))
     if isNull ex.InnerException then
       currentMsg
@@ -500,13 +218,14 @@ module Impl =
       count         : int
       meanDuration  : float
       maxDuration   : float }
+
     member x.duration = TimeSpan.FromMilliseconds x.meanDuration
     static member single result duration =
       { result        = result
         count         = 1
         meanDuration  = duration
         maxDuration   = duration }
-    static member (+)(s:TestSummary,(r,x):TestResult*float) =
+    static member (+) (s:TestSummary, (r,x): TestResult*float) =
       { result        = TestResult.max s.result r
         count         = s.count + 1
         meanDuration  =
@@ -514,11 +233,11 @@ module Impl =
         maxDuration   = max s.maxDuration x }
 
   type TestRunSummary =
-    { results   : (FlatTest * TestSummary) list
-      duration  : TimeSpan
-      maxMemory : int64
+    { results     : (FlatTest * TestSummary) list
+      duration    : TimeSpan
+      maxMemory   : int64
       memoryLimit : int64
-      timedOut  : FlatTest list
+      timedOut    : FlatTest list
     }
     static member fromResults results =
       { results  = results
@@ -1164,7 +883,7 @@ module Impl =
   let runEval config test =
     runEvalWithCancel CancellationToken.None config test
 
-  let runStressWithCancel (ct:CancellationToken) config test =
+  let runStressWithCancel (ct: CancellationToken) config test =
     async {
       do! config.printer.beforeRun test
 
@@ -1198,21 +917,20 @@ module Impl =
         lazy
         totalTicks |> (+) (Stopwatch.GetTimestamp())
 
-      let asyncRun foldRunner (runningTests:ResizeArray<_>,
+      let asyncRun foldRunner (runningTests: ResizeArray<_>,
                                results,
                                maxMemory) =
         let cancel = new CancellationTokenSource()
 
-        let folder (runningTests:ResizeArray<_>,
-                    results:ResizeMap<_,_>,
-                    maxMemory) (test,result) =
+        let folder (runningTests: ResizeArray<_>, results: ResizeMap<_,_>, maxMemory)
+                   (test, result) =
 
           runningTests.Remove test |> ignore
 
           results.[test] <-
             match results.TryGetValue test with
             | true, existing ->
-              existing + (result.result,result.meanDuration)
+              existing + (result.result, result.meanDuration)
             | false, _ ->
               result
 
@@ -1336,7 +1054,6 @@ module Impl =
     | [] -> None
     | x -> Some (TestList (x, Normal))
 
-  // TODO: make internal
   let testFromType =
     let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
     let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
@@ -1389,7 +1106,7 @@ module Impl =
 
   // Ported from
   // https://github.com/adamchester/expecto-adapter/blob/885fc9fff0/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
-  let getSourceLocation (asm:Assembly) className methodName =
+  let getSourceLocation (asm: Assembly) className methodName =
     let lineNumberIndicatingHiddenLine = 0xfeefee
     let getEcma335TypeName (clrTypeName:string) = clrTypeName.Replace("+", "/")
 
@@ -1469,7 +1186,6 @@ module Tests =
   open Impl
   open Helpers
   open Expecto.Logging
-  open Expecto.Logging.Message
   open FSharp.Control.Tasks.CopiedDoNotReference.V2
 
   let mutable private afterRunTestsList = []

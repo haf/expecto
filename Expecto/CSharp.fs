@@ -105,11 +105,11 @@ module Runner =
 
       /// Set the printer - this replaces the current one
       [<Extension; CompiledName("WithPrinter")>]
-      member x.WithPrinter(printer:ITestPrinter) = { x with printer = printerFromInterface printer }
+      member x.WithPrinter(printer: ITestPrinter) = { x with printer = printerFromInterface printer }
 
       /// Add an additional printer - this does not replace the current one
       [<Extension; CompiledName("AddPrinter")>]
-      member x.AddPrinter(printer:ITestPrinter) =
+      member x.AddPrinter(printer: ITestPrinter) =
         let combinedPrinter = TestPrinters.mergePrinters (x.printer, (printerFromInterface printer))
         { x with printer = combinedPrinter }
 
@@ -183,7 +183,7 @@ type Function() =
         message
     result <- r
     b
-    
+
   /// Expects function `f1` is faster than `f2`. Statistical test to 99.99%
   /// confidence level. With `setup` actions.
   static member IsFasterThan (setup1:Action, f1:Func<'a>,
