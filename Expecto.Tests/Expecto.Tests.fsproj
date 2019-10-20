@@ -12,6 +12,7 @@
     <Compile Include="FocusedTests.fs" />
     <Compile Include="FsCheckTests.fs" />
     <Compile Include="PerformanceTests.fs" />
+    <Compile Include="Bug341.fs" />
     <Compile Include="Main.fs" />
     <None Include="paket.references" />
     <ProjectReference Include="..\Expecto.Hopac\Expecto.Hopac.fsproj" />

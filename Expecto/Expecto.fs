@@ -1304,9 +1304,9 @@ module Tests =
       try
         f disposable
       finally
-        match disposable with
-        | null -> ()
-        | disp -> disp.Dispose()
+        match box disposable with
+        | :? IDisposable as d when not (isNull d) -> d.Dispose()
+        | _ -> ()
     member __.For(sequence, f) =
       for i in sequence do f i
     member __.Combine(f1, f2) = f2(); f1
