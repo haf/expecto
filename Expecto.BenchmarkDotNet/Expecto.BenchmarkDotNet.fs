@@ -1,5 +1,6 @@
 namespace Expecto
 
+open System.Text
 open BenchmarkDotNet
 open BenchmarkDotNet.Running
 open BenchmarkDotNet.Configs
@@ -11,6 +12,7 @@ open BenchmarkDotNet.Filters
 open BenchmarkDotNet.Jobs
 open BenchmarkDotNet.Loggers
 open BenchmarkDotNet.Order
+open BenchmarkDotNet.Reports
 open BenchmarkDotNet.Validators
 
 [<AutoOpen>]
@@ -24,36 +26,38 @@ module BenchmarkDotNet =
   type BenchmarkConfig =
     { columnProviders: IColumnProvider list
       hardwareCounters: HardwareCounter list
-      summaryStyle: Reports.ISummaryStyle
+      summaryStyle: SummaryStyle
       exporters : IExporter list
       loggers : ILogger list
       diagnosers : IDiagnoser list
       analysers : IAnalyser list
       jobs : Job list
       validators : IValidator list
-      orderProvider : IOrderProvider
+      orderer : IOrderer
       unionRule : ConfigUnionRule
-      keepFiles : bool
       filters : IFilter list
       artifactsPath : string
       logicalGroupRules : BenchmarkLogicalGroupRule list
+      encoding: Encoding
+      options: ConfigOptions
     }
     interface IConfig with
       member x.GetColumnProviders() = Seq.ofList x.columnProviders
       member x.GetHardwareCounters() = Seq.ofList x.hardwareCounters
-      member x.GetSummaryStyle() = x.summaryStyle
+      member x.SummaryStyle = x.summaryStyle
       member x.GetExporters() = Seq.ofList x.exporters
       member x.GetLoggers() = Seq.ofList x.loggers
       member x.GetDiagnosers() = Seq.ofList x.diagnosers
       member x.GetAnalysers() = Seq.ofList x.analysers
       member x.GetJobs() = Seq.ofList x.jobs
       member x.GetValidators() = Seq.ofList x.validators
-      member x.GetOrderProvider() = x.orderProvider
+      member x.Orderer = x.orderer
       member x.UnionRule = x.unionRule
-      member x.KeepBenchmarkFiles = x.keepFiles
       member x.GetFilters() = Seq.ofList x.filters
       member x.ArtifactsPath = x.artifactsPath
       member x.GetLogicalGroupRules() = Seq.ofList x.logicalGroupRules
+      member x.Encoding = x.encoding
+      member x.Options = x.options
 
   let private synchronisedLogger =
     let cl = ConsoleLogger.Default
@@ -64,25 +68,28 @@ module BenchmarkDotNet =
           cl.WriteLine (kind, text)
         member __.WriteLine () =
           cl.WriteLine()
+        member __.Flush () =
+          cl.Flush()
     }
 
   let benchmarkConfig =
     let def = DefaultConfig.Instance
     { columnProviders = def.GetColumnProviders() |> List.ofSeq
       hardwareCounters = def.GetHardwareCounters() |> List.ofSeq
-      summaryStyle = def.GetSummaryStyle()
+      summaryStyle = def.SummaryStyle
       exporters = def.GetExporters() |> List.ofSeq
       loggers = [ synchronisedLogger ]
       diagnosers = def.GetDiagnosers() |> List.ofSeq
       analysers = def.GetAnalysers() |> List.ofSeq
       jobs = def.GetJobs() |> List.ofSeq
       validators = def.GetValidators() |> List.ofSeq
-      orderProvider = def.GetOrderProvider()
+      orderer = def.Orderer
       unionRule = def.UnionRule
-      keepFiles = true
       filters = def.GetFilters() |> List.ofSeq
       artifactsPath = def.ArtifactsPath
       logicalGroupRules = def.GetLogicalGroupRules() |> List.ofSeq
+      encoding = def.Encoding
+      options = def.Options
     }
 
   /// Run a performance test: pass the annotated type as a type param
