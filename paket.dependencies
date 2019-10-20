@@ -1,15 +1,15 @@
 source https://api.nuget.org/v3/index.json
 framework net461, netstandard2.0, netcoreapp2.0, netcoreapp2.1
 storage: none
-clitool paket
-version 5.219.0
+clitool paket 5.226.0
+version 5.226.0
 
 nuget FSharp.Core 4.3.4
 nuget FsCheck ~> 2.10
 nuget Hopac ~> 0.3
 nuget DiffPlex ~> 1.4.4
 nuget Mono.Cecil ~> 0.10
-nuget BenchmarkDotNet 0.10.14
+nuget BenchmarkDotNet ~> 0.11
 
 group Build
   source https://api.nuget.org/v3/index.json
