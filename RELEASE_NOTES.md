@@ -1,3 +1,17 @@
+#### 8.13.0 - 2019-11-23
+* Docs fixes #342 #358, #362, thanks @PhilT @ZaymonFC @dmitrydprog
+* Fix TestBuilder bug #341, thanks @haf
+* Upgrade Paket, DotNetBenchmark #355, thanks @haf
+* Refactor files; split into separate files #353, thanks @haf
+* Get inner message exceptions, #349 thanks @MNie
+* Update Logary sample, #347 thanks @smoothdeveloper
+* LARGE IMPROVEMENT: use DiffPlex for diffs (opt-in right now) #346, thanks @drhumlen
+* Configure WhiteSource for security scanning Expecto, #344 thanks @haf
+* Report duplicate test names in printer, #339, thanks @auduchinok
+* Improve Travis build for .Net Core #338 thanks @auduchinok
+* (Missed creds to @TheAngryByrd in 8.12 for improving TestJobBuilder)
+* Thank you everyone❣️
+
 #### 8.12.0 - 2019-09-16
 * Fix #330 - a possible null ref in coloured logging, thanks @haf
 
