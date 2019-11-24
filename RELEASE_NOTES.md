@@ -1,3 +1,6 @@
+#### 8.13.1 - 2019-11-24
+* Include Expecto.Diff in build, thanks @haf
+
 #### 8.13.0 - 2019-11-23
 * Docs fixes #342 #358, #362, thanks @PhilT @ZaymonFC @dmitrydprog
 * Fix TestBuilder bug #341, thanks @haf
