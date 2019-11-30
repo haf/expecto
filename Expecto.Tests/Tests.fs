@@ -499,6 +499,7 @@ let expecto =
             "--allow-duplicate-names"
             "--no-spinner"
             "--colours"; "256"
+            "--split-on"; "."
         |]
         let ok = [
           Sequenced
@@ -525,6 +526,7 @@ let expecto =
           Allow_Duplicate_Names
           No_Spinner
           Colours 256
+          Splitter "."
         ]
         testArgs args (Ok ok)
       }
@@ -624,6 +626,12 @@ let expecto =
           let test = dummy (fun () -> incr count)
           runTestsWithCLIArgs [No_Spinner] [|"--filter-test-list"; "f"|] test ==? 0
           !count ==? 2
+
+        yield testCase "run with split" <| fun _ ->
+          let count = ref 0
+          let test = dummy (fun () -> incr count)
+          runTestsWithCLIArgs [No_Spinner] [|"--split-on"; "."|] test ==? 0
+          !count ==? 7
 
         yield testCase "run with run" <| fun _ ->
           let count = ref 0
@@ -1487,6 +1495,19 @@ let stress =
         Printer TestPrinters.silent
         Verbosity Logging.LogLevel.Fatal
         No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] (singleTest "single test")) 0 "one"
+    }
+
+    yield testAsync "single with dot separator" {
+      let config = [
+        Parallel_Workers 8
+        Stress 0.002
+        Stress_Timeout 0.2
+        Printer TestPrinters.silent
+        Verbosity Logging.LogLevel.Fatal
+        No_Spinner
+        Splitter "."
       ]
       Expect.equal (runTestsWithCLIArgs config [||] (singleTest "single test")) 0 "one"
     }

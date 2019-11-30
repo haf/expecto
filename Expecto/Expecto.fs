@@ -335,6 +335,18 @@ module Impl =
       >> setField "errored" errored
       >> setField "erroredCount" (align erroredCount 0))
 
+  [<ReferenceEquality>]
+  type Split =
+    | Dot
+    | Slash
+    static member getSign = function
+      | Dot -> '.'
+      | Slash -> '/'
+
+    static member getSignAsString = function
+      | Dot -> "."
+      | Slash -> "/"
+
   /// Hooks to print report through test run
   [<ReferenceEquality>]
   type TestPrinters =
@@ -417,6 +429,7 @@ module Impl =
           }
 
         summary = fun _config summary ->
+          let splitSign = Split.getSignAsString _config.splitter
           let spirit =
             if summary.successful then "Success!" else String.Empty
           let commonAncestor =
@@ -426,16 +439,16 @@ module Impl =
               | hd::tl when hd.StartsWith(ancestor)->
                 loop ancestor tl
               | _ ->
-                if ancestor.Contains("/") then
-                  loop (ancestor.Substring(0, ancestor.LastIndexOf "/")) descendants
+                if ancestor.Contains(splitSign) then
+                  loop (ancestor.Substring(0, ancestor.LastIndexOf splitSign)) descendants
                 else
                   "miscellaneous"
 
             let parentNames =
               summary.results
               |> List.map (fun (flatTest, _)  ->
-                if flatTest.name.Contains("/") then
-                  flatTest.name.Substring(0, flatTest.name.LastIndexOf "/")
+                if flatTest.name.Contains(splitSign) then
+                  flatTest.name.Substring(0, flatTest.name.LastIndexOf splitSign)
                 else
                   flatTest.name )
 
@@ -504,7 +517,7 @@ module Impl =
 
     static member teamCityPrinter innerPrinter =
       let formatName (n:string) =
-        n.Replace( "/", "." ).Replace( " ", "_" )
+        n.Replace( " ", "_" )
 
       // https://confluence.jetbrains.com/display/TCD10/Build+Script+Interaction+with+TeamCity#BuildScriptInteractionwithTeamCity-Escapedvalues
       let escape (msg: string) =
@@ -647,6 +660,7 @@ module Impl =
       noSpinner: bool
       /// Set the level of colours to use.
       colour: ColourLevel
+      splitter: Split
     }
     static member defaultConfig =
       { parallel = true
@@ -672,6 +686,7 @@ module Impl =
         allowDuplicateNames = false
         noSpinner = false
         colour = Colour8
+        splitter = Split.Slash
       }
 
     member x.appendSummaryHandler handleSummary =
@@ -1539,6 +1554,7 @@ module Tests =
     | Verbosity of LogLevel
     /// Append a summary handler.
     | Append_Summary_Handler of SummaryHandler
+    | Splitter of split:string
 
   let options = [
       "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
@@ -1565,6 +1581,7 @@ module Tests =
       "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
       "--colours", "Set the level of colours to use. Can be 0, 8 (default) or 256.", Args.number Colours
       "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
+      "--split-on", "Split on option. Can be \".\" or \"/\" (default).", Args.string Splitter
   ]
 
   type FillFromArgsResult =
@@ -1573,14 +1590,14 @@ module Tests =
     | ArgsVersion of ExpectoConfig
     | ArgsUsage of usage:string * errors:string list
 
-  let private getTestList (s:string) =
-    let all = s.Split('/')
+  let private getTestList (split) (s:string) =
+    let all = s.Split(Split.getSign split)
     match all with
     | [||] | [|_|] -> [||]
     | xs -> xs.[0..all.Length-2]
 
-  let private getTestCase (s:string) =
-    let i = s.LastIndexOf('/')
+  let private getTestCase (split) (s:string) =
+    let i = s.LastIndexOf(Split.getSign split)
     if i= -1 then s else s.Substring(i+1)
 
   let private foldCLIArgumentToConfig = function
@@ -1596,8 +1613,8 @@ module Tests =
     | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
     | Log_Name name -> fun o -> { o with logName = Some name }
     | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
-    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
-    | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
+    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList o.splitter |> Array.exists(fun s -> s.Contains name )) }
+    | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestCase o.splitter |> fun s -> s.Contains name )}
     | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
     | List_Tests -> id
     | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
@@ -1613,6 +1630,12 @@ module Tests =
                                       if i >= 256 then Colour256
                                       elif i >= 8 then Colour8
                                       else Colour0
+                  }
+    | Splitter s -> fun o -> { o with splitter = 
+                                      match s with
+                                      | "." -> Split.Dot
+                                      | "/" -> Split.Slash
+                                      | _ -> Split.Slash
                   }
     | Printer p -> fun o -> { o with printer = p }
     | Verbosity l -> fun o -> { o with verbosity = l }
