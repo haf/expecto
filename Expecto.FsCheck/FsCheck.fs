@@ -110,7 +110,7 @@ module ExpectoFsCheck =
       | Some (testConfig, stressConfig) ->
         AsyncFsCheck (Some testConfig, Some stressConfig, test)
 
-    TestLabel(name, TestCase (testCode, focusState), focusState)
+    TestLabel([name], TestCase (testCode, focusState), focusState)
 
   /// Builds a test property with config
   let testPropertyWithConfigs testConfig stressConfig name =

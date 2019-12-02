@@ -33,22 +33,22 @@ let runFsCheckTests =
       |> Seq.head
       |> snd
 
-    Expect.equal (getResult "FsCheck/Addition is commutative").result
+    Expect.equal (getResult ["FsCheck";"Addition is commutative"]).result
                  TestResult.Passed "passed count"
 
-    match (getResult "FsCheck/Deliberately failing test").result with
+    match (getResult ["FsCheck";"Deliberately failing test"]).result with
     | TestResult.Failed _ ->
       ()
     | x ->
       failtestf "Expected Failed, actual %A" x
 
-    match (getResult "FsCheck/ignored").result with
+    match (getResult ["FsCheck";"ignored"]).result with
     | TestResult.Ignored e ->
       Expect.equal "Because I feel like it." e "It should fail with the right message."
     | x ->
       failtestf "Expected Ignored, actual %A" x
 
-    match (getResult "FsCheck/ignored2").result with
+    match (getResult ["FsCheck";"ignored2"]).result with
     | TestResult.Ignored _ ->
       ()
     | x ->
@@ -78,13 +78,13 @@ let runFsCheckFocusedTests =
       |> Seq.head
       |> snd
 
-    match (getResult "FsCheck focused/ignore me").result with
+    match (getResult ["FsCheck focused";"ignore me"]).result with
     | TestResult.Ignored _ ->
       ()
     | x ->
       failtestf "Expected Ignored, actual %A" x
 
-    match (getResult "FsCheck focused/Deliberately failing test").result with
+    match (getResult ["FsCheck focused";"Deliberately failing test"]).result with
     | TestResult.Failed actual ->
       let expected = "
 Failed after 5 tests. Parameters:
@@ -123,13 +123,13 @@ let runFsCheckConfigTests =
       |> Seq.head
       |> snd
 
-    match (getResult "FsCheck config/ignore me").result with
+    match (getResult ["FsCheck config";"ignore me"]).result with
     | TestResult.Ignored _ ->
       ()
     | x ->
       failtestf "Expected Ignored, actual %A" x
 
-    match (getResult "FsCheck config/Deliberately failing test").result with
+    match (getResult ["FsCheck config";"Deliberately failing test"]).result with
     | TestResult.Failed actual ->
       let expected = "
 Failed after 5 tests. Parameters:

@@ -14,7 +14,7 @@ do ()
 
 [<ReferenceEquality>]
 type FlatTest =
-  { name      : string
+  { name      : string list
     test      : TestCode
     state     : FocusState
     focusOn   : bool
@@ -55,9 +55,9 @@ module Test =
       function
       | TestLabel (name, test, state) ->
         let fullName =
-          if String.IsNullOrEmpty parentName
+          if List.isEmpty parentName
             then name
-            else parentName + "/" + name
+            else parentName @ name
         loop fullName testList (computeChildFocusState parentState state) sequenced test
       | TestCase (test, state) ->
         { name=parentName
@@ -67,7 +67,7 @@ module Test =
           sequenced=sequenced } :: testList
       | TestList (tests, state) -> List.collect (loop parentName testList (computeChildFocusState parentState state) sequenced) tests
       | Sequenced (sequenced,test) -> loop parentName testList parentState sequenced test
-    loop null [] Normal InParallel test
+    loop [] [] Normal InParallel test
 
   let fromFlatTests (tests:FlatTest list) =
     TestList(
@@ -102,13 +102,13 @@ module Test =
 
   /// Recursively replaces TestCodes in a Test.
   /// Check translateFocusState for focus state behaviour description.
-  let rec replaceTestCode (f:string -> TestCode -> Test) =
+  let rec replaceTestCode (f:string list -> TestCode -> Test) =
     function
     | TestLabel (label, TestCase (test, childState), parentState) ->
       f label test
       |> translateFocusState (computeChildFocusState parentState childState)
     | TestCase (test, state) ->
-      f null test
+      f [] test
       |> translateFocusState state
     | TestList (testList, state) -> TestList (List.map (replaceTestCode f) testList, state)
     | TestLabel (label, test, state) -> TestLabel (label, replaceTestCode f test, state)
@@ -169,6 +169,18 @@ module Impl =
       currentMsg
     else
       exnWithInnerMsg ex.InnerException currentMsg
+
+  [<ReferenceEquality>]
+  type Split =
+    | Dot
+    | Slash
+    static member getSign = function
+      | Dot -> '.'
+      | Slash -> '/'
+
+    static member getSignAsString = function
+      | Dot -> "."
+      | Slash -> "/"
 
   type TestResult =
     | Passed
@@ -259,10 +271,10 @@ module Impl =
       (if List.isEmpty x.timedOut then 0 else 8)
     member x.successful = x.errorCode = 0
 
-  let createSummaryMessage (summary: TestRunSummary) =
+  let createSummaryMessage splitter (summary: TestRunSummary) =
     let handleLineBreaks (elements:(FlatTest*TestSummary) seq) =
         elements
-        |> Seq.map (fun (n,_) -> "\n\t" + n.name)
+        |> Seq.map (fun (n,_) -> "\n\t" + String.Join(splitter, n.name))
         |> String.Concat
 
     let passed = summary.passed |> handleLineBreaks
@@ -291,19 +303,22 @@ module Impl =
     >> setField "errored" errored
     >> setField "erroredCount" (align erroredCount 0)
 
-  let createSummaryText (summary: TestRunSummary) =
-    createSummaryMessage summary Info
+  let createSummaryText splitter (summary: TestRunSummary) =
+    createSummaryMessage splitter summary Info
     |> Expecto.Logging.Formatting.defaultFormatter
 
-  let logSummary (summary: TestRunSummary) =
-    createSummaryMessage summary
+  let logSummary splitter (summary: TestRunSummary) =
+    let split = Split.getSignAsString splitter
+    createSummaryMessage split summary
     |> logger.logWithAck Info
 
-  let logSummaryWithLocation locate (summary: TestRunSummary) =
+  let logSummaryWithLocation splitter locate (summary: TestRunSummary) =
+    let split = Split.getSignAsString splitter
     let handleLineBreaks (elements:(FlatTest*TestSummary) seq) =
       let format (n:FlatTest,_) =
         let location = locate n.test
-        sprintf "%s [%s:%d]" n.name location.sourcePath location.lineNumber
+        let name = String.Join(split, n.name)
+        sprintf "%s [%s:%d]" name location.sourcePath location.lineNumber
 
       let text = elements |> Seq.map format |> String.concat "\n\t"
       if text = "" then text else text + "\n"
@@ -335,17 +350,7 @@ module Impl =
       >> setField "errored" errored
       >> setField "erroredCount" (align erroredCount 0))
 
-  [<ReferenceEquality>]
-  type Split =
-    | Dot
-    | Slash
-    static member getSign = function
-      | Dot -> '.'
-      | Slash -> '/'
-
-    static member getSignAsString = function
-      | Dot -> "."
-      | Slash -> "/"
+  
 
   /// Hooks to print report through test run
   [<ReferenceEquality>]
@@ -368,11 +373,13 @@ module Impl =
       summary : ExpectoConfig -> TestRunSummary -> Async<unit> }
 
     static member printResult config (test:FlatTest) (result:TestSummary) =
+      let splitter = Split.getSignAsString config.splitter
+      let name = String.Join(splitter, test.name)
       match result.result with
-      | Passed -> config.printer.passed test.name result.duration
-      | Failed message -> config.printer.failed test.name message result.duration
-      | Ignored message -> config.printer.ignored test.name message
-      | Error e -> config.printer.exn test.name e result.duration
+      | Passed -> config.printer.passed name result.duration
+      | Failed message -> config.printer.failed name message result.duration
+      | Ignored message -> config.printer.ignored name message
+      | Error e -> config.printer.exn name e result.duration
 
     static member silent =
       { beforeRun = fun _ -> async.Zero()
@@ -447,10 +454,10 @@ module Impl =
             let parentNames =
               summary.results
               |> List.map (fun (flatTest, _)  ->
-                if flatTest.name.Contains(splitSign) then
-                  flatTest.name.Substring(0, flatTest.name.LastIndexOf splitSign)
+                if (flatTest.name |> List.length) > 1 then
+                  flatTest.name |> List.head
                 else
-                  flatTest.name )
+                  flatTest.name |> List.head )
 
             match parentNames with
             | [x] -> x
@@ -476,6 +483,9 @@ module Impl =
             logger.logWithAck Info (
               eventX "EXPECTO? Running stress testing...")
           summary = fun config summary ->
+            let getName (name: string list) =
+              let splitter = Split.getSignAsString config.splitter
+              String.Join(splitter, name)
             let printResults =
               List.map (fun (t,r) -> TestPrinters.printResult config t r) summary.results
               |> Async.foldSequentially (fun _ _ -> ()) ()
@@ -485,7 +495,7 @@ module Impl =
                   eventX "Maximum memory usage was {memory} KB and exceeded the limit set at {limit} KB.\nRunning tests:\n\t{timeout}"
                   >> setField "memory" (summary.maxMemory / 1024L |> int |> commaString)
                   >> setField "limit" (summary.memoryLimit / 1024L |> int |> commaString)
-                  >> setField "timeout" (summary.timedOut |> Seq.map (fun t -> t.name) |> String.concat "\n\t"))
+                  >> setField "timeout" (summary.timedOut |> Seq.map (fun t -> getName t.name) |> String.concat "\n\t"))
               elif List.isEmpty summary.timedOut then
                 logger.logWithAck Info (
                   eventX "Maximum memory usage was {memory} KB (limit set at {limit} KB)."
@@ -494,7 +504,7 @@ module Impl =
               else
                 logger.logWithAck LogLevel.Error (
                   eventX "Deadlock timeout running tests:\n\t{timeout}"
-                  >> setField "timeout" (summary.timedOut |> Seq.map (fun t -> t.name) |> String.concat "\n\t"))
+                  >> setField "timeout" (summary.timedOut |> Seq.map (fun t -> getName t.name) |> String.concat "\n\t"))
             async {
               do! printResults
               do! result
@@ -506,13 +516,13 @@ module Impl =
       { innerPrinter with
           summary = fun config summary ->
             innerPrinter.summary config summary
-            |> Async.bind (fun () -> logSummary summary) }
+            |> Async.bind (fun () -> logSummary config.splitter summary) }
 
     static member summaryWithLocationPrinter innerPrinter =
       { innerPrinter with
           summary = fun config summary ->
             innerPrinter.summary config summary
-            |> Async.bind (fun () -> logSummaryWithLocation config.locate summary) }
+            |> Async.bind (fun () -> logSummaryWithLocation config.splitter config.locate summary) }
 
 
     static member teamCityPrinter innerPrinter =
@@ -708,7 +718,8 @@ module Impl =
         | Some ignoredMessage ->
           return TestSummary.single (Ignored ignoredMessage) 0.0
         | None ->
-          TestNameHolder.Name <- test.name
+          let splitter = Split.getSignAsString config.splitter
+          TestNameHolder.Name <- String.Join(splitter, test.name)
           match test.test with
           | Sync test ->
             test()
@@ -788,7 +799,9 @@ module Impl =
       let evalTestAsync (test:FlatTest) =
 
         let beforeEach (test:FlatTest) =
-          config.printer.beforeEach test.name
+          let splitter = Split.getSignAsString config.splitter
+          let name = String.Join(splitter, test.name)
+          config.printer.beforeEach name
 
         async {
           let! beforeAsync = beforeEach test |> Async.StartChild
@@ -1257,37 +1270,37 @@ module Tests =
 
   /// Builds a list/group of tests that will be ignored by Expecto if exists
   /// focused tests and none of the parents is focused
-  let inline testList name tests = TestLabel(name, TestList (tests, Normal), Normal)
+  let inline testList name tests = TestLabel([name], TestList (tests, Normal), Normal)
 
   /// Builds a list/group of tests that will make Expecto to ignore other unfocused tests
-  let inline ftestList name tests = TestLabel(name, TestList (tests, Focused), Focused)
+  let inline ftestList name tests = TestLabel([name], TestList (tests, Focused), Focused)
   /// Builds a list/group of tests that will be ignored by Expecto
-  let inline ptestList name tests = TestLabel(name, TestList (tests, Pending), Pending)
+  let inline ptestList name tests = TestLabel([name], TestList (tests, Pending), Pending)
 
   /// Labels the passed test with a text segment. In Expecto, tests are slash-separated (`/`), so this wraps the passed
   /// tests in such a label. Useful when you don't want lots of indentation in your tests (the code would become hard to
   /// modify and read, due to all the whitespace), and you want to do `testList "..." [ ] |> testLabel "api"`.
-  let inline testLabel name test = TestLabel(name, test, Normal)
+  let inline testLabel name test = TestLabel([name], test, Normal)
 
   /// Builds a test case that will be ignored by Expecto if exists focused
   /// tests and none of the parents is focused
-  let inline testCase name test = TestLabel(name, TestCase (Sync test,Normal), Normal)
+  let inline testCase name test = TestLabel([name], TestCase (Sync test,Normal), Normal)
   /// Builds a test case with a CancellationToken that can be check for cancel
-  let inline testCaseWithCancel name test = TestLabel(name, TestCase (SyncWithCancel test,Normal), Normal)
+  let inline testCaseWithCancel name test = TestLabel([name], TestCase (SyncWithCancel test,Normal), Normal)
   /// Builds an async test case
-  let inline testCaseAsync name test = TestLabel(name, TestCase (Async test,Normal), Normal)
+  let inline testCaseAsync name test = TestLabel([name], TestCase (Async test,Normal), Normal)
   /// Builds a test case that will make Expecto to ignore other unfocused tests
-  let inline ftestCase name test = TestLabel(name, TestCase (Sync test, Focused), Focused)
+  let inline ftestCase name test = TestLabel([name], TestCase (Sync test, Focused), Focused)
   /// Builds a test case with cancel that will make Expecto to ignore other unfocused tests
-  let inline ftestCaseWithCancel name test = TestLabel(name, TestCase (SyncWithCancel test, Focused), Focused)
+  let inline ftestCaseWithCancel name test = TestLabel([name], TestCase (SyncWithCancel test, Focused), Focused)
   /// Builds an async test case that will make Expecto to ignore other unfocused tests
-  let inline ftestCaseAsync name test = TestLabel(name, TestCase (Async test, Focused), Focused)
+  let inline ftestCaseAsync name test = TestLabel([name], TestCase (Async test, Focused), Focused)
   /// Builds a test case that will be ignored by Expecto
-  let inline ptestCase name test = TestLabel(name, TestCase (Sync test, Pending), Pending)
+  let inline ptestCase name test = TestLabel([name], TestCase (Sync test, Pending), Pending)
   /// Builds a test case with cancel that will be ignored by Expecto
-  let inline ptestCaseWithCancel name test = TestLabel(name, TestCase (SyncWithCancel test, Pending), Pending)
+  let inline ptestCaseWithCancel name test = TestLabel([name], TestCase (SyncWithCancel test, Pending), Pending)
   /// Builds an async test case that will be ignored by Expecto
-  let inline ptestCaseAsync name test = TestLabel(name, TestCase (Async test, Pending), Pending)
+  let inline ptestCaseAsync name test = TestLabel([name], TestCase (Async test, Pending), Pending)
   /// Test case or list needs to run sequenced. Use for any benchmark code or
   /// for tests using `Expect.isFasterThan`
   let inline testSequenced test = Sequenced (Synchronous,test)
@@ -1590,15 +1603,13 @@ module Tests =
     | ArgsVersion of ExpectoConfig
     | ArgsUsage of usage:string * errors:string list
 
-  let private getTestList (split) (s:string) =
-    let all = s.Split(Split.getSign split)
-    match all with
+  let private getTestList (s:string list) =
+    match s |> List.toArray with
     | [||] | [|_|] -> [||]
-    | xs -> xs.[0..all.Length-2]
+    | xs -> xs.[0..s.Length-2]
 
-  let private getTestCase (split) (s:string) =
-    let i = s.LastIndexOf(Split.getSign split)
-    if i= -1 then s else s.Substring(i+1)
+  let private getTestCase (s:string list) =
+    s |> List.rev |> List.head
 
   let private foldCLIArgumentToConfig = function
     | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
@@ -1612,10 +1623,10 @@ module Tests =
     | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
     | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
     | Log_Name name -> fun o -> { o with logName = Some name }
-    | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s.StartsWith hiera )}
-    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList o.splitter |> Array.exists(fun s -> s.Contains name )) }
-    | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestCase o.splitter |> fun s -> s.Contains name )}
-    | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
+    | Filter hiera -> fun o -> {o with filter = Test.filter (fun s -> s |> List.head |> fun z -> z.StartsWith hiera )}
+    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestList |> Array.exists(fun s -> s.Contains name )) }
+    | Filter_Test_Case name ->  fun o -> {o with filter = Test.filter (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
+    | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) (s |> List.rev |> List.head)) )}
     | List_Tests -> id
     | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
     | Version -> id
@@ -1669,9 +1680,10 @@ module Tests =
         ArgsUsage (Args.usage commandName options, errors)
 
   /// Prints out names of all tests for given test suite.
-  let listTests test =
+  let listTests splitter test =
+    let split = Split.getSignAsString splitter
     Test.toTestCodeList test
-    |> Seq.iter (fun t -> printfn "%s" t.name)
+    |> Seq.iter (fun t -> printfn "%s" (String.Join(split, t.name)))
 
   /// Prints out names of all tests for given test suite.
   let duplicatedNames test =
@@ -1728,7 +1740,7 @@ module Tests =
       if List.isEmpty errors then 0 else 1
     | ArgsList config ->
       config.filter tests
-      |> listTests
+      |> listTests config.splitter
       0
     | ArgsRun config ->
       runTestsWithCancel ct config tests

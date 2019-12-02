@@ -8,11 +8,11 @@ open System.Threading.Tasks
 [<AutoOpen; Extension>]
 module Tests =
   /// Builds an job test case
-  let inline testCaseJob name (test : #Job<unit>) = TestLabel(name, TestCase (Async (test |> Job.toAsync),Normal), Normal)
+  let inline testCaseJob name (test : #Job<unit>) = TestLabel([name], TestCase (Async (test |> Job.toAsync),Normal), Normal)
   /// Builds an job test case that will make Expecto to ignore other unfocused tests
-  let inline ftestCaseJob name (test : #Job<unit>) = TestLabel(name, TestCase (Async (test |> Job.toAsync), Focused), Focused)
+  let inline ftestCaseJob name (test : #Job<unit>) = TestLabel([name], TestCase (Async (test |> Job.toAsync), Focused), Focused)
   /// Builds an job test case that will be ignored by Expecto
-  let inline ptestCaseJob name (test : #Job<unit>) = TestLabel(name, TestCase (Async (test |> Job.toAsync), Pending), Pending)
+  let inline ptestCaseJob name (test : #Job<unit>) = TestLabel([name], TestCase (Async (test |> Job.toAsync), Pending), Pending)
 
   type TestJobBuilder(name, focusState) =
     member inline __.Zero() = job.Zero()

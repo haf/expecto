@@ -14,10 +14,10 @@ open System.Globalization
 module Dummy =
 
   [<Tests>]
-  let testA = TestLabel ("test A", TestList ([], Normal), Normal)
+  let testA = TestLabel (["test A"], TestList ([], Normal), Normal)
 
   [<Tests>]
-  let testB() = TestLabel ("test B", TestList ([], Normal), Normal)
+  let testB() = TestLabel (["test B"], TestList ([], Normal), Normal)
 
   let thisAssemblyName = "Expecto.Tests"
   let thisModuleNameQualified = sprintf "Expecto.Tests+Dummy, %s" thisAssemblyName
@@ -131,7 +131,7 @@ let tests =
     testList "sumTestResults" [
       let sumTestResultsTests =
         let dummyTest = {
-          name = String.Empty
+          name = [String.Empty]
           test = Sync ignore
           state = Normal
           focusOn = false
@@ -296,11 +296,11 @@ let expecto =
           |> List.sortBy (fun i -> i.name)
           |> List.map (fun t -> t.name,t.state,t.focusOn,t.sequenced)
         Expect.sequenceEqual tests [
-          "1/2/4",Normal,true,InParallel
-          "1/2/5",Pending,true,InParallel
-          "1/2/6",Focused,true,InParallel
-          "1/3/7",Normal,true,Synchronous
-          "1/3/8",Pending,true,SynchronousGroup "g"
+          ["1";"2";"4"],Normal,true,InParallel
+          ["1";"2";"5"],Pending,true,InParallel
+          ["1";"2";"6"],Focused,true,InParallel
+          ["1";"3";"7"],Normal,true,Synchronous
+          ["1";"3";"8"],Pending,true,SynchronousGroup "g"
         ] "flat tests"
       }
     ]
@@ -317,16 +317,16 @@ let expecto =
             ]
           ], Normal)
       yield testCase "with one testcase" <| fun _ ->
-        let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter ((=) ["a"]) tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with nested testcase" <| fun _ ->
-        let t = Test.filter (fun (s: string) -> s.Contains "d") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (fun (s: string list) -> s |> List.head |> fun z -> z.Contains "d") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with one testlist" <| fun _ ->
-        let t = Test.filter (fun (s: string) -> s.Contains "c") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (fun (s: string list) -> s |> List.head |> fun z -> z.Contains "c") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 2
       yield testCase "with no results" <| fun _ ->
-        let t = Test.filter ((=) "z") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter ((=) ["z"]) tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 0
     ]
 
@@ -363,15 +363,15 @@ let expecto =
           >> Option.bind (function TestLabel(name, _, Normal) -> Some name | _ -> None)
 
       yield testCase "from member" <| fun _ ->
-          getTest "testA" ==? Some "test A"
+          getTest "testA" ==? Some ["test A"]
       yield testCase"from function" <| fun _ ->
-          getTest "testB" ==? Some "test B"
+          getTest "testB" ==? Some ["test B"]
       yield testCase"from type" <| fun _ ->
           match testFromType Dummy.thisModuleType.Value with
           | Some (TestList (
                       Seq.Two (
-                          TestLabel("test B", TestList (_, Normal), Normal),
-                          TestLabel("test A", TestList (_, Normal), Normal)), Normal)) -> ()
+                          TestLabel(["test B"], TestList (_, Normal), Normal),
+                          TestLabel(["test A"], TestList (_, Normal), Normal)), Normal)) -> ()
           | x -> failtestf "TestList expected, found %A" x
       yield testCase "from empty type" <| fun _ ->
           let test = testFromType EmptyModule.thisModuleType.Value
@@ -679,7 +679,7 @@ let expecto =
 
         let testWithCultures (cultures: #seq<CultureInfo>) =
           Test.replaceTestCode <| fun name test ->
-            testList name [
+            testList (name |> List.head) [
               for c in cultures ->
                 testCaseAsync c.Name (withCulture c test)
             ]
@@ -703,9 +703,9 @@ let expecto =
 
         Expect.equal 3 results.Count "results count"
 
-        Expect.isTrue (results.["parse/en-US"].isFailed) "parse en-US fails"
-        Expect.isTrue (results.["parse/es-AR"].isPassed) "parse es-AR passes"
-        Expect.isTrue (results.["parse/fr-FR"].isPassed) "parse fr-FR passes"
+        Expect.isTrue (results.[["parse";"en-US"]].isFailed) "parse en-US fails"
+        Expect.isTrue (results.[["parse";"es-AR"]].isPassed) "parse es-AR passes"
+        Expect.isTrue (results.[["parse";"fr-FR"]].isPassed) "parse fr-FR passes"
       }
     ]
 
