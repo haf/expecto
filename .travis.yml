@@ -1,6 +1,5 @@
 language: csharp
 dist: xenial
-sudo: false
 dotnet: 3.1.100
 
 matrix:
@@ -8,18 +7,24 @@ matrix:
   
   include:
     - os: linux
-      mono: 5.8.0
+      mono: 5.18.1
+      sudo: required
     - os: linux
       mono: 6.0.0
+      sudo: false
     - os: linux
       mono: latest
+      sudo: false
     - os: osx
       osx_image: xcode9.3
       mono: latest
+      sudo: false
 
   allow_failures:
     - mono: latest
+      sudo: false
     - mono: 5.8.0
+      sudo: false
 
 env:
   global:
