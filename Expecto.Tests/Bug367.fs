@@ -23,6 +23,13 @@ let tests =
       Expect.equal res 10000 "should have folded all items"
     }
 
+    testCaseAsync "all" <| async {
+      let! res =
+        createWork()
+        |> Async.Parallel
+      Expect.equal res.Length 10000 "should have folded all items"
+    }
+
     testCaseAsync "par" <| async {
       let! tok = Async.CancellationToken
       let! res =
