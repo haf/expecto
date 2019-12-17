@@ -14,19 +14,20 @@ let createWork ()=
     } ]
 [<Tests>]
 let tests =
-  testCaseAsync "deadlockonlogging_seq" <| async {
-    let printer = defaultConfig.printer
-    let! tok = Async.CancellationToken
-    let! res =
-      createWork()
-      |> Async.foldSequentiallyWithCancel tok (fun j i -> j + i) 0
-    Expect.equal res 10000 "should have folded all items"
-  }
+  testList "deadlockonlogging tests" [
+    testCaseAsync "seq" <| async {
+      let! tok = Async.CancellationToken
+      let! res =
+        createWork()
+        |> Async.foldSequentiallyWithCancel tok (fun j i -> j + i) 0
+      Expect.equal res 10000 "should have folded all items"
+    }
 
-  testCaseAsync "deadlockonlogging_par" <| async {
-    let! tok = Async.CancellationToken
-    let! res =
-      createWork()
-      |> Async.foldParallelWithCancel 4 tok (fun j i -> j + i) 0
-    Expect.equal res 10000 "should have folded all items"
-  }
+    testCaseAsync "par" <| async {
+      let! tok = Async.CancellationToken
+      let! res =
+        createWork()
+        |> Async.foldParallelWithCancel 4 tok (fun j i -> j + i) 0
+      Expect.equal res 10000 "should have folded all items"
+    }
+  ]
