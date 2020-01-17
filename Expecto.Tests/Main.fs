@@ -11,5 +11,5 @@ let main args =
   let test =
     Impl.testFromThisAssembly()
     |> Option.orDefault (TestList ([], Normal))
-    |> Test.shuffle
+    |> Test.shuffle "."
   runTestsWithCLIArgs [Append_Summary_Handler(SummaryHandler writeResults)] args test

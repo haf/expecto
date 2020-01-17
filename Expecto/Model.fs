@@ -88,7 +88,7 @@ type Test =
   /// A collection/list of tests.
   | TestList of tests:Test list * state:FocusState
   /// A labelling of a Test (list or test code).
-  | TestLabel of label:string list * test:Test * state:FocusState
+  | TestLabel of label:string * test:Test * state:FocusState
   /// Require sequenced for a Test (list or test code).
   | Sequenced of SequenceMethod * Test
 
