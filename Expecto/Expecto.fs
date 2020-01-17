@@ -462,7 +462,7 @@ module Impl =
                 if flatTest.name.Length > 1 then
                   flatTest.name |> List.head
                 else
-                  flatTest.name |> List.head )
+                  _config.joinBy.format flatTest.name )
 
             match parentNames with
             | [x] -> x
