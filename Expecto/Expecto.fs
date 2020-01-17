@@ -25,7 +25,7 @@ type FlatTest =
     | true, Normal -> Some "The test is skipped because other tests are Focused"
     | _ -> None
   member x.fullName (joinBy: string) =
-    String.Join(joinBy, x.name)
+    String.concat joinBy x.name
 
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
