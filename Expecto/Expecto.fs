@@ -119,9 +119,9 @@ module Test =
   /// Filter tests by name.
   let filter joiner pred =
     toTestCodeList
-    >> List.filter (fun t -> pred (t.name))
+    >> List.filter (fun t -> pred t.name)
     >> List.map (fun t ->
-        let test = TestLabel ((t.fullName joiner), TestCase (t.test, t.state), t.state)
+        let test = TestLabel (t.fullName joiner, TestCase (t.test, t.state), t.state)
         match t.sequenced with
         | InParallel ->
           test
@@ -175,19 +175,14 @@ module Impl =
   type JoinBy =
     | Dot
     | Slash
-    member x.getSign () =
-      match x with
-      | Dot -> '.'
-      | Slash -> '/'
-
-    member x.getSignAsString () =
+    member x.asString =
       match x with
       | Dot -> "."
-      | Slash -> "/"
+      | _ -> "/"
 
     member x.format (parts: string list) =
-      let by = x.getSignAsString ()
-      String.Join(by, parts)
+      let by = x.asString
+      String.concat by parts
 
   type TestResult =
     | Passed
@@ -281,7 +276,7 @@ module Impl =
   let createSummaryMessage joinBy (summary: TestRunSummary) =
     let handleLineBreaks (elements:(FlatTest*TestSummary) seq) =
         elements
-        |> Seq.map (fun (n,_) -> "\n\t" + String.Join(joinBy, n.name))
+        |> Seq.map (fun (n,_) -> "\n\t" + n.fullName joinBy)
         |> String.Concat
 
     let passed = summary.passed |> handleLineBreaks
@@ -315,7 +310,7 @@ module Impl =
     |> Expecto.Logging.Formatting.defaultFormatter
 
   let logSummary (joinBy: JoinBy) (summary: TestRunSummary) =
-    let split = joinBy.getSignAsString ()
+    let split = joinBy.asString
     createSummaryMessage split summary
     |> logger.logWithAck Info
 
@@ -441,7 +436,7 @@ module Impl =
           }
 
         summary = fun _config summary ->
-          let splitSign = _config.joinBy.getSignAsString ()
+          let splitSign = _config.joinBy.asString
           let spirit =
             if summary.successful then "Success!" else String.Empty
           let commonAncestor =
@@ -1627,10 +1622,10 @@ module Tests =
     | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
     | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
     | Log_Name name -> fun o -> { o with logName = Some name }
-    | Filter hiera -> fun o -> {o with filter = Test.filter (o.joinBy.getSignAsString()) (fun z -> (o.joinBy.format z).StartsWith (hiera) )}
-    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (o.joinBy.getSignAsString()) (fun s -> s |> getTestList |> List.exists(fun s -> s.Contains name )) }
-    | Filter_Test_Case name ->  fun o -> { o with filter = Test.filter (o.joinBy.getSignAsString()) (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
-    | Run tests -> fun o -> {o with filter = Test.filter (o.joinBy.getSignAsString()) (fun s -> tests |> List.exists ((=) (o.joinBy.format (s))) )}
+    | Filter hiera -> fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun z -> (o.joinBy.format z).StartsWith (hiera) )}
+    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun s -> s |> getTestList |> List.exists(fun s -> s.Contains name )) }
+    | Filter_Test_Case name ->  fun o -> { o with filter = Test.filter (o.joinBy.asString) (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
+    | Run tests -> fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun s -> tests |> List.exists ((=) (o.joinBy.format (s))) )}
     | List_Tests -> id
     | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
     | Version -> id

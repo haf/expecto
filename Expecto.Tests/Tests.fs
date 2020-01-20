@@ -291,7 +291,7 @@ let expecto =
             ]
           ]
         let tests =
-          Test.shuffle (defaultConfig.joinBy.getSignAsString ()) test
+          Test.shuffle (defaultConfig.joinBy.asString) test
           |> Test.toTestCodeList
           |> List.sortBy (fun i -> i.name)
           |> List.map (fun t -> t.name,t.state,t.focusOn,t.sequenced)
@@ -317,16 +317,16 @@ let expecto =
             ]
           ], Normal)
       yield testCase "with one testcase" <| fun _ ->
-        let t = Test.filter (defaultConfig.joinBy.getSignAsString ()) ((=) ["a"]) tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinBy.asString) ((=) ["a"]) tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with nested testcase" <| fun _ ->
-        let t = Test.filter (defaultConfig.joinBy.getSignAsString ()) (fun (s: string list) -> defaultConfig.joinBy.format s |> fun z -> z.Contains "d") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinBy.asString) (fun (s: string list) -> defaultConfig.joinBy.format s |> fun z -> z.Contains "d") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with one testlist" <| fun _ ->
-        let t = Test.filter (defaultConfig.joinBy.getSignAsString ()) (fun (s: string list) -> defaultConfig.joinBy.format s |> fun z -> z.Contains "c") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinBy.asString) (fun (s: string list) -> defaultConfig.joinBy.format s |> fun z -> z.Contains "c") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 2
       yield testCase "with no results" <| fun _ ->
-        let t = Test.filter (defaultConfig.joinBy.getSignAsString ()) ((=) ["z"]) tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinBy.asString) ((=) ["z"]) tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 0
     ]
 
