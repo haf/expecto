@@ -351,8 +351,6 @@ module Impl =
       >> setField "errored" errored
       >> setField "erroredCount" (align erroredCount 0))
 
-  
-
   /// Hooks to print report through test run
   [<ReferenceEquality>]
   type TestPrinters =
@@ -455,7 +453,8 @@ module Impl =
               summary.results
               |> List.map (fun (flatTest, _)  ->
                 if flatTest.name.Length > 1 then
-                  flatTest.name |> List.head
+                  let size = flatTest.name.Length - 1
+                  _config.joinBy.format flatTest.name.[0..size]
                 else
                   _config.joinBy.format flatTest.name )
 
@@ -1622,10 +1621,10 @@ module Tests =
     | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
     | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
     | Log_Name name -> fun o -> { o with logName = Some name }
-    | Filter hiera -> fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun z -> (o.joinBy.format z).StartsWith hiera )}
-    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun s -> s |> getTestList |> List.exists(fun s -> s.Contains name )) }
-    | Filter_Test_Case name ->  fun o -> { o with filter = Test.filter (o.joinBy.asString) (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
-    | Run tests -> fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun s -> tests |> List.exists ((=) (o.joinBy.format s)) )}
+    | Filter hiera -> fun o -> {o with filter = Test.filter o.joinBy.asString (fun z -> (o.joinBy.format z).StartsWith hiera )}
+    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter o.joinBy.asString (fun s -> s |> getTestList |> List.exists(fun s -> s.Contains name )) }
+    | Filter_Test_Case name ->  fun o -> { o with filter = Test.filter o.joinBy.asString (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
+    | Run tests -> fun o -> {o with filter = Test.filter o.joinBy.asString (fun s -> tests |> List.exists ((=) (o.joinBy.format s)) )}
     | List_Tests -> id
     | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
     | Version -> id
