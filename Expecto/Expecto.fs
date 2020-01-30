@@ -1622,10 +1622,10 @@ module Tests =
     | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
     | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
     | Log_Name name -> fun o -> { o with logName = Some name }
-    | Filter hiera -> fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun z -> (o.joinBy.format z).StartsWith (hiera) )}
+    | Filter hiera -> fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun z -> (o.joinBy.format z).StartsWith hiera )}
     | Filter_Test_List name ->  fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun s -> s |> getTestList |> List.exists(fun s -> s.Contains name )) }
     | Filter_Test_Case name ->  fun o -> { o with filter = Test.filter (o.joinBy.asString) (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
-    | Run tests -> fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun s -> tests |> List.exists ((=) (o.joinBy.format (s))) )}
+    | Run tests -> fun o -> {o with filter = Test.filter (o.joinBy.asString) (fun s -> tests |> List.exists ((=) (o.joinBy.format s)) )}
     | List_Tests -> id
     | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
     | Version -> id
