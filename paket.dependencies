@@ -4,12 +4,12 @@ storage: none
 clitool paket 5.226.0
 version 5.226.0
 
-nuget FSharp.Core 4.3.4
-nuget FsCheck ~> 2.10
-nuget Hopac ~> 0.3
-nuget DiffPlex ~> 1.4.4
-nuget Mono.Cecil ~> 0.10
-nuget BenchmarkDotNet ~> 0.11
+nuget FSharp.Core 4.6.0
+nuget FsCheck ~> 2.14
+nuget Hopac ~> 0.4
+nuget DiffPlex ~> 1.5
+nuget Mono.Cecil ~> 0.11
+nuget BenchmarkDotNet ~> 0.12
 
 group Build
   source https://api.nuget.org/v3/index.json
