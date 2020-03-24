@@ -4,6 +4,15 @@ open System.IO
 open System.Xml.Linq
 open System.Xml
 
+let private xmlSave fileName (doc: XDocument) =
+  let path = Path.GetFullPath fileName
+  Path.GetDirectoryName path
+  |> Directory.CreateDirectory
+  |> ignore
+  let settings = XmlWriterSettings(CheckCharacters = false)
+  use writer = XmlWriter.Create(path, settings)
+  doc.Save writer
+
 /// Generate test results using NUnit v2 schema.
 let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
     // v3: https://github.com/nunit/docs/wiki/Test-Result-XML-Format
@@ -116,14 +125,9 @@ let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
             |]) |> box
         |])
 
-    let doc = XDocument([|element|])
-    let path = Path.GetFullPath file
-    Path.GetDirectoryName path
-    |> Directory.CreateDirectory
-    |> ignore
-    let settings = XmlWriterSettings(CheckCharacters=false)
-    use writer = XmlWriter.Create(path,settings)
-    doc.Save writer
+    element
+    |> XDocument
+    |> xmlSave file
 
 /// If using this with gitlab, set the third parameter 'handleErrorsLikeFailures' to true.
 let writeJUnitSummary (file, assemblyName, handleErrorsLikeFailures) (summary: Impl.TestRunSummary) =
@@ -200,11 +204,6 @@ let writeJUnitSummary (file, assemblyName, handleErrorsLikeFailures) (summary: I
             |]) |> box
         |])
 
-    let doc = XDocument([|element|])
-    let path = Path.GetFullPath file
-    Path.GetDirectoryName path
-    |> Directory.CreateDirectory
-    |> ignore
-    let settings = XmlWriterSettings(CheckCharacters=false)
-    use writer = XmlWriter.Create(path,settings)
-    doc.Save writer
+    element
+    |> XDocument
+    |> xmlSave file
