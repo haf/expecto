@@ -51,7 +51,6 @@ let libProjects =
   ++ "Expecto.Diff/*.fsproj"
   ++ "Expecto.BenchmarkDotNet/*.fsproj"
   ++ "Expecto.Hopac/*.fsproj"
-  ++ "Expecto.TestResults/*.fsproj"
 
 let testProjects =
   !! "Expecto.Tests/*.Tests.fsproj"
@@ -92,7 +91,6 @@ Target.create "AssemblyInfo" (fun _ ->
     createAssemblyInfo "Expecto.FsCheck"
     createAssemblyInfo "Expecto.BenchmarkDotNet"
     createAssemblyInfo "Expecto.Hopac"
-    createAssemblyInfo "Expecto.TestResults"
 )
 
 Target.create "ProjectVersion" (fun _ ->
@@ -105,7 +103,6 @@ Target.create "ProjectVersion" (fun _ ->
     setProjectVersion "Expecto.FsCheck"
     setProjectVersion "Expecto.BenchmarkDotNet"
     setProjectVersion "Expecto.Hopac"
-    setProjectVersion "Expecto.TestResults"
 )
 
 let build project =

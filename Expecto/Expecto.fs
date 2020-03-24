@@ -13,6 +13,7 @@ do ()
 
 [<AutoOpen>]
 module Tests =
+  open Expecto.CSharp
   open Impl
   open Helpers
   open Expecto.Logging
@@ -350,6 +351,10 @@ module Tests =
     | List_Tests
     /// Print out a summary after all tests are finished.
     | Summary
+    /// Put an NUnit-like summary XML file at the given file.
+    | NUnit_Summary of string
+    /// Put a JUnit-like summary XML file at the given file.
+    | JUnit_Summary of string
     /// Print out a summary after all tests are finished including their source code location.
     | Summary_Location
     /// Print out version information.
@@ -369,6 +374,8 @@ module Tests =
     /// Append a summary handler.
     | Append_Summary_Handler of SummaryHandler
 
+  let assemblyName = Assembly.GetEntryAssembly().GetName().Name
+
   let options = [
       "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
       "--parallel", "Run all tests in parallel (default).", Args.none Parallel
@@ -385,6 +392,8 @@ module Tests =
       "--run", "Runs only provided list of tests.", Args.list Args.string Run
       "--list-tests", "Don't run tests, but prints out list of tests instead.", Args.none List_Tests
       "--summary", "Print out a summary after all tests are finished.", Args.none Summary
+      "--nunit-summary", "Put an NUnit-like summary XML file at the given file.", Args.string NUnit_Summary
+      "--junit-summary", "Put a JUnit-like summary XML file at the given file.", Args.string JUnit_Summary
       "--version", "Print out version information.", Args.none Version
       "--summary-location", "Print out a summary after all tests are finished including their source code location.", Args.none Summary_Location
       "--fscheck-max-tests", "Set FsCheck maximum number of tests (default: 100).", Args.number FsCheck_Max_Tests
@@ -430,6 +439,8 @@ module Tests =
     | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
     | List_Tests -> id
     | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
+    | NUnit_Summary path -> fun o -> o.AddNUnitSummary(path, assemblyName)
+    | JUnit_Summary path -> fun o -> o.AddJUnitSummary(path, assemblyName)
     | Version -> id
     | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter o.printer}
     | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
