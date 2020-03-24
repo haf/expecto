@@ -3,13 +3,8 @@ namespace Expecto
 #nowarn "46"
 open System
 open System.Reflection
-open System.Runtime.CompilerServices
 open System.Threading
 open System.Threading.Tasks
-
-// When exposing Extension Methods, you should declare an assembly-level attribute (in addition to class and method)
-[<assembly: Extension>]
-do ()
 
 [<AutoOpen>]
 module Tests =

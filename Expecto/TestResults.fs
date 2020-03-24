@@ -14,120 +14,113 @@ let private xmlSave fileName (doc: XDocument) =
   doc.Save writer
 
 /// Generate test results using NUnit v2 schema.
-let writeNUnitSummary (file, assemblyName) (summary: Impl.TestRunSummary) =
-    // v3: https://github.com/nunit/docs/wiki/Test-Result-XML-Format
-    // this impl is v2: http://nunit.org/docs/files/TestResult.xml
-    let totalTests = summary.errored @ summary.failed @ summary.ignored @ summary.passed
-    let testCaseElements =
-        totalTests
-        |> Seq.sortByDescending (fun (_,test) -> test.result.order,test.duration.TotalSeconds)
-        |> Seq.map (fun (flatTest, test) ->
-            let content =
-                match test.result with
-                | Impl.TestResult.Passed ->
-                  [|
-                    XAttribute(XName.Get "executed", "True") |> box
-                    XAttribute(XName.Get "result", "Success") |> box
-                    XAttribute(XName.Get "success", "True") |> box
-                    XAttribute(XName.Get "time",
-                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "{0:0.000}", test.duration.TotalSeconds)) |> box
-                    XAttribute(XName.Get "asserts", "0") |> box
-                  |]
-                | Impl.TestResult.Error e ->
-                  [|
-                    XAttribute(XName.Get "executed", "True") |> box
-                    XAttribute(XName.Get "result", "Failure") |> box
-                    XAttribute(XName.Get "success", "False") |> box
-                    XAttribute(XName.Get "time",
-                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "{0:0.000}", test.duration.TotalSeconds)) |> box
-                    XAttribute(XName.Get "asserts", "0") |> box
-                    XElement(XName.Get "failure",
-                      [|
-                        XElement(XName.Get "message", e.Message)
-                        XElement(XName.Get "stack-trace", e.ToString())
-                      |]) |> box
-                  |]
-                | Impl.TestResult.Failed msg ->
-                  [|
-                    XAttribute(XName.Get "executed", "True") |> box
-                    XAttribute(XName.Get "result", "Failure") |> box
-                    XAttribute(XName.Get "success", "False") |> box
-                    XAttribute(XName.Get "time",
-                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "{0:0.000}", test.duration.TotalSeconds)) |> box
-                    XAttribute(XName.Get "asserts", "0") |> box
-                    XElement(XName.Get "failure",
-                        XElement(XName.Get "message", msg)) |> box
-                  |]
-                | Impl.TestResult.Ignored msg ->
-                  [|
-                    XAttribute(XName.Get "executed", "False") |> box
-                    XAttribute(XName.Get "result", "Ignored") |> box
-                    XElement(XName.Get "reason",
-                        XElement(XName.Get "message", msg)) |> box
-                  |]
-
-            XElement(XName.Get "test-case",
+let writeNUnitSummary (file, assemblyName: string) (summary: Impl.TestRunSummary) =
+  // v3: https://github.com/nunit/docs/wiki/Test-Result-XML-Format
+  // this impl is v2: http://nunit.org/docs/files/TestResult.xml
+  let totalTests = summary.errored @ summary.failed @ summary.ignored @ summary.passed
+  let testCaseElements =
+    totalTests
+    |> Seq.sortByDescending (fun (_,test) -> test.result.order,test.duration.TotalSeconds)
+    |> Seq.map (fun (flatTest, test) ->
+      let content: XObject[] =
+        match test.result with
+        | Impl.TestResult.Passed ->
+          [|
+            XAttribute(XName.Get "executed", "True")
+            XAttribute(XName.Get "result", "Success")
+            XAttribute(XName.Get "success", "True")
+            XAttribute(XName.Get "time",
+              System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "{0:0.000}", test.duration.TotalSeconds))
+            XAttribute(XName.Get "asserts", "0")
+          |]
+        | Impl.TestResult.Error e ->
+          [|
+            XAttribute(XName.Get "executed", "True")
+            XAttribute(XName.Get "result", "Failure")
+            XAttribute(XName.Get "success", "False")
+            XAttribute(XName.Get "time",
+              System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "{0:0.000}", test.duration.TotalSeconds))
+            XAttribute(XName.Get "asserts", "0")
+            XElement(XName.Get "failure",
               [|
-                yield XAttribute(XName.Get "name", flatTest.name) |> box
-                yield! content
-              |]))
-    let element =
-      XElement(
-        XName.Get "test-results",
-        [|
-          let d = System.DateTime.Now
-          yield XAttribute(XName.Get "date", d.ToString("yyyy-MM-dd")) |> box
-          yield XAttribute(XName.Get "name", assemblyName) |> box
-          yield XAttribute(XName.Get "total", totalTests.Length) |> box
-          yield XAttribute(XName.Get "errors", summary.errored.Length) |> box
-          yield XAttribute(XName.Get "failures", summary.failed.Length) |> box
-          yield XAttribute(XName.Get "ignored", summary.ignored.Length) |> box
-          yield XAttribute(XName.Get "not-run", "0") |> box
-          yield XAttribute(XName.Get "inconclusive", "0") |> box
-          yield XAttribute(XName.Get "skipped", "0") |> box
-          yield XAttribute(XName.Get "invalid", "0") |> box
-          //yield XAttribute(XName.Get "date", sprintf "0") |> box
-          yield XAttribute(XName.Get "time", d.ToString("HH:mm:ss")) |> box
-          yield XElement(XName.Get "environment",
-            [|
-              yield XAttribute(XName.Get "expecto-version", AssemblyInfo.AssemblyVersionInformation.AssemblyVersion) |> box
-              yield XAttribute(XName.Get "clr-version", string System.Environment.Version) |> box
-              yield XAttribute(XName.Get "os-version", System.Environment.OSVersion) |> box
-              yield XAttribute(XName.Get "platform", "Linux") |> box
-              yield XAttribute(XName.Get "cwd", System.Environment.CurrentDirectory) |> box
-              yield XAttribute(XName.Get "machine-name", System.Environment.MachineName) |> box
-              yield XAttribute(XName.Get "user", System.Environment.UserName) |> box
-              yield XAttribute(XName.Get "user-domain", System.Environment.UserDomainName) |> box
-            |]) |> box
-          yield XElement(XName.Get "culture-info",
-            [|
-              yield XAttribute(XName.Get "current-culture", string System.Globalization.CultureInfo.CurrentCulture) |> box
-              yield XAttribute(XName.Get "current-uiculture", string System.Globalization.CultureInfo.CurrentUICulture) |> box
-            |]) |> box
-          yield XElement(XName.Get "test-suite",
-            [|
-              yield XAttribute(XName.Get "type", "Assembly") |> box
-              yield XAttribute(XName.Get "name", assemblyName) |> box
-              yield XAttribute(XName.Get "executed", "True") |> box
-              yield XAttribute(XName.Get "result", if summary.successful then "Success" else "Failure") |> box
-              yield XAttribute(XName.Get "success", if summary.successful then "True" else "False") |> box
-              yield XAttribute(XName.Get "time",
-                  System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
-                              "{0:0.000}", summary.duration.TotalSeconds)) |> box
-              yield XAttribute(XName.Get "asserts", "0") |> box
-              yield XElement(XName.Get "results",
-                [|
-                  yield! testCaseElements
-                |]) |> box
-            |]) |> box
-        |])
+                XElement(XName.Get "message", XCData e.Message)
+                XElement(XName.Get "stack-trace", XCData(e.ToString()))
+              |])
+          |]
+        | Impl.TestResult.Failed msg ->
+          [|
+            XAttribute(XName.Get "executed", "True")
+            XAttribute(XName.Get "result", "Failure")
+            XAttribute(XName.Get "success", "False")
+            XAttribute(XName.Get "time",
+              System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "{0:0.000}", test.duration.TotalSeconds))
+            XAttribute(XName.Get "asserts", "0")
+            XElement(XName.Get "failure",
+              XElement(XName.Get "message", XCData msg))
+          |]
+        | Impl.TestResult.Ignored msg ->
+          [|
+            XAttribute(XName.Get "executed", "False")
+            XAttribute(XName.Get "result", "Ignored")
+            XElement(XName.Get "reason",
+              XElement(XName.Get "message", XCData msg))
+          |]
 
-    element
-    |> XDocument
-    |> xmlSave file
+      XElement(XName.Get "test-case",
+        [|
+          yield XAttribute(XName.Get "name", flatTest.name) :> XObject
+          yield! content
+        |]))
+  let d = System.DateTime.Now
+  let element =
+    XElement(
+      XName.Get "test-results",
+      XAttribute(XName.Get "date", d.ToString("yyyy-MM-dd")),
+      XAttribute(XName.Get "name", assemblyName),
+      XAttribute(XName.Get "total", totalTests.Length),
+      XAttribute(XName.Get "errors", summary.errored.Length),
+      XAttribute(XName.Get "failures", summary.failed.Length),
+      XAttribute(XName.Get "ignored", summary.ignored.Length),
+      XAttribute(XName.Get "not-run", "0"),
+      XAttribute(XName.Get "inconclusive", "0"),
+      XAttribute(XName.Get "skipped", "0"),
+      XAttribute(XName.Get "invalid", "0"),
+      //XAttribute(XName.Get "date", sprintf "0"),
+      XAttribute(XName.Get "time", d.ToString("HH:mm:ss")),
+      XElement(XName.Get "environment",
+        XAttribute(XName.Get "expecto-version", AssemblyInfo.AssemblyVersionInformation.AssemblyVersion),
+        XAttribute(XName.Get "clr-version", string System.Environment.Version),
+        XAttribute(XName.Get "os-version", System.Environment.OSVersion.VersionString),
+        XAttribute(XName.Get "platform", System.Environment.OSVersion.Platform),
+        XAttribute(XName.Get "cwd", System.Environment.CurrentDirectory),
+        XAttribute(XName.Get "machine-name", System.Environment.MachineName),
+        XAttribute(XName.Get "user", System.Environment.UserName),
+        XAttribute(XName.Get "user-domain", System.Environment.UserDomainName)
+      ),
+      XElement(XName.Get "culture-info",
+        XAttribute(XName.Get "current-culture", string System.Globalization.CultureInfo.CurrentCulture),
+        XAttribute(XName.Get "current-uiculture", string System.Globalization.CultureInfo.CurrentUICulture)
+      ),
+      XElement(XName.Get "test-suite",
+        XAttribute(XName.Get "type", "Assembly"),
+        XAttribute(XName.Get "name", assemblyName),
+        XAttribute(XName.Get "executed", "True"),
+        XAttribute(XName.Get "result", if summary.successful then "Success" else "Failure"),
+        XAttribute(XName.Get "success", if summary.successful then "True" else "False"),
+        XAttribute(XName.Get "time",
+          System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+            "{0:0.000}", summary.duration.TotalSeconds)),
+        XAttribute(XName.Get "asserts", "0"),
+        XElement(XName.Get "results", testCaseElements)
+        )
+      )
+
+  element
+  |> XDocument
+  |> xmlSave file
 
 /// If using this with gitlab, set the third parameter 'handleErrorsLikeFailures' to true.
 let writeJUnitSummary (file, assemblyName, handleErrorsLikeFailures) (summary: Impl.TestRunSummary) =
