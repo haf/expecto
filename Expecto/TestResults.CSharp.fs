@@ -14,12 +14,11 @@ module ConfigExt =
 
   type Expecto.Impl.ExpectoConfig with
 
-      [<Extension; CompiledName("AddNUnitSummary")>]
-      member x.AddNUnitSummary(file:string, assemblyName:string) =
-          x.appendSummaryHandler (TestResults.writeNUnitSummary(file, assemblyName) )
+    [<Extension; CompiledName("AddNUnitSummary")>]
+    member x.AddNUnitSummary(file, assemblyName) =
+      x.appendSummaryHandler(TestResults.writeNUnitSummary(file, assemblyName))
 
-
-      /// If using this with gitlab, set the third parameter 'handleErrorsLikeFailures' to true.
-      [<Extension; CompiledName("AddJUnitSummary")>]
-      member x.AddJUnitSummary(file:string, assemblyName:string, [<Optional;DefaultParameterValue(false)>]handleErrorsLikeFailures) =
-          x.appendSummaryHandler (TestResults.writeJUnitSummary(file, assemblyName, handleErrorsLikeFailures) )
+    /// If using this with gitlab, set the third parameter 'handleErrorsLikeFailures' to true.
+    [<Extension; CompiledName("AddJUnitSummary")>]
+    member x.AddJUnitSummary(file, assemblyName, [<Optional;DefaultParameterValue(false)>] handleErrorsLikeFailures) =
+      x.appendSummaryHandler(TestResults.writeJUnitSummary(file, assemblyName, handleErrorsLikeFailures))

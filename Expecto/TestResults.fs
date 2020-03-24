@@ -123,80 +123,77 @@ let writeNUnitSummary (file, assemblyName: string) (summary: Impl.TestRunSummary
   |> xmlSave file
 
 /// If using this with gitlab, set the third parameter 'handleErrorsLikeFailures' to true.
-let writeJUnitSummary (file, assemblyName, handleErrorsLikeFailures) (summary: Impl.TestRunSummary) =
+let writeJUnitSummary (file, assemblyName: string, handleErrorsLikeFailures) (summary: Impl.TestRunSummary) =
 
-    // junit does not have an official xml spec
-    // this is a minimal implementation to get gitlab to recognize the tests: https://docs.gitlab.com/ee/ci/junit_test_reports.html
+  // junit does not have an official xml spec
+  // this is a minimal implementation to get gitlab to recognize the tests: https://docs.gitlab.com/ee/ci/junit_test_reports.html
 
-    // gitlab only detects failures, and does not yet handle errors:
-    // see issue https://gitlab.com/gitlab-org/gitlab-ce/issues/51087
-    // and see code https://gitlab.com/gitlab-org/gitlab-ce/blob/master/lib/gitlab/ci/parsers/junit.rb#L45-52
+  // gitlab only detects failures, and does not yet handle errors:
+  // see issue https://gitlab.com/gitlab-org/gitlab-ce/issues/51087
+  // and see code https://gitlab.com/gitlab-org/gitlab-ce/blob/master/lib/gitlab/ci/parsers/junit.rb#L45-52
 
-    let totalTests = summary.errored @ summary.failed @ summary.ignored @ summary.passed
-    let testCaseElements =
-        totalTests
-        |> Seq.sortByDescending (fun (_,test) -> test.result.order,test.duration.TotalSeconds)
-        |> Seq.map (fun (flatTest, test) ->
-            let content =
-                match test.result with
-                | Impl.TestResult.Passed ->
-                  [|
-                    XAttribute(XName.Get "time",
-                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "{0:0.000}", test.duration.TotalSeconds)) |> box
-                  |]
-                | Impl.TestResult.Error e when (handleErrorsLikeFailures = true) ->
-                  [|
-                    XAttribute(XName.Get "time",
-                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "{0:0.000}", test.duration.TotalSeconds)) |> box
-                    XElement(XName.Get "failure",
-                      [|
-                        XAttribute(XName.Get "message", e.Message) |> box
-                        XText(e.ToString()) |> box
-                      |]) |> box
-                  |]
-                | Impl.TestResult.Error e ->
-                  [|
-                    XAttribute(XName.Get "time",
-                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "{0:0.000}", test.duration.TotalSeconds)) |> box
-                    XElement(XName.Get "error",
-                      [|
-                        XAttribute(XName.Get "message", e.Message) |> box
-                        XText(e.ToString()) |> box
-                      |]) |> box
-                  |]
-                | Impl.TestResult.Failed msg ->
-                  [|
-                    XAttribute(XName.Get "time",
-                        System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "{0:0.000}", test.duration.TotalSeconds)) |> box
-                    XElement(XName.Get "failure",
-                        XAttribute(XName.Get "message", msg))
-                  |]
-                | Impl.TestResult.Ignored msg ->
-                  [|
-                    XElement(XName.Get "skipped",
-                        XAttribute(XName.Get "message", msg)) |> box
-                  |]
+  let totalTests = summary.errored @ summary.failed @ summary.ignored @ summary.passed
+  let testCaseElements =
+    totalTests
+    |> Seq.sortByDescending (fun (_,test) -> test.result.order,test.duration.TotalSeconds)
+    |> Seq.map (fun (flatTest, test) ->
+      let content: XObject[] =
+        match test.result with
+        | Impl.TestResult.Passed ->
+          [|
+            XAttribute(XName.Get "time",
+              System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "{0:0.000}", test.duration.TotalSeconds))
+          |]
+        | Impl.TestResult.Error e when (handleErrorsLikeFailures = true) ->
+          [|
+            XAttribute(XName.Get "time",
+              System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "{0:0.000}", test.duration.TotalSeconds))
+            XElement(XName.Get "failure",
+                XAttribute(XName.Get "message", e.Message),
+                XText(e.ToString())
+              )
+          |]
+        | Impl.TestResult.Error e ->
+          [|
+            XAttribute(XName.Get "time",
+              System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "{0:0.000}", test.duration.TotalSeconds))
+            XElement(XName.Get "error",
+                XAttribute(XName.Get "message", e.Message),
+                XText(e.ToString())
+              )
+          |]
+        | Impl.TestResult.Failed msg ->
+          [|
+            XAttribute(XName.Get "time",
+              System.String.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "{0:0.000}", test.duration.TotalSeconds))
+            XElement(XName.Get "failure",
+                XAttribute(XName.Get "message", msg))
+          |]
+        | Impl.TestResult.Ignored msg ->
+          [|
+            XElement(XName.Get "skipped",
+              XAttribute(XName.Get "message", msg))
+          |]
 
-            XElement(XName.Get "testcase",
-              [|
-                yield XAttribute(XName.Get "name", flatTest.name) |> box
-                yield! content
-              |]) |> box)
-    let element =
-      XElement(
-        XName.Get "testsuites",
+      XElement(XName.Get "testcase",
         [|
-          yield XElement(XName.Get "testsuite",
-            [|
-              yield XAttribute(XName.Get "name", assemblyName) |> box
-              yield! testCaseElements
-            |]) |> box
-        |])
+          yield XAttribute(XName.Get "name", flatTest.name) :> XObject
+          yield! content
+        |]) :> XObject)
+  let element =
+    XElement(
+      XName.Get "testsuites",
+        XElement(XName.Get "testsuite",
+          [|
+            yield XAttribute(XName.Get "name", assemblyName) :> XObject
+            yield! testCaseElements
+          |])
+      )
 
-    element
-    |> XDocument
-    |> xmlSave file
+  element
+  |> XDocument
+  |> xmlSave file
