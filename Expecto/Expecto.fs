@@ -432,8 +432,8 @@ module Tests =
     | Run tests -> fun o -> {o with filter = Test.filter (fun s -> tests |> List.exists ((=) s) )}
     | List_Tests -> id
     | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
-    | NUnit_Summary path -> fun o -> o.AddNUnitSummary(path, assemblyName)
-    | JUnit_Summary path -> fun o -> o.AddJUnitSummary(path, assemblyName)
+    | NUnit_Summary path -> fun o -> o.AddNUnitSummary(path)
+    | JUnit_Summary path -> fun o -> o.AddJUnitSummary(path)
     | Version -> id
     | Summary_Location -> fun o -> {o with printer = TestPrinters.summaryWithLocationPrinter o.printer}
     | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }

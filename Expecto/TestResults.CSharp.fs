@@ -14,9 +14,9 @@ module ConfigExt =
   type Expecto.Impl.ExpectoConfig with
 
     [<Extension; CompiledName("AddNUnitSummary")>]
-    member x.AddNUnitSummary(file, assemblyName) =
+    member x.AddNUnitSummary(file) =
       x.appendSummaryHandler(TestResults.writeNUnitSummary file)
 
     [<Extension; CompiledName("AddJUnitSummary")>]
-    member x.AddJUnitSummary(file, assemblyName) =
+    member x.AddJUnitSummary(file) =
       x.appendSummaryHandler(TestResults.writeJUnitSummary file)
