@@ -415,8 +415,8 @@ module Tests =
     if i= -1 then s else s.Substring(i+1)
 
   let private foldCLIArgumentToConfig = function
-    | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
-    | Parallel -> fun o -> { o with parallel = true }
+    | Sequenced -> fun o -> { o with runInParallel = false }
+    | Parallel -> fun o -> { o with runInParallel = true }
     | Parallel_Workers n -> fun o -> { o with parallelWorkers = n }
     | Stress n -> fun o  -> {o with
                                 stress = TimeSpan.FromMinutes n |> Some

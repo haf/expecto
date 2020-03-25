@@ -456,7 +456,7 @@ module Impl =
     { /// Whether to run the tests in parallel. Defaults to
       /// true, because your code should not mutate global
       /// state by default.
-      parallel : bool
+      runInParallel : bool
       /// Number of parallel workers. Defaults to the number of
       /// logical processors.
       parallelWorkers : int
@@ -502,7 +502,7 @@ module Impl =
       colour: ColourLevel
     }
     static member defaultConfig =
-      { parallel = true
+      { runInParallel = true
         parallelWorkers = Environment.ProcessorCount
         stress = None
         stressTimeout = TimeSpan.FromMinutes 5.0
@@ -643,7 +643,7 @@ module Impl =
 
       let inline cons xs x = x::xs
 
-      if not config.``parallel`` ||
+      if not config.runInParallel ||
          config.parallelWorkers = 1 ||
          List.forall (fun t -> t.sequenced=Synchronous) tests then
         return!
@@ -654,7 +654,7 @@ module Impl =
           List.filter (fun t -> t.sequenced=Synchronous) tests
           |> List.map evalTestAsync
 
-        let parallel =
+        let runInParallel =
           List.filter (fun t -> t.sequenced<>Synchronous) tests
           |> Seq.groupBy (fun t -> t.sequenced)
           |> Seq.collect(fun (group,tests) ->
@@ -676,9 +676,9 @@ module Impl =
 
         let! parallelResults =
           let noWorkers = numberOfWorkers false config
-          Async.foldParallelWithCancel noWorkers ct (@) [] parallel
+          Async.foldParallelWithCancel noWorkers ct (@) [] runInParallel
 
-        if List.isEmpty sequenced |> not && List.isEmpty parallel |> not then
+        if List.isEmpty sequenced |> not && List.isEmpty runInParallel |> not then
           do! config.printer.info "Starting sequenced tests..."
 
         let! results = Async.foldSequentiallyWithCancel ct cons parallelResults sequenced
@@ -694,7 +694,7 @@ module Impl =
   let evalTestsSilent test =
     let config =
       { ExpectoConfig.defaultConfig with
-          parallel = false
+          runInParallel = false
           verbosity = LogLevel.Fatal
           printer = TestPrinters.silent
       }
@@ -826,7 +826,7 @@ module Impl =
       let w = Stopwatch.StartNew()
 
       let! runningTests,results,maxMemory =
-        if not config.``parallel`` ||
+        if not config.runInParallel ||
            config.parallelWorkers = 1 ||
            List.forall (fun t -> t.sequenced=Synchronous) tests then
 
@@ -841,10 +841,10 @@ module Impl =
                   Stopwatch.GetTimestamp() > finishTime.Value then
                  async.Return (runningTests,results,maxMemory)
                else
-                 let parallel =
+                 let runInParallel =
                    List.filter (fun t -> t.sequenced<>Synchronous) tests
-                 Seq.initInfinite (fun _ -> randNext parallel)
-                 |> Seq.append parallel
+                 Seq.initInfinite (fun _ -> randNext runInParallel)
+                 |> Seq.append runInParallel
                  |> Seq.filter (fun test ->
                       let s = test.sequenced
                       s=InParallel ||
