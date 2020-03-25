@@ -54,9 +54,9 @@ let tests =
 
     testList "testName tests" [
       testCase "one test" <| fun _ ->
-        Expect.equal (testName()) "all/testName tests/one test" "one name"
+        Expect.equal testName "all/testName tests/one test" "one name"
       testCase "two test" <| fun _ ->
-        Expect.equal (testName()) "all/testName tests/two test" "two name"
+        Expect.equal testName "all/testName tests/two test" "two name"
     ]
 
     testList "null comparison" [
