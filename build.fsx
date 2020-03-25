@@ -4,7 +4,6 @@
 #load "paket-files/build/eiriktsarpalis/snippets/SlnTools/SlnTools.fs"
 #if !FAKE
 #r "netstandard"
-#r "facades/netstandard"
 #endif
 
 open System
@@ -35,10 +34,8 @@ let licenceUrl = "https://github.com/haf/expecto/blob/master/LICENSE"
 let copyright = "Copyright 2019"
 let mutable dotnetExePath = "dotnet"
 
-let envRequired k =
-  let v = Environment.GetEnvironmentVariable k
-  if isNull v then failwithf "Missing environment key '%s'." k
-  v
+let githubToken = lazy(Environment.environVarOrFail "GITHUB_TOKEN")
+let nugetToken = lazy(Environment.environVarOrFail "NUGET_TOKEN")
 
 BuildServer.install [
   Travis.Installer
@@ -127,8 +124,8 @@ Target.create "RunTest" <| fun _ ->
 
     let runTest project =
         DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
-             (sprintf "%s/bin/%O/netcoreapp2.1/%s.dll" project configuration project)
-             "--summary"
+          (sprintf "%s/bin/%O/netcoreapp2.1/%s.dll" project configuration project)
+          "--summary"
         |> fun r -> if r.ExitCode<>0 then project+".dll failed" |> failwith
         let exeName = sprintf "%s/bin/%O/net461/%s.exe" project configuration project
         let filename, arguments =
@@ -189,13 +186,13 @@ Target.create "Push" <| fun _ ->
     { p with
         ToolPath = Path.GetFullPath "./.paket/paket"
         WorkingDir = pkgPath
-        ApiKey = envRequired "NUGET_TOKEN" }
+        ApiKey = nugetToken.Value }
   // for f in *.nupkg; do ../.paket/paket push  --api-key $NUGET_TOKEN $f; done
   Paket.push setParams
 
 Target.create "CheckEnv" <| fun _ ->
-  ignore (envRequired "GITHUB_TOKEN")
-  ignore (envRequired "NUGET_TOKEN")
+  ignore nugetToken.Value
+  ignore githubToken.Value
 
 Target.create "Release" (fun _ ->
     let gitOwner = "haf"
@@ -214,7 +211,7 @@ Target.create "Release" (fun _ ->
     Git.Branches.tag "" release.NugetVersion
     Git.Branches.pushTag "" remote release.NugetVersion
 
-    Environment.environVar "GITHUB_TOKEN"
+    githubToken.Value
     |> GitHub.createClientWithToken
     |> GitHub.draftNewRelease gitOwner gitName release.NugetVersion
                               release.SemVer.PreRelease.IsSome release.Notes
