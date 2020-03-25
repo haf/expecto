@@ -1,16 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>Expecto.Hopac</AssemblyName>
     <PackageId>Expecto.Hopac</PackageId>
-    <Version>8.13.1</Version>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <!-- Optional: Declare that the Repository URL can be published to NuSpec -->
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <!-- Optional: Embed source files that are not tracked by the source control manager to the PDB -->
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <!-- Optional: Include PDB in the built .nupkg -->
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
@@ -20,5 +11,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
   </ItemGroup>
+  <Import Project="..\NuGet.props" />
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

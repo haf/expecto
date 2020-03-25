@@ -71,37 +71,6 @@ let normaliseFileToLFEnding filename =
     s.Replace(String.WindowsLineBreaks,String.LinuxLineBreaks)
     |> File.writeString false filename
 
-Target.create "AssemblyInfo" (fun _ ->
-    let createAssemblyInfo project =
-        let filename = project+"/AssemblyInfo.fs"
-        AssemblyInfoFile.createFSharpWithConfig filename [
-            AssemblyInfo.Title project
-            AssemblyInfo.Product project
-            AssemblyInfo.Copyright copyright
-            AssemblyInfo.Description description
-            AssemblyInfo.Version release.AssemblyVersion
-            AssemblyInfo.FileVersion release.AssemblyVersion
-            AssemblyInfo.InternalsVisibleTo "Expecto.Tests"
-        ] (AssemblyInfoFileConfig(true,false,"Expecto.AssemblyInfo"))
-        normaliseFileToLFEnding filename
-    createAssemblyInfo "Expecto"
-    createAssemblyInfo "Expecto.FsCheck"
-    createAssemblyInfo "Expecto.BenchmarkDotNet"
-    createAssemblyInfo "Expecto.Hopac"
-)
-
-Target.create "ProjectVersion" (fun _ ->
-    let setProjectVersion project =
-        let filename = project+"/"+project+".fsproj"
-        Xml.pokeInnerText filename
-            "Project/PropertyGroup/Version" release.NugetVersion
-        normaliseFileToLFEnding filename
-    setProjectVersion "Expecto"
-    setProjectVersion "Expecto.FsCheck"
-    setProjectVersion "Expecto.BenchmarkDotNet"
-    setProjectVersion "Expecto.Hopac"
-)
-
 let build project =
   DotNet.build (fun p ->
     { p with Configuration = configuration
@@ -159,18 +128,9 @@ Target.create "Pack" <| fun _ ->
     { MSBuild.CliArguments.Create() with
         NoLogo = true
         DoRestore = false
-        Properties =
-          [ "PackageVersion", release.NugetVersion
-            "Authors", authors
-            "Owners", owners
-            "PackageRequireLicenseAcceptance", "true"
-            "Description", description.Replace(",","")
+        Properties = [
+            "Version", release.NugetVersion
             "PackageReleaseNotes", (release.Notes |> String.toLines).Replace(",","").Replace(";", "—")
-            "Copyright", copyright
-            "PackageTags", tags
-            "PackageProjectUrl", projectUrl
-            "PackageIconUrl", iconUrl
-            "PackageLicenseUrl", licenceUrl
           ]
     }
   let pkgSln = SlnTools.createTempSolutionFile libProjects
@@ -199,10 +159,10 @@ Target.create "Release" (fun _ ->
     let gitName = "expecto"
     let gitOwnerName = gitOwner + "/" + gitName
     let remote =
-        Git.CommandHelper.getGitResult "" "remote -v"
-        |> Seq.tryFind (fun s -> s.EndsWith "(push)" && s.Contains gitOwnerName)
-        |> function | None -> "ssh://github.com/" + gitOwnerName
-                    | Some s -> s.Split().[0]
+      Git.CommandHelper.getGitResult "" "remote -v"
+      |> Seq.tryFind (fun s -> s.EndsWith "(push)" && s.Contains gitOwnerName)
+      |> function | None -> "ssh://github.com/" + gitOwnerName
+                  | Some s -> s.Split().[0]
 
     Git.Staging.stageAll ""
     Git.Commit.exec "" (sprintf "Bump version to %s" release.NugetVersion)
@@ -225,8 +185,6 @@ Target.create "All" ignore
   ==> "Release"
 
 "Clean"
-  ==> "AssemblyInfo"
-  ==> "ProjectVersion"
   ==> "BuildExpecto"
   ==> "BuildBenchmarkDotNet"
   ==> "BuildTest"

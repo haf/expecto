@@ -1,0 +1,21 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <Description>Advanced testing library for F#</Description>
+    <Authors>Anthony Lloyd & Henrik Feldt and contributors</Authors>
+    <Owners>Anthony Lloyd & Henrik Feldt (cloned from Fuchu by @mausch)</Owners>
+    <Copyright>Copyright 2019</Copyright>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/haf/expecto</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png</PackageIconUrl>
+    <PackageTags>test;testing;fsharp;assert;expect;stress;performance;unit;random;property</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Optional: Declare that the Repository URL can be published to NuSpec -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <!-- Optional: Embed source files that are not tracked by the source control manager to the PDB -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Optional: Include PDB in the built .nupkg -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+</Project>
