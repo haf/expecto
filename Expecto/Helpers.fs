@@ -7,8 +7,8 @@ open System.Reflection
 
 let expectoVersion =
   Assembly.GetExecutingAssembly()
-    .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-    .InformationalVersion
+    .GetCustomAttribute<AssemblyFileVersionAttribute>()
+    .Version
 
 let inline dispose (d:IDisposable) = d.Dispose()
 let inline addFst a b = a,b

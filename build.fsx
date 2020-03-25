@@ -57,6 +57,7 @@ let pkgPath = Path.GetFullPath "./pkg"
 Target.create "Clean" <| fun _ ->
   !!"./**/bin/"
   ++ "./**/obj/"
+  ++ pkgPath
   |> Shell.cleanDirs
 
 let normaliseFileToLFEnding filename =
@@ -124,7 +125,7 @@ Target.create "Pack" <| fun _ ->
         DoRestore = false
         Properties = [
           "Version", release.NugetVersion
-          "PackageReleaseNotes", (release.Notes |> String.toLines).Replace(",","").Replace(";", "—")
+          "PackageReleaseNotes", String.toLines release.Notes
         ]
     }
   let pkgSln = SlnTools.createTempSolutionFile libProjects
