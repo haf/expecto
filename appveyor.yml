@@ -1,6 +1,5 @@
 image:
-  - Visual Studio 2015
-  - Visual Studio 2017
+  - Visual Studio 2019
 
 install:
   - dotnet tool install paket --tool-path .paket --version 5.219.0
