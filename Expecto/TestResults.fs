@@ -74,44 +74,44 @@ let writeNUnitSummary file (summary: TestRunSummary) =
       | Ignored msg -> element.Add(XElement(XName.Get "reason", XElement(XName.Get "message", XCData msg)))
       element)
   let d = DateTime.Now
+  let xAttr name data = XAttribute(XName.Get name, data)
   let element =
-    XElement(
-      XName.Get "test-results",
-      XAttribute(XName.Get "date", d.ToString("yyyy-MM-dd")),
-      XAttribute(XName.Get "name", assemblyName),
-      XAttribute(XName.Get "total", totalTests.Length),
-      XAttribute(XName.Get "errors", summary.errored.Length),
-      XAttribute(XName.Get "failures", summary.failed.Length),
-      XAttribute(XName.Get "ignored", summary.ignored.Length),
-      XAttribute(XName.Get "not-run", "0"),
-      XAttribute(XName.Get "inconclusive", "0"),
-      XAttribute(XName.Get "skipped", "0"),
-      XAttribute(XName.Get "invalid", "0"),
-      XAttribute(XName.Get "time", d.ToString("HH:mm:ss")),
+    XElement(XName.Get "test-results",
+      xAttr "date" (d.ToString("yyyy-MM-dd")),
+      xAttr "name" assemblyName,
+      xAttr "total" totalTests.Length,
+      xAttr "errors" summary.errored.Length,
+      xAttr "failures" summary.failed.Length,
+      xAttr "ignored" summary.ignored.Length,
+      xAttr "not-run" "0",
+      xAttr "inconclusive" "0",
+      xAttr "skipped" "0",
+      xAttr "invalid" "0",
+      xAttr "time" (d.ToString("HH:mm:ss")),
       XElement(XName.Get "environment",
-        XAttribute(XName.Get "expecto-version", AssemblyInfo.AssemblyVersionInformation.AssemblyVersion),
-        XAttribute(XName.Get "clr-version", string Environment.Version),
-        XAttribute(XName.Get "os-version", Environment.OSVersion.VersionString),
-        XAttribute(XName.Get "platform", Environment.OSVersion.Platform),
-        XAttribute(XName.Get "cwd", Environment.CurrentDirectory),
-        XAttribute(XName.Get "machine-name", Environment.MachineName),
-        XAttribute(XName.Get "user", Environment.UserName),
-        XAttribute(XName.Get "user-domain", Environment.UserDomainName)
+        xAttr "expecto-version" AssemblyInfo.AssemblyVersionInformation.AssemblyVersion,
+        xAttr "clr-version" Environment.Version,
+        xAttr "os-version" Environment.OSVersion.VersionString,
+        xAttr "platform" Environment.OSVersion.Platform,
+        xAttr "cwd" Environment.CurrentDirectory,
+        xAttr "machine-name" Environment.MachineName,
+        xAttr "user" Environment.UserName,
+        xAttr "user-domain" Environment.UserDomainName
       ),
       XElement(XName.Get "culture-info",
-        XAttribute(XName.Get "current-culture", string CultureInfo.CurrentCulture),
-        XAttribute(XName.Get "current-uiculture", string CultureInfo.CurrentUICulture)
+        xAttr "current-culture", CultureInfo.CurrentCulture,
+        xAttr "current-uiculture", CultureInfo.CurrentUICulture
       ),
       XElement(XName.Get "test-suite",
-        XAttribute(XName.Get "type", "Assembly"),
-        XAttribute(XName.Get "name", assemblyName),
-        XAttribute(XName.Get "executed", "True"),
-        XAttribute(XName.Get "result", if summary.successful then "Success" else "Failure"),
-        XAttribute(XName.Get "success", if summary.successful then "True" else "False"),
-        XAttribute(XName.Get "time",
-          String.Format(CultureInfo.InvariantCulture,
+        xAttr "type" "Assembly",
+        xAttr "name" assemblyName,
+        xAttr "executed" "True",
+        xAttr "result" (if summary.successful then "Success" else "Failure"),
+        xAttr "success" (if summary.successful then "True" else "False"),
+        xAttr "time"
+          (String.Format(CultureInfo.InvariantCulture,
             "{0:0.000}", summary.duration.TotalSeconds)),
-        XAttribute(XName.Get "asserts", "0"),
+        xAttr "asserts" "0",
         XElement(XName.Get "results", testCaseElements)
         )
       )
