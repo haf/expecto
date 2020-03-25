@@ -37,45 +37,44 @@ What follows is the Table of Contents for this README, which also serves as the 
 <!-- toc -->
 
 - [Installing](#installing)
-  * [Prettify stacktraces/ship test logs](#prettify-stacktracesship-test-logs)
-  * [TestResults file](#testresults-file)
+  - [Prettify stacktraces/ship test logs](#prettify-stacktracesship-test-logs)
+  - [TestResults file](#testresults-file)
 - [.Net Core support](#net-core-support)
-- [Testing "Hello world"](#testing-hello-world)
+- [Testing "Hello world"](#testing-%22hello-world%22)
 - [Running tests](#running-tests)
-  * [`runTests`](#runtests)
-  * [`runTestsWithArgs`](#runtestswithargs)
-  * [`runTestsWithCLIArgs`](#runtestswithcliargs)
-  * [`runTestsInAssembly`](#runtestsinassembly)
-  * [`runTestsInAssemblyWithCLIArgs`](#runtestsinassemblywithcliargs)
-  * [Filtering with `filter`](#filtering-with-filter)
-  * [Shuffling with `shuffle`](#shuffling-with-shuffle)
-  * [Stress testing](#stress-testing)
+  - [`runTests`](#runtests)
+  - [`runTestsWithArgs`](#runtestswithargs)
+  - [`runTestsWithCLIArgs`](#runtestswithcliargs)
+  - [`runTestsInAssembly`](#runtestsinassembly)
+  - [`runTestsInAssemblyWithCLIArgs`](#runtestsinassemblywithcliargs)
+  - [Filtering with `filter`](#filtering-with-filter)
+  - [Shuffling with `shuffle`](#shuffling-with-shuffle)
+  - [Stress testing](#stress-testing)
 - [Writing tests](#writing-tests)
-  * [Normal tests](#normal-tests)
-  * [`testList` for grouping](#testlist-for-grouping)
-  * [Test fixtures](#test-fixtures)
-  * [Pending tests](#pending-tests)
-  * [Focusing tests](#focusing-tests)
-  * [Sequenced tests](#sequenced-tests)
-  * [Parametised tests with `testParam`](#parametised-tests-with-testparam)
-  * [Setup and teardown](#setup-and-teardown)
-  * [Property based tests](#property-based-tests)
-    + [Link collection](#link-collection)
-    + [Code from FsCheck](#code-from-fscheck)
+  - [Normal tests](#normal-tests)
+  - [`testList` for grouping](#testlist-for-grouping)
+  - [Test fixtures](#test-fixtures)
+  - [Pending tests](#pending-tests)
+  - [Focusing tests](#focusing-tests)
+  - [Sequenced tests](#sequenced-tests)
+  - [Parameterised tests with `testParam`](#parameterised-tests-with-testparam)
+  - [Setup and teardown](#setup-and-teardown)
+  - [Property based tests](#property-based-tests)
+    - [Link collection](#link-collection)
+    - [Code from FsCheck](#code-from-fscheck)
 - [Expectations with `Expect`](#expectations-with-expect)
-  * [`Expect` module](#expect-module)
-  * [`Performance` module](#performance-module)
-    + [Example](#example)
-  * [Performance.findFastest](#performancefindfastest)
-- [`main args` and command line – how to run console apps](#main-args-and-command-line--how-to-run-console-apps-examples)
+  - [`Expect` module](#expect-module)
+  - [`Performance` module](#performance-module)
+    - [Example](#example)
+  - [Performance.findFastest](#performancefindfastest)
+- [`main args` and command line – how to run console apps examples](#main-args-and-command-line-%e2%80%93-how-to-run-console-apps-examples)
 - [Contributing and building](#contributing-and-building)
 - [BenchmarkDotNet usage](#benchmarkdotnet-usage)
 - [You're not alone!](#youre-not-alone)
-  * [Testing hardware](#testing-hardware)
-- [Sending e-mail on failure – custom printers](#sending-e-mail-on-failure-%E2%80%93-custom-printers)
+  - [Testing hardware](#testing-hardware)
+- [Sending e-mail on failure – custom printers](#sending-e-mail-on-failure-%e2%80%93-custom-printers)
 - [About test parallelism](#about-test-parallelism)
-- [About upgrading from Fuchu](#about-upgrading-from-fuchu)
-  * [What does 'expected to have type TestCode' mean?](#what-does-expected-to-have-type-testcode-mean)
+  - [What does 'expected to have type TestCode' mean?](#what-does-expected-to-have-type-testcode-mean)
 
 <!-- tocstop -->
 
@@ -134,7 +133,8 @@ and the output won't be interlaced due to concurrency.
 
 ### TestResults file
 
-    nuget Expecto.TestResults
+<s>
+nuget Expecto.TestResults
 
 and configure it to generate the tests result file (nunit v2 format)
 
@@ -147,6 +147,9 @@ let main args =
   let config = defaultConfig.appendSummaryHandler writeResults
   runTestsInAssembly config args
 ```
+</s>
+
+Use `--nunit-summary TestResults.xml` or `--junit-summary TestResults.junit.xml` (JUnit support is incomplete).
 
 ## .Net Core support
 
