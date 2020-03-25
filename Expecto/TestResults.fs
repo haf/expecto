@@ -89,7 +89,7 @@ let writeNUnitSummary file (summary: TestRunSummary) =
       xAttr "invalid" "0",
       xAttr "time" (d.ToString("HH:mm:ss")),
       XElement(XName.Get "environment",
-        xAttr "expecto-version" AssemblyInfo.AssemblyVersionInformation.AssemblyVersion,
+        xAttr "expecto-version" expectoVersion,
         xAttr "clr-version" Environment.Version,
         xAttr "os-version" Environment.OSVersion.VersionString,
         xAttr "platform" Environment.OSVersion.Platform,

@@ -6,7 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="TaskBuilder.fs" />
-    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Progress.fs" />
     <Compile Include="Statistics.fs" />

@@ -4,7 +4,6 @@
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Expecto.Hopac.fs" />
     <None Include="paket.references" />
   </ItemGroup>

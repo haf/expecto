@@ -1,4 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>Expecto.Diff</PackageId>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
@@ -10,6 +11,6 @@
     <Compile Include="Library.fs" />
     <None Include="paket.references" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
   <Import Project="..\NuGet.props" />
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
