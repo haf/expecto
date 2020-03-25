@@ -4,7 +4,6 @@
     <Authors>Anthony Lloyd, Henrik Feldt and contributors</Authors>
     <Owners>Anthony Lloyd &amp; Henrik Feldt (cloned from Fuchu by @mausch)</Owners>
     <Copyright>Copyright 2019</Copyright>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/haf/expecto</PackageProjectUrl>
     <PackageIcon>expecto-logo-small.png</PackageIcon>

@@ -7,18 +7,10 @@ matrix:
   
   include:
     - os: linux
-      mono: 5.8.0
-    - os: linux
-      mono: 6.0.0
-    - os: linux
       mono: latest
     - os: osx
-      osx_image: xcode9.3
+      osx_image: xcode11.3
       mono: latest
-
-  allow_failures:
-    - mono: latest
-    - mono: 5.8.0
 
 env:
   global:
