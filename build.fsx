@@ -24,15 +24,8 @@ let configuration =
   |> DotNet.BuildConfiguration.fromString
 
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
-let description = "Advanced testing library for F#"
-let tags = "test testing fsharp assert expect stress performance unit random property"
-let authors = "Anthony Lloyd & Henrik Feldt and contributors"
-let owners = "Anthony Lloyd & Henrik Feldt (cloned from Fuchu by @mausch)"
-let projectUrl = "https://github.com/haf/expecto"
-let iconUrl = "https://raw.githubusercontent.com/haf/expecto/master/docs/expecto-logo-small.png"
-let licenceUrl = "https://github.com/haf/expecto/blob/master/LICENSE"
-let copyright = "Copyright 2019"
-let mutable dotnetExePath = "dotnet"
+let testFramework = "netcoreapp3.1"
+let dotnetExePath = "dotnet"
 
 let githubToken = lazy(Environment.environVarOrFail "GITHUB_TOKEN")
 let nugetToken = lazy(Environment.environVarOrFail "NUGET_TOKEN")
@@ -93,7 +86,7 @@ Target.create "RunTest" <| fun _ ->
 
     let runTest project =
         DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
-          (sprintf "%s/bin/%O/netcoreapp2.1/%s.dll" project configuration project)
+          (sprintf "%s/bin/%O/%s/%s.dll" project configuration testFramework project)
           "--summary"
         |> fun r -> if r.ExitCode<>0 then project+".dll failed" |> failwith
         let exeName = sprintf "%s/bin/%O/net461/%s.exe" project configuration project

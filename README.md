@@ -30,7 +30,7 @@ VSCode and Ionide integrate out-of-the-box with Expecto's command-line output.  
 
 Or simply `dotnet run` or `dotnet watch` from the command line:
 
-    dotnet watch -p MyProject.Tests run -f netcoreapp2.1
+    dotnet watch -p MyProject.Tests run -f netcoreapp3.1
 
 What follows is the Table of Contents for this README, which also serves as the documentation for the project.
 
@@ -1084,8 +1084,8 @@ Tests.runTestsInAssembly [Stress 0.1;Stress_Timeout 0.2] [||]
 From the command line you can run:
 
 ```
-dotnet run -p Expecto.Tests -f netcoreapp2.1 -c release -- --help
-dotnet watch -p Expecto.Tests run -f netcoreapp2.1 -c release -- --colours 256
+dotnet run -p Expecto.Tests -f netcoreapp3.1 -c release -- --help
+dotnet watch -p Expecto.Tests run -f netcoreapp3.1 -c release -- --colours 256
 ```
 
 ## Contributing and building 
