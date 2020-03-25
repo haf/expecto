@@ -84,37 +84,38 @@ Target.create "BuildTest" (fun _ ->
 
 Target.create "RunTest" <| fun _ ->
 
-    let runTest project =
-        DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
-          (sprintf "%s/bin/%O/%s/%s.dll" project configuration testFramework project)
-          "--summary"
-        |> fun r -> if r.ExitCode<>0 then project+".dll failed" |> failwith
-        let exeName = sprintf "%s/bin/%O/net461/%s.exe" project configuration project
-        let filename, arguments =
-            let args = "--colours 0 --summary"
-            if Environment.isWindows then exeName, args
-            else "mono", exeName + " " + args
-        Process.shellExec
-          { ExecParams.Empty with
-              Program = filename
-              CommandLine = arguments
-          }
-        |> fun r -> if r<>0 then project+".exe failed" |> failwith
+  let runTest project =
+    Trace.logfn "Running %s on .NET Core" project
+    DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
+      (sprintf "%s/bin/%O/%s/%s.dll" project configuration testFramework project)
+      "--summary"
+    |> fun r -> if r.ExitCode <> 0 then failwithf "Running %s on .NET Core failed" project
 
-    runTest "Expecto.Tests"
+    Trace.logfn "Running %s on .NET Framework" project
+    let exeName = sprintf "%s/bin/%O/net461/%s.exe" project configuration project
+    let filename, arguments =
+        let args = "--colours 0 --summary"
+        if Environment.isWindows then exeName, args
+        else "mono", exeName + " " + args
+    Process.shellExec
+      { ExecParams.Empty with
+          Program = filename
+          CommandLine = arguments
+      }
+    |> fun r -> if r <> 0 then failwithf "Running %s on .NET Framework failed" project
 
-    "Expecto.Tests.TestResults.xml"
-    |> Path.combine (Path.combine __SOURCE_DIRECTORY__ "bin")
-    |> Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
+  runTest "Expecto.Tests"
+  "Expecto.Tests.TestResults.xml"
+  |> Path.combine (Path.combine __SOURCE_DIRECTORY__ "bin")
+  |> Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
 
-    runTest "Expecto.Tests.CSharp"
+  runTest "Expecto.Tests.CSharp"
+  "Expecto.Tests.CSharp.TestResults.xml"
+  |> Path.combine (Path.combine __SOURCE_DIRECTORY__ "bin")
+  |> Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
 
-    "Expecto.Tests.CSharp.TestResults.xml"
-    |> Path.combine (Path.combine __SOURCE_DIRECTORY__ "bin")
-    |> Trace.publish (ImportData.Nunit NunitDataVersion.Nunit)
-
-    runTest "Expecto.Hopac.Tests"
-    runTest "Expecto.Focused.Tests"
+  runTest "Expecto.Hopac.Tests"
+  runTest "Expecto.Focused.Tests"
 
 Target.create "Pack" <| fun _ ->
   let args =
@@ -122,9 +123,9 @@ Target.create "Pack" <| fun _ ->
         NoLogo = true
         DoRestore = false
         Properties = [
-            "Version", release.NugetVersion
-            "PackageReleaseNotes", (release.Notes |> String.toLines).Replace(",","").Replace(";", "—")
-          ]
+          "Version", release.NugetVersion
+          "PackageReleaseNotes", (release.Notes |> String.toLines).Replace(",","").Replace(";", "—")
+        ]
     }
   let pkgSln = SlnTools.createTempSolutionFile libProjects
   let setParams (p: DotNet.PackOptions) =
