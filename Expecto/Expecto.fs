@@ -50,12 +50,14 @@ module Tests =
     ) format
 
   /// The full name of the currently running test
-  let testName() = TestNameHolder.Name
+  // The generic parameter allows it to be used like
+  // a value, instead of calling testName().
+  let testName<'unused> = TestNameHolder.Name
 
   /// Fail this test
   let inline failtest msg = raise <| AssertException msg
   /// Fail this test
-  let inline failtestf fmt = Printf.ksprintf (AssertException >> raise) fmt
+  let inline failtestf fmt = Printf.ksprintf failtest fmt
   /// Fail this test
   let inline failtestNoStack msg = raise <| FailedException msg
   /// Fail this test

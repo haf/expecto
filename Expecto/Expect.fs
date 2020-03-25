@@ -90,8 +90,9 @@ let throwsC f cont =
   | Some e -> cont e
   | _ -> failtestf "Expected f to throw."
 
+[<RequiresExplicitTypeArguments>]
 /// Expects the passed function to throw `'texn`.
-let throwsT<'texn> f message =
+let throwsT<'texn when 'texn :> exn> f message =
   let thrown =
     try
       f ()
@@ -110,19 +111,20 @@ let throwsT<'texn> f message =
 /// Expects the value to be a None value.
 let isNone x message =
   match x with
-  | None ->
-    ()
+  | None -> ()
   | Some x ->
-    failtestf "%s. Expected None, was Some(%A)."
-      message x
+    failtestf "%s. Expected None, was Some(%A)." message x
 
-/// Expects the value to be a Some _ value.
-let isSome x message =
+/// Expects the value to be a Some x value
+/// and returns x or fails the test.
+let wantSome x message =
   match x with
   | None ->
     failtestf "%s. Expected Some _, was None." message
-  | Some _ ->
-    ()
+  | Some x -> x
+
+/// Expects the value to be a Some _ value.
+let isSome x message = wantSome x message |> ignore
 
 /// Expects the value to be a Choice1Of2 value.
 let isChoice1Of2 x message =
@@ -137,15 +139,18 @@ let isChoice2Of2 x message =
   | Choice1Of2 x ->
     failtestf "%s. Expected Choice2Of2 _, was Choice1Of2(%A)."
       message x
-  | Choice2Of2 _ ->
-    ()
+  | Choice2Of2 _ -> ()
 
-/// Expects the value to be a Result.Ok value.
-let isOk x message =
+/// Expects the value to be a Result.Ok value
+/// and returns it or fails the test.
+let wantOk x message =
   match x with
-  | Ok _ -> ()
+  | Ok x -> x
   | Result.Error x ->
     failtestf "%s. Expected Ok, was Error(%A)." message x
+
+/// Expects the value to be a Result.Ok value.
+let isOk x message = wantOk x message |> ignore
 
 /// Expects the value to be a Result.Error value.
 let isError x message =

@@ -6,11 +6,16 @@ let inline throws message f = Expecto.Expect.throws f message
 /// Expects f to throw, and calls `cont` with its exception.
 let inline throwsC cont f = Expecto.Expect.throwsC f cont
 
+[<RequiresExplicitTypeArguments>]
 /// Expects the passed function to throw `'texn`.
-let inline throwsT<'texn> message f = Expecto.Expect.throwsT<'texn> f message
+let inline throwsT<'texn when 'texn :> exn> message f = Expecto.Expect.throwsT<'texn> f message
 
 /// Expects the value to be a None value.
 let inline isNone message x = Expecto.Expect.isNone x message
+
+/// Expects the value to be a Some x value
+/// and returns x or fails the test.
+let wantSome message x = Expecto.Expect.wantSome x message
 
 /// Expects the value to be a Some _ value.
 let inline isSome message x = Expecto.Expect.isSome x message
@@ -20,6 +25,10 @@ let inline isChoice1Of2 message x = Expecto.Expect.isChoice1Of2 x message
 
 /// Expects the value to be a Choice2Of2 value.
 let inline isChoice2Of2 message x = Expecto.Expect.isChoice2Of2 x message
+
+/// Expects the value to be a Result.Ok value
+/// and returns it or fails the test.
+let inline wantOk message x = Expecto.Expect.wantOk x message
 
 /// Expects the value to be a Result.Ok value.
 let inline isOk message x = Expecto.Expect.isOk x message
