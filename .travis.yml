@@ -1,6 +1,5 @@
 language: csharp
-dist: xenial
-sudo: false
+dist: bionic
 dotnet: 3.1.200
 
 matrix:
