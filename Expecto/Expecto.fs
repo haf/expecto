@@ -369,8 +369,6 @@ module Tests =
     /// Append a summary handler.
     | Append_Summary_Handler of SummaryHandler
 
-  let assemblyName = Assembly.GetEntryAssembly().GetName().Name
-
   let options = [
       "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
       "--parallel", "Run all tests in parallel (default).", Args.none Parallel
