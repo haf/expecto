@@ -534,13 +534,13 @@ let expecto =
       testCase "default" <| fun _ ->
         match ExpectoConfig.fillFromArgs defaultConfig [||] with
         | ArgsRun opts ->
-          opts.parallel ==? true
+          opts.runInParallel ==? true
         | _ -> 0 ==? 1
 
       testCase "sequenced" <| fun _ ->
         match ExpectoConfig.fillFromArgs defaultConfig [|"--sequenced"|] with
         | ArgsRun opts ->
-          opts.parallel ==? false
+          opts.runInParallel ==? false
         | _ -> 0 ==? 1
 
       testCase "list" <| fun _ ->
@@ -1636,7 +1636,7 @@ let cancel =
       testAsync n {
         let config =
           { defaultConfig with
-              parallel = p
+              runInParallel = p
               printer = TestPrinters.silent
               verbosity = Logging.LogLevel.Fatal
               noSpinner = true }

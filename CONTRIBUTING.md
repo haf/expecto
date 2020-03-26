@@ -10,7 +10,7 @@
     * Visual Studio - [EditorConfig VS Extension][ec-vs]
     * VS Code - [EditorConfig VScode Extension][ec-vsc]
 
- 1. You will need .NET Core [v2.1 SDK][netcore-sdk] installed. The versions of Mono and .NET Core currently tested in CI can be found [here in .travis.yml][travis]
+ 1. You will need .NET Core [v3.1 SDK][netcore-sdk] installed. The versions of Mono and .NET Core currently tested in CI can be found [here in .travis.yml][travis]
 
  1. Ensure .Net Core tools are on your PATH: `$HOME/.dotnet/tools`
 
@@ -78,7 +78,7 @@ Futhermore, in no particular order;
 
 [ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
 [ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
-[netcore-sdk]: https://www.microsoft.com/net/download
+[netcore-sdk]: https://dotnet.microsoft.com/download
 [netcore-rt]: https://github.com/dotnet/core/blob/master/release-notes/download-archive.md#net-core-11
 [travis]: https://github.com/haf/expecto/blob/master/.travis.yml
 [mono-dl]: http://www.mono-project.com/download/

@@ -5,6 +5,11 @@ open System
 open System.Globalization
 open System.Reflection
 
+let expectoVersion =
+  Assembly.GetExecutingAssembly()
+    .GetCustomAttribute<AssemblyFileVersionAttribute>()
+    .Version
+
 let inline dispose (d:IDisposable) = d.Dispose()
 let inline addFst a b = a,b
 let inline addSnd b a = a,b
@@ -18,7 +23,7 @@ let inline tryParseNumber (s: string) =
   let mutable r = Unchecked.defaultof<_>
   if (^a : (static member TryParse: string * NumberStyles * IFormatProvider * ^a byref -> bool) (s, NumberStyles.Any, CultureInfo.InvariantCulture, &r))
   then Some r else None
-  
+
 module Seq =
   let cons x xs = seq { yield x; yield! xs }
 

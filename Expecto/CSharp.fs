@@ -80,7 +80,7 @@ module Runner =
 
       // C# is weak and it is hard to update the configuration
       [<Extension; CompiledName("WithParallel")>]
-      member x.WithParallel(parallel) = { x with parallel = parallel }
+      member x.WithParallel(parallel) = { x with runInParallel = parallel }
 
       [<Extension; CompiledName("WithParallelWorkers")>]
       member x.WithParallelWorkers(parallelWorkers) = { x with parallelWorkers = parallelWorkers }

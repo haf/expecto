@@ -1,21 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>Expecto</AssemblyName>
     <PackageId>Expecto</PackageId>
-    <Version>8.13.1</Version>
+    <Description>Advanced testing library for F#</Description>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <!-- Optional: Declare that the Repository URL can be published to NuSpec -->
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <!-- Optional: Embed source files that are not tracked by the source control manager to the PDB -->
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <!-- Optional: Include PDB in the built .nupkg -->
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="TaskBuilder.fs" />
-    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Progress.fs" />
     <Compile Include="Statistics.fs" />
@@ -32,5 +23,6 @@
     <Compile Include="CSharp.fs" />
     <Compile Include="Flip.Expect.fs" />
   </ItemGroup>
+  <Import Project="..\NuGet.props" />
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

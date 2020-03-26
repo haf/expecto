@@ -417,8 +417,8 @@ module Tests =
     if i= -1 then s else s.Substring(i+1)
 
   let private foldCLIArgumentToConfig = function
-    | Sequenced -> fun o -> { o with ExpectoConfig.parallel = false }
-    | Parallel -> fun o -> { o with parallel = true }
+    | Sequenced -> fun o -> { o with runInParallel = false }
+    | Parallel -> fun o -> { o with runInParallel = true }
     | Parallel_Workers n -> fun o -> { o with parallelWorkers = n }
     | Stress n -> fun o  -> {o with
                                 stress = TimeSpan.FromMinutes n |> Some
@@ -455,8 +455,6 @@ module Tests =
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
-
-    let expectoVersion = AssemblyInfo.AssemblyVersionInformation.AssemblyVersion
 
     /// Parses command-line arguments into a config. This allows you to
     /// override the config from the command line, rather than having
@@ -536,7 +534,7 @@ module Tests =
     | ArgsUsage (usage, errors) ->
       if not (List.isEmpty errors) then
         printfn "ERROR: %s\n" (String.Join(" ",errors))
-      printfn "EXPECTO! v%s\n\n%s" ExpectoConfig.expectoVersion usage
+      printfn "EXPECTO! v%s\n\n%s" expectoVersion usage
       if List.isEmpty errors then 0 else 1
     | ArgsList config ->
       config.filter tests
@@ -545,7 +543,7 @@ module Tests =
     | ArgsRun config ->
       runTestsWithCancel ct config tests
     | ArgsVersion config ->
-      printfn "EXPECTO! v%s\n" ExpectoConfig.expectoVersion
+      printfn "EXPECTO! v%s\n" expectoVersion
       runTestsWithCancel ct config tests
 
   /// Runs all given tests with the supplied typed command-line options.
