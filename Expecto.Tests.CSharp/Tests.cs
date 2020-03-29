@@ -89,8 +89,8 @@ namespace Test.CSharp
             var config =
                 Runner.DefaultConfig
                     .AddPrinter(new CSharpPrinter())
-                    .AddNUnitSummary("bin/Expecto.Tests.CSharp.TestResults.xml", "Expecto.Tests.CSharp")
-                    .AddJUnitSummary("bin/Expecto.Tests.CSharp.TestResults.junit.xml", "Expecto.Tests.CSharp", handleErrorsLikeFailures: true);
+                    .AddNUnitSummary("bin/Expecto.Tests.CSharp.TestResults.xml")
+                    .AddJUnitSummary("bin/Expecto.Tests.CSharp.TestResults.junit.xml");
             return Runner.RunTestsInAssembly(config, args);
         }
     }

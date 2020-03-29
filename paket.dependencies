@@ -1,29 +1,27 @@
 source https://api.nuget.org/v3/index.json
-framework net461, netstandard2.0, netcoreapp2.0, netcoreapp2.1
-storage: none
-clitool paket 5.226.0
-version 5.226.0
+framework net461, netstandard2.0, netcoreapp3.1
+storage none
+version 5.242.2
 
-nuget FSharp.Core 4.3.4
-nuget FsCheck ~> 2.10
-nuget Hopac ~> 0.3
-nuget DiffPlex ~> 1.4.4
-nuget Mono.Cecil ~> 0.10
-nuget BenchmarkDotNet ~> 0.11
+nuget FSharp.Core 4.6.0
+nuget FsCheck ~> 2.14
+nuget Hopac ~> 0.4
+nuget DiffPlex ~> 1.5
+nuget Mono.Cecil ~> 0.11
+nuget BenchmarkDotNet ~> 0.12
 
 group Build
   source https://api.nuget.org/v3/index.json
   storage none
   framework auto-detect
 
-  nuget FSharp.Core ~> 4.6.0
+  nuget FSharp.Core
   nuget Fake.Api.GitHub
   nuget Fake.BuildServer.AppVeyor
   nuget Fake.BuildServer.Travis
   nuget Fake.Core.ReleaseNotes
   nuget Fake.Core.Target
   nuget Fake.Core.Xml
-  nuget Fake.DotNet.AssemblyInfoFile
   nuget Fake.DotNet.Cli
   nuget Fake.DotNet.Paket
   nuget Fake.IO.FileSystem

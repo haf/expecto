@@ -54,9 +54,9 @@ let tests =
 
     testList "testName tests" [
       testCase "one test" <| fun _ ->
-        Expect.equal (testName()) "all.testName tests.one test" "one name"
+        Expect.equal testName "all.testName tests.one test" "one name"
       testCase "two test" <| fun _ ->
-        Expect.equal (testName()) "all.testName tests.two test" "two name"
+        Expect.equal testName "all.testName tests.two test" "two name"
     ]
 
     testList "null comparison" [
@@ -296,11 +296,11 @@ let expecto =
           |> List.sortBy (fun i -> i.name)
           |> List.map (fun t -> t.name,t.state,t.focusOn,t.sequenced)
         Expect.sequenceEqual tests [
-          ["1/2/4"],Normal,true,InParallel
-          ["1/2/5"],Pending,true,InParallel
-          ["1/2/6"],Focused,true,InParallel
-          ["1/3/7"],Normal,true,Synchronous
-          ["1/3/8"],Pending,true,SynchronousGroup "g"
+          ["1.2.4"],Normal,true,InParallel
+          ["1.2.5"],Pending,true,InParallel
+          ["1.2.6"],Focused,true,InParallel
+          ["1.3.7"],Normal,true,Synchronous
+          ["1.3.8"],Pending,true,SynchronousGroup "g"
         ] "flat tests"
       }
     ]
@@ -536,13 +536,13 @@ let expecto =
       testCase "default" <| fun _ ->
         match ExpectoConfig.fillFromArgs defaultConfig [||] with
         | ArgsRun opts ->
-          opts.parallel ==? true
+          opts.runInParallel ==? true
         | _ -> 0 ==? 1
 
       testCase "sequenced" <| fun _ ->
         match ExpectoConfig.fillFromArgs defaultConfig [|"--sequenced"|] with
         | ArgsRun opts ->
-          opts.parallel ==? false
+          opts.runInParallel ==? false
         | _ -> 0 ==? 1
 
       testCase "list" <| fun _ ->
@@ -575,7 +575,7 @@ let expecto =
           filtered |> Seq.length ==? 4
 
         yield testCase "filter deep" <| fun _ ->
-          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c/f"|] |> getArgsConfig
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c.f"|] |> getArgsConfig
           let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
@@ -605,14 +605,14 @@ let expecto =
           filtered |> Seq.length ==? 0
 
         yield testCase "run" <| fun _ ->
-          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--run"; "a"; "c/d"; "c/f/h"|] |> getArgsConfig
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--run"; "a"; "c.d"; "c.f.h"|] |> getArgsConfig
           let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 3
 
         yield testCase "run with filter" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          runTestsWithCLIArgs [No_Spinner] [|"--filter"; "c/f"|] test ==? 0
+          runTestsWithCLIArgs [No_Spinner] [|"--filter"; "c.f"|] test ==? 0
 
         yield testCase "run with filter test case" <| fun _ ->
           let count = ref 0
@@ -632,7 +632,7 @@ let expecto =
         yield testCase "run with run" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          runTestsWithCLIArgs [No_Spinner] [|"--run"; "a"; "c/d"; "c/f/h"|] test ==? 0
+          runTestsWithCLIArgs [No_Spinner] [|"--run"; "a"; "c.d"; "c.f.h"|] test ==? 0
       ]
     ]
 
@@ -1651,7 +1651,7 @@ let cancel =
       testAsync n {
         let config =
           { defaultConfig with
-              parallel = p
+              runInParallel = p
               printer = TestPrinters.silent
               verbosity = Logging.LogLevel.Fatal
               noSpinner = true }

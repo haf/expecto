@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Expecto.Tests</AssemblyName>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.1;net461</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net461</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Prelude.fs" />
@@ -17,7 +17,6 @@
     <None Include="paket.references" />
     <ProjectReference Include="..\Expecto.Hopac\Expecto.Hopac.fsproj" />
     <ProjectReference Include="..\Expecto.FsCheck\Expecto.FsCheck.fsproj" />
-    <ProjectReference Include="..\Expecto.TestResults\Expecto.TestResults.fsproj" />
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
