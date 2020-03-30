@@ -23,6 +23,18 @@ module Impl =
     else
       exnWithInnerMsg ex.InnerException currentMsg
 
+  type JoinBy =
+    | Dot
+    | Slash
+    member x.asString =
+      match x with
+      | Dot -> "."
+      | _ -> "/"
+
+    member x.format (parts: string list) =
+      let by = x.asString
+      String.concat by parts
+
   type TestResult =
     | Passed
     | Ignored of string
@@ -112,10 +124,10 @@ module Impl =
       (if List.isEmpty x.timedOut then 0 else 8)
     member x.successful = x.errorCode = 0
 
-  let createSummaryMessage (summary: TestRunSummary) =
+  let createSummaryMessage joinBy (summary: TestRunSummary) =
     let handleLineBreaks (elements:(FlatTest*TestSummary) seq) =
         elements
-        |> Seq.map (fun (n,_) -> "\n\t" + n.name)
+        |> Seq.map (fun (n,_) -> "\n\t" + n.fullName joinBy)
         |> String.Concat
 
     let passed = summary.passed |> handleLineBreaks
@@ -144,19 +156,21 @@ module Impl =
     >> setField "errored" errored
     >> setField "erroredCount" (align erroredCount 0)
 
-  let createSummaryText (summary: TestRunSummary) =
-    createSummaryMessage summary Info
-    |> Expecto.Logging.Formatting.defaultFormatter
+  let createSummaryText joinBy (summary: TestRunSummary) =
+    createSummaryMessage joinBy summary Info
+    |> Formatting.defaultFormatter
 
-  let logSummary (summary: TestRunSummary) =
-    createSummaryMessage summary
+  let logSummary (joinBy: JoinBy) (summary: TestRunSummary) =
+    let split = joinBy.asString
+    createSummaryMessage split summary
     |> logger.logWithAck Info
 
-  let logSummaryWithLocation locate (summary: TestRunSummary) =
+  let logSummaryWithLocation (joinBy: JoinBy) locate (summary: TestRunSummary) =
     let handleLineBreaks (elements:(FlatTest*TestSummary) seq) =
       let format (n:FlatTest,_) =
         let location = locate n.test
-        sprintf "%s [%s:%d]" n.name location.sourcePath location.lineNumber
+        let name = joinBy.format n.name
+        sprintf "%s [%s:%d]" name location.sourcePath location.lineNumber
 
       let text = elements |> Seq.map format |> String.concat "\n\t"
       if text = "" then text else text + "\n"
@@ -209,11 +223,12 @@ module Impl =
       summary : ExpectoConfig -> TestRunSummary -> Async<unit> }
 
     static member printResult config (test:FlatTest) (result:TestSummary) =
+      let name = config.joinBy.format test.name
       match result.result with
-      | Passed -> config.printer.passed test.name result.duration
-      | Failed message -> config.printer.failed test.name message result.duration
-      | Ignored message -> config.printer.ignored test.name message
-      | Error e -> config.printer.exn test.name e result.duration
+      | Passed -> config.printer.passed name result.duration
+      | Failed message -> config.printer.failed name message result.duration
+      | Ignored message -> config.printer.ignored name message
+      | Error e -> config.printer.exn name e result.duration
 
     static member silent =
       { beforeRun = fun _ -> async.Zero()
@@ -270,6 +285,7 @@ module Impl =
           }
 
         summary = fun _config summary ->
+          let splitSign = _config.joinBy.asString
           let spirit =
             if summary.successful then "Success!" else String.Empty
           let commonAncestor =
@@ -279,18 +295,19 @@ module Impl =
               | hd::tl when hd.StartsWith(ancestor)->
                 loop ancestor tl
               | _ ->
-                if ancestor.Contains("/") then
-                  loop (ancestor.Substring(0, ancestor.LastIndexOf "/")) descendants
+                if ancestor.Contains(splitSign) then
+                  loop (ancestor.Substring(0, ancestor.LastIndexOf splitSign)) descendants
                 else
                   "miscellaneous"
 
             let parentNames =
               summary.results
               |> List.map (fun (flatTest, _)  ->
-                if flatTest.name.Contains("/") then
-                  flatTest.name.Substring(0, flatTest.name.LastIndexOf "/")
+                if flatTest.name.Length > 1 then
+                  let size = flatTest.name.Length - 1
+                  _config.joinBy.format flatTest.name.[0..size]
                 else
-                  flatTest.name )
+                  _config.joinBy.format flatTest.name )
 
             match parentNames with
             | [x] -> x
@@ -316,6 +333,8 @@ module Impl =
             logger.logWithAck Info (
               eventX "EXPECTO? Running stress testing...")
           summary = fun config summary ->
+            let getName (name: string list) =
+              config.joinBy.format name
             let printResults =
               List.map (fun (t,r) -> TestPrinters.printResult config t r) summary.results
               |> Async.foldSequentially (fun _ _ -> ()) ()
@@ -325,7 +344,7 @@ module Impl =
                   eventX "Maximum memory usage was {memory} KB and exceeded the limit set at {limit} KB.\nRunning tests:\n\t{timeout}"
                   >> setField "memory" (summary.maxMemory / 1024L |> int |> commaString)
                   >> setField "limit" (summary.memoryLimit / 1024L |> int |> commaString)
-                  >> setField "timeout" (summary.timedOut |> Seq.map (fun t -> t.name) |> String.concat "\n\t"))
+                  >> setField "timeout" (summary.timedOut |> Seq.map (fun t -> getName t.name) |> String.concat "\n\t"))
               elif List.isEmpty summary.timedOut then
                 logger.logWithAck Info (
                   eventX "Maximum memory usage was {memory} KB (limit set at {limit} KB)."
@@ -334,7 +353,7 @@ module Impl =
               else
                 logger.logWithAck LogLevel.Error (
                   eventX "Deadlock timeout running tests:\n\t{timeout}"
-                  >> setField "timeout" (summary.timedOut |> Seq.map (fun t -> t.name) |> String.concat "\n\t"))
+                  >> setField "timeout" (summary.timedOut |> Seq.map (fun t -> getName t.name) |> String.concat "\n\t"))
             async {
               do! printResults
               do! result
@@ -346,18 +365,17 @@ module Impl =
       { innerPrinter with
           summary = fun config summary ->
             innerPrinter.summary config summary
-            |> Async.bind (fun () -> logSummary summary) }
+            |> Async.bind (fun () -> logSummary config.joinBy summary) }
 
     static member summaryWithLocationPrinter innerPrinter =
       { innerPrinter with
           summary = fun config summary ->
             innerPrinter.summary config summary
-            |> Async.bind (fun () -> logSummaryWithLocation config.locate summary) }
-
+            |> Async.bind (fun () -> logSummaryWithLocation config.joinBy config.locate summary) }
 
     static member teamCityPrinter innerPrinter =
       let formatName (n:string) =
-        n.Replace( "/", "." ).Replace( " ", "_" )
+        n.Replace( " ", "_" )
 
       // https://confluence.jetbrains.com/display/TCD10/Build+Script+Interaction+with+TeamCity#BuildScriptInteractionwithTeamCity-Escapedvalues
       let escape (msg: string) =
@@ -500,6 +518,8 @@ module Impl =
       noSpinner: bool
       /// Set the level of colours to use.
       colour: ColourLevel
+      /// Split test names by `.` instead of `/`
+      joinBy: JoinBy
     }
     static member defaultConfig =
       { runInParallel = true
@@ -525,6 +545,7 @@ module Impl =
         allowDuplicateNames = false
         noSpinner = false
         colour = Colour8
+        joinBy = JoinBy.Dot
       }
 
     member x.appendSummaryHandler handleSummary =
@@ -546,7 +567,7 @@ module Impl =
         | Some ignoredMessage ->
           return TestSummary.single (Ignored ignoredMessage) 0.0
         | None ->
-          TestNameHolder.Name <- test.name
+          TestNameHolder.Name <- config.joinBy.format test.name
           match test.test with
           | Sync test ->
             test()
@@ -626,7 +647,8 @@ module Impl =
       let evalTestAsync (test:FlatTest) =
 
         let beforeEach (test:FlatTest) =
-          config.printer.beforeEach test.name
+          let name = config.joinBy.format test.name
+          config.printer.beforeEach name
 
         async {
           let! beforeAsync = beforeEach test |> Async.StartChild

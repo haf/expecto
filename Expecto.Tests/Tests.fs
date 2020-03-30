@@ -54,9 +54,9 @@ let tests =
 
     testList "testName tests" [
       testCase "one test" <| fun _ ->
-        Expect.equal testName "all/testName tests/one test" "one name"
+        Expect.equal testName "all.testName tests.one test" "one name"
       testCase "two test" <| fun _ ->
-        Expect.equal testName "all/testName tests/two test" "two name"
+        Expect.equal testName "all.testName tests.two test" "two name"
     ]
 
     testList "null comparison" [
@@ -131,7 +131,7 @@ let tests =
     testList "sumTestResults" [
       let sumTestResultsTests =
         let dummyTest = {
-          name = String.Empty
+          name = [String.Empty]
           test = Sync ignore
           state = Normal
           focusOn = false
@@ -291,16 +291,16 @@ let expecto =
             ]
           ]
         let tests =
-          Test.shuffle test
+          Test.shuffle (defaultConfig.joinBy.asString) test
           |> Test.toTestCodeList
           |> List.sortBy (fun i -> i.name)
           |> List.map (fun t -> t.name,t.state,t.focusOn,t.sequenced)
         Expect.sequenceEqual tests [
-          "1/2/4",Normal,true,InParallel
-          "1/2/5",Pending,true,InParallel
-          "1/2/6",Focused,true,InParallel
-          "1/3/7",Normal,true,Synchronous
-          "1/3/8",Pending,true,SynchronousGroup "g"
+          ["1.2.4"],Normal,true,InParallel
+          ["1.2.5"],Pending,true,InParallel
+          ["1.2.6"],Focused,true,InParallel
+          ["1.3.7"],Normal,true,Synchronous
+          ["1.3.8"],Pending,true,SynchronousGroup "g"
         ] "flat tests"
       }
     ]
@@ -317,16 +317,16 @@ let expecto =
             ]
           ], Normal)
       yield testCase "with one testcase" <| fun _ ->
-        let t = Test.filter ((=) "a") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinBy.asString) ((=) ["a"]) tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with nested testcase" <| fun _ ->
-        let t = Test.filter (fun (s: string) -> s.Contains "d") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinBy.asString) (fun (s: string list) -> defaultConfig.joinBy.format s |> fun z -> z.Contains "d") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with one testlist" <| fun _ ->
-        let t = Test.filter (fun (s: string) -> s.Contains "c") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinBy.asString) (fun (s: string list) -> defaultConfig.joinBy.format s |> fun z -> z.Contains "c") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 2
       yield testCase "with no results" <| fun _ ->
-        let t = Test.filter ((=) "z") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinBy.asString) ((=) ["z"]) tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 0
     ]
 
@@ -499,6 +499,7 @@ let expecto =
             "--allow-duplicate-names"
             "--no-spinner"
             "--colours"; "256"
+            "--join-by"; "."
         |]
         let ok = [
           Sequenced
@@ -525,6 +526,7 @@ let expecto =
           Allow_Duplicate_Names
           No_Spinner
           Colours 256
+          JoinBy "."
         ]
         testArgs args (Ok ok)
       }
@@ -573,7 +575,7 @@ let expecto =
           filtered |> Seq.length ==? 4
 
         yield testCase "filter deep" <| fun _ ->
-          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c/f"|] |> getArgsConfig
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--filter"; "c.f"|] |> getArgsConfig
           let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 2
 
@@ -603,35 +605,35 @@ let expecto =
           filtered |> Seq.length ==? 0
 
         yield testCase "run" <| fun _ ->
-          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--run"; "a"; "c/d"; "c/f/h"|] |> getArgsConfig
+          let opts =  ExpectoConfig.fillFromArgs defaultConfig [|"--run"; "a"; "c.d"; "c.f.h"|] |> getArgsConfig
           let filtered = dummy ignore |> opts.filter |> Test.toTestCodeList
           filtered |> Seq.length ==? 3
 
         yield testCase "run with filter" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          runTestsWithCLIArgs [No_Spinner] [|"--filter"; "c/f"|] test ==? 0
-          !count ==? 2
+          runTestsWithCLIArgs [No_Spinner] [|"--filter"; "c.f"|] test ==? 0
 
         yield testCase "run with filter test case" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
           runTestsWithCLIArgs [No_Spinner] [|"--filter-test-case"; "a"|] test ==? 0
-          !count ==? 2
 
         yield testCase "run with filter test list" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
           runTestsWithCLIArgs [No_Spinner] [|"--filter-test-list"; "f"|] test ==? 0
-          !count ==? 2
+
+        yield testCase "run with join" <| fun _ ->
+          let count = ref 0
+          let test = dummy (fun () -> incr count)
+          runTestsWithCLIArgs [No_Spinner] [|"--join-by"; "."|] test ==? 0
 
         yield testCase "run with run" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          runTestsWithCLIArgs [No_Spinner] [|"--run"; "a"; "c/d"; "c/f/h"|] test ==? 0
-          !count ==? 3
+          runTestsWithCLIArgs [No_Spinner] [|"--run"; "a"; "c.d"; "c.f.h"|] test ==? 0
       ]
-
     ]
 
     testList "transformations" [
@@ -671,7 +673,7 @@ let expecto =
 
         let testWithCultures (cultures: #seq<CultureInfo>) =
           Test.replaceTestCode <| fun name test ->
-            testList name [
+            testList (name) [
               for c in cultures ->
                 testCaseAsync c.Name (withCulture c test)
             ]
@@ -695,9 +697,9 @@ let expecto =
 
         Expect.equal 3 results.Count "results count"
 
-        Expect.isTrue (results.["parse/en-US"].isFailed) "parse en-US fails"
-        Expect.isTrue (results.["parse/es-AR"].isPassed) "parse es-AR passes"
-        Expect.isTrue (results.["parse/fr-FR"].isPassed) "parse fr-FR passes"
+        Expect.isTrue (results.[["parse";"en-US"]].isFailed) "parse en-US fails"
+        Expect.isTrue (results.[["parse";"es-AR"]].isPassed) "parse es-AR passes"
+        Expect.isTrue (results.[["parse";"fr-FR"]].isPassed) "parse fr-FR passes"
       }
     ]
 
@@ -1487,6 +1489,19 @@ let stress =
         Printer TestPrinters.silent
         Verbosity Logging.LogLevel.Fatal
         No_Spinner
+      ]
+      Expect.equal (runTestsWithCLIArgs config [||] (singleTest "single test")) 0 "one"
+    }
+
+    yield testAsync "single with dot separator" {
+      let config = [
+        Parallel_Workers 8
+        Stress 0.002
+        Stress_Timeout 0.2
+        Printer TestPrinters.silent
+        Verbosity Logging.LogLevel.Fatal
+        No_Spinner
+        JoinBy "."
       ]
       Expect.equal (runTestsWithCLIArgs config [||] (singleTest "single test")) 0 "one"
     }

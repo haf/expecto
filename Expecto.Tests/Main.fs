@@ -10,5 +10,5 @@ let main args =
   let test =
     Impl.testFromThisAssembly()
     |> Option.orDefault (TestList ([], Normal))
-    |> Test.shuffle
+    |> Test.shuffle "."
   runTestsWithCLIArgs [NUnit_Summary "bin/Expecto.Tests.TestResults.xml"] args test

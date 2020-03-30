@@ -4,7 +4,7 @@ open System
 
 [<ReferenceEquality>]
 type FlatTest =
-  { name      : string
+  { name      : string list
     test      : TestCode
     state     : FocusState
     focusOn   : bool
@@ -14,6 +14,8 @@ type FlatTest =
     | _, Pending -> Some "The test or one of its parents is marked as Pending"
     | true, Normal -> Some "The test is skipped because other tests are Focused"
     | _ -> None
+  member x.fullName (joinBy: string) =
+    String.concat joinBy x.name
 
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
@@ -45,9 +47,9 @@ module Test =
       function
       | TestLabel (name, test, state) ->
         let fullName =
-          if String.IsNullOrEmpty parentName
-            then name
-            else parentName + "/" + name
+          if List.isEmpty parentName
+            then [name]
+            else parentName @ [name]
         loop fullName testList (computeChildFocusState parentState state) sequenced test
       | TestCase (test, state) ->
         { name=parentName
@@ -57,22 +59,22 @@ module Test =
           sequenced=sequenced } :: testList
       | TestList (tests, state) -> List.collect (loop parentName testList (computeChildFocusState parentState state) sequenced) tests
       | Sequenced (sequenced,test) -> loop parentName testList parentState sequenced test
-    loop null [] Normal InParallel test
+    loop [] [] Normal InParallel test
 
-  let fromFlatTests (tests:FlatTest list) =
+  let fromFlatTests (joinBy: string) (tests:FlatTest list) =
     TestList(
-      List.map (fun t ->
-        TestLabel(t.name, Sequenced(t.sequenced, TestCase (t.test, t.state)), t.state)
+      List.map (fun (t: FlatTest) ->
+        TestLabel(t.fullName joinBy, Sequenced(t.sequenced, TestCase (t.test, t.state)), t.state)
       ) tests
     , Normal)
 
-  let shuffle (test:Test) =
+  let shuffle joiner (test:Test) =
     let tests =
       toTestCodeList test
       |> List.toArray
     Array.shuffleInPlace tests
     Array.toList tests
-    |> fromFlatTests
+    |> fromFlatTests joiner
 
   /// Change the FocusState by applying the old state to a new state
   /// Note: this is not state replacement!!!
@@ -105,11 +107,11 @@ module Test =
     | Sequenced (sequenced,test) -> Sequenced (sequenced,replaceTestCode f test)
 
   /// Filter tests by name.
-  let filter pred =
+  let filter joiner pred =
     toTestCodeList
     >> List.filter (fun t -> pred t.name)
     >> List.map (fun t ->
-        let test = TestLabel (t.name, TestCase (t.test, t.state), t.state)
+        let test = TestLabel (t.fullName joiner, TestCase (t.test, t.state), t.state)
         match t.sequenced with
         | InParallel ->
           test
