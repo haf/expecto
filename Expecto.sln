@@ -23,6 +23,11 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.Hopac.Tests", "Expe
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.Diff", "Expecto.Diff\Expecto.Diff.fsproj", "{499DEA86-F089-4983-BB60-D54C22B6643D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{9B913138-FBD2-4216-95EC-BDEE468E94BA}"
+ProjectSection(SolutionItems) = preProject
+	build.fsx = build.fsx
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

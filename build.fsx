@@ -139,7 +139,6 @@ Target.create "Pack" <| fun _ ->
 Target.create "Push" <| fun _ ->
   let setParams (p: Paket.PaketPushParams) =
     { p with
-        ToolPath = Path.GetFullPath "./.paket/paket"
         WorkingDir = pkgPath
         ApiKey = nugetToken.Value }
   // for f in *.nupkg; do ../.paket/paket push  --api-key $NUGET_TOKEN $f; done
