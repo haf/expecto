@@ -1,3 +1,13 @@
+#### 9.0.0 - 2020-04-04
+* Change the default test separator to `.` (dot). Override back, using `--join-with /` Big thanks @MNie 
+* Add `Expect.wantSome` and `Expect.wantOk`, which returns the value inside the Option/Result wrapper if successful, thanks @teo-tsirpanis
+* Remove deprecated PackageIconUrl from the build props, replace with PackageIcon, thanks @teo-tsirpanis
+* Add cmd file for building on Windows, thanks @teo-tsirpanis
+* Port Expecto's own tests to .net core app 3.1, but target netstandard2.0 for the main lib, thanks @teo-tsirpanis
+* Rename `parallel` to `runInParallel` in config record to avoid warning, thanks @teo-tsirpanis
+* Inline the XML/NUnit/JUnit test result printer in the main assembly. Thanks @teo-tsirpanis
+* Split Expecto monofile into separate per surface area, thanks @teo-tsirpanis
+
 #### 8.13.1 - 2019-11-24
 * Include Expecto.Diff in build, thanks @haf
 

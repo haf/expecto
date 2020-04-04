@@ -14,8 +14,8 @@ type FlatTest =
     | _, Pending -> Some "The test or one of its parents is marked as Pending"
     | true, Normal -> Some "The test is skipped because other tests are Focused"
     | _ -> None
-  member x.fullName (joinBy: string) =
-    String.concat joinBy x.name
+  member x.fullName (joinWith: string) =
+    String.concat joinWith x.name
 
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module Test =
@@ -61,10 +61,10 @@ module Test =
       | Sequenced (sequenced,test) -> loop parentName testList parentState sequenced test
     loop [] [] Normal InParallel test
 
-  let fromFlatTests (joinBy: string) (tests:FlatTest list) =
+  let fromFlatTests (joinWith: string) (tests: FlatTest list) =
     TestList(
       List.map (fun (t: FlatTest) ->
-        TestLabel(t.fullName joinBy, Sequenced(t.sequenced, TestCase (t.test, t.state)), t.state)
+        TestLabel(t.fullName joinWith, Sequenced(t.sequenced, TestCase (t.test, t.state)), t.state)
       ) tests
     , Normal)
 

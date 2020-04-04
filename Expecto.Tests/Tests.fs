@@ -291,7 +291,7 @@ let expecto =
             ]
           ]
         let tests =
-          Test.shuffle (defaultConfig.joinBy.asString) test
+          Test.shuffle (defaultConfig.joinWith.asString) test
           |> Test.toTestCodeList
           |> List.sortBy (fun i -> i.name)
           |> List.map (fun t -> t.name,t.state,t.focusOn,t.sequenced)
@@ -317,16 +317,16 @@ let expecto =
             ]
           ], Normal)
       yield testCase "with one testcase" <| fun _ ->
-        let t = Test.filter (defaultConfig.joinBy.asString) ((=) ["a"]) tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinWith.asString) ((=) ["a"]) tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with nested testcase" <| fun _ ->
-        let t = Test.filter (defaultConfig.joinBy.asString) (fun (s: string list) -> defaultConfig.joinBy.format s |> fun z -> z.Contains "d") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinWith.asString) (fun (s: string list) -> defaultConfig.joinWith.format s |> fun z -> z.Contains "d") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 1
       yield testCase "with one testlist" <| fun _ ->
-        let t = Test.filter (defaultConfig.joinBy.asString) (fun (s: string list) -> defaultConfig.joinBy.format s |> fun z -> z.Contains "c") tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinWith.asString) (fun (s: string list) -> defaultConfig.joinWith.format s |> fun z -> z.Contains "c") tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 2
       yield testCase "with no results" <| fun _ ->
-        let t = Test.filter (defaultConfig.joinBy.asString) ((=) ["z"]) tests |> Test.toTestCodeList |> Seq.toList
+        let t = Test.filter (defaultConfig.joinWith.asString) ((=) ["z"]) tests |> Test.toTestCodeList |> Seq.toList
         t.Length ==? 0
     ]
 
@@ -499,7 +499,7 @@ let expecto =
             "--allow-duplicate-names"
             "--no-spinner"
             "--colours"; "256"
-            "--join-by"; "."
+            "--join-with"; "."
         |]
         let ok = [
           Sequenced
@@ -526,7 +526,7 @@ let expecto =
           Allow_Duplicate_Names
           No_Spinner
           Colours 256
-          JoinBy "."
+          JoinWith "."
         ]
         testArgs args (Ok ok)
       }
@@ -627,7 +627,7 @@ let expecto =
         yield testCase "run with join" <| fun _ ->
           let count = ref 0
           let test = dummy (fun () -> incr count)
-          runTestsWithCLIArgs [No_Spinner] [|"--join-by"; "."|] test ==? 0
+          runTestsWithCLIArgs [No_Spinner] [|"--join-with"; "."|] test ==? 0
 
         yield testCase "run with run" <| fun _ ->
           let count = ref 0
@@ -1501,7 +1501,7 @@ let stress =
         Printer TestPrinters.silent
         Verbosity Logging.LogLevel.Fatal
         No_Spinner
-        JoinBy "."
+        JoinWith "."
       ]
       Expect.equal (runTestsWithCLIArgs config [||] (singleTest "single test")) 0 "one"
     }

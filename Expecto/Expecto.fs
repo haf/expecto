@@ -370,7 +370,7 @@ module Tests =
     | Verbosity of LogLevel
     /// Append a summary handler.
     | Append_Summary_Handler of SummaryHandler
-    | JoinBy of split :string
+    | JoinWith of split: string
 
   let options = [
       "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
@@ -399,7 +399,7 @@ module Tests =
       "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
       "--colours", "Set the level of colours to use. Can be 0, 8 (default) or 256.", Args.number Colours
       "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
-      "--join-by", "Split on option. Can be \".\" or \"/\" (default).", Args.string JoinBy
+      "--join-with", "Split on option. Can be \".\" (default) or \"/\".", Args.string JoinWith
   ]
 
   type FillFromArgsResult =
@@ -430,10 +430,10 @@ module Tests =
     | Fail_On_Focused_Tests -> fun o -> { o with failOnFocusedTests = true }
     | Debug -> fun o -> { o with verbosity = LogLevel.Debug }
     | Log_Name name -> fun o -> { o with logName = Some name }
-    | Filter hiera -> fun o -> {o with filter = Test.filter o.joinBy.asString (fun z -> (o.joinBy.format z).StartsWith hiera )}
-    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter o.joinBy.asString (fun s -> s |> getTestList |> List.exists(fun s -> s.Contains name )) }
-    | Filter_Test_Case name ->  fun o -> { o with filter = Test.filter o.joinBy.asString (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
-    | Run tests -> fun o -> {o with filter = Test.filter o.joinBy.asString (fun s -> tests |> List.exists ((=) (o.joinBy.format s)) )}
+    | Filter hiera -> fun o -> {o with filter = Test.filter o.joinWith.asString (fun z -> (o.joinWith.format z).StartsWith hiera )}
+    | Filter_Test_List name ->  fun o -> {o with filter = Test.filter o.joinWith.asString (fun s -> s |> getTestList |> List.exists(fun s -> s.Contains name )) }
+    | Filter_Test_Case name ->  fun o -> { o with filter = Test.filter o.joinWith.asString (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
+    | Run tests -> fun o -> {o with filter = Test.filter o.joinWith.asString (fun s -> tests |> List.exists ((=) (o.joinWith.format s)) )}
     | List_Tests -> id
     | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
     | NUnit_Summary path -> fun o -> o.AddNUnitSummary(path)
@@ -451,11 +451,11 @@ module Tests =
                                       elif i >= 8 then Colour8
                                       else Colour0
                   }
-    | JoinBy s -> fun o -> { o with joinBy =
+    | JoinWith s -> fun o -> { o with joinWith =
                                       match s with
-                                      | "." -> JoinBy.Dot
-                                      | "/" -> JoinBy.Slash
-                                      | _ -> JoinBy.Dot
+                                      | "." -> JoinWith.Dot
+                                      | "/" -> JoinWith.Slash
+                                      | _ -> JoinWith.Dot
                   }
     | Printer p -> fun o -> { o with printer = p }
     | Verbosity l -> fun o -> { o with verbosity = l }
@@ -487,15 +487,15 @@ module Tests =
         ArgsUsage (Args.usage commandName options, errors)
 
   /// Prints out names of all tests for given test suite.
-  let listTests (joinBy: JoinBy) test =
+  let listTests (join: JoinWith) test =
     Test.toTestCodeList test
-    |> Seq.iter (fun t -> printfn "%s" (joinBy.format t.name))
+    |> Seq.iter (fun t -> printfn "%s" (join.format t.name))
 
   /// Prints out names of all tests for given test suite.
-  let duplicatedNames (joinBy: JoinBy) test =
+  let duplicatedNames (join: JoinWith) test =
     Test.toTestCodeList test
     |> Seq.toList
-    |> List.groupBy (fun t -> (joinBy.format t.name))
+    |> List.groupBy (fun t -> (join.format t.name))
     |> List.choose (function
         | _, x :: _ :: _ -> Some x.name
         | _ -> None
@@ -516,7 +516,7 @@ module Tests =
       1
     else
       let fTests = config.filter tests
-      let duplicates = lazy duplicatedNames config.joinBy fTests
+      let duplicates = lazy duplicatedNames config.joinWith fTests
       if config.allowDuplicateNames || List.isEmpty duplicates.Value then
         let retCode =
           match config.stress with
@@ -546,7 +546,7 @@ module Tests =
       if List.isEmpty errors then 0 else 1
     | ArgsList config ->
       config.filter tests
-      |> listTests config.joinBy
+      |> listTests config.joinWith
       0
     | ArgsRun config ->
       runTestsWithCancel ct config tests

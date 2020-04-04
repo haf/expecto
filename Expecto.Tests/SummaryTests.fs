@@ -25,7 +25,7 @@ let tests =
   testList "summary tests" [
     testCase "can log empty summary" <| fun _ ->
       let text =
-        Expecto.Impl.createSummaryText (JoinBy.Dot.asString)
+        Expecto.Impl.createSummaryText (JoinWith.Dot.asString)
           { results = []
             duration = TimeSpan.MinValue
             maxMemory = 0L
@@ -37,7 +37,7 @@ let tests =
 
     testCase "can log one passed test" <| fun _ ->
       let text =
-        Expecto.Impl.createSummaryText (JoinBy.Dot.asString)
+        Expecto.Impl.createSummaryText (JoinWith.Dot.asString)
           { results = [testResult "test 1"]
             duration = TimeSpan.MinValue
             maxMemory = 0L
@@ -49,7 +49,7 @@ let tests =
 
     testCase "can log 9 passed test" <| fun _ ->
       let text =
-        Expecto.Impl.createSummaryText (JoinBy.Dot.asString)
+        Expecto.Impl.createSummaryText (JoinWith.Dot.asString)
           { results = [1..9] |> List.map (fun x -> "test " + x.ToString() |> testResult)
             duration = TimeSpan.MinValue
             maxMemory = 0L

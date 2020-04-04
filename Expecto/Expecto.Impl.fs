@@ -23,7 +23,7 @@ module Impl =
     else
       exnWithInnerMsg ex.InnerException currentMsg
 
-  type JoinBy =
+  type JoinWith =
     | Dot
     | Slash
     member x.asString =
@@ -124,10 +124,10 @@ module Impl =
       (if List.isEmpty x.timedOut then 0 else 8)
     member x.successful = x.errorCode = 0
 
-  let createSummaryMessage joinBy (summary: TestRunSummary) =
+  let createSummaryMessage joinWith (summary: TestRunSummary) =
     let handleLineBreaks (elements:(FlatTest*TestSummary) seq) =
         elements
-        |> Seq.map (fun (n,_) -> "\n\t" + n.fullName joinBy)
+        |> Seq.map (fun (n,_) -> "\n\t" + n.fullName joinWith)
         |> String.Concat
 
     let passed = summary.passed |> handleLineBreaks
@@ -140,11 +140,11 @@ module Impl =
     let erroredCount = List.sumBy (fun (_,r) -> r.count) summary.errored |> commaString
 
     let digits =
-      [passedCount; ignoredCount; failedCount; erroredCount ]
+      [ passedCount; ignoredCount; failedCount; erroredCount ]
       |> List.map (fun x -> x.ToString().Length)
       |> List.max
 
-    let align (s:string) offset = s.PadLeft(offset + digits)
+    let align (s: string) offset = s.PadLeft(offset + digits)
 
     eventX "EXPECTO?! Summary...\nPassed: {passedCount}{passed}\nIgnored: {ignoredCount}{ignored}\nFailed: {failedCount}{failed}\nErrored: {erroredCount}{errored}"
     >> setField "passed" passed
@@ -156,20 +156,20 @@ module Impl =
     >> setField "errored" errored
     >> setField "erroredCount" (align erroredCount 0)
 
-  let createSummaryText joinBy (summary: TestRunSummary) =
-    createSummaryMessage joinBy summary Info
+  let createSummaryText joinWith (summary: TestRunSummary) =
+    createSummaryMessage joinWith summary Info
     |> Formatting.defaultFormatter
 
-  let logSummary (joinBy: JoinBy) (summary: TestRunSummary) =
-    let split = joinBy.asString
+  let logSummary (joinWith: JoinWith) (summary: TestRunSummary) =
+    let split = joinWith.asString
     createSummaryMessage split summary
     |> logger.logWithAck Info
 
-  let logSummaryWithLocation (joinBy: JoinBy) locate (summary: TestRunSummary) =
+  let logSummaryWithLocation (join: JoinWith) locate (summary: TestRunSummary) =
     let handleLineBreaks (elements:(FlatTest*TestSummary) seq) =
       let format (n:FlatTest,_) =
         let location = locate n.test
-        let name = joinBy.format n.name
+        let name = join.format n.name
         sprintf "%s [%s:%d]" name location.sourcePath location.lineNumber
 
       let text = elements |> Seq.map format |> String.concat "\n\t"
@@ -223,7 +223,7 @@ module Impl =
       summary : ExpectoConfig -> TestRunSummary -> Async<unit> }
 
     static member printResult config (test:FlatTest) (result:TestSummary) =
-      let name = config.joinBy.format test.name
+      let name = config.joinWith.format test.name
       match result.result with
       | Passed -> config.printer.passed name result.duration
       | Failed message -> config.printer.failed name message result.duration
@@ -285,7 +285,7 @@ module Impl =
           }
 
         summary = fun _config summary ->
-          let splitSign = _config.joinBy.asString
+          let splitSign = _config.joinWith.asString
           let spirit =
             if summary.successful then "Success!" else String.Empty
           let commonAncestor =
@@ -305,9 +305,9 @@ module Impl =
               |> List.map (fun (flatTest, _)  ->
                 if flatTest.name.Length > 1 then
                   let size = flatTest.name.Length - 1
-                  _config.joinBy.format flatTest.name.[0..size]
+                  _config.joinWith.format flatTest.name.[0..size]
                 else
-                  _config.joinBy.format flatTest.name )
+                  _config.joinWith.format flatTest.name )
 
             match parentNames with
             | [x] -> x
@@ -334,7 +334,7 @@ module Impl =
               eventX "EXPECTO? Running stress testing...")
           summary = fun config summary ->
             let getName (name: string list) =
-              config.joinBy.format name
+              config.joinWith.format name
             let printResults =
               List.map (fun (t,r) -> TestPrinters.printResult config t r) summary.results
               |> Async.foldSequentially (fun _ _ -> ()) ()
@@ -365,13 +365,13 @@ module Impl =
       { innerPrinter with
           summary = fun config summary ->
             innerPrinter.summary config summary
-            |> Async.bind (fun () -> logSummary config.joinBy summary) }
+            |> Async.bind (fun () -> logSummary config.joinWith summary) }
 
     static member summaryWithLocationPrinter innerPrinter =
       { innerPrinter with
           summary = fun config summary ->
             innerPrinter.summary config summary
-            |> Async.bind (fun () -> logSummaryWithLocation config.joinBy config.locate summary) }
+            |> Async.bind (fun () -> logSummaryWithLocation config.joinWith config.locate summary) }
 
     static member teamCityPrinter innerPrinter =
       let formatName (n:string) =
@@ -519,7 +519,7 @@ module Impl =
       /// Set the level of colours to use.
       colour: ColourLevel
       /// Split test names by `.` instead of `/`
-      joinBy: JoinBy
+      joinWith: JoinWith
     }
     static member defaultConfig =
       { runInParallel = true
@@ -545,7 +545,7 @@ module Impl =
         allowDuplicateNames = false
         noSpinner = false
         colour = Colour8
-        joinBy = JoinBy.Dot
+        joinWith = JoinWith.Dot
       }
 
     member x.appendSummaryHandler handleSummary =
@@ -567,7 +567,7 @@ module Impl =
         | Some ignoredMessage ->
           return TestSummary.single (Ignored ignoredMessage) 0.0
         | None ->
-          TestNameHolder.Name <- config.joinBy.format test.name
+          TestNameHolder.Name <- config.joinWith.format test.name
           match test.test with
           | Sync test ->
             test()
@@ -647,7 +647,7 @@ module Impl =
       let evalTestAsync (test:FlatTest) =
 
         let beforeEach (test:FlatTest) =
-          let name = config.joinBy.format test.name
+          let name = config.joinWith.format test.name
           config.printer.beforeEach name
 
         async {
