@@ -1093,6 +1093,11 @@ dotnet watch -p Expecto.Tests run -f netcoreapp3.1 -c release -- --colours 256
 Please review the [guidelines for contributing](./CONTRIBUTING.md) to Expecto;
 this document also includes instructions on how to build.
 
+We'd specifically like to call out the following people for their great contributions to Expecto in the past:
+
+- @mausch — for building Fuchu which became the foundation of Expecto
+- @AnthonyLloyd — for maintaining Expecto for some years and drastically improving it
+
 ## BenchmarkDotNet usage
 
 The integration with
