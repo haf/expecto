@@ -141,7 +141,7 @@ Target.create "Push" <| fun _ ->
     { p with
         WorkingDir = pkgPath
         ApiKey = nugetToken.Value }
-  // for f in *.nupkg; do ../.paket/paket push  --api-key $NUGET_TOKEN $f; done
+  // for f in *.nupkg; do dotnet paket push  --api-key $NUGET_TOKEN $f; done
   Paket.push setParams
 
 Target.create "CheckEnv" <| fun _ ->
