@@ -1,9 +1,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-    <Authors>Anthony Lloyd, Henrik Feldt and contributors</Authors>
-    <Owners>Anthony Lloyd &amp; Henrik Feldt (cloned from Fuchu by @mausch)</Owners>
-    <Copyright>Copyright 2019</Copyright>
+    <Authors>Henrik Feldt and contributors</Authors>
+    <Owners>Henrik Feldt</Owners>
+    <Copyright>Copyright 2020 Authors &amp; contributors</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/haf/expecto</PackageProjectUrl>
     <PackageIcon>expecto-logo-small.png</PackageIcon>
