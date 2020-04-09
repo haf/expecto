@@ -549,7 +549,8 @@ module Tests =
       |> listTests config.joinWith
       0
     | ArgsRun config ->
-      runTestsWithCancel ct config tests
+      config.filter tests
+      |> runTestsWithCancel ct config
     | ArgsVersion config ->
       printfn "EXPECTO! v%s\n" expectoVersion
       runTestsWithCancel ct config tests
