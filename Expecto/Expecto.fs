@@ -336,7 +336,7 @@ module Tests =
     | Debug
     /// Set the process name to log under (default: "Expecto").
     | Log_Name of name:string
-    /// Filters the list of tests by a hierarchy that's slash (/) separated.
+    /// Filters the list of tests by a hierarchy that's separated by a `joinWith` operator.
     | Filter of hiera:string
     /// Filters the list of test lists by a given substring.
     | Filter_Test_List of substring:string
@@ -520,8 +520,8 @@ module Tests =
       if config.allowDuplicateNames || List.isEmpty duplicates.Value then
         let retCode =
           match config.stress with
-          | None -> runEvalWithCancel ct config tests |> Async.RunSynchronously
-          | Some _ -> runStressWithCancel ct config tests |> Async.RunSynchronously
+          | None -> runEvalWithCancel ct config fTests |> Async.RunSynchronously
+          | Some _ -> runStressWithCancel ct config fTests |> Async.RunSynchronously
         afterRunTestsInvoke()
         retCode
       else
