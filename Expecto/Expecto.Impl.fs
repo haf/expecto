@@ -518,7 +518,7 @@ module Impl =
       noSpinner: bool
       /// Set the level of colours to use.
       colour: ColourLevel
-      /// Split test names by `.` instead of `/`
+      /// Split test names by `.` or `/`
       joinWith: JoinWith
     }
     static member defaultConfig =
