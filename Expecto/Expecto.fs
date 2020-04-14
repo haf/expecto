@@ -356,8 +356,6 @@ module Tests =
     | Summary_Location
     /// Print out version information.
     | Version
-    /// Deprecated
-    | My_Spirit_Is_Weak
     /// Allow duplicate test names.
     | Allow_Duplicate_Names
     /// Disable the spinner progress update.
@@ -396,7 +394,6 @@ module Tests =
       "--fscheck-max-tests", "Set FsCheck maximum number of tests (default: 100).", Args.number FsCheck_Max_Tests
       "--fscheck-start-size", "Set FsCheck start size (default: 1).", Args.number FsCheck_Start_Size
       "--fscheck-end-size", "Set FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.number FsCheck_End_Size
-      "--my-spirit-is-weak", Args.deprecated, Args.none My_Spirit_Is_Weak
       "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
       "--colours", "Set the level of colours to use. Can be 0, 8 (default) or 256.", Args.number Colours
       "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
@@ -444,7 +441,6 @@ module Tests =
     | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
     | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
     | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
-    | My_Spirit_Is_Weak -> id
     | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
     | No_Spinner -> fun o -> { o with noSpinner = true }
     | Colours i -> fun o -> { o with colour =

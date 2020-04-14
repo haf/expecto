@@ -510,8 +510,6 @@ module Impl =
       /// FsCheck end size (default: 100 for testing and 10,000 for
       /// stress testing).
       fsCheckEndSize: int option
-      /// Deprecated. Will be removed on next major release.
-      mySpiritIsWeak: bool
       /// Allows duplicate test names.
       allowDuplicateNames: bool
       /// Disable spinner progress update.
@@ -541,7 +539,6 @@ module Impl =
         fsCheckMaxTests = 100
         fsCheckStartSize = 1
         fsCheckEndSize = None
-        mySpiritIsWeak = false
         allowDuplicateNames = false
         noSpinner = false
         colour = Colour8

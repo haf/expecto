@@ -522,7 +522,6 @@ let expecto =
           FsCheck_Max_Tests 5
           FsCheck_Start_Size 10
           FsCheck_End_Size 20
-          My_Spirit_Is_Weak
           Allow_Duplicate_Names
           No_Spinner
           Colours 256
