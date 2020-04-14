@@ -46,8 +46,13 @@ What follows is the Table of Contents for this README, which also serves as the 
   - [`runTests`](#runtests)
   - [`runTestsWithArgs`](#runtestswithargs)
   - [`runTestsWithCLIArgs`](#runtestswithcliargs)
+  - [`runTestsWithCancel`](#runTestsWithCancel)
+  - [`runTestsWithArgsAndCancel`](#runTestsWithArgsAndCancel)
+  - [`runTestsWithCLIArgsAndCancel`](#runTestsWithCLIArgsAndCancel)
   - [`runTestsInAssembly`](#runtestsinassembly)
   - [`runTestsInAssemblyWithCLIArgs`](#runtestsinassemblywithcliargs)
+  - [`runTestsInAssemblyWithCancel`](#runTestsInAssemblyWithCancel)
+  - [`runTestsInAssemblyWithCLIArgsAndCancel`](#runTestsInAssemblyWithCLIArgsAndCancel)
   - [Filtering with `filter`](#filtering-with-filter)
   - [Shuffling with `shuffle`](#shuffling-with-shuffle)
   - [Stress testing](#stress-testing)
@@ -125,7 +130,7 @@ let main argv =
   LogaryFacadeAdapter.initialise<Expecto.Logging.Logger> logary
 
   // Invoke Expecto:
-  runTestsInAssembly defaultConfig argv
+  runTestsInAssemblyWithCLIArgs [] argv
 ```
 
 Now, when you use Logary in your app, you can see your log messages
@@ -183,7 +188,7 @@ let tests =
 
 [<EntryPoint>]
 let main args =
-  runTestsWithArgs defaultConfig args tests
+  runTestsWithCLIArgs [] args tests
 ```
 
 No magic is involved here. We just created a single test and hooked it
@@ -210,7 +215,7 @@ let simpleTest =
 Then run it like this, e.g. in the interactive or through a console app.
 
 ```fsharp
-runTests defaultConfig simpleTest
+runTestsWithCLIArgs [] [||] simpleTest
 ```
 
 which returns 1 if any tests failed, otherwise 0. Useful for returning to the
@@ -227,17 +232,33 @@ testCase "A simple test" (fun () ->
 ### `runTests`
 
 Signature `ExpectoConfig -> Test -> int`. Runs the passed tests with the passed
-configuration record. Note: now depricated please use CLIArgs below.
+configuration record. Note: now deprecated please use CLIArgs below.
 
 ### `runTestsWithArgs`
 
 Signature `ExpectoConfig -> string[] -> Test -> int`. Runs the passed tests
 and also overrides the passed `ExpectoConfig` with the command line parameters.
-Note: now depricated please use CLIArgs below.
+Note: now deprecated please use CLIArgs below.
 
 ### `runTestsWithCLIArgs`
 
 Signature `CLIArguments seq -> string[] -> Test -> int`. Runs the passed tests
+and also overrides the passed `CLIArguments` with the command line parameters.
+
+### `runTestsWithCancel`
+
+Signature `CancellationToken -> ExpectoConfig -> Test -> int`. Runs the passed tests with the passed
+configuration record. Note: now deprecated please use CLIArgs below.
+
+### `runTestsWithArgsAndCancel`
+
+Signature `CancellationToken -> ExpectoConfig -> Test -> int`. Runs the passed tests
+and also overrides the passed `ExpectoConfig` with the command line parameters.
+configuration record. Note: now deprecated please use CLIArgs below.
+
+### `runTestsWithCLIArgsAndCancel`
+
+Signature `CancellationToken -> ExpectoConfig -> Test -> int`. Runs the passed tests
 and also overrides the passed `CLIArguments` with the command line parameters.
 
 ### `runTestsInAssembly`
@@ -245,11 +266,23 @@ and also overrides the passed `CLIArguments` with the command line parameters.
 Signature `ExpectoConfig -> string[] -> int`. Runs the tests in the current
 assembly and also overrides the passed `ExpectoConfig` with the command line
 parameters. All tests need to be marked with the `[<Tests>]` attribute.
-Note: now depricated please use CLIArgs below.
+Note: now deprecated please use CLIArgs below.
 
 ### `runTestsInAssemblyWithCLIArgs`
 
 Signature `CLIArguments seq -> string[] -> int`. Runs the tests in the current
+assembly and also overrides the passed `CLIArguments` with the command line
+parameters. All tests need to be marked with the `[<Tests>]` attribute.
+
+### `runTestsInAssemblyWithCancel`
+
+Signature `CancellationToken -> ExpectoConfig -> string[] -> int`. Runs the tests in the current
+assembly and also overrides the passed `ExpectoConfig` with the command line
+parameters. All tests need to be marked with the `[<Tests>]` attribute.
+
+### `runTestsInAssemblyWithCLIArgsAndCancel`
+
+Signature `CancellationToken -> CLIArguments seq -> string[] -> int`. Runs the tests in the current
 assembly and also overrides the passed `CLIArguments` with the command line
 parameters. All tests need to be marked with the `[<Tests>]` attribute.
 
@@ -622,7 +655,7 @@ let properties =
         a * (b + c) = a * b + a * c
   ]
 
-Tests.runTests defaultConfig properties
+Tests.runTestsWithCLIArgs [] [||] properties
 ```
 
 You can freely mix testProperty with testCase and testList. The config looks
@@ -698,7 +731,7 @@ let properties =
         Expect.isNotNull x.FirstName "First Name should not be null"
   ]
 
-Tests.runTests defaultConfig properties
+Tests.runTestsWithCLIArgs [] [||] properties
 ```
 
 And a further example of creating constraints on generated values
@@ -915,7 +948,7 @@ test "yup yup" {
   compute 2
     |> Expect.equal "x2 = 82" 84
 }
-|> runTests defaultConfig
+|> runTestsWithCLIArgs [] [||]
 ```
 
 ### `Performance` module
@@ -1079,7 +1112,7 @@ let findFastest =
 From code you can run:
 
 ```fsharp
-Tests.runTestsInAssembly [Stress 0.1;Stress_Timeout 0.2] [||]
+Tests.runTestsInAssemblyWithCLIArgs [Stress 0.1;Stress_Timeout 0.2] [||]
 ```
 
 From the command line you can run:
@@ -1223,7 +1256,7 @@ let main argv =
   LogaryFacadeAdapter.initialise<Expecto.Logging.Logger> logary
 
   // run all tests
-  Tests.runTestsInAssembly defaultConfig args
+  Tests.runTestsInAssemblyWithCLIArgs [] argv
 ```
 
 ## About test parallelism
