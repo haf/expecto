@@ -7,6 +7,7 @@
 <a href="https://www.nuget.org/packages/expecto"><img alt="Nuget" src="https://buildstats.info/nuget/expecto"></a>
 <img src="https://img.shields.io/github/languages/top/haf/expecto?color=%23b845fc">
 <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License - Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
+<a href="https://github.com/sponsors/haf" title="Sponsor this"><img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=red" /></a>
 </p><br>
 
 Expecto tests are parallel and async by default, so that you can use all your cores for testing your software.  This
