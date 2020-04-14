@@ -510,7 +510,7 @@ module Impl =
       /// FsCheck end size (default: 100 for testing and 10,000 for
       /// stress testing).
       fsCheckEndSize: int option
-      /// Depricated. Will be removed on next major release.
+      /// Deprecated. Will be removed on next major release.
       mySpiritIsWeak: bool
       /// Allows duplicate test names.
       allowDuplicateNames: bool

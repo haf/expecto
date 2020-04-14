@@ -503,6 +503,7 @@ module Tests =
     )
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
+  /// Deprecated: please use runTestsWithCLIArgsAndCancel.
   let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
     ANSIOutputWriter.setColourLevel config.colour
     Global.initialiseIfDefault
@@ -533,6 +534,7 @@ module Tests =
         1
   /// Runs tests with the supplied config.
   /// Returns 0 if all tests passed, otherwise 1
+  /// Deprecated: please use runTestsWithCLIArgs.
   let runTests config tests =
     runTestsWithCancel CancellationToken.None config tests
 
@@ -565,6 +567,7 @@ module Tests =
 
   /// Runs all given tests with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
+  /// Deprecated: please use runTestsWithCLIArgs.
   let runTestsWithArgs config args tests =
     runTestsWithArgsAndCancel CancellationToken.None config args tests
 
@@ -575,6 +578,7 @@ module Tests =
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
+  /// Deprecated: please use runTestsInAssemblyWithCLIArgsAndCancel
   let runTestsInAssemblyWithCancel (ct:CancellationToken) config args =
     let config = { config with locate = getLocation (Assembly.GetEntryAssembly()) }
     testFromThisAssembly ()
@@ -592,6 +596,7 @@ module Tests =
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
+  /// Deprecated: please use runTestsInAssemblyWithCLIArgs
   let runTestsInAssembly config args =
     runTestsInAssemblyWithCancel CancellationToken.None config args
 
