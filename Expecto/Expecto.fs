@@ -370,6 +370,7 @@ module Tests =
     | Verbosity of LogLevel
     /// Append a summary handler.
     | Append_Summary_Handler of SummaryHandler
+    /// Specify test names join character.
     | JoinWith of split: string
 
   let options = [
