@@ -231,13 +231,13 @@ testCase "A simple test" (fun () ->
 ### `runTests`
 
 Signature `ExpectoConfig -> Test -> int`. Runs the passed tests with the passed
-configuration record. Note: now depricated please use CLIArgs below.
+configuration record. Note: now deprecated please use CLIArgs below.
 
 ### `runTestsWithArgs`
 
 Signature `ExpectoConfig -> string[] -> Test -> int`. Runs the passed tests
 and also overrides the passed `ExpectoConfig` with the command line parameters.
-Note: now depricated please use CLIArgs below.
+Note: now deprecated please use CLIArgs below.
 
 ### `runTestsWithCLIArgs`
 
@@ -247,13 +247,13 @@ and also overrides the passed `CLIArguments` with the command line parameters.
 ### `runTestsWithCancel`
 
 Signature `CancellationToken -> ExpectoConfig -> Test -> int`. Runs the passed tests with the passed
-configuration record. Note: now depricated please use CLIArgs below.
+configuration record. Note: now deprecated please use CLIArgs below.
 
 ### `runTestsWithArgsAndCancel`
 
 Signature `CancellationToken -> ExpectoConfig -> Test -> int`. Runs the passed tests
 and also overrides the passed `ExpectoConfig` with the command line parameters.
-configuration record. Note: now depricated please use CLIArgs below.
+configuration record. Note: now deprecated please use CLIArgs below.
 
 ### `runTestsWithCLIArgsAndCancel`
 
@@ -265,7 +265,7 @@ and also overrides the passed `CLIArguments` with the command line parameters.
 Signature `ExpectoConfig -> string[] -> int`. Runs the tests in the current
 assembly and also overrides the passed `ExpectoConfig` with the command line
 parameters. All tests need to be marked with the `[<Tests>]` attribute.
-Note: now depricated please use CLIArgs below.
+Note: now deprecated please use CLIArgs below.
 
 ### `runTestsInAssemblyWithCLIArgs`
 
