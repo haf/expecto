@@ -14,6 +14,7 @@ open BenchmarkDotNet.Loggers
 open BenchmarkDotNet.Order
 open BenchmarkDotNet.Reports
 open BenchmarkDotNet.Validators
+open System.Globalization
 
 [<AutoOpen>]
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -38,7 +39,7 @@ module BenchmarkDotNet =
       filters : IFilter list
       artifactsPath : string
       logicalGroupRules : BenchmarkLogicalGroupRule list
-      encoding: Encoding
+      cultureInfo: CultureInfo
       options: ConfigOptions
     }
     interface IConfig with
@@ -56,7 +57,7 @@ module BenchmarkDotNet =
       member x.GetFilters() = Seq.ofList x.filters
       member x.ArtifactsPath = x.artifactsPath
       member x.GetLogicalGroupRules() = Seq.ofList x.logicalGroupRules
-      member x.Encoding = x.encoding
+      member x.CultureInfo = x.cultureInfo
       member x.Options = x.options
 
   let private synchronisedLogger =
@@ -70,6 +71,10 @@ module BenchmarkDotNet =
           cl.WriteLine()
         member __.Flush () =
           cl.Flush()
+        member __.Id =
+          cl.Id
+        member __.Priority =
+          cl.Priority
     }
 
   let benchmarkConfig =
@@ -88,7 +93,7 @@ module BenchmarkDotNet =
       filters = def.GetFilters() |> List.ofSeq
       artifactsPath = def.ArtifactsPath
       logicalGroupRules = def.GetLogicalGroupRules() |> List.ofSeq
-      encoding = def.Encoding
+      cultureInfo = def.CultureInfo
       options = def.Options
     }
 
