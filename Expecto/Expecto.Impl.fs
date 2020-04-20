@@ -1034,7 +1034,7 @@ module Impl =
     |> listToTestListOption
 
   /// Scan tests marked with TestsAttribute from an assembly
-  let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
+  let testFromAssembly asm = testFromAssemblyWithFilter (fun _ -> true) asm
 
   /// Scan tests marked with TestsAttribute from entry assembly
   let testFromThisAssembly () = testFromAssembly (Assembly.GetEntryAssembly())
