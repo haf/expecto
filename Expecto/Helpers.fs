@@ -105,4 +105,4 @@ type MemberInfo with
     |> List.choose matchFocusAttributes
     |> List.sortBy fst
     |> List.map snd
-    |> List.tryFind (fun _ -> true)
+    |> List.tryHead
