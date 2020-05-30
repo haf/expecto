@@ -788,13 +788,11 @@ module Impl =
         config.stress.Value.TotalSeconds * float Stopwatch.Frequency
         |> int64
 
-      let finishTime =
-        lazy
-        totalTicks |> (+) (Stopwatch.GetTimestamp())
+      let finishTime = lazy (totalTicks + Stopwatch.GetTimestamp())
 
       let asyncRun foldRunner (runningTests: ResizeArray<_>,
                                results,
-                               maxMemory) =
+                               maxMemory) x =
         let cancel = new CancellationTokenSource()
 
         let folder (runningTests: ResizeArray<_>, results: ResizeMap<_,_>, maxMemory)
@@ -826,7 +824,8 @@ module Impl =
           cancel.Cancel()
         }, cancel.Token)
 
-        Seq.takeWhile (fun test ->
+        x
+        |> Seq.takeWhile (fun test ->
           let now = Stopwatch.GetTimestamp()
 
           if progressStarted then
@@ -840,8 +839,8 @@ module Impl =
             true
           else
             false )
-        >> Seq.map evalTestAsync
-        >> foldRunner cancel.Token folder (runningTests,results,maxMemory)
+        |> Seq.map evalTestAsync
+        |> foldRunner cancel.Token folder (runningTests,results,maxMemory)
 
       let initial = ResizeArray(), ResizeMap(), GC.GetTotalMemory false
 
@@ -1039,13 +1038,12 @@ module Impl =
   ///
   /// Returns true if the check passes, otherwise false.
   let passesFocusTestCheck config tests =
-    let isFocused : FlatTest -> _ = function t when t.state = Focused -> true | _ -> false
-    let focused = Test.toTestCodeList tests |> List.filter isFocused
+    let focused = Test.toTestCodeList tests |> List.filter (fun t -> t.state = Focused)
     if focused.Length = 0 then true
     else
       if config.verbosity <> LogLevel.Fatal then
         logger.logWithAck LogLevel.Error (
-          eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
+          eventX "It was requested that no focused tests exist, but {count} focused tests were found."
           >> setField "count" focused.Length)
         |> Async.StartImmediate
         ANSIOutputWriter.flush ()

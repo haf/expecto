@@ -4,14 +4,9 @@ open System
 open System.Threading
 open System.Threading.Tasks
 
-let map fn a =
-  async {
-    let! v = a
-    return fn v
-  }
+let map fn a = async.Bind(a, fun v -> async.Return(fn v))
 
-let bind fn a =
-  async.Bind(a, fn)
+let inline bind fn a = async.Bind(a, fn)
 
 let foldSequentiallyWithCancel (ct: CancellationToken) folder state (s:_ seq) =
   async {
@@ -51,5 +46,3 @@ let foldParallelWithCancel maxParallelism (ct: CancellationToken) folder state (
         else tasks <- Async.StartAsTask e.Current :: tasks
     return state
   }
-
-
