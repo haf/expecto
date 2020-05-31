@@ -1,7 +1,7 @@
 source https://api.nuget.org/v3/index.json
 framework net461, netstandard2.0, netcoreapp3.1
 storage none
-version 5.242.2
+version 5.245.1
 
 nuget FSharp.Core 4.6.0
 nuget FsCheck ~> 2.14

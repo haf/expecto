@@ -788,13 +788,11 @@ module Impl =
         config.stress.Value.TotalSeconds * float Stopwatch.Frequency
         |> int64
 
-      let finishTime =
-        lazy
-        totalTicks |> (+) (Stopwatch.GetTimestamp())
+      let finishTime = lazy (totalTicks + Stopwatch.GetTimestamp())
 
       let asyncRun foldRunner (runningTests: ResizeArray<_>,
                                results,
-                               maxMemory) =
+                               maxMemory) x =
         let cancel = new CancellationTokenSource()
 
         let folder (runningTests: ResizeArray<_>, results: ResizeMap<_,_>, maxMemory)
@@ -826,7 +824,8 @@ module Impl =
           cancel.Cancel()
         }, cancel.Token)
 
-        Seq.takeWhile (fun test ->
+        x
+        |> Seq.takeWhile (fun test ->
           let now = Stopwatch.GetTimestamp()
 
           if progressStarted then
@@ -840,8 +839,8 @@ module Impl =
             true
           else
             false )
-        >> Seq.map evalTestAsync
-        >> foldRunner cancel.Token folder (runningTests,results,maxMemory)
+        |> Seq.map evalTestAsync
+        |> foldRunner cancel.Token folder (runningTests,results,maxMemory)
 
       let initial = ResizeArray(), ResizeMap(), GC.GetTotalMemory false
 
@@ -908,21 +907,16 @@ module Impl =
       else unbox v
     let getTestFromMemberInfo focusedState =
       match box mi with
-      | :? FieldInfo as m ->
-        if m.FieldType = typeof<Test> then Some(focusedState, m.GetValue(null) |> unboxTest)
-        else None
-      | :? MethodInfo as m ->
-        if m.ReturnType = typeof<Test> then Some(focusedState, m.Invoke(null, null) |> unboxTest)
-        else None
-      | :? PropertyInfo as m ->
-        if m.PropertyType = typeof<Test> then Some(focusedState, m.GetValue(null, null) |> unboxTest)
-        else None
+      | :? FieldInfo as m when m.FieldType = typeof<Test> ->
+        Some(focusedState, m.GetValue(null) |> unboxTest)
+      | :? MethodInfo as m when m.ReturnType = typeof<Test> ->
+        Some(focusedState, m.Invoke(null, null) |> unboxTest)
+      | :? PropertyInfo as m when m.PropertyType = typeof<Test> ->
+        Some(focusedState, m.GetValue(null, null) |> unboxTest)
       | _ -> None
     mi.MatchTestsAttributes ()
-    |> Option.map getTestFromMemberInfo
-    |> function
-    | Some (Some (focusedState, test)) -> Some (Test.translateFocusState focusedState test)
-    | _ -> None
+    |> Option.bind getTestFromMemberInfo
+    |> Option.map ((<||) Test.translateFocusState)
 
   let listToTestListOption =
     function
@@ -930,12 +924,12 @@ module Impl =
     | x -> Some (TestList (x, Normal))
 
   let testFromType =
-    let asMembers x = Seq.map (fun m -> m :> MemberInfo) x
+    let inline asMembers x = unbox<MemberInfo[]> x
     let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
     fun (t: Type) ->
-      [ t.GetTypeInfo().GetMethods bindingFlags |> asMembers
-        t.GetTypeInfo().GetProperties bindingFlags |> asMembers
-        t.GetTypeInfo().GetFields bindingFlags |> asMembers ]
+      [ t.GetMethods bindingFlags |> asMembers
+        t.GetProperties bindingFlags |> asMembers
+        t.GetFields bindingFlags |> asMembers ]
       |> Seq.collect id
       |> Seq.choose testFromMember
       |> Seq.toList
@@ -986,7 +980,7 @@ module Impl =
     let getEcma335TypeName (clrTypeName:string) = clrTypeName.Replace("+", "/")
 
     let types =
-      let readerParams = new ReaderParameters( ReadSymbols = true )
+      let readerParams = ReaderParameters( ReadSymbols = true )
       let moduleDefinition = ModuleDefinition.ReadModule(asm.Location, readerParams)
 
       seq { for t in moduleDefinition.GetTypes() -> (t.FullName, t) }
@@ -1034,7 +1028,7 @@ module Impl =
     |> listToTestListOption
 
   /// Scan tests marked with TestsAttribute from an assembly
-  let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
+  let testFromAssembly asm = testFromAssemblyWithFilter (fun _ -> true) asm
 
   /// Scan tests marked with TestsAttribute from entry assembly
   let testFromThisAssembly () = testFromAssembly (Assembly.GetEntryAssembly())
@@ -1044,13 +1038,12 @@ module Impl =
   ///
   /// Returns true if the check passes, otherwise false.
   let passesFocusTestCheck config tests =
-    let isFocused : FlatTest -> _ = function t when t.state = Focused -> true | _ -> false
-    let focused = Test.toTestCodeList tests |> List.filter isFocused
+    let focused = Test.toTestCodeList tests |> List.filter (fun t -> t.state = Focused)
     if focused.Length = 0 then true
     else
       if config.verbosity <> LogLevel.Fatal then
         logger.logWithAck LogLevel.Error (
-          eventX "It was requested that no focused tests exist, but yet there are {count} focused tests found."
+          eventX "It was requested that no focused tests exist, but {count} focused tests were found."
           >> setField "count" focused.Length)
         |> Async.StartImmediate
         ANSIOutputWriter.flush ()

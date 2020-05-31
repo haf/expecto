@@ -356,7 +356,7 @@ let expecto =
     testList "Reflection" [
       let getMember name =
           Dummy.thisModuleType.Value.GetTypeInfo().GetMember name
-          |> Array.tryFind (fun _ -> true)
+          |> Array.tryHead
       let getTest =
           getMember
           >> Option.bind testFromMember

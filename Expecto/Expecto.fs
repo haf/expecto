@@ -128,15 +128,11 @@ module Tests =
       try
         f()
       with e -> catchHandler e
-    member __.Using(disposable: #IDisposable, f) =
-      try
-        f disposable
-      finally
-        match box disposable with
-        | :? IDisposable as d when not (isNull d) -> d.Dispose()
-        | _ -> ()
+    member __.Using(disposable: #IDisposable, f) = using disposable f
     member __.For(sequence, f) =
       for i in sequence do f i
+    member __.While(gd, prog) =
+      while gd() do prog()
     member __.Combine(f1, f2) = f2(); f1
     member __.Zero() = ()
     member __.Delay f = f

@@ -26,6 +26,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{9B913138-FBD2-4216-95EC-BDEE468E94BA}"
 ProjectSection(SolutionItems) = preProject
 	build.fsx = build.fsx
+	paket.dependencies = paket.dependencies
+	paket.lock = paket.lock
 EndProjectSection
 EndProject
 Global
