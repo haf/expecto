@@ -33,6 +33,10 @@ let inline wantOk message x = Expecto.Expect.wantOk x message
 /// Expects the value to be a Result.Ok value.
 let inline isOk message x = Expecto.Expect.isOk x message
 
+/// Expects the value to be a Result.Error value
+/// and returns it or fails the test.
+let inline wantError message x = Expecto.Expect.wantError x message
+
 /// Expects the value to be a Result.Error value.
 let inline isError message x = Expecto.Expect.isError x message
 
