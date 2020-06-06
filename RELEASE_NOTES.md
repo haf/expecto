@@ -1,3 +1,6 @@
+#### 9.0.1 - 2020-06-08
+* Add `Expect.wantError`, which returns the value inside the Result wrapper if successful, thanks @yreynhout
+
 #### 9.0.0 - 2020-04-04
 * Change the default test separator to `.` (dot). Override back, using `--join-with /` Big thanks @MNie 
 * Add `Expect.wantSome` and `Expect.wantOk`, which returns the value inside the Option/Result wrapper if successful, thanks @teo-tsirpanis
