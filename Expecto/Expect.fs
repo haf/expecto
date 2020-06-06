@@ -152,12 +152,16 @@ let wantOk x message =
 /// Expects the value to be a Result.Ok value.
 let isOk x message = wantOk x message |> ignore
 
-/// Expects the value to be a Result.Error value.
-let isError x message =
+/// Expects the value to be a Result.Error value
+/// and returns it or fails the test.
+let wantError x message =
   match x with
   | Ok x ->
-    failtestf "%s. Expected Error _, was Ok(%A)." message x
-  | Result.Error _ -> ()
+    failtestf "%s. Expected Error, was Ok(%A)." message x
+  | Result.Error x -> x
+
+/// Expects the value to be a Result.Error value.
+let isError x message = wantError x message |> ignore
 
 /// Expects the value not to be null.
 let isNotNull x message =

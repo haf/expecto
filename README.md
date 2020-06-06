@@ -931,6 +931,8 @@ This module is your main entry-point when asserting.
    `Performance.Measurer<unit,'a> -> 'a`, allowing you to do setup and teardown
    of your subject under test (the function) before calling the `measurer`. See
    the next section on [Performance](#performance-module) for example usage.
+- `wantOk` - Expect the result to be `Ok` and returns its value, otherwise fails.
+- `wantError` - Expect the result to be `Error` and returns its value, otherwise fails.
 
 Also note, that there's a "fluent" API, with which you can pipe the test-subject
 value into the expectation:
