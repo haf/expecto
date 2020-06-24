@@ -1,4 +1,7 @@
-#### 9.0.1 - 2020-06-08
+#### 9.0.1 - 2020-06-24
+* Ensure filtered tests are properly filtered #378 #380, thanks @MNie
+* Update BenchmarkDotNet to 0.12.1 fixing #381 #384, thanks @MNie
+* Add support for while-expressions inside regular test cases #386, thanks @teo-tsirpanis
 * Add `Expect.wantError`, which returns the value inside the Result wrapper if successful, thanks @yreynhout
 
 #### 9.0.0 - 2020-04-04
