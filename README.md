@@ -26,10 +26,8 @@ Expecto comes with performance testing, making statistically sound performance c
 
 Expecto also provides a simple API for property based testing using FsCheck.
 
-VSCode and Ionide integrate out-of-the-box with Expecto's command-line output.  There's also a nuget
-`Expecto.VisualStudio.TestAdapter` for Visual Studio integration.
-
-Or simply `dotnet run` or `dotnet watch` from the command line:
+There's a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio integration, or you can simply use `dotnet run`
+or `dotnet watch` from the command line.
 
     dotnet watch -p MyProject.Tests run -f netcoreapp3.1
 
