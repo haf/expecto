@@ -1,3 +1,6 @@
+#### 9.0.2 - 2020-06-25
+* An eta-expansion caused ABI compatibility for dependents, #388, thanks @haf
+
 #### 9.0.1 - 2020-06-24
 * Ensure filtered tests are properly filtered #378 #380, thanks @MNie
 * Update BenchmarkDotNet to 0.12.1 fixing #381 #384, thanks @MNie
