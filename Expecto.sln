@@ -28,6 +28,7 @@ ProjectSection(SolutionItems) = preProject
 	build.fsx = build.fsx
 	paket.dependencies = paket.dependencies
 	paket.lock = paket.lock
+	NuGet.props = NuGet.props
 EndProjectSection
 EndProject
 Global
