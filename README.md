@@ -157,22 +157,6 @@ and the output won't be interlaced due to concurrency.
 
 ### TestResults file
 
-<s>
-nuget Expecto.TestResults
-
-and configure it to generate the tests result file (nunit v2 format)
-
-```fsharp
-open Expecto
-
-[<EntryPoint>]
-let main args =
-  let writeResults = TestResults.writeNUnitSummary ("TestResults.xml", "Expecto.Tests")
-  let config = defaultConfig.appendSummaryHandler writeResults
-  runTestsInAssembly config args
-```
-</s>
-
 Use `--nunit-summary TestResults.xml` or `--junit-summary TestResults.junit.xml` (JUnit support is incomplete).
 
 ## .Net Core support
