@@ -8,10 +8,13 @@
 <img src="https://img.shields.io/github/languages/top/haf/expecto?color=%23b845fc">
 <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License - Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 <a href="https://github.com/sponsors/haf" title="Sponsor this"><img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=red" /></a>
-</p><br>
+</p>
+<br>
 
-Expecto tests are parallel and async by default, so that you can use all your cores for testing your software.  This
-also opens up a new way of catching threading and memory issues for free using stress testing.
+Expecto aims to make it easy to test CLR based software; be it with unit tests, stress tests, regression tests or
+property based tests. Expecto tests are parallel and async by default, so that you can use all your cores for
+testing your software. This also opens up a new way of catching threading and memory issues for free using stress
+testing.
 
 ![Parallel by default](./docs/stress.jpg)
 
@@ -26,10 +29,10 @@ Expecto comes with performance testing, making statistically sound performance c
 
 Expecto also provides a simple API for property based testing using FsCheck.
 
-There's a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio integration, or you can simply use `dotnet run`
-or `dotnet watch` from the command line.
+## Quickstart
 
-    dotnet watch -p MyProject.Tests run -f netcoreapp3.1
+    dotnet new -i Expecto.Template::*
+    dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
 
 What follows is the Table of Contents for this README, which also serves as the documentation for the project.
 
@@ -84,6 +87,7 @@ What follows is the Table of Contents for this README, which also serves as the 
 
 ![Sample output](docs/sample-output-2.png)
 
+
 ## Installing
 
 In your `paket.dependencies`:
@@ -100,6 +104,18 @@ Let's have look at what an extensive unit test suite looks like when running
 with Expecto:
 
 ![Sample output from Logary](docs/sample-output-logary.png)
+
+
+## IDE integrations
+
+There's a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio integration.
+
+## .Net Core integration
+
+You can use `dotnet run` or `dotnet watch` from the command line.
+
+    dotnet watch -p MyProject.Tests run -f netcoreapp3.1
+
 
 ### Prettify stacktraces/ship test logs
 
