@@ -33,12 +33,16 @@ Expecto also provides a simple API for property based testing using FsCheck.
 
     dotnet new -i Expecto.Template::*
     dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
+    
+Follow [Smooth Testing](https://www.youtube.com/channel/UC2SN9CUu9LlOBukXXv_bT5Q) on YouTube to learn the basics.
 
 What follows is the Table of Contents for this README, which also serves as the documentation for the project.
 
 <!-- toc -->
 
 - [Installing](#installing)
+- [IDE integrations](#IDE-integrations)
+- [.Net Core integration](#net-core-integration)
   - [Prettify stacktraces/ship test logs](#prettify-stacktracesship-test-logs)
   - [TestResults file](#testresults-file)
 - [.Net Core support](#net-core-support)
