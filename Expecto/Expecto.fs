@@ -342,6 +342,10 @@ module Tests =
     | Run of tests:string list
     /// Don't run tests, but prints out list of tests instead.
     | List_Tests
+    /// Don't run tests, but prints out list of focused tests instead.
+    | List_Focused_Tests
+    /// Don't run tests, but prints out list of pending tests instead.
+    | List_Pending_Tests
     /// Print out a summary after all tests are finished.
     | Summary
     /// Put an NUnit-like summary XML file at the given file.
@@ -384,6 +388,8 @@ module Tests =
       "--filter-test-case", "Filters the list of test cases by a given substring.", Args.string Filter_Test_Case
       "--run", "Runs only provided list of tests.", Args.list Args.string Run
       "--list-tests", "Don't run tests, but prints out list of tests instead.", Args.none List_Tests
+      "--list-focused-tests", "Don't run tests, but prints out list of focused tests instead.", Args.none List_Focused_Tests
+      "--list-pending-tests", "Don't run tests, but prints out list of pending tests instead.", Args.none List_Pending_Tests
       "--summary", "Print out a summary after all tests are finished.", Args.none Summary
       "--nunit-summary", "Put an NUnit-like summary XML file at the given file.", Args.string NUnit_Summary
       "--junit-summary", "Put a JUnit-like summary XML file at the given file.", Args.string JUnit_Summary
@@ -402,6 +408,8 @@ module Tests =
   type FillFromArgsResult =
     | ArgsRun of ExpectoConfig
     | ArgsList of ExpectoConfig
+    | ArgsListFocused of ExpectoConfig
+    | ArgsListPending of ExpectoConfig
     | ArgsVersion of ExpectoConfig
     | ArgsUsage of usage:string * errors:string list
 
@@ -432,6 +440,8 @@ module Tests =
     | Filter_Test_Case name ->  fun o -> { o with filter = Test.filter o.joinWith.asString (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
     | Run tests -> fun o -> {o with filter = Test.filter o.joinWith.asString (fun s -> tests |> List.exists ((=) (o.joinWith.format s)) )}
     | List_Tests -> id
+    | List_Focused_Tests -> id
+    | List_Pending_Tests -> id
     | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
     | NUnit_Summary path -> fun o -> o.AddNUnitSummary(path)
     | JUnit_Summary path -> fun o -> o.AddJUnitSummary(path)
@@ -472,6 +482,10 @@ module Tests =
             Seq.fold (fun s a -> foldCLIArgumentToConfig a s) baseConfig cliArguments
           if List.contains List_Tests cliArguments then
             ArgsList config
+          elif List.contains List_Focused_Tests cliArguments then
+            ArgsListFocused config
+          elif List.contains List_Pending_Tests cliArguments then
+            ArgsListPending config
           elif List.contains Version cliArguments then
             ArgsVersion config
           else
@@ -486,6 +500,18 @@ module Tests =
   /// Prints out names of all tests for given test suite.
   let listTests (join: JoinWith) test =
     Test.toTestCodeList test
+    |> Seq.iter (fun t -> printfn "%s" (join.format t.name))
+
+  /// Prints out names of all focused tests for given test suite.
+  let listFocusedTests (join: JoinWith) test =
+    Test.toTestCodeList test
+    |> Seq.filter(fun t -> t.state = Focused)
+    |> Seq.iter (fun t -> printfn "%s" (join.format t.name))
+
+  /// Prints out names of all focused tests for given test suite.
+  let listPendingTests (join: JoinWith) test =
+    Test.toTestCodeList test
+    |> Seq.filter(fun t -> t.state = Pending)
     |> Seq.iter (fun t -> printfn "%s" (join.format t.name))
 
   /// Prints out names of all tests for given test suite.
@@ -546,6 +572,14 @@ module Tests =
     | ArgsList config ->
       config.filter tests
       |> listTests config.joinWith
+      0
+    | ArgsListFocused config ->
+      config.filter tests
+      |> listFocusedTests config.joinWith
+      0
+    | ArgsListPending config ->
+      config.filter tests
+      |> listPendingTests config.joinWith
       0
     | ArgsRun config ->
       runTestsWithCancel ct config tests
