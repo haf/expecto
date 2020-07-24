@@ -1043,9 +1043,15 @@ module Impl =
     if focused.Length = 0 then true
     else
       if config.verbosity <> LogLevel.Fatal then
+        let focusedTestNames =
+          focused
+          |> Seq.map(fun t -> config.joinWith.format t.name)
+          |> String.concat Environment.NewLine
+
         logger.logWithAck LogLevel.Error (
-          eventX "It was requested that no focused tests exist, but {count} focused tests were found."
-          >> setField "count" focused.Length)
+          eventX "It was requested that no focused tests exist, but {count} focused tests were found:\n{testNames}"
+          >> setField "count" focused.Length
+          >> setField "testNames" focusedTestNames )
         |> Async.StartImmediate
         ANSIOutputWriter.flush ()
       false
