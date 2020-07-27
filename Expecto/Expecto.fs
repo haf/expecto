@@ -486,10 +486,10 @@ module Tests =
 
   /// Prints out names of all tests for given test suite.
   let listTests config test =
-      Test.toTestCodeList test
-      |> Seq.filter(fun t -> List.isEmpty config.listStates ||
-                             List.contains t.state config.listStates)
-      |> Seq.iter (fun t -> printfn "%s" (config.joinWith.format t.name))
+    Test.toTestCodeList test
+    |> Seq.filter(fun t -> List.isEmpty config.listStates ||
+                           List.contains t.state config.listStates)
+    |> Seq.iter (fun t -> printfn "%s" (config.joinWith.format t.name))
 
   /// Prints out names of all tests for given test suite.
   let duplicatedNames (join: JoinWith) test =
