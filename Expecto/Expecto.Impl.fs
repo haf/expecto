@@ -494,6 +494,8 @@ module Impl =
       /// An optional filter function. Useful if you only would
       /// like to run a subset of all the tests defined in your assembly.
       filter   : Test -> Test
+      /// List tests of specified state
+      listStates : FocusState list
       /// Allows the test printer to be parametised to your liking.
       printer : TestPrinters
       /// Verbosity level (default: Info).
@@ -528,6 +530,7 @@ module Impl =
         stressTimeout = TimeSpan.FromMinutes 5.0
         stressMemoryLimit = 100.0
         filter = id
+        listStates = []
         failOnFocusedTests = false
         printer =
           let tc = Environment.GetEnvironmentVariable "TEAMCITY_PROJECT_NAME"
