@@ -847,10 +847,13 @@ module Impl =
       let w = Stopwatch.StartNew()
 
       let! runningTests,results,maxMemory =
-        if not config.runInParallel ||
-           config.parallelWorkers = 1 ||
-           List.forall (fun t -> t.sequenced=Synchronous) tests then
-
+        let shouldRunSync =
+          not config.runInParallel
+          || config.parallelWorkers = 1
+          || List.forall (fun t -> t.sequenced=Synchronous) tests
+        if List.isEmpty tests then
+          async { return initial }
+        elif shouldRunSync then
           Seq.initInfinite (fun _ -> randNext tests)
           |> Seq.append tests
           |> asyncRun Async.foldSequentiallyWithCancel initial
@@ -858,8 +861,8 @@ module Impl =
           List.filter (fun t -> t.sequenced=Synchronous) tests
           |> asyncRun Async.foldSequentiallyWithCancel initial
           |> Async.bind (fun (runningTests,results,maxMemory) ->
-               if maxMemory > memoryLimit ||
-                  Stopwatch.GetTimestamp() > finishTime.Value then
+               if maxMemory > memoryLimit
+                  || Stopwatch.GetTimestamp() > finishTime.Value then
                  async.Return (runningTests,results,maxMemory)
                else
                  let runInParallel =
