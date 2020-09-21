@@ -486,10 +486,27 @@ module Tests =
 
   /// Prints out names of all tests for given test suite.
   let listTests config test =
-    Test.toTestCodeList test
-    |> Seq.filter(fun t -> List.isEmpty config.listStates ||
-                           List.contains t.state config.listStates)
-    |> Seq.iter (fun t -> printfn "%s" (config.joinWith.format t.name))
+    let toStateChar state =
+      match state with
+      | Normal  -> "N"
+      | Pending -> "P"
+      | Focused -> "F"
+
+    let tests =
+      Test.toTestCodeList test
+      |> Seq.filter(fun t -> List.isEmpty config.listStates ||
+                             List.contains t.state config.listStates)
+      |> Seq.map(fun t -> toStateChar t.state, config.joinWith.format t.name)
+      |> Seq.toList
+
+    let hideState = tests |> List.exists(fun (stateChar,_) -> stateChar <> "N") |> not
+
+    tests
+    |> Seq.iter (fun (stateChar, name) ->
+      if hideState then
+        printfn "%s" name
+      else
+        printfn "%s %s" stateChar name)
 
   /// Prints out names of all tests for given test suite.
   let duplicatedNames (join: JoinWith) test =
