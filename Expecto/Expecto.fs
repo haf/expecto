@@ -501,12 +501,20 @@ module Tests =
 
     let hideState = tests |> List.exists(fun (stateChar,_) -> stateChar <> "N") |> not
 
+    let result = System.Text.StringBuilder()
     tests
     |> Seq.iter (fun (stateChar, name) ->
       if hideState then
-        printfn "%s" name
+        Printf.bprintf result "%s\n" name
+        //logger.info (Message.eventX "{name}" >> Message.setField "name" name)
       else
-        printfn "%s %s" stateChar name)
+        // logger.info (Message.eventX "{stateChar} {name}"
+        //   >> Message.setField "stateChar" stateChar
+        //   >> Message.setField "name" name
+        // )
+        Printf.bprintf result "%s %s\n" stateChar name
+    )
+    logger.info (Message.eventX "{result}" >> Message.setField "result" (string result))
 
   /// Prints out names of all tests for given test suite.
   let duplicatedNames (join: JoinWith) test =
