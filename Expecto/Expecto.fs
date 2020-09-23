@@ -505,16 +505,18 @@ module Tests =
     tests
     |> Seq.iter (fun (stateChar, name) ->
       if hideState then
-        Printf.bprintf result "%s\n" name
-        //logger.info (Message.eventX "{name}" >> Message.setField "name" name)
+        Printf.bprintf result "\n%s" name
       else
-        // logger.info (Message.eventX "{stateChar} {name}"
-        //   >> Message.setField "stateChar" stateChar
-        //   >> Message.setField "name" name
-        // )
-        Printf.bprintf result "%s %s\n" stateChar name
+        Printf.bprintf result "\n%s %s" stateChar name
     )
-    logger.info (Message.eventX "{result}" >> Message.setField "result" (string result))
+    Printf.bprintf result "\n"
+
+    logger.logWithAck Info (
+      Message.eventX "{result}"
+      >> Message.setField "result" (string result)
+    )
+    |> Async.RunSynchronously
+    Printf.printfn "" // TODO workaround to flush output
 
   /// Prints out names of all tests for given test suite.
   let duplicatedNames (join: JoinWith) test =
