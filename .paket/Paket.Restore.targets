@@ -275,7 +275,7 @@
 
   <Target Name="PaketDisableDirectPack" AfterTargets="_IntermediatePack" BeforeTargets="GenerateNuspec" Condition="('$(IsPackable)' == '' Or '$(IsPackable)' == 'true') And Exists('$(PaketIntermediateOutputPath)/$(MSBuildProjectFile).references')" >
     <PropertyGroup>
-      <ContinuePackingAfterGeneratingNuspec>false</ContinuePackingAfterGeneratingNuspec>
+      <!-- <ContinuePackingAfterGeneratingNuspec>false</ContinuePackingAfterGeneratingNuspec> -->
     </PropertyGroup>
   </Target>
 
