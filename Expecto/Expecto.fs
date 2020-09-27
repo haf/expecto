@@ -516,7 +516,6 @@ module Tests =
       >> Message.setField "result" (string result)
     )
     |> Async.RunSynchronously
-    Printf.printfn "" // TODO workaround to flush output
 
   /// Prints out names of all tests for given test suite.
   let duplicatedNames (join: JoinWith) test =
