@@ -225,7 +225,7 @@ let floatClose accuracy actual expected message =
     failtestf "%s. Expected expected to not be infinity, but it was." message
   elif Accuracy.areClose accuracy actual expected |> not then
     failtestf
-      "%s. Expected difference to be less than %f for accuracy {absolute=%f; relative=%f}, but was %f. actual=%f expected=%f"
+      "%s. Expected difference to be less than %.20g for accuracy {absolute=%.20g; relative=%.20g}, but was %.20g. actual=%.20g expected=%.20g"
       message (Accuracy.areCloseRhs accuracy actual expected)
       accuracy.absolute accuracy.relative
       (Accuracy.areCloseLhs actual expected)
