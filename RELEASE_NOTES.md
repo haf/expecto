@@ -1,3 +1,7 @@
+#### 9.0.3 - 2020-07-27
+* List focused tests if failed using `--fail-on-focused-tests`, #392, thanks @vilinski
+* Add an option to specify test states in `--list-tests`, thanks @vilinski
+
 #### 9.0.2 - 2020-06-25
 * An eta-expansion caused ABI compatibility for dependents, #388, thanks @haf
 
@@ -8,7 +12,7 @@
 * Add `Expect.wantError`, which returns the value inside the Result wrapper if successful, thanks @yreynhout
 
 #### 9.0.0 - 2020-04-04
-* Change the default test separator to `.` (dot). Override back, using `--join-with /` Big thanks @MNie 
+* Change the default test separator to `.` (dot). Override back, using `--join-with /` Big thanks @MNie
 * Add `Expect.wantSome` and `Expect.wantOk`, which returns the value inside the Option/Result wrapper if successful, thanks @teo-tsirpanis
 * Remove deprecated PackageIconUrl from the build props, replace with PackageIcon, thanks @teo-tsirpanis
 * Add cmd file for building on Windows, thanks @teo-tsirpanis

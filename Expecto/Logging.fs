@@ -1177,6 +1177,7 @@ type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?output
   let colourWriter = outputWriter |> Option.defaultWith (fun () ->
     ANSIOutputWriter.prettyPrint (minLevel <= Debug) sem
   )
+  let flush() = ANSIOutputWriter.flush()
 
   /// Converts the message to tokens, apply the theme, then output them using the `colourWriter`.
   let writeColourisedThenNewLine message =
@@ -1202,7 +1203,10 @@ type LiterateConsoleTarget(name, minLevel, ?options, ?literateTokeniser, ?output
     member __.name = name
     member __.logWithAck level msgFactory =
       if level >= minLevel then
-        async { do writeColourisedThenNewLine (msgFactory level) }
+        async {
+          writeColourisedThenNewLine (msgFactory level)
+          flush()
+          }
       else
         async.Return ()
     member __.log level msgFactory =

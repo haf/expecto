@@ -489,6 +489,7 @@ let expecto =
             "--filter-test-case"; "f case"
             "--run"; "a"; "b"; "c"
             "--list-tests"
+            "--list-tests"; "normal"; "FOCUSED"; "Pending"
             "--summary"
             "--version"
             "--summary-location"
@@ -515,7 +516,8 @@ let expecto =
           Filter_Test_List "f list"
           Filter_Test_Case "f case"
           Run ["a";"b";"c"]
-          List_Tests
+          List_Tests []
+          List_Tests [Normal; Focused; Pending]
           Summary
           Version
           Summary_Location

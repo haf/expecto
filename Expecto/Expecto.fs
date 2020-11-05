@@ -299,6 +299,7 @@ module Tests =
 
     let inline parse case: Parser<'a> = parseWith tryParse case
     let inline number case: Parser<'a> = parseWith tryParseNumber case
+    let inline focusState case: Parser<'a> = parseWith tryParseFocusState case
 
 
   [<ReferenceEquality>]
@@ -341,7 +342,7 @@ module Tests =
     /// Runs only provided list of tests.
     | Run of tests:string list
     /// Don't run tests, but prints out list of tests instead.
-    | List_Tests
+    | List_Tests of listStates: FocusState list
     /// Print out a summary after all tests are finished.
     | Summary
     /// Put an NUnit-like summary XML file at the given file.
@@ -383,7 +384,7 @@ module Tests =
       "--filter-test-list", "Filters the list of test lists by a given substring.", Args.string Filter_Test_List
       "--filter-test-case", "Filters the list of test cases by a given substring.", Args.string Filter_Test_Case
       "--run", "Runs only provided list of tests.", Args.list Args.string Run
-      "--list-tests", "Don't run tests, but prints out list of tests instead.", Args.none List_Tests
+      "--list-tests", "Don't run tests, but prints out list of tests instead. Lists only tests with specified state(s), or all tests if not.", Args.list (Args.focusState) List_Tests
       "--summary", "Print out a summary after all tests are finished.", Args.none Summary
       "--nunit-summary", "Put an NUnit-like summary XML file at the given file.", Args.string NUnit_Summary
       "--junit-summary", "Put a JUnit-like summary XML file at the given file.", Args.string JUnit_Summary
@@ -431,7 +432,7 @@ module Tests =
     | Filter_Test_List name ->  fun o -> {o with filter = Test.filter o.joinWith.asString (fun s -> s |> getTestList |> List.exists(fun s -> s.Contains name )) }
     | Filter_Test_Case name ->  fun o -> { o with filter = Test.filter o.joinWith.asString (fun s -> s |> getTestCase |> fun s -> s.Contains name )}
     | Run tests -> fun o -> {o with filter = Test.filter o.joinWith.asString (fun s -> tests |> List.exists ((=) (o.joinWith.format s)) )}
-    | List_Tests -> id
+    | List_Tests states -> fun o -> { o with listStates = states }
     | Summary -> fun o -> {o with printer = TestPrinters.summaryPrinter o.printer}
     | NUnit_Summary path -> fun o -> o.AddNUnitSummary(path)
     | JUnit_Summary path -> fun o -> o.AddJUnitSummary(path)
@@ -470,7 +471,7 @@ module Tests =
       | Ok cliArguments ->
           let config =
             Seq.fold (fun s a -> foldCLIArgumentToConfig a s) baseConfig cliArguments
-          if List.contains List_Tests cliArguments then
+          if List.exists(function List_Tests _ -> true | _ -> false) cliArguments then
             ArgsList config
           elif List.contains Version cliArguments then
             ArgsVersion config
@@ -484,9 +485,37 @@ module Tests =
         ArgsUsage (Args.usage commandName options, errors)
 
   /// Prints out names of all tests for given test suite.
-  let listTests (join: JoinWith) test =
-    Test.toTestCodeList test
-    |> Seq.iter (fun t -> printfn "%s" (join.format t.name))
+  let listTests config test =
+    let toStateChar state =
+      match state with
+      | Normal  -> "N"
+      | Pending -> "P"
+      | Focused -> "F"
+
+    let tests =
+      Test.toTestCodeList test
+      |> Seq.filter(fun t -> List.isEmpty config.listStates ||
+                             List.contains t.state config.listStates)
+      |> Seq.map(fun t -> toStateChar t.state, config.joinWith.format t.name)
+      |> Seq.toList
+
+    let hideState = tests |> List.exists(fun (stateChar,_) -> stateChar <> "N") |> not
+
+    let result = System.Text.StringBuilder()
+    tests
+    |> Seq.iter (fun (stateChar, name) ->
+      if hideState then
+        Printf.bprintf result "\n%s" name
+      else
+        Printf.bprintf result "\n%s %s" stateChar name
+    )
+    Printf.bprintf result "\n"
+
+    logger.logWithAck Info (
+      Message.eventX "{result}"
+      >> Message.setField "result" (string result)
+    )
+    |> Async.RunSynchronously
 
   /// Prints out names of all tests for given test suite.
   let duplicatedNames (join: JoinWith) test =
@@ -544,8 +573,7 @@ module Tests =
       printfn "EXPECTO! v%s\n\n%s" expectoVersion usage
       if List.isEmpty errors then 0 else 1
     | ArgsList config ->
-      config.filter tests
-      |> listTests config.joinWith
+      listTests config tests
       0
     | ArgsRun config ->
       runTestsWithCancel ct config tests

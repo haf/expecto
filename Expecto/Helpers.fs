@@ -72,6 +72,14 @@ let matchFocusAttributes = function
   | "Expecto.PTestsAttribute" -> Some (3, Pending)
   | _ -> None
 
+let inline tryParseFocusState (input: string) =
+  let inline (=~) (input : string) (value: string) =
+    input.Equals(value, StringComparison.OrdinalIgnoreCase)
+  if   input =~ "focused" then Some Focused
+  elif input =~ "pending" then Some Pending
+  elif input =~ "normal" then Some Normal
+  else None
+
 let allTestAttributes =
   Set [
     typeof<FTestsAttribute>.FullName

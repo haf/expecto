@@ -51,7 +51,7 @@ module Runner =
   let RunTestsWithCLIArgs(cliArgs, args, tests) = runTestsWithCLIArgs cliArgs args tests
   let RunTestsInAssembly(config, args) = runTestsInAssembly config args
   let RunTestsInAssemblyWithCLIArgs(cliArgs, args) = runTestsInAssemblyWithCLIArgs cliArgs args
-  let ListTests(tests) = listTests tests
+  let ListTests(config, tests) = listTests config tests
   let TestList(name, tests: IEnumerable<Test>) = testList name (List.ofSeq tests)
   [<CompiledName("TestCase")>]
   let TestCaseA(name, test: System.Action) = testCase name test.Invoke
