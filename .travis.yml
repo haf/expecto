@@ -1,6 +1,6 @@
 language: csharp
 dist: bionic
-dotnet: 3.1.300
+dotnet: 5.0.100
 
 matrix:
   fast_finish: true

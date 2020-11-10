@@ -1,5 +1,5 @@
 source https://api.nuget.org/v3/index.json
-framework net461, netstandard2.0, netcoreapp3.1
+framework net461, netstandard2.0, netcoreapp3.1, net5.0
 storage none
 version 5.245.1
 
@@ -13,20 +13,21 @@ nuget BenchmarkDotNet ~> 0.12.1
 group Build
   source https://api.nuget.org/v3/index.json
   storage none
-  framework auto-detect
+  framework netstandard2.0
 
   nuget FSharp.Core
   nuget Fake.Api.GitHub
   nuget Fake.BuildServer.AppVeyor
   nuget Fake.BuildServer.Travis
   nuget Fake.Core.ReleaseNotes
-  nuget Fake.Core.Target
-  nuget Fake.Core.Xml
-  nuget Fake.DotNet.Cli
-  nuget Fake.DotNet.Paket
-  nuget Fake.IO.FileSystem
+  nuget Fake.Core.Target prerelease
+  nuget Fake.Core.Xml prerelease
+  nuget Fake.DotNet.Cli prerelease
+  nuget Fake.DotNet.Paket prerelease
+  nuget Fake.IO.FileSystem prerelease
   nuget Fake.IO.Zip
   nuget Fake.Tools.Git
   nuget Fake.Tools.Octo
+  nuget Nuget.Protocol < 5.8
 
   github eiriktsarpalis/snippets SlnTools/SlnTools.fs

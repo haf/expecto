@@ -11,6 +11,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
+    <Reference Include="System.Threading.Tasks" />
+  </ItemGroup>
   <Import Project="..\NuGet.props" />
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

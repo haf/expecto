@@ -118,7 +118,7 @@ There's a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio integration
 
 You can use `dotnet run` or `dotnet watch` from the command line.
 
-    dotnet watch -p MyProject.Tests run -f netcoreapp3.1
+    dotnet watch -p MyProject.Tests run -f net5.0
 
 
 ### Prettify stacktraces/ship test logs
@@ -1122,8 +1122,8 @@ Tests.runTestsInAssemblyWithCLIArgs [Stress 0.1;Stress_Timeout 0.2] [||]
 From the command line you can run:
 
 ```
-dotnet run -p Expecto.Tests -f netcoreapp3.1 -c release -- --help
-dotnet watch -p Expecto.Tests run -f netcoreapp3.1 -c release -- --colours 256
+dotnet run -p Expecto.Tests -f net5.0 -c release -- --help
+dotnet watch -p Expecto.Tests run -f net5.0 -c release -- --colours 256
 ```
 
 ## Contributing and building 
