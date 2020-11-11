@@ -4,4 +4,4 @@ set -eu
 set -o pipefail
 
 dotnet tool restore
-dotnet tool run fake $@
+dotnet fake $@

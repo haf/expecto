@@ -24,7 +24,7 @@ let configuration =
   |> DotNet.BuildConfiguration.fromString
 
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
-let testFramework = "netcoreapp3.1"
+let testFramework = "net5.0"
 let dotnetExePath = "dotnet"
 
 let githubToken = lazy(Environment.environVarOrFail "GITHUB_TOKEN")
