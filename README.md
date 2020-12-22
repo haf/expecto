@@ -1304,6 +1304,10 @@ It means that you have code like `testCase "abc" <| Expect.equal ...`. Instead
 you should create a function like so: `testCase "abc" <| fun () -> Expect.equal
 ...`.
 
+### My tests are hanging and I can't see why
+
+This might be due to how terminals/the locking thereof work: try running your tests with `--no-spinner` and see if that works.
+
 ![Expecto expecto](./docs/expecto-patronus-2000x1126.png)
 
 
