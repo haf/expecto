@@ -297,7 +297,7 @@ interactive/REPL). For example:
 open Expecto
 open MyLib.Tests
 integrationTests // from MyLib.Tests
-|> Test.filter (fun s -> s.EndsWith "another test") // the filtering function
+|> Test.filter defaultConfig.joinWith.asString (fun z -> (defaultConfig.joinWith.format z).StartsWith "another test" ) // the filtering function
 |> runTestsWithCLIArgs [] [||]
 ```
 
@@ -310,7 +310,7 @@ For example:
 open Expecto
 open MyLib.Tests
 myTests // from MyLib.Tests
-|> Test.shuffle
+|> Test.shuffle defaultConfig.joinWith.asString
 |> runTestsWithCLIArgs [] [||]
 ```
 
@@ -520,14 +520,20 @@ can be useful for timeout and performance testing.
 let timeout =
   testSequenced <| testList "Timeout" [
     test "fail" {
-      let test = TestCase(Test.timeout 10 (fun () -> Thread.Sleep 100), Normal)
-      let result = evalSilent test |> sumTestResults
-      result.failed.Length ==? 1
+      let test = TestCase(Test.timeout 10 (TestCode.Sync (fun _ -> Thread.Sleep 100)), Normal)
+      async {
+        let! eval = Impl.evalTests defaultConfig test
+        let result = Impl.TestRunSummary.fromResults eval
+        result.failed.Length ==? 1
+      } |> Async.RunSynchronously
     }
     test "pass" {
-      let test = TestCase(Test.timeout 1000 ignore, Normal)
-      let result = evalSilent test |> sumTestResults
-      result.passed.Length ==? 1
+      let test = TestCase(Test.timeout 1000 (TestCode.Sync ignore), Normal)
+      async {
+        let! eval = Impl.evalTests defaultConfig test
+        let result = Impl.TestRunSummary.fromResults eval
+        result.passed.Length ==? 1
+      } |> Async.RunSynchronously
     }
   ]
 ```
