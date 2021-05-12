@@ -131,9 +131,6 @@ module Runner =
       [<Extension; CompiledName("WithFsCheckEndSize")>]
       member x.WithFsCheckEndSize(fsCheckEndSize) = { x with fsCheckEndSize = fsCheckEndSize }
 
-      [<Extension; CompiledName("WithMySpiritIsWeak")>]
-      member x.WithMySpiritIsWeak(mySpiritIsWeak) = { x with mySpiritIsWeak = mySpiritIsWeak }
-
       [<Extension; CompiledName("WithAllowDuplicateNames")>]
       member x.WithAllowDuplicateNames(allowDuplicateNames) = { x with allowDuplicateNames = allowDuplicateNames }
 
