@@ -21,7 +21,7 @@ let colourisedDiff actual expected =
     | ChangeType.Deleted -> ColourText.colouriseText ConsoleColor.Red text
     | ChangeType.Modified -> ColourText.colouriseText ConsoleColor.Blue text
     | ChangeType.Imaginary -> ColourText.colouriseText ConsoleColor.Yellow text
-    | ChangeType.Unchanged | ChangeType.Imaginary | _ -> text
+    | ChangeType.Unchanged | _ -> text
 
   let colouriseLine (line: DiffPiece) =
     if line.SubPieces.Count = 0 then
@@ -33,11 +33,12 @@ let colourisedDiff actual expected =
   let colourisedDiff (lines: DiffPiece seq) =
     String.Join("\n", lines |> Seq.map colouriseLine)
 
-  let diff = sideBySideDiffer.BuildDiffModel(actual, expected)
+  let diff = sideBySideDiffer.BuildDiffModel(expected, actual)
   sprintf
-    "\n---------- Actual: --------------------\n%s\n---------- Expected: ------------------\n%s\n"
-    (colourisedDiff diff.OldText.Lines)
+    "\n%s---------- Expected: ------------------\n%s\n---------- Actual: --------------------\n%s\n"
+    (ColourText.colouriseText ConsoleColor.White "") // Reset colour.
     (colourisedDiff diff.NewText.Lines)
+    (colourisedDiff diff.OldText.Lines)
 
 let equals actual expected message =
   Expect.equalWithDiffPrinter colourisedDiff actual expected message
