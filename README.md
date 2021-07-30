@@ -288,6 +288,12 @@ Signature `CancellationToken -> CLIArguments seq -> string[] -> int`. Runs the t
 assembly and also overrides the passed `CLIArguments` with the command line
 parameters. All tests need to be marked with the `[<Tests>]` attribute.
 
+### `runTestsInAssembliesWithCLIArgsAndCancel`
+
+Signature `CancellationToken -> CLIArguments seq -> string[] -> seq<Assembly> -> int`. Runs the
+tests in all the specified assemblies and also overrides the passed `CLIArguments` with the
+command line parameters. All tests need to be marked with the `[<Tests>]` attribute.
+
 ### Filtering with `filter`
 
 You can single out tests by filtering them by name (e.g. in the

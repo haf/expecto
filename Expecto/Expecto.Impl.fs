@@ -1026,16 +1026,31 @@ module Impl =
       SourceLocation.empty
 
   /// Scan filtered tests marked with TestsAttribute from an assembly
-  let testFromAssemblyWithFilter typeFilter (a: Assembly) =
+  let testListFromAssemblyWithFilter typeFilter (a : Assembly) =
     a.GetExportedTypes()
     |> Seq.filter typeFilter
     |> Seq.choose testFromType
     |> Seq.toList
+
+  /// Scan filtered tests marked with TestsAttribute from an assembly
+  let testFromAssemblyWithFilter typeFilter (assembly : Assembly) =
+    testListFromAssemblyWithFilter typeFilter assembly
+    |> listToTestListOption
+
+  /// Scan filtered tests marked with TestsAttribute from multiple assemblies
+  let testFromAssembliesWithFilter typeFilter (assemblies : Assembly seq) =
+    assemblies
+    |> Seq.map (testListFromAssemblyWithFilter typeFilter)
+    |> List.concat
     |> listToTestListOption
 
   /// Scan tests marked with TestsAttribute from an assembly
   let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
   // TODO v10 eta expansion: let testFromAssembly asm = testFromAssemblyWithFilter (fun _ -> true) asm
+
+  /// Scan tests marked with TestsAttribute from multiple assemblies
+  let testFromAssemblies assemblies = testFromAssembliesWithFilter (fun _ -> true) assemblies
+  // TODO v10 eta expansion: let testFromAssemblies assemblies asm = testFromAssembliesWithFilter (fun _ -> true) assemblies asm
 
   /// Scan tests marked with TestsAttribute from entry assembly
   let testFromThisAssembly () = testFromAssembly (Assembly.GetEntryAssembly())
