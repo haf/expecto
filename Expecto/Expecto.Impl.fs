@@ -1033,9 +1033,8 @@ module Impl =
     |> Seq.toList
 
   /// Scan filtered tests marked with TestsAttribute from an assembly
-  let testFromAssemblyWithFilter typeFilter (assembly : Assembly) =
-    testListFromAssemblyWithFilter typeFilter assembly
-    |> listToTestListOption
+  let testFromAssemblyWithFilter typeFilter =
+    testListFromAssemblyWithFilter typeFilter >> listToTestListOption
 
   /// Scan filtered tests marked with TestsAttribute from multiple assemblies
   let testFromAssembliesWithFilter typeFilter (assemblies : Assembly seq) =
