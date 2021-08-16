@@ -1,0 +1,23 @@
+name: GitHub Actions Demo
+on:
+  push: {}
+  pull_request: {}
+  schedule:
+  - cron: 0 15 * * *
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .Net
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.9
+    - run: ./fake build
+
+
