@@ -1,3 +1,6 @@
+#### 9.0.3 - 2021-08-17
+* Thanks @lydell for improving Expecto.Diff
+
 #### 9.0.3 - 2020-07-27
 * List focused tests if failed using `--fail-on-focused-tests`, #392, thanks @vilinski
 * Add an option to specify test states in `--list-tests`, thanks @vilinski
