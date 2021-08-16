@@ -46,7 +46,7 @@ What follows is the Table of Contents for this README, which also serves as the 
   - [Prettify stacktraces/ship test logs](#prettify-stacktracesship-test-logs)
   - [TestResults file](#testresults-file)
 - [.Net Core support](#net-core-support)
-- [Testing "Hello world"](#testing-%22hello-world%22)
+- [Testing "Hello world"](#testing-hello-world)
 - [Running tests](#running-tests)
   - [`runTests`](#runtests)
   - [`runTestsWithArgs`](#runtestswithargs)
