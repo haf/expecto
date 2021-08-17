@@ -19,5 +19,5 @@ jobs:
       with:
         dotnet-version: "5.0"
     - run: ./fake build --target Pack
-
-
+      env:
+        NUGET_TOKEN: ${{secrets.NUGET_RELEASE_KEY}}
