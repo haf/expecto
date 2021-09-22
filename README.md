@@ -1212,6 +1212,7 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
   just add the `nuget Expecto.VisualStudio.TestAdapter version_in_path: true` to
   your paket file and you're off to the races!
 * [FsCheck supports it](https://fscheck.github.io/FsCheck/QuickStart.html#Integration-with-Expecto)
+* [Verify supports it](https://github.com/VerifyTests/Verify#expecto)
 
 ![Expecto VS Test Plugin](./docs/expecto-vs-addon.jpeg "Easy to get started even
 for Enterprise Developers")
