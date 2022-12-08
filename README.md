@@ -42,10 +42,10 @@ What follows is the Table of Contents for this README, which also serves as the 
 
 - [Installing](#installing)
 - [IDE integrations](#IDE-integrations)
-- [.Net Core integration](#net-core-integration)
+- [.Net integration](#net-integration)
   - [Prettify stacktraces/ship test logs](#prettify-stacktracesship-test-logs)
   - [TestResults file](#testresults-file)
-- [.Net Core support](#net-core-support)
+- [.Net support](#net-support)
 - [Testing "Hello world"](#testing-hello-world)
 - [Running tests](#running-tests)
   - [`runTests`](#runtests)
@@ -114,11 +114,11 @@ with Expecto:
 
 There's a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio integration.
 
-## .Net Core integration
+## .Net integration
 
 You can use `dotnet run` or `dotnet watch` from the command line.
 
-    dotnet watch -p MyProject.Tests run -f net5.0
+    dotnet watch -p MyProject.Tests run -f net6.0
 
 
 ### Prettify stacktraces/ship test logs
@@ -159,9 +159,9 @@ and the output won't be interlaced due to concurrency.
 
 Use `--nunit-summary TestResults.xml` or `--junit-summary TestResults.junit.xml` (JUnit support is incomplete).
 
-## .Net Core support
+## .Net support
 
-[Expecto has it's own .net core template](https://github.com/MNie/Expecto.Template)! You could create a base .Net core
+[Expecto has it's own .Net template](https://github.com/MNie/Expecto.Template)! You could create a base .Net
 project with expecto.  How to do that? Simply write following lines:
 
     dotnet new -i 'Expecto.Template::*'
