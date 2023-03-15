@@ -40,8 +40,9 @@ What follows is the Table of Contents for this README, which also serves as the 
 
 <!-- toc -->
 
+- [Quickstart](#quickstart)
 - [Installing](#installing)
-- [IDE integrations](#IDE-integrations)
+- [IDE integrations](#ide-integrations)
 - [.Net integration](#net-integration)
   - [Prettify stacktraces/ship test logs](#prettify-stacktracesship-test-logs)
   - [TestResults file](#testresults-file)
@@ -51,13 +52,13 @@ What follows is the Table of Contents for this README, which also serves as the 
   - [`runTests`](#runtests)
   - [`runTestsWithArgs`](#runtestswithargs)
   - [`runTestsWithCLIArgs`](#runtestswithcliargs)
-  - [`runTestsWithCancel`](#runTestsWithCancel)
-  - [`runTestsWithArgsAndCancel`](#runTestsWithArgsAndCancel)
-  - [`runTestsWithCLIArgsAndCancel`](#runTestsWithCLIArgsAndCancel)
+  - [`runTestsWithCancel`](#runtestswithcancel)
+  - [`runTestsWithArgsAndCancel`](#runtestswithargsandcancel)
+  - [`runTestsWithCLIArgsAndCancel`](#runtestswithcliargsandcancel)
   - [`runTestsInAssembly`](#runtestsinassembly)
   - [`runTestsInAssemblyWithCLIArgs`](#runtestsinassemblywithcliargs)
-  - [`runTestsInAssemblyWithCancel`](#runTestsInAssemblyWithCancel)
-  - [`runTestsInAssemblyWithCLIArgsAndCancel`](#runTestsInAssemblyWithCLIArgsAndCancel)
+  - [`runTestsInAssemblyWithCancel`](#runtestsinassemblywithcancel)
+  - [`runTestsInAssemblyWithCLIArgsAndCancel`](#runtestsinassemblywithcliargsandcancel)
   - [Filtering with `filter`](#filtering-with-filter)
   - [Shuffling with `shuffle`](#shuffling-with-shuffle)
   - [Stress testing](#stress-testing)
@@ -78,14 +79,15 @@ What follows is the Table of Contents for this README, which also serves as the 
   - [`Performance` module](#performance-module)
     - [Example](#example)
   - [Performance.findFastest](#performancefindfastest)
-- [`main args` and command line – how to run console apps examples](#main-args-and-command-line-%e2%80%93-how-to-run-console-apps-examples)
+- [`main args` and command line – how to run console apps examples](#main-args-and-command-line--how-to-run-console-apps-examples)
 - [Contributing and building](#contributing-and-building)
 - [BenchmarkDotNet usage](#benchmarkdotnet-usage)
 - [You're not alone!](#youre-not-alone)
   - [Testing hardware](#testing-hardware)
-- [Sending e-mail on failure – custom printers](#sending-e-mail-on-failure-%e2%80%93-custom-printers)
+- [Sending e-mail on failure – custom printers](#sending-e-mail-on-failure--custom-printers)
 - [About test parallelism](#about-test-parallelism)
   - [What does 'expected to have type TestCode' mean?](#what-does-expected-to-have-type-testcode-mean)
+  - [My tests are hanging and I can't see why](#my-tests-are-hanging-and-i-cant-see-why)
 
 <!-- tocstop -->
 
@@ -332,7 +334,7 @@ Expecto supports the following test constructors:
 
 - normal test cases with `testCase` and `testCaseAsync`
 - lists of tests with `testList`
-- test fixtures with `testFixture`
+- test fixtures with `testFixture`, `testFixtureAsync`, `testFixtureTask`
 - pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
 - focused tests (that are the only ones run) with `ftestCase` and
    `ftestCaseAsync`
@@ -418,6 +420,54 @@ testList "Setup & teardown 3" [
   ]
 ]
 ```
+
+- `testFixtureAsync : ('a -> unit -> Async<unit>) -> (seq<string * 'a>) -> seq<Test>`
+
+The test fixture async takes a factory and a sequence of partial
+tests. The `'a` parameter will be inferred to the *function type*,
+such as `MemoryStream -> 'a -> 'a`.
+
+Example:
+
+```fsharp
+testList "Setup & teardown 4" [
+  let withMemoryStream f = async {
+    use ms = new MemoryStream()
+    do! f ms
+  }
+  yield! testFixture withMemoryStream [
+    "can read",
+      fun ms -> async { return ms.CanRead ==? true }
+    "can write",
+      fun ms -> async { return ms.CanWrite ==? true }
+  ]
+]
+```
+
+
+- `testFixtureTask : ('a -> unit -> Task<unit>) -> (seq<string * 'a>) -> seq<Test>`
+
+The test fixture task takes a factory and a sequence of partial tests.
+The `'a` parameter will be inferred to the *function type*, such as
+`MemoryStream -> 'a -> 'a`.
+
+Example:
+
+```fsharp
+testList "Setup & teardown 5" [
+  let withMemoryStream f = task {
+    use ms = new MemoryStream()
+    do! f ms
+  }
+  yield! testFixture withMemoryStream [
+    "can read",
+      fun ms -> task { return ms.CanRead ==? true }
+    "can write",
+      fun ms -> task { return ms.CanWrite ==? true }
+  ]
+]
+```
+
 
 ### Pending tests
 

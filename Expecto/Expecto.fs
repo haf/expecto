@@ -180,6 +180,10 @@ module Tests =
   /// Builds an async test case that will be ignored by Expecto
   let inline ptestAsync name =
     TestAsyncBuilder (name, Pending)
+  /// Applies a function to a list of values to build async test cases
+  let inline testFixtureAsync setupAsync =
+    Seq.map (fun (name, partialTest) ->
+      testAsync name { do! setupAsync partialTest })
 
   type TestTaskBuilder(name, focusState) =
     member __.Zero() = task.Zero()
@@ -212,6 +216,10 @@ module Tests =
   /// Builds a task test case that will be ignored by Expecto
   let inline ptestTask name =
     TestTaskBuilder (name, Pending)
+  /// Applies a function to a list of values to build task test cases
+  let inline testFixtureTask setupTask =
+    Seq.map (fun (name, partialTest) ->
+      testTask name { do! setupTask partialTest })
 
   /// The default configuration for Expecto.
   let defaultConfig = ExpectoConfig.defaultConfig
