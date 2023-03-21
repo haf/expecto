@@ -10,6 +10,7 @@ open Expecto
 open Expecto.Impl
 open Expecto.Logging
 open System.Globalization
+open FSharp.Control.Tasks.CopiedDoNotReference
 
 module Dummy =
 
@@ -244,6 +245,20 @@ let expecto =
           fun ms -> ms.CanRead ==? true
         "can write",
           fun ms -> ms.CanWrite ==? true
+      ]
+    ]
+
+    testList "Setup & teardown 4" [
+      let withMemoryStreamAsync f = async {
+        use ms = new MemoryStream()
+        do! f ms
+      }
+
+      yield! testFixtureAsync withMemoryStreamAsync [
+        "can read",
+          fun ms -> async { return ms.CanRead ==? true }
+        "can write",
+          fun ms -> async { return ms.CanWrite ==? true }
       ]
     ]
 
@@ -1274,6 +1289,19 @@ open System.Threading.Tasks
 [<Tests>]
 let taskTests =
   testList "task" [
+    let task = TaskBuilder.TaskBuilder()
+
+    let withMemoryStreamTask f = task {
+      use ms = new MemoryStream()
+      do! f ms
+    }
+
+    yield! testFixtureTask withMemoryStreamTask [
+      "can read",
+        fun ms -> task { return ms.CanRead ==? true }
+      "can write",
+        fun ms -> task { return ms.CanWrite ==? true }
+    ]
 
     testTask "simple" {
       do! Task.Delay 1
