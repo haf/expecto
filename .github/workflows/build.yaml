@@ -15,9 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Setup .Net
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: "5.0"
+        global-json-file: "./global.json"
     - run: ./fake build --target Pack
       env:
         NUGET_TOKEN: ${{secrets.NUGET_RELEASE_KEY}}

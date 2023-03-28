@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Expecto.Focused.Tests</AssemblyName>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net5.0;netcoreapp3.1;net461</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Main.fs" />

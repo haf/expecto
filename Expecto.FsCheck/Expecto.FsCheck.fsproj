@@ -2,7 +2,7 @@
   <PropertyGroup>
     <PackageId>Expecto.FsCheck</PackageId>
     <Description>Property testing for Expecto, powered by FsCheck</Description>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FsCheck.fs" />

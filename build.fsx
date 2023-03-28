@@ -1,7 +1,6 @@
 #r "paket: groupref Build //"
 
-#load "./.fake/build.fsx/intellisense.fsx"
-#load "paket-files/build/eiriktsarpalis/snippets/SlnTools/SlnTools.fs"
+#load ".fake/build.fsx/intellisense.fsx"
 #if !FAKE
 #r "netstandard"
 #endif
@@ -16,6 +15,7 @@ open Fake.IO
 open Fake.Core.TargetOperators
 open Fake.IO.Globbing.Operators
 open Fake.BuildServer
+open NoSln
 
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
@@ -24,7 +24,7 @@ let configuration =
   |> DotNet.BuildConfiguration.fromString
 
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
-let testFramework = "net5.0"
+let testFramework = "net6.0"
 let dotnetExePath = "dotnet"
 
 let githubToken = lazy(Environment.environVarOrFail "GITHUB_TOKEN")
@@ -72,15 +72,18 @@ let build project =
     project
 
 Target.create "BuildExpecto" (fun _ ->
-  build (SlnTools.createTempSolutionFile libProjects)
+  let sln = NoSln.WriteSolutionFile(projects=libProjects, useTempSolutionFile=true)
+  build sln
 )
 
 Target.create "BuildBenchmarkDotNet" (fun _ ->
-  build (SlnTools.createTempSolutionFile benchmarkProjects)
+  let sln = NoSln.WriteSolutionFile(files=benchmarkProjects, useTempSolutionFile=true)
+  build sln
 )
 
 Target.create "BuildTest" (fun _ ->
-  build (SlnTools.createTempSolutionFile testProjects)
+  let sln = NoSln.WriteSolutionFile(files=testProjects, useTempSolutionFile=true)
+  build sln
 )
 
 Target.create "RunTest" <| fun _ ->
@@ -88,22 +91,9 @@ Target.create "RunTest" <| fun _ ->
   let runTest project =
     Trace.logfn "Running %s on .NET Core" project
     DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
-      (sprintf "%s/bin/%O/%s/%s.dll" project configuration testFramework project)
+      (sprintf "run --framework %s --project %s -c %O" testFramework project configuration)
       "--summary"
     |> fun r -> if r.ExitCode <> 0 then failwithf "Running %s on .NET Core failed" project
-
-    Trace.logfn "Running %s on .NET Framework" project
-    let exeName = sprintf "%s/bin/%O/net461/%s.exe" project configuration project
-    let filename, arguments =
-        let args = "--colours 0 --summary"
-        if Environment.isWindows then exeName, args
-        else "mono", exeName + " " + args
-    Process.shellExec
-      { ExecParams.Empty with
-          Program = filename
-          CommandLine = arguments
-      }
-    |> fun r -> if r <> 0 then failwithf "Running %s on .NET Framework failed" project
 
   runTest "Expecto.Tests"
   "Expecto.Tests.TestResults.xml"
@@ -128,7 +118,8 @@ Target.create "Pack" <| fun _ ->
           "PackageReleaseNotes", String.toLines release.Notes
         ]
     }
-  let pkgSln = SlnTools.createTempSolutionFile libProjects
+
+  let pkgSln = NoSln.WriteSolutionFile(files=libProjects, useTempSolutionFile=true)
   let setParams (p: DotNet.PackOptions) =
     { p with
         OutputPath = Some pkgPath
