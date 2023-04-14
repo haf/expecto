@@ -49,15 +49,9 @@ What follows is the Table of Contents for this README, which also serves as the 
 - [.Net support](#net-support)
 - [Testing "Hello world"](#testing-hello-world)
 - [Running tests](#running-tests)
-  - [`runTests`](#runtests)
-  - [`runTestsWithArgs`](#runtestswithargs)
   - [`runTestsWithCLIArgs`](#runtestswithcliargs)
-  - [`runTestsWithCancel`](#runtestswithcancel)
-  - [`runTestsWithArgsAndCancel`](#runtestswithargsandcancel)
   - [`runTestsWithCLIArgsAndCancel`](#runtestswithcliargsandcancel)
-  - [`runTestsInAssembly`](#runtestsinassembly)
   - [`runTestsInAssemblyWithCLIArgs`](#runtestsinassemblywithcliargs)
-  - [`runTestsInAssemblyWithCancel`](#runtestsinassemblywithcancel)
   - [`runTestsInAssemblyWithCLIArgsAndCancel`](#runtestsinassemblywithcliargsandcancel)
   - [Filtering with `filter`](#filtering-with-filter)
   - [Shuffling with `shuffle`](#shuffling-with-shuffle)
@@ -233,55 +227,20 @@ testCase "A simple test" (fun () ->
   Expect.equal 4 (2+2) "2+2 should equal 4")
 ```
 
-### `runTests`
-
-Signature `ExpectoConfig -> Test -> int`. Runs the passed tests with the passed
-configuration record. Note: now deprecated please use CLIArgs below.
-
-### `runTestsWithArgs`
-
-Signature `ExpectoConfig -> string[] -> Test -> int`. Runs the passed tests
-and also overrides the passed `ExpectoConfig` with the command line parameters.
-Note: now deprecated please use CLIArgs below.
-
 ### `runTestsWithCLIArgs`
 
 Signature `CLIArguments seq -> string[] -> Test -> int`. Runs the passed tests
 and also overrides the passed `CLIArguments` with the command line parameters.
-
-### `runTestsWithCancel`
-
-Signature `CancellationToken -> ExpectoConfig -> Test -> int`. Runs the passed tests with the passed
-configuration record. Note: now deprecated please use CLIArgs below.
-
-### `runTestsWithArgsAndCancel`
-
-Signature `CancellationToken -> ExpectoConfig -> Test -> int`. Runs the passed tests
-and also overrides the passed `ExpectoConfig` with the command line parameters.
-configuration record. Note: now deprecated please use CLIArgs below.
 
 ### `runTestsWithCLIArgsAndCancel`
 
 Signature `CancellationToken -> ExpectoConfig -> Test -> int`. Runs the passed tests
 and also overrides the passed `CLIArguments` with the command line parameters.
 
-### `runTestsInAssembly`
-
-Signature `ExpectoConfig -> string[] -> int`. Runs the tests in the current
-assembly and also overrides the passed `ExpectoConfig` with the command line
-parameters. All tests need to be marked with the `[<Tests>]` attribute.
-Note: now deprecated please use CLIArgs below.
-
 ### `runTestsInAssemblyWithCLIArgs`
 
 Signature `CLIArguments seq -> string[] -> int`. Runs the tests in the current
 assembly and also overrides the passed `CLIArguments` with the command line
-parameters. All tests need to be marked with the `[<Tests>]` attribute.
-
-### `runTestsInAssemblyWithCancel`
-
-Signature `CancellationToken -> ExpectoConfig -> string[] -> int`. Runs the tests in the current
-assembly and also overrides the passed `ExpectoConfig` with the command line
 parameters. All tests need to be marked with the `[<Tests>]` attribute.
 
 ### `runTestsInAssemblyWithCLIArgsAndCancel`
