@@ -1,5 +1,7 @@
 namespace Expecto
 
+open System
+open System.Collections.Generic
 open System.Text
 open BenchmarkDotNet
 open BenchmarkDotNet.Running
@@ -41,6 +43,9 @@ module BenchmarkDotNet =
       logicalGroupRules : BenchmarkLogicalGroupRule list
       cultureInfo: CultureInfo
       options: ConfigOptions
+      buildTimeout: TimeSpan
+      configAnalysisConclusion: IReadOnlyList<Conclusion>
+      columnHidingRules: IColumnHidingRule list
     }
     interface IConfig with
       member x.GetColumnProviders() = Seq.ofList x.columnProviders
@@ -59,6 +64,9 @@ module BenchmarkDotNet =
       member x.GetLogicalGroupRules() = Seq.ofList x.logicalGroupRules
       member x.CultureInfo = x.cultureInfo
       member x.Options = x.options
+      member x.GetColumnHidingRules() = Seq.ofList x.columnHidingRules
+      member x.BuildTimeout = x.buildTimeout
+      member x.ConfigAnalysisConclusion = x.configAnalysisConclusion
 
   let private synchronisedLogger =
     let cl = ConsoleLogger.Default
@@ -95,6 +103,9 @@ module BenchmarkDotNet =
       logicalGroupRules = def.GetLogicalGroupRules() |> List.ofSeq
       cultureInfo = def.CultureInfo
       options = def.Options
+      columnHidingRules = def.GetColumnHidingRules() |> List.ofSeq
+      buildTimeout = def.BuildTimeout
+      configAnalysisConclusion = def.ConfigAnalysisConclusion
     }
 
   /// Run a performance test: pass the annotated type as a type param

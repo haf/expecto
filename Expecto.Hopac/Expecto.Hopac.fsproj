@@ -2,7 +2,7 @@
   <PropertyGroup>
     <PackageId>Expecto.Hopac</PackageId>
     <Description>Running Hopac jobs from Expecto</Description>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Expecto.Hopac.fs" />

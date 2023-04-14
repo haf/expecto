@@ -3,10 +3,9 @@
   <PropertyGroup>
     <PackageId>Expecto</PackageId>
     <Description>Advanced testing library for F#</Description>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="TaskBuilder.fs" />
     <Compile Include="Logging.fs" />
     <Compile Include="Progress.fs" />
     <Compile Include="Statistics.fs" />

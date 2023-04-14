@@ -12,7 +12,6 @@ module Tests =
   open Impl
   open Helpers
   open Expecto.Logging
-  open FSharp.Control.Tasks.CopiedDoNotReference.V2
 
   let mutable private afterRunTestsList = []
   let private afterRunTestsListLock = obj()
@@ -186,18 +185,18 @@ module Tests =
       testAsync name { do! setupAsync partialTest })
 
   type TestTaskBuilder(name, focusState) =
-    member __.Zero() = task.Zero()
-    member __.Delay(f) = task.Delay(f)
-    member __.Return(x) = task.Return(x)
-    member __.ReturnFrom(x) = task.ReturnFrom(x)
-    member __.Bind(p1:Task<'a>, p2:'a->_) = task.Bind(p1, p2)
-    member __.Bind(p1:Task, p2:unit->_) = task.Bind(p1, p2)
-    member __.Using(g, p) = task.Using(g, p)
-    member __.While(gd, prog) = task.While(gd, prog)
-    member __.For(e, prog) = task.For(e, prog)
-    member __.Combine(p1, p2) = task.Combine(p1, p2)
-    member __.TryFinally(p, cf) = task.TryFinally(p, cf)
-    member __.TryWith(p, cf) = task.TryWith(p, cf)
+    member inline __.Zero() = task.Zero()
+    member inline __.Delay(f) = task.Delay(f)
+    member inline __.Return(x) = task.Return(x)
+    member inline __.ReturnFrom(x) = task.ReturnFrom(x)
+    member inline __.Bind(p1:Task<'a>, p2:'a->_) = task.Bind(p1, p2)
+    member inline __.Bind(p1:Task, p2:unit->_) = task.Bind(p1, p2)
+    member inline __.Using(g, p) = task.Using(g, p)
+    member inline __.While(gd, prog) = task.While(gd, prog)
+    member inline __.For(e, prog) = task.For(e, prog)
+    member inline __.Combine(p1, p2) = task.Combine(p1, p2)
+    member inline __.TryFinally(p, cf) = task.TryFinally(p, cf)
+    member inline __.TryWith(p, cf) = task.TryWith(p, cf)
     member __.Run f =
       let a = async {
           do! task.Run f |> Async.AwaitTask

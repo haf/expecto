@@ -10,7 +10,6 @@ open Expecto
 open Expecto.Impl
 open Expecto.Logging
 open System.Globalization
-open FSharp.Control.Tasks.CopiedDoNotReference
 
 module Dummy =
 
@@ -124,8 +123,8 @@ let tests =
             let greenStart = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Green
             let greenEnd = ANSIOutputWriter.colourText (ANSIOutputWriter.getColour()) ConsoleColor.Cyan
             "Failing - record with different content.\nRecord does not match at position 2 for field named `b`. Expected field with value: \"dw\", but got \"de\".\n"+
-            greenStart+"expected"+greenEnd+":\n{a = \"dd\";\n b = \"d"+greenStart+"w"+greenEnd+"\";}\n"+
-            redStart+"  actual"+redEnd+":\n{a = \"dd\";\n b = \"d"+redStart+"e"+redEnd+"\";}"
+            greenStart+"expected"+greenEnd+":\n{ a = \"dd\"\n  b = \"d"+greenStart+"w"+greenEnd+"\" }\n"+
+            redStart+"  actual"+redEnd+":\n{ a = \"dd\"\n  b = \"d"+redStart+"e"+redEnd+"\" }"
           )
     ]
 
@@ -1289,8 +1288,6 @@ open System.Threading.Tasks
 [<Tests>]
 let taskTests =
   testList "task" [
-    let task = TaskBuilder.TaskBuilder()
-
     let withMemoryStreamTask f = task {
       use ms = new MemoryStream()
       do! f ms

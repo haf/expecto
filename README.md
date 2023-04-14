@@ -1178,8 +1178,8 @@ Tests.runTestsInAssemblyWithCLIArgs [Stress 0.1;Stress_Timeout 0.2] [||]
 From the command line you can run:
 
 ```
-dotnet run -p Expecto.Tests -f net5.0 -c release -- --help
-dotnet watch -p Expecto.Tests run -f net5.0 -c release -- --colours 256
+dotnet run -p Expecto.Tests -f net6.0 -c release -- --help
+dotnet watch -p Expecto.Tests run -f net6.0 -c release -- --colours 256
 ```
 
 ## Contributing and building 
