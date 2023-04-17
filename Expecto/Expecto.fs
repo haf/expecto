@@ -632,6 +632,15 @@ module Tests =
     let tests = testFromThisAssembly() |> Option.orDefault (TestList ([], Normal))
     runTestsWithArgsAndCancel ct config args tests
 
+  /// Runs tests in the specified assemblies with the supplied command-line options.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTestsInAssembliesWithCLIArgsAndCancel (ct:CancellationToken) cliArgs args assemblies =
+    let config = { ExpectoConfig.defaultConfig
+                    with locate = getLocation (Assembly.GetEntryAssembly()) }
+    let config = Seq.fold (fun s a -> foldCLIArgumentToConfig a s) config cliArgs
+    let tests = testFromAssemblies assemblies |> Option.orDefault (TestList ([], Normal))
+    runTestsWithArgsAndCancel ct config args tests
+
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   /// Deprecated: please use runTestsInAssemblyWithCLIArgs
