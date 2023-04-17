@@ -3,6 +3,7 @@ namespace Expecto.CSharp
 #nowarn "46"
 
 open System
+open System.Threading
 open System.Threading.Tasks
 open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
@@ -47,10 +48,10 @@ module Runner =
       Async.AwaitTask tcs.Task
 
   let RunTests(config, tests) = runEval config tests
-  let RunTestsWithArgs(config, args, tests) = runTestsWithArgs config args tests
   let RunTestsWithCLIArgs(cliArgs, args, tests) = runTestsWithCLIArgs cliArgs args tests
-  let RunTestsInAssembly(config, args) = runTestsInAssembly config args
+  let RunTestsWithCLIArgsAndCancel(ct, cliArgs, args, tests) = runTestsWithCLIArgsAndCancel ct cliArgs args tests
   let RunTestsInAssemblyWithCLIArgs(cliArgs, args) = runTestsInAssemblyWithCLIArgs cliArgs args
+  let RunTestsInAssemblyWithCLIArgsAndCancel(ct, cliArgs, args) = runTestsInAssemblyWithCLIArgsAndCancel ct cliArgs args
   let ListTests(config, tests) = listTests config tests
   let TestList(name, tests: IEnumerable<Test>) = testList name (List.ofSeq tests)
   [<CompiledName("TestCase")>]
@@ -130,9 +131,6 @@ module Runner =
 
       [<Extension; CompiledName("WithFsCheckEndSize")>]
       member x.WithFsCheckEndSize(fsCheckEndSize) = { x with fsCheckEndSize = fsCheckEndSize }
-
-      [<Extension; CompiledName("WithMySpiritIsWeak")>]
-      member x.WithMySpiritIsWeak(mySpiritIsWeak) = { x with mySpiritIsWeak = mySpiritIsWeak }
 
       [<Extension; CompiledName("WithAllowDuplicateNames")>]
       member x.WithAllowDuplicateNames(allowDuplicateNames) = { x with allowDuplicateNames = allowDuplicateNames }

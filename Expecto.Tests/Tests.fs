@@ -510,7 +510,6 @@ let expecto =
             "--fscheck-max-tests"; "5"
             "--fscheck-start-size"; "10"
             "--fscheck-end-size"; "20"
-            "--my-spirit-is-weak"
             "--allow-duplicate-names"
             "--no-spinner"
             "--colours"; "256"
@@ -538,7 +537,6 @@ let expecto =
           FsCheck_Max_Tests 5
           FsCheck_Start_Size 10
           FsCheck_End_Size 20
-          My_Spirit_Is_Weak
           Allow_Duplicate_Names
           No_Spinner
           Colours 256

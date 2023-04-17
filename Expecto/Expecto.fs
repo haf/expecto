@@ -360,8 +360,6 @@ module Tests =
     | Summary_Location
     /// Print out version information.
     | Version
-    /// Deprecated
-    | My_Spirit_Is_Weak
     /// Allow duplicate test names.
     | Allow_Duplicate_Names
     /// Disable the spinner progress update.
@@ -400,7 +398,6 @@ module Tests =
       "--fscheck-max-tests", "Set FsCheck maximum number of tests (default: 100).", Args.number FsCheck_Max_Tests
       "--fscheck-start-size", "Set FsCheck start size (default: 1).", Args.number FsCheck_Start_Size
       "--fscheck-end-size", "Set FsCheck end size (default: 100 for testing and 10,000 for stress testing).", Args.number FsCheck_End_Size
-      "--my-spirit-is-weak", Args.deprecated, Args.none My_Spirit_Is_Weak
       "--allow-duplicate-names", "Allow duplicate test names.", Args.none Allow_Duplicate_Names
       "--colours", "Set the level of colours to use. Can be 0, 8 (default) or 256.", Args.number Colours
       "--no-spinner", "Disable the spinner progress update.", Args.none No_Spinner
@@ -448,7 +445,6 @@ module Tests =
     | FsCheck_Max_Tests n -> fun o -> {o with fsCheckMaxTests = n }
     | FsCheck_Start_Size n -> fun o -> {o with fsCheckStartSize = n }
     | FsCheck_End_Size n -> fun o -> {o with fsCheckEndSize = Some n }
-    | My_Spirit_Is_Weak -> id
     | Allow_Duplicate_Names -> fun o -> { o with allowDuplicateNames = true }
     | No_Spinner -> fun o -> { o with noSpinner = true }
     | Colours i -> fun o -> { o with colour =
@@ -533,51 +529,43 @@ module Tests =
         | _, x :: _ :: _ -> Some x.name
         | _ -> None
     )
-  /// Runs tests with the supplied config.
+
+  /// Runs all given tests with the supplied typed command-line options.
   /// Returns 0 if all tests passed, otherwise 1
-  /// Deprecated: please use runTestsWithCLIArgsAndCancel.
-  [<Obsolete("Deprecated: please use runTestsWithCLIArgsAndCancel")>]
-  let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
-    ANSIOutputWriter.setColourLevel config.colour
-    Global.initialiseIfDefault
-      { Global.defaultConfig with
-          getLogger = fun name ->
-            LiterateConsoleTarget(
-              name, config.verbosity,
-              consoleSemaphore = Global.semaphore()) :> Logger
-      }
-    config.logName |> Option.iter setLogName
-    if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
-      1
-    else
-      let fTests = config.filter tests
-      let duplicates = lazy duplicatedNames config.joinWith fTests
-      if config.allowDuplicateNames || List.isEmpty duplicates.Value then
-        let retCode =
-          match config.stress with
-          | None -> runEvalWithCancel ct config fTests |> Async.RunSynchronously
-          | Some _ -> runStressWithCancel ct config fTests |> Async.RunSynchronously
-        afterRunTestsInvoke()
-        retCode
-      else
-        sprintf "Found duplicated test names, these names are: %A" duplicates.Value
-        |> config.printer.info
-        |> Async.RunSynchronously
-        ANSIOutputWriter.close()
+  let runTestsWithCLIArgsAndCancel (ct:CancellationToken) cliArgs args tests =
+    let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
+      ANSIOutputWriter.setColourLevel config.colour
+      Global.initialiseIfDefault
+        { Global.defaultConfig with
+            getLogger = fun name ->
+              LiterateConsoleTarget(
+                name, config.verbosity,
+                consoleSemaphore = Global.semaphore()) :> Logger
+        }
+      config.logName |> Option.iter setLogName
+      if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
         1
+      else
+        let fTests = config.filter tests
+        let duplicates = lazy duplicatedNames config.joinWith fTests
+        if config.allowDuplicateNames || List.isEmpty duplicates.Value then
+          let retCode =
+            match config.stress with
+            | None -> runEvalWithCancel ct config fTests |> Async.RunSynchronously
+            | Some _ -> runStressWithCancel ct config fTests |> Async.RunSynchronously
+          afterRunTestsInvoke()
+          retCode
+        else
+          sprintf "Found duplicated test names, these names are: %A" duplicates.Value
+          |> config.printer.info
+          |> Async.RunSynchronously
+          ANSIOutputWriter.close()
+          1
 
-  /// Runs tests with the supplied config.
-  /// Returns 0 if all tests passed, otherwise 1
-  /// Deprecated: please use runTestsWithCLIArgs.
-  [<Obsolete("Deprecated: please use runTestsWithCLIArgs")>]
-  let runTests config tests =
-    runTestsWithCancel CancellationToken.None config tests
+    let config =
+      Seq.fold (fun s a -> foldCLIArgumentToConfig a s)
+        ExpectoConfig.defaultConfig cliArgs
 
-  /// Runs all given tests with the supplied command-line options.
-  /// Returns 0 if all tests passed, otherwise 1
-  /// Deprecated: please use runTestsWithCLIArgsAndCancel
-  [<Obsolete("Deprecated: please use runTestsWithCLIArgsAndCancel")>]
-  let runTestsWithArgsAndCancel (ct:CancellationToken) config args tests =
     match ExpectoConfig.fillFromArgs config args with
     | ArgsUsage (usage, errors) ->
       if not (List.isEmpty errors) then
@@ -595,49 +583,14 @@ module Tests =
 
   /// Runs all given tests with the supplied typed command-line options.
   /// Returns 0 if all tests passed, otherwise 1
-  let runTestsWithCLIArgsAndCancel (ct:CancellationToken) cliArgs args tests =
-    let config =
-      Seq.fold (fun s a -> foldCLIArgumentToConfig a s)
-        ExpectoConfig.defaultConfig cliArgs
-    runTestsWithArgsAndCancel ct config args tests
-
-  /// Runs all given tests with the supplied command-line options.
-  /// Returns 0 if all tests passed, otherwise 1
-  /// Deprecated: please use runTestsWithCLIArgs
-  [<Obsolete("Deprecated: please use runTestsWithCLIArgs")>]
-  let runTestsWithArgs config args tests =
-    runTestsWithArgsAndCancel CancellationToken.None config args tests
-
-  /// Runs all given tests with the supplied typed command-line options.
-  /// Returns 0 if all tests passed, otherwise 1
   let runTestsWithCLIArgs cliArgs args tests =
     runTestsWithCLIArgsAndCancel CancellationToken.None cliArgs args tests
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
-  /// Deprecated: please use runTestsInAssemblyWithCLIArgsAndCancel
-  [<Obsolete("Deprecated: please use runTestsInAssemblyWithCLIArgsAndCancel")>]
-  let runTestsInAssemblyWithCancel (ct:CancellationToken) config args =
-    let config = { config with locate = getLocation (Assembly.GetEntryAssembly()) }
-    testFromThisAssembly ()
-    |> Option.orDefault (TestList ([], Normal))
-    |> runTestsWithArgsAndCancel ct config args
-
-  /// Runs tests in this assembly with the supplied command-line options.
-  /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssemblyWithCLIArgsAndCancel (ct:CancellationToken) cliArgs args =
-    let config = { ExpectoConfig.defaultConfig
-                    with locate = getLocation (Assembly.GetEntryAssembly()) }
-    let config = Seq.fold (fun s a -> foldCLIArgumentToConfig a s) config cliArgs
     let tests = testFromThisAssembly() |> Option.orDefault (TestList ([], Normal))
-    runTestsWithArgsAndCancel ct config args tests
-
-  /// Runs tests in this assembly with the supplied command-line options.
-  /// Returns 0 if all tests passed, otherwise 1
-  /// Deprecated: please use runTestsInAssemblyWithCLIArgs
-  [<Obsolete("Deprecated: please use runTestsInAssemblyWithCLIArgs")>]
-  let runTestsInAssembly config args =
-    runTestsInAssemblyWithCancel CancellationToken.None config args
+    runTestsWithCLIArgsAndCancel ct cliArgs args tests
 
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
