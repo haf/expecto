@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33027.239
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto", "Expecto\Expecto.fsproj", "{F82A6D5C-3B7C-4204-8A96-7D0AB8A67721}"
 EndProject
@@ -21,15 +21,19 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.Hopac", "Expecto.Ho
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.Hopac.Tests", "Expecto.Hopac.Tests\Expecto.Hopac.Tests.fsproj", "{DF3DAA62-1273-47AB-ADEB-659492FFEE94}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.Diff", "Expecto.Diff\Expecto.Diff.fsproj", "{499DEA86-F089-4983-BB60-D54C22B6643D}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.Diff", "Expecto.Diff\Expecto.Diff.fsproj", "{499DEA86-F089-4983-BB60-D54C22B6643D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{9B913138-FBD2-4216-95EC-BDEE468E94BA}"
-ProjectSection(SolutionItems) = preProject
-	build.fsx = build.fsx
-	paket.dependencies = paket.dependencies
-	paket.lock = paket.lock
-	NuGet.props = NuGet.props
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		build.fsx = build.fsx
+		NuGet.props = NuGet.props
+		paket.dependencies = paket.dependencies
+		paket.lock = paket.lock
+	EndProjectSection
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.FsCheck3", "Expecto.FsCheck3\Expecto.FsCheck3.fsproj", "{854FC486-3741-4910-A719-54D1C355B07D}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Expecto.Tests.FsCheck3", "Expecto.Tests.FsCheck3\Expecto.Tests.FsCheck3.fsproj", "{C82C1A73-8341-49E4-BBAF-7C39316963A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -77,6 +81,14 @@ Global
 		{499DEA86-F089-4983-BB60-D54C22B6643D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{499DEA86-F089-4983-BB60-D54C22B6643D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{499DEA86-F089-4983-BB60-D54C22B6643D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{854FC486-3741-4910-A719-54D1C355B07D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{854FC486-3741-4910-A719-54D1C355B07D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{854FC486-3741-4910-A719-54D1C355B07D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{854FC486-3741-4910-A719-54D1C355B07D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C82C1A73-8341-49E4-BBAF-7C39316963A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C82C1A73-8341-49E4-BBAF-7C39316963A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C82C1A73-8341-49E4-BBAF-7C39316963A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C82C1A73-8341-49E4-BBAF-7C39316963A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

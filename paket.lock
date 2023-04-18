@@ -371,3 +371,10 @@ NUGET
       System.Runtime.CompilerServices.Unsafe (>= 4.5.3) - restriction: || (&& (== net6.0) (>= net461)) (&& (== net6.0) (< netcoreapp2.1)) (&& (== net6.0) (< netstandard1.0)) (&& (== net6.0) (< netstandard2.0)) (&& (== net6.0) (>= wp8)) (== netstandard2.1)
     System.Windows.Extensions (7.0) - restriction: || (== net6.0) (&& (== netstandard2.1) (>= net6.0))
       System.Drawing.Common (>= 7.0) - restriction: || (== net6.0) (&& (== netstandard2.1) (>= net6.0))
+
+GROUP FsCheck3
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    FsCheck (3.0.0-beta2)
+      FSharp.Core (>= 4.5) - restriction: >= netstandard2.0
+    FSharp.Core (7.0.200) - restriction: >= netstandard2.0

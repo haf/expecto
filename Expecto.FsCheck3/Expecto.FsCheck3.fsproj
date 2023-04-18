@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Expecto.FsCheck3</PackageId>
+    <Description>Property testing for Expecto, powered by FsCheck3</Description>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="FsCheck3.fs" />
+    <None Include="paket.references" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Expecto\Expecto.fsproj" />
+  </ItemGroup>
+  <Import Project="..\NuGet.props" />
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>
