@@ -260,7 +260,7 @@ let isNotInfinity actual message =
 /// Expect the passed string not to be empty.
 let isNotEmpty (actual : string) message =
   isNotNull actual message
-  if String.IsNullOrWhiteSpace actual then Tests.failtestf "%s. Should not be empty." message
+  if String.IsNullOrEmpty actual then Tests.failtestf "%s. Should not be empty." message
 
 /// Expect the passed string is not whitespace
 let isNotWhitespace (actual : string) message =
