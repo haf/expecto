@@ -1,3 +1,9 @@
+#### 10.0.0 - 2023-04-20
+* Make Expect.isNotEmpty accept whitespace strings #452
+* Removed deprecated code #449
+* Bumped minimum framework to .NET 6 #447
+* Add testFixtureAsync and testFixtureTask #444
+
 #### 9.0.3 - 2021-08-17
 * Thanks @lydell for improving Expecto.Diff
 

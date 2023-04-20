@@ -1,0 +1,20 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .Net
+        uses: actions/setup-dotnet@v3
+        with:
+          global-json-file: "./global.json"
+      - run: ./fake build --target Release
+        env:
+          NUGET_TOKEN: ${{secrets.NUGET_RELEASE_KEY}}
