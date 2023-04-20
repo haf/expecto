@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Expecto.CSharp;
 using Expecto;
 using static Expecto.Impl;
+using static Expecto.Tests.CLIArguments;
 
 namespace Test.CSharp
 {
@@ -86,12 +87,12 @@ namespace Test.CSharp
 
         public static int Main(string[] args)
         {
-            var config =
-                Runner.DefaultConfig
-                    .AddPrinter(new CSharpPrinter())
-                    .AddNUnitSummary("bin/Expecto.Tests.CSharp.TestResults.xml")
-                    .AddJUnitSummary("bin/Expecto.Tests.CSharp.TestResults.junit.xml");
-            return Runner.RunTestsInAssembly(config, args);
+            Tests.CLIArguments[] config = new[]
+            {
+                NewNUnit_Summary("bin/Expecto.Tests.CSharp.TestResults.xml"),
+                NewJUnit_Summary("bin/Expecto.Tests.CSharp.TestResults.junit.xml"),
+            };
+            return Runner.RunTestsInAssemblyWithCLIArgs(config, args);
         }
     }
 }
