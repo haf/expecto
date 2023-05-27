@@ -173,7 +173,7 @@ let inline isAscending message subject = Expecto.Expect.isAscending subject mess
 let inline isDescending message subject = Expecto.Expect.isDescending subject message
 
 /// Expect the string `subject` to contain `substring` as part of itself.
-/// If it does not, then fail with `format` and `subject` and `substring`
+/// If it does not, then fail with `message` and `subject` and `substring`
 /// as part of the error message.
 let inline stringContains message substring subject = Expecto.Expect.stringContains subject substring message
 
@@ -188,7 +188,7 @@ let inline stringStarts message prefix subject = Expecto.Expect.stringStarts sub
 let inline stringEnds message suffix subject = Expecto.Expect.stringEnds subject suffix message
 
 /// Expect the string `subject` to have length equals `length`. If it does not
-/// then fail with `format` as an error message together with a description
+/// then fail with `message` as an error message together with a description
 /// of `subject` and `length`.
 let inline stringHasLength message length subject = Expecto.Expect.stringHasLength subject length message
 
