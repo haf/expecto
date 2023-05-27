@@ -192,6 +192,10 @@ let inline stringEnds message suffix subject = Expecto.Expect.stringEnds subject
 /// of `subject` and `length`.
 let inline stringHasLength message length subject = Expecto.Expect.stringHasLength subject length message
 
+/// Expect length of a list/array/seq to be exactly length. Print out the whole seq
+/// on failure so it's easier to debug.
+let inline hasLength message expectedLength seq = Expecto.Expect.hasLength seq expectedLength message
+
 /// Expect the streams to byte-wise equal.
 let inline streamsEqual message s2 s1 = Expecto.Expect.streamsEqual s1 s2 message
 
