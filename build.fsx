@@ -38,6 +38,7 @@ BuildServer.install [
 let libProjects =
   !! "Expecto/*.fsproj"
   ++ "Expecto.FsCheck/*.fsproj"
+  ++ "Expecto.FsCheck3/*.fsproj"
   ++ "Expecto.Diff/*.fsproj"
   ++ "Expecto.BenchmarkDotNet/*.fsproj"
   ++ "Expecto.Hopac/*.fsproj"
@@ -47,6 +48,7 @@ let testProjects =
   ++ "Expecto.Hopac.Tests/*.Tests.fsproj"
   ++ "Expecto.Tests.CSharp/*.Tests.CSharp.csproj"
   ++ "Expecto.Focused.Tests/*.Tests.fsproj"
+  ++ "Expecto.Tests.FsCheck3/*.Tests.FsCheck3.fsproj"
 
 let benchmarkProjects =
   !! "Expecto.BenchmarkDotNet/*.fsproj"
@@ -107,6 +109,7 @@ Target.create "RunTest" <| fun _ ->
 
   runTest "Expecto.Hopac.Tests"
   runTest "Expecto.Focused.Tests"
+  runTest "Expecto.Tests.FsCheck3"
 
 Target.create "Pack" <| fun _ ->
   let args =
