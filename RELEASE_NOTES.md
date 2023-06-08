@@ -1,4 +1,5 @@
 #### 10.0.0 - 2023-04-20
+* New Expecto package with FsCheck3 support #450
 * Make Expect.isNotEmpty accept whitespace strings #452
 * Removed deprecated code #449
 * Bumped minimum framework to .NET 6 #447
