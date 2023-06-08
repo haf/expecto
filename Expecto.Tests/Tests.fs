@@ -1691,3 +1691,18 @@ let cancel =
       }
     )
   ]
+
+[<Tests>]
+let theory =
+  testList "theory testing" [
+    testTheory "odd numbers" [1; 3; 5] <| fun x ->
+      Expect.isTrue (x % 2 = 1) "should be odd"
+
+    testTheoryAsync "async even numbers" [2; 4; 6] <| fun x -> async {
+      Expect.isTrue (x % 2 = 0) "should be even"
+    }
+
+    testTheoryTask "task odd numbers" [1; 3; 5;] <| fun x -> task {
+      Expect.isTrue (x % 2 = 1) "should be odd"
+    }
+  ]

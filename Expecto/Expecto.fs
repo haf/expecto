@@ -110,7 +110,24 @@ module Tests =
   let inline testFixture setup =
     Seq.map (fun (name, partialTest) ->
       testCase name (setup partialTest))
-
+  /// Builds a theory test case
+  let inline testTheory name cases test =
+    let caseToTest case =
+      testCase (string case) <| fun () ->
+        test case |> ignore
+    testList name (cases |> Seq.map caseToTest |> List.ofSeq)
+  /// Builds a theory test case that will make Expecto to ignore other unfocused tests
+  let inline ftestTheory name cases test =
+    let caseToTest case =
+      ftestCase (string case) <| fun () ->
+        test case |> ignore
+    ftestList name (cases |> Seq.map caseToTest |> List.ofSeq)
+  /// Builds a theory test case that will be ignored by Expecto
+  let inline ptestTheory name cases test =
+    let caseToTest case =
+      ptestCase (string case) <| fun () ->
+        test case |> ignore
+    ptestList name (cases |> Seq.map caseToTest |> List.ofSeq)
   /// Applies a value to a list of partial tests
   let inline testParam param =
     Seq.map (fun (name, partialTest) ->
@@ -183,6 +200,21 @@ module Tests =
   let inline testFixtureAsync setupAsync =
     Seq.map (fun (name, partialTest) ->
       testAsync name { do! setupAsync partialTest })
+  /// Builds an async theory test case
+  let inline testTheoryAsync name cases test =
+    let caseToTest case =
+      testAsync (string case) { do! test case }
+    testList name (cases |> Seq.map caseToTest |> List.ofSeq)
+  /// Builds an async theory test case that will make Expecto to ignore other unfocused tests
+  let inline ftestTheoryAsync name cases test =
+    let caseToTest case =
+      ftestAsync (string case) { do! test case }
+    ftestList name (cases |> Seq.map caseToTest |> List.ofSeq)
+  /// Builds an async theory test case that will be ignored by Expecto
+  let inline ptestTheoryAsync name cases test =
+    let caseToTest case =
+      ptestAsync (string case) { do! test case }
+    ptestList name (cases |> Seq.map caseToTest |> List.ofSeq)
 
   type TestTaskBuilder(name, focusState) =
     member inline __.Zero() = task.Zero()
@@ -219,6 +251,21 @@ module Tests =
   let inline testFixtureTask setupTask =
     Seq.map (fun (name, partialTest) ->
       testTask name { do! setupTask partialTest })
+  /// Builds a task theory test case
+  let inline testTheoryTask name cases test =
+    let caseToTest case =
+      testTask (string case) { do! test case }
+    testList name (cases |> Seq.map caseToTest |> List.ofSeq)
+  /// Builds a task theory test case that will make Expecto to ignore other unfocused tests
+  let inline ftestTheoryTask name cases test =
+    let caseToTest case =
+      ftestTask (string case) { do! test case }
+    ftestList name (cases |> Seq.map caseToTest |> List.ofSeq)
+  /// Builds a task theory test case that will be ignored by Expecto
+  let inline ptestTheoryTask name cases test =
+    let caseToTest case =
+      ptestTask (string case) { do! test case }
+    ptestList name (cases |> Seq.map caseToTest |> List.ofSeq)
 
   /// The default configuration for Expecto.
   let defaultConfig = ExpectoConfig.defaultConfig

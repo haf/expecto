@@ -60,6 +60,7 @@ What follows is the Table of Contents for this README, which also serves as the 
   - [Normal tests](#normal-tests)
   - [`testList` for grouping](#testlist-for-grouping)
   - [Test fixtures](#test-fixtures)
+  - [Theory tests](#theory-tests)
   - [Pending tests](#pending-tests)
   - [Focusing tests](#focusing-tests)
   - [Sequenced tests](#sequenced-tests)
@@ -427,6 +428,36 @@ testList "Setup & teardown 5" [
 ]
 ```
 
+### Theory tests
+
+- `testTheory : string -> seq<'a> -> ('a -> 'b) -> Test`
+
+The test theory takes a name and a sequence of cases to test against.
+The `'a` parameter will be inferred to the *sequence type*, such as `string -> seq<int> -> (int -> 'b) -> Test`.
+
+Example:
+
+```fsharp
+testList "theory testing" [
+  testTheory "odd numbers" [1; 3; 5] <| fun x ->
+    Expect.isTrue (x % 2 = 1) "should be odd"
+]
+```
+
+- `testTheoryWithResult: string -> seq<'a * 'b> -> ('a * 'b -> 'c) -> Test`
+
+The test theory with result takes a name and a sequence of tuples with the cases to test against.
+The `'a * 'b` parameter will be inferred to the *sequence type*, such as `string -> seq<(int * int) * int> -> ((int * int) * int -> 'b) -> Test`.
+
+Example:
+
+```fsharp
+testList "theory testing" [
+  testTheoryWithResult "sum numbers" [(1,1),2; (2,2),4] <| fun (actual, expected) ->
+    let a, b = actual
+    Expect.equal (a+b) expected "should be equal"
+]
+```
 
 ### Pending tests
 
@@ -435,6 +466,9 @@ testList "Setup & teardown 5" [
 - `ptestAsync`
 - `ptestTask`
 - `ptestCaseAsync`
+- `ptestTheory`
+- `ptestTheoryAsync`
+- `ptestTheoryTask`
 
 You can mark an individual spec or container as Pending. This will prevent the spec (or specs within the list) from
 running.  You do this by adding a `p` before *testCase* or *testList* or `P` before *Tests* attribute (when reflection
@@ -480,6 +514,9 @@ Focusing can be done with
 - `ftest`
 - `ftestAsync`
 - `ftestTask`
+- `ftestTheory`
+- `ftestTheoryAsync`
+- `ftestTheoryTask`
 
 It is often convenient, when developing to be able to run a subset of specs.  Expecto allows you to focus specific test
 cases or tests list by putting `f` before *testCase* or *testList* or `F` before attribute *Tests*(when reflection tests

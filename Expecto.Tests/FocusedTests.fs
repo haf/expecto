@@ -20,6 +20,8 @@ let pendingTests =
     testCase "normal" working
     test "normal" { () }
     ptest "ignored" { 1 ==? 2 }
+    testTheory "normal" [()] working
+    ptestTheory "ignored" [()] failing
   ]
 
 let focusedTests =
@@ -27,6 +29,9 @@ let focusedTests =
     test "normal" { 1 ==? 2 }
     ptest "ignored" { 1 ==? 2 }
     ftest "focused" { () }
+    testTheory "normal" [()] failing
+    ptestTheory "ignored" [()] failing
+    ftestTheory "focused" [()] working
     ptestCase "ignored" failing
     testCase "normal" failing
     ftestCase "focused" working
@@ -74,8 +79,8 @@ let all =
                      memoryLimit = 0L
                      timedOut = [] }
 
-      Seq.length result.passed ==? 2
-      Seq.length result.ignored ==? 5
+      Seq.length result.passed ==? 3
+      Seq.length result.ignored ==? 6
     }
     testCaseAsync "focused" <| async {
       let! result = Impl.evalTestsSilent focusedTests
@@ -85,8 +90,8 @@ let all =
                      memoryLimit = 0L
                      timedOut = [] }
 
-      Seq.length result.passed ==? 11
-      Seq.length result.ignored ==? 19
+      Seq.length result.passed ==? 12
+      Seq.length result.ignored ==? 21
     }
     testCase "can detect focused test" <| fun _ ->
       let localList =

@@ -1,3 +1,6 @@
+### 10.1.0 - 2023-06-08
+* Add Theory Test Support #456
+
 #### 10.0.0 - 2023-04-20
 * New Expecto package with FsCheck3 support #450
 * Make Expect.isNotEmpty accept whitespace strings #452
