@@ -444,17 +444,13 @@ testList "theory testing" [
 ]
 ```
 
-- `testTheoryWithResult: string -> seq<'a * 'b> -> ('a * 'b -> 'c) -> Test`
-
-The test theory with result takes a name and a sequence of tuples with the cases to test against.
-The `'a * 'b` parameter will be inferred to the *sequence type*, such as `string -> seq<(int * int) * int> -> ((int * int) * int -> 'b) -> Test`.
+Theory tests can simulate multiple parameters via tuples. For example, passing input with an expected result
 
 Example:
 
 ```fsharp
-testList "theory testing" [
-  testTheoryWithResult "sum numbers" [(1,1),2; (2,2),4] <| fun (actual, expected) ->
-    let a, b = actual
+testList "theory testing with an expected result" [
+  testTheory "sum numbers" [(1,1),2; (2,2),4] <| fun ((a,b), expected) ->
     Expect.equal (a+b) expected "should be equal"
 ]
 ```
