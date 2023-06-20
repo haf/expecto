@@ -3,7 +3,7 @@ framework netstandard2.1, net6.0
 storage none
 version 7.1.5
 
-nuget FSharp.Core ~6
+nuget FSharp.Core ~> 7
 nuget FsCheck ~> 2.14
 nuget Hopac ~> 0.4
 nuget DiffPlex ~> 1.5
