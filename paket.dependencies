@@ -32,9 +32,9 @@ group Build
   nuget Fake.IO.Zip
   nuget Fake.Tools.Git
   nuget Fake.Tools.Octo
-  nuget Microsoft.Build 17.3.2
-  nuget Microsoft.Build.Framework 17.3.2
-  nuget Microsoft.Build.Tasks.Core 17.3.2
-  nuget Microsoft.Build.Utilities.Core 17.3.2
+  nuget Microsoft.Build 17.6.3
+  nuget Microsoft.Build.Framework 17.6.3
+  nuget Microsoft.Build.Tasks.Core 17.6.3
+  nuget Microsoft.Build.Utilities.Core 17.6.3
   nuget Nuget.Protocol
   nuget nosln
