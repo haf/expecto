@@ -13,7 +13,7 @@ nuget BenchmarkDotNet ~> 0.13.5
 group FsCheck3
   source https://api.nuget.org/v3/index.json
 
-  nuget FsCheck ~> 3.0.0-beta2
+  nuget FsCheck ~> 3
 
 group Build
   source https://api.nuget.org/v3/index.json
