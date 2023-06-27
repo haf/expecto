@@ -169,17 +169,17 @@ Target.create "Release" (fun _ ->
 
 Target.create "All" ignore
 
-"CheckEnv"
-  ==> "Release"
+// "CheckEnv"
+//   ==> "Release"
 
-"Clean"
-  ==> "BuildExpecto"
-  ==> "BuildBenchmarkDotNet"
-  ==> "BuildTest"
-  ==> "RunTest"
-  ==> "Pack"
-  ==> "All"
-  ==> "Push"
-  ==> "Release"
+// "Clean"
+//   ==> "BuildExpecto"
+//   ==> "BuildBenchmarkDotNet"
+//   ==> "BuildTest"
+//   ==> "RunTest"
+//   ==> "Pack"
+//   ==> "All"
+//   ==> "Push"
+//   ==> "Release"
 
 Target.runOrDefaultWithArguments "All"
