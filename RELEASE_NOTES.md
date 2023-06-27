@@ -1,8 +1,10 @@
-### 10.1.0 - 2023-06-08
-* Add Theory Test Support #456
+### 10.1.0 - 2023-06-26
+* Add Theory Test Support #456, thanks @ratsclub
+* Loosen the FSharp.Core version requirement #458, thanks @farlee2121 and @JohnTheGr8
+* New Expecto.FsCheck pre-release version with FsCheck3 support #450, thanks @farlee2121
+* Add `Flip.Expect.hasLength` #455, thanks @JohnTheGr8
 
 #### 10.0.0 - 2023-04-20
-* New Expecto package with FsCheck3 support #450
 * Make Expect.isNotEmpty accept whitespace strings #452
 * Removed deprecated code #449
 * Bumped minimum framework to .NET 6 #447
