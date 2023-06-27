@@ -122,7 +122,7 @@ Target.create "Pack" <| fun _ ->
         ]
     }
 
-  let pkgSln = NoSln.WriteSolutionFile(files=libProjects, useTempSolutionFile=true)
+  let pkgSln = NoSln.WriteSolutionFile(projects=libProjects, useTempSolutionFile=true)
   let setParams (p: DotNet.PackOptions) =
     { p with
         OutputPath = Some pkgPath
