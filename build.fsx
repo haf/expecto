@@ -117,7 +117,7 @@ Target.create "Pack" <| fun _ ->
         NoLogo = true
         DoRestore = false
         Properties = [
-          "Version", release.NugetVersion
+          "VersionPrefix", release.NugetVersion
           "PackageReleaseNotes", String.toLines release.Notes
         ]
     }
