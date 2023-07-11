@@ -901,6 +901,9 @@ This module is your main entry-point when asserting.
 - `throws`
 - `throwsC`
 - `throwsT`
+- `throwsAsync`
+- `throwsAsyncC`
+- `throwsAsyncT`
 - `isNone`
 - `isSome`
 - `isChoice1Of2`
