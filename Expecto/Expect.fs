@@ -108,7 +108,7 @@ let throwsT<'texn when 'texn :> exn> f message =
   | Some _ -> ()
   | _ -> failtestf "%s. Expected f to throw." message
 
-/// Expects f to throw an exception.
+/// Expects f to throw an exception asynchronously.
 let throwsAsync f message = async {
   let! thrown = async {
     try
@@ -121,7 +121,7 @@ let throwsAsync f message = async {
     failtestf "%s. Expected f to throw." message
 }
 
-/// Expects f to throw, and calls `cont` with its exception.
+/// Expects f to throw asynchronously, and calls `cont` with its exception.
 let throwsAsyncC f cont = async {
   let! thrown = async {
     try
@@ -136,7 +136,7 @@ let throwsAsyncC f cont = async {
   | _ -> failtestf "Expected f to throw."
 }
 
-/// Expects the passed function to throw `'texn`.
+/// Expects the passed function to throw `'texn` asynchronously.
 [<RequiresExplicitTypeArguments>]
 let throwsAsyncT<'texn when 'texn :> exn> f message = async {
   let! thrown = async {
