@@ -132,7 +132,7 @@ let throwsAsyncC f cont = async {
   }
 
   match thrown with
-  | Some e -> cont e
+  | Some e -> do! cont e
   | _ -> failtestf "Expected f to throw."
 }
 

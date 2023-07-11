@@ -804,22 +804,22 @@ let expecto =
           do!
             Expect.throwsAsyncC
               (fun _ -> raise exc)
-              (fun e ->
+              (fun e -> async {
                 contCalled <- true
                 if e <> exc then failtest "passes different exception"
-              )
+              })
 
           if not contCalled then failtest "'cont' is not called"
         }
 
         testCaseAsync "fail when exception is not raised" (
-          Expect.throwsAsyncC (fun _ -> async { () }) ignore
+          Expect.throwsAsyncC (fun _ -> async { () }) (fun _ -> async { () })
         ) |> assertTestFails
 
         testCaseAsync "do not call 'cont' if exception is not raised" <| async {
           let mutable contCalled = false
           try
-            do! Expect.throwsAsyncC (fun _ -> async { () }) (fun e -> contCalled <- true)
+            do! Expect.throwsAsyncC (fun _ -> async { () }) (fun e -> async { contCalled <- true })
           with
             _ -> ()
 
