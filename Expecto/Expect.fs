@@ -90,8 +90,8 @@ let throwsC f cont =
   | Some e -> cont e
   | _ -> failtestf "Expected f to throw."
 
-[<RequiresExplicitTypeArguments>]
 /// Expects the passed function to throw `'texn`.
+[<RequiresExplicitTypeArguments>]
 let throwsT<'texn when 'texn :> exn> f message =
   let thrown =
     try
@@ -107,6 +107,54 @@ let throwsT<'texn when 'texn :> exn> f message =
       (e.GetType().FullName)
   | Some _ -> ()
   | _ -> failtestf "%s. Expected f to throw." message
+
+/// Expects f to throw an exception.
+let throwsAsync f message = async {
+  let! thrown = async {
+    try
+      do! f ()
+      return false
+    with _ ->
+      return true
+  }
+  if not thrown then
+    failtestf "%s. Expected f to throw." message
+}
+
+/// Expects f to throw, and calls `cont` with its exception.
+let throwsAsyncC f cont = async {
+  let! thrown = async {
+    try
+      do! f ()
+      return None
+    with e ->
+      return Some e
+  }
+
+  match thrown with
+  | Some e -> cont e
+  | _ -> failtestf "Expected f to throw."
+}
+
+/// Expects the passed function to throw `'texn`.
+[<RequiresExplicitTypeArguments>]
+let throwsAsyncT<'texn when 'texn :> exn> f message = async {
+  let! thrown = async {
+    try
+      do! f ()
+      return None
+    with e ->
+      return Some e
+  }
+  match thrown with
+  | Some e when e.GetType() <> typeof<'texn> ->
+    failtestf "%s. Expected f to throw an exn of type %s, but one of type %s was thrown."
+      message
+      (typeof<'texn>.FullName)
+      (e.GetType().FullName)
+  | Some _ -> ()
+  | _ -> failtestf "%s. Expected f to throw." message
+}
 
 /// Expects the value to be a None value.
 let isNone x message =
