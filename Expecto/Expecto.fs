@@ -633,6 +633,10 @@ module Tests =
   let runTestsWithCLIArgs cliArgs args tests =
     runTestsWithCLIArgsAndCancel CancellationToken.None cliArgs args tests
 
+  /// Runs all given tests.
+  /// Returns 0 if all tests passed, otherwise 1
+  let runTests = runTestsWithCLIArgs [] [||]
+
   /// Runs tests in this assembly with the supplied command-line options.
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssemblyWithCLIArgsAndCancel (ct:CancellationToken) cliArgs args =
@@ -643,3 +647,5 @@ module Tests =
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssemblyWithCLIArgs cliArgs args =
     runTestsInAssemblyWithCLIArgsAndCancel CancellationToken.None cliArgs args
+
+
