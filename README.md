@@ -43,10 +43,10 @@ What follows is the Table of Contents for this README, which also serves as the 
 - [Quickstart](#quickstart)
 - [Installing](#installing)
 - [IDE integrations](#ide-integrations)
-- [.Net integration](#net-integration)
+- [.NET integration](#net-integration)
   - [Prettify stacktraces/ship test logs](#prettify-stacktracesship-test-logs)
   - [TestResults file](#testresults-file)
-- [.Net support](#net-support)
+- [.NET support](#net-support)
 - [Testing "Hello world"](#testing-hello-world)
 - [Running tests](#running-tests)
   - [`runTestsWithCLIArgs`](#runtestswithcliargs)
@@ -109,9 +109,9 @@ with Expecto:
 
 ## IDE integrations
 
-There's a nuget `Expecto.VisualStudio.TestAdapter` for Visual Studio integration.
+There's a NuGet `Expecto.VisualStudio.TestAdapter` for Visual Studio integration.
 
-## .Net integration
+## .NET integration
 
 You can use `dotnet run` or `dotnet watch` from the command line.
 
@@ -156,9 +156,9 @@ and the output won't be interlaced due to concurrency.
 
 Use `--nunit-summary TestResults.xml` or `--junit-summary TestResults.junit.xml` (JUnit support is incomplete).
 
-## .Net support
+## .NET support
 
-[Expecto has it's own .Net template](https://github.com/MNie/Expecto.Template)! You could create a base .Net
+[Expecto has its own .NET template](https://github.com/MNie/Expecto.Template)! You could create a base .NET
 project with expecto.  How to do that? Simply write following lines:
 
     dotnet new -i 'Expecto.Template::*'
@@ -1252,7 +1252,7 @@ Others have discovered the beauty of tests-as-values in easy-to-read F#.
 * [Visual Studio Plugin for
   Expecto](https://www.nuget.org/packages/Expecto.VisualStudio.TestAdapter/) –
   just add the `nuget Expecto.VisualStudio.TestAdapter version_in_path: true` to
-  your paket file and you're off to the races!
+  your Paket file and you're off to the races!
 * [FsCheck supports it](https://fscheck.github.io/FsCheck/QuickStart.html#Integration-with-Expecto)
 
 ![Expecto VS Test Plugin](./docs/expecto-vs-addon.jpeg "Easy to get started even
