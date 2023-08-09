@@ -6,9 +6,19 @@ let inline throws message f = Expecto.Expect.throws f message
 /// Expects f to throw, and calls `cont` with its exception.
 let inline throwsC cont f = Expecto.Expect.throwsC f cont
 
-[<RequiresExplicitTypeArguments>]
 /// Expects the passed function to throw `'texn`.
+[<RequiresExplicitTypeArguments>]
 let inline throwsT<'texn when 'texn :> exn> message f = Expecto.Expect.throwsT<'texn> f message
+
+/// Expects f to throw an exception.
+let inline throwsAsync message f = Expecto.Expect.throwsAsync f message
+
+/// Expects f to throw, and calls `cont` with its exception.
+let inline throwsAsyncC cont f = Expecto.Expect.throwsAsyncC f cont
+
+/// Expects the passed function to throw `'texn`.
+[<RequiresExplicitTypeArguments>]
+let inline throwsAsyncT<'texn when 'texn :> exn> message f = Expecto.Expect.throwsAsyncT<'texn> f message
 
 /// Expects the value to be a None value.
 let inline isNone message x = Expecto.Expect.isNone x message

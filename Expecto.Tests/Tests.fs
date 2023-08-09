@@ -786,6 +786,68 @@ let expecto =
 
       ]
 
+      testList "throwsAsync" [
+
+        testCaseAsync "pass" <|
+          Expect.throwsAsync (fun _ -> nullArg "") "Expected to throw an exception"
+
+        testCaseAsync "fail when exception is not raised" (
+          Expect.throwsAsync (fun _ -> async { () }) "Should fail because no exception is thrown"
+        ) |> assertTestFails
+      ]
+
+      testList "throwsAsyncC" [
+
+        testCaseAsync "pass and call 'cont' when exception is raised" <| async {
+          let mutable contCalled = false
+          let exc = Exception()
+          do!
+            Expect.throwsAsyncC
+              (fun _ -> raise exc)
+              (fun e -> async {
+                contCalled <- true
+                if e <> exc then failtest "passes different exception"
+              })
+
+          if not contCalled then failtest "'cont' is not called"
+        }
+
+        testCaseAsync "fail when exception is not raised" (
+          Expect.throwsAsyncC (fun _ -> async { () }) (fun _ -> async { () })
+        ) |> assertTestFails
+
+        testCaseAsync "do not call 'cont' if exception is not raised" <| async {
+          let mutable contCalled = false
+          try
+            do! Expect.throwsAsyncC (fun _ -> async { () }) (fun e -> async { contCalled <- true })
+          with
+            _ -> ()
+
+          if contCalled then failtest "should not call 'cont'"
+        }
+      ]
+
+      testList "throwsAsyncT" [
+
+        testCaseAsync "pass" <|
+          Expect.throwsAsyncT<ArgumentNullException> (fun _ -> nullArg "")
+                                                     "Should throw null arg"
+
+        testCaseAsync "fail with incorrect exception" (
+          Expect.throwsAsyncT<ArgumentException> (fun _ -> async { nullArg "" })
+                                                 "Expected argument exception."
+        ) |> assertTestFails
+
+        testCaseAsync "fail with no exception" (
+          Expect.throwsAsyncT<ArgumentNullException> (fun _ -> async { () }) "Ignore 'should' throw an exn, ;)"
+        ) |> assertTestFails
+
+        testCaseAsync "give correct assert message on no exception" (
+          Expect.throwsAsyncT<ArgumentNullException> (fun _ -> async { () }) "Should throw null arg"
+        ) |> assertTestFailsWithMsgContaining "Expected f to throw."
+
+      ]
+
       testList "flipped throwsT" [
 
         testCase "pass" <| fun _ ->
@@ -799,6 +861,24 @@ let expecto =
 
         testCase "fail with no exception" (fun _ ->
           ignore |> Flip.Expect.throwsT<ArgumentNullException> "Ignore 'should' throw an exn, ;)"
+        ) |> assertTestFails
+
+      ]
+
+      testList "flipped throwsAsyncT" [
+
+        testCaseAsync "pass" <| (
+          (fun _ -> nullArg "") |> Flip.Expect.throwsAsyncT<ArgumentNullException>
+                                                "Should throw null arg"
+        )
+
+        testCaseAsync "fail with incorrect exception" (
+          (fun _ -> nullArg "") |> Flip.Expect.throwsAsyncT<ArgumentException>
+                                            "Expected argument exception."
+        ) |> assertTestFails
+
+        testCaseAsync "fail with no exception" (
+          (fun _ -> async { () }) |> Flip.Expect.throwsAsyncT<ArgumentNullException> "Ignore 'should' throw an exn, ;)"
         ) |> assertTestFails
 
       ]
