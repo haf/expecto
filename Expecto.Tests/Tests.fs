@@ -69,6 +69,16 @@ let tests =
       ) |> assertTestFails
     ]
 
+    testList "null value tests" [
+      testCase "null value" (fun _ ->
+        Expect.isNullValue (Nullable 1) ""
+      ) |> assertTestFails
+
+      testCase "non null value" (fun _ ->
+        Expect.isNotNullValue (Nullable()) ""
+      ) |> assertTestFails
+    ]
+
     testList "string comparison" [
       test "string equal" {
         Expect.equal "Test string" "Test string" "Test string"
