@@ -227,6 +227,16 @@ let isNull x message =
     failtestf "%s. Expected null, but was %A."
       message x
 
+/// Expects the nullable value type to be non-null.
+let isNotNullValue (x : Nullable<'t>) message =
+  if x.HasValue then ()
+  else failtestf "%s. Expected non-null, but was null." message
+
+/// Expects the nullable value type to be null.
+let isNullValue (x : Nullable<'t>) message =
+  if not x.HasValue then ()
+  else failtestf "%s. Expected null, but was %A." message x
+
 /// Expects `a` to be less than `b`.
 let isLessThan a b message =
   if a >= b then
