@@ -879,7 +879,7 @@ module internal ANSIOutputWriter =
     override __.WriteLine() = write "\n"
 
   let mutable internal colours = None
-  let internal setColourLevel c = if colours.IsNone then colours <- Some c
+  let internal setColourLevel c = colours <- Some c
   let internal getColour() = Option.defaultValue Colour8 colours
 
   let colourReset = "\u001b[0m"
