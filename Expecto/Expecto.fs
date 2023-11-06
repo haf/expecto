@@ -643,3 +643,44 @@ module Tests =
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssemblyWithCLIArgs cliArgs args =
     runTestsInAssemblyWithCLIArgsAndCancel CancellationToken.None cliArgs args
+
+  let runTestsReturnLogs cliArgs args tests =
+    let tryBuildConfig cliArgs args =
+        let config =
+          Seq.fold (fun s a -> foldCLIArgumentToConfig a s)
+            ExpectoConfig.defaultConfig cliArgs
+
+        match ExpectoConfig.fillFromArgs config args with
+        | ArgsUsage (usage, errors) ->
+          None
+        | ArgsList config 
+        | ArgsRun config 
+        | ArgsVersion config ->
+          Some config
+
+    let literateOutputWriter (outputBuilder: Text.StringBuilder) (text: (string*ConsoleColor) list) : unit =
+      let colorizeLine (text, color) = ColourText.colouriseText color text
+      let sbAppend (builder: Text.StringBuilder) (text: string) =
+        builder.Append(text)
+
+      text
+      |> List.iter (colorizeLine >> (sbAppend outputBuilder) >> ignore)
+
+    let outputBuilder = System.Text.StringBuilder("")
+
+    let verbosity = 
+      tryBuildConfig cliArgs args 
+      |> Option.defaultValue ExpectoConfig.defaultConfig 
+      |> (fun config -> config.verbosity)
+        
+    Global.initialise 
+      { Global.defaultConfig with
+          getLogger = fun name ->
+            Expecto.Logging.LiterateConsoleTarget(
+              name, 
+              minLevel = verbosity, 
+              outputWriter = (literateOutputWriter outputBuilder)) :> Expecto.Logging.Logger
+      }
+
+    runTestsWithCLIArgs cliArgs args tests |> ignore
+    outputBuilder.ToString()
