@@ -2,6 +2,7 @@ namespace Expecto
 
 open System
 open System.Threading
+open System.Threading.Tasks
 
 type SourceLocation =
   { sourcePath: string; lineNumber: int }
