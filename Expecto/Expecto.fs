@@ -644,6 +644,9 @@ module Tests =
   let runTestsInAssemblyWithCLIArgs cliArgs args =
     runTestsInAssemblyWithCLIArgsAndCancel CancellationToken.None cliArgs args
 
+  /// Runs all given tests with the supplied typed command-line options.
+  /// Returns the console output as a string (with ANSI coloring by default)
+  /// Useful for interactive environments like F# interactive or notebooks
   let runTestsReturnLogs cliArgs args tests =
     let tryBuildConfig cliArgs args =
         let config =
