@@ -520,6 +520,9 @@ module Impl =
       colour: ColourLevel
       /// Split test names by `.` or `/`
       joinWith: JoinWith
+      /// A factory method taking the configured min log level and returning a logging config.
+      /// Can be used to swap out log targets like the LiterateConsoleTarget, TextWriterTarget, and OutputWindowTarget
+      loggingConfigFactory: (LogLevel -> LoggingConfig) option
     }
     static member defaultConfig =
       { runInParallel = true
@@ -546,6 +549,7 @@ module Impl =
         noSpinner = false
         colour = Colour8
         joinWith = JoinWith.Dot
+        loggingConfigFactory = None
       }
 
     member x.appendSummaryHandler handleSummary =
