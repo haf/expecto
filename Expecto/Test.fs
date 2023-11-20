@@ -141,4 +141,3 @@ module Test =
     | Async test -> timeoutAsync test |> Async
     | AsyncFsCheck (testConfig, stressConfig, test) ->
       AsyncFsCheck (testConfig, stressConfig, test >> timeoutAsync)
-

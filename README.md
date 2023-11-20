@@ -309,12 +309,12 @@ The default config will run FsCheck tests with a higher end size than normal.
 
 Expecto supports the following test constructors:
 
-- normal test cases with `testCase` and `testCaseAsync`
+- normal test cases with `testCase`, `testCaseAsync` and `testCaseTask`
 - lists of tests with `testList`
 - test fixtures with `testFixture`, `testFixtureAsync`, `testFixtureTask`
-- pending tests (that aren't run) with `ptestCase` and `ptestCaseAsync`
-- focused tests (that are the only ones run) with `ftestCase` and
-   `ftestCaseAsync`
+- pending tests (that aren't run) with `ptestCase`, `ptestCaseAsync` and `ptestCaseTask`
+- focused tests (that are the only ones run) with `ftestCase`,
+   `ftestCaseAsync` and `ftestCaseTask`
 - sequenced tests with `testSequenced` and `testSequencedGroup` (tests inside a
    group are run in sequence w.r.t each other)
 - parametised tests with `testParam`
@@ -342,6 +342,7 @@ test project.**
 - `testTask : string -> TestTaskBuilder` - Builds a task test case in a computation expression.
 - `testCase : string -> (unit -> unit) -> Test` - Builds a test case from a test function.
 - `testCaseAsync : string -> Async<unit> -> Test` - Builds an async test case from an async expression.
+- `testCaseTask : string -> Task<unit> -> Test` - Builds an async test case from a task expression.
 
 ### `testList` for grouping
 
@@ -479,6 +480,7 @@ testList "theory testing with an expected result" [
 - `ptestAsync`
 - `ptestTask`
 - `ptestCaseAsync`
+- `ptestCaseTask`
 - `ptestTheory`
 - `ptestTheoryAsync`
 - `ptestTheoryTask`
@@ -524,6 +526,7 @@ Focusing can be done with
 - `ftestCase`
 - `ftestList`
 - `ftestCaseAsync`
+- `ftestCaseTask`
 - `ftest`
 - `ftestAsync`
 - `ftestTask`
