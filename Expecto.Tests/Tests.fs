@@ -1396,57 +1396,61 @@ let taskTests =
         fun ms -> task { return ms.CanWrite ==? true }
     ]
 
-    testCaseTask "simple" <| task {
-      Expect.equal 1 1 "1=1"
-    }
+    testList "testCaseTask" [
+      testCaseTask "simple" <| task {
+        Expect.equal 1 1 "1=1"
+      }
 
-    testCaseTask "let" <| task {
-      let! n = async { return 1 }
-      Expect.equal n 1 "n=1"
-    }
-
-    testCaseTask "can fail" <| task {
-      let! n = async { return 2 }
-      Expect.equal n 1 "n=1"
-    } |> assertTestFails
-
-    testTask "simple" {
-      do! Task.Delay 1
-      Expect.equal 1 1 "1=1"
-    }
-
-    testTask "let" {
-      let! n = Task.FromResult 23
-      Expect.equal n 23 "n=23"
-    }
-
-    testTask "can fail" {
-        let! n = Task.FromResult 2
+      testCaseTask "let" <| task {
+        let! n = async { return 1 }
         Expect.equal n 1 "n=1"
-    } |> assertTestFails
+      }
 
-    testTask "two" {
-        let! n = Task.FromResult 2
-        let! m = Task.FromResult (3*n)
-        Expect.equal m 6 "m=6"
-    }
+      testCaseTask "can fail" <| task {
+        let! n = async { return 2 }
+        Expect.equal n 1 "n=1"
+      } |> assertTestFails
+    ]
 
-    testTask "two can fail" {
-        let! n = Task.FromResult 2
-        let! m = Task.FromResult (3*n)
-        Expect.equal m 7 "m=7"
-    } |> assertTestFails
+    testList "testTask" [
+      testTask "simple" {
+        do! Task.Delay 1
+        Expect.equal 1 1 "1=1"
+      }
 
-    testTask "two can fail middle" {
-        let! n = Task.FromResult 2
-        Expect.equal n 3 "n=3"
-        let! m = Task.FromResult (3*n)
-        Expect.equal m 6 "m=6"
-    } |> assertTestFails
+      testTask "let" {
+        let! n = Task.FromResult 23
+        Expect.equal n 23 "n=23"
+      }
 
-    testTask "inner skip" {
-      skiptest "skipped"
-    }
+      testTask "can fail" {
+          let! n = Task.FromResult 2
+          Expect.equal n 1 "n=1"
+      } |> assertTestFails
+
+      testTask "two" {
+          let! n = Task.FromResult 2
+          let! m = Task.FromResult (3*n)
+          Expect.equal m 6 "m=6"
+      }
+
+      testTask "two can fail" {
+          let! n = Task.FromResult 2
+          let! m = Task.FromResult (3*n)
+          Expect.equal m 7 "m=7"
+      } |> assertTestFails
+
+      testTask "two can fail middle" {
+          let! n = Task.FromResult 2
+          Expect.equal n 3 "n=3"
+          let! m = Task.FromResult (3*n)
+          Expect.equal m 6 "m=6"
+      } |> assertTestFails
+
+      testTask "inner skip" {
+        skiptest "skipped"
+      }
+    ]
   ]
 
 [<Tests>]

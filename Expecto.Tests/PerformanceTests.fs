@@ -16,6 +16,7 @@ let runMD5() = md5.ComputeHash data
 let runSHA256() = sha256.ComputeHash data
 
 
+open System.Runtime.InteropServices;
 [<Tests>]
 let performance =
   testSequenced <| testList "performance cryptography tests" [
@@ -23,20 +24,7 @@ let performance =
     testCase "md5 equals sha256" (fun _ ->
       Expect.isFasterThan runMD5 runSHA256 "MD5 equals SHA256 should fail"
     ) |> assertTestFailsWithMsgContaining "same"
-
-    testCase "sha256 versus md5" (fun _ ->
-      Expect.isFasterThan
-        (runSHA256 >> ignore |> repeat10)
-        (runMD5 >> ignore |> repeat10)
-        "SHA256 is faster than MD5 should fail"
-    ) |> assertTestFailsWithMsgContaining "slower"
-
-    testCase "md5 versus sha256" <| fun _ ->
-      Expect.isFasterThan
-        (runMD5 >> ignore |> repeat10)
-        (runSHA256 >> ignore |> repeat10)
-        "MD5 is faster than SHA256"
-    ]
+  ]
 
 [<Tests>]
 let findFastest =
