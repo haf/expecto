@@ -221,6 +221,8 @@ runTestsWithCLIArgs [] [||] simpleTest
 which returns 1 if any tests failed, otherwise 0. Useful for returning to the
 operating system as error code.
 
+For interactive environments, you can alternatively call [`runTestsReturnLogs`](#runtestsreturnlogs), which returns the console output as a string.
+
 It's worth noting that `<|` is just a way to change the associativity of the
 language parser. In other words; it's equivalent to:
 

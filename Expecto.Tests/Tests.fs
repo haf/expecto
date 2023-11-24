@@ -1822,3 +1822,70 @@ let theory =
       Expect.isTrue (x % 2 = 1) "should be odd"
     }
   ]
+
+[<Tests>]
+let interactiveRunTests =
+  testList "running for interactive flows" [
+    testList "logging config" [
+      testCase "set loggingConfig via CLIArguments" <| fun () ->
+        let tests = testList "Test me" [
+          testCase "I am a case" (fun () -> ())
+        ]
+
+        let globalLoggerOutput = new Text.StringBuilder()
+        let globalWriter = new StringWriter(globalLoggerOutput)
+        Global.initialise {
+          Global.defaultConfig with
+            getLogger = (fun name -> 
+              TextWriterTarget(name, LogLevel.Info, globalWriter)
+            )
+        }
+
+        (runTestsWithCLIArgs [] [|"--help"|] tests) |> ignore
+
+        let cliArgLoggerOutput = new Text.StringBuilder()
+        let cliArgWriter = new StringWriter(cliArgLoggerOutput)
+        let loggingConfigFactory _ = 
+          {
+            Global.defaultConfig with
+              getLogger = (fun name -> 
+                TextWriterTarget(name, LogLevel.Info, cliArgWriter)
+              )
+          }
+
+        (runTestsWithCLIArgs [LoggingConfigFactory (FromVerbosity loggingConfigFactory)] [|"--help"|] tests) |> ignore
+
+        Expect.equal (string cliArgLoggerOutput) (string globalLoggerOutput) "Caputred output should be the same with Global.initialize or CLIArguments.LoggingConfigFactory"
+    ]
+
+    testList "runTestsReturnLogs" [
+      testCase "can print help" <| fun () -> 
+        let tests = (testList "hi" [])
+        let output = runTestsReturnLogs [] [|"--help"|] tests
+        Expect.stringContains output "Options:" ""
+        Expect.stringContains output "--help                   Show this help message." "help message should contain the --help description"
+
+
+      testCase "can list tests" <| fun () -> 
+        let tests = (testList "hi" [
+          testCase "case1" (fun () -> ())
+          testCase "case2" (fun () -> ())
+        ])
+        let expectedTestNames = ["hi.case1"; "hi.case2"]
+        let testListText = String.Join(Environment.NewLine, expectedTestNames)
+
+        let output = runTestsReturnLogs [] [|"--list-tests"|] tests
+        Expect.stringContains output testListText ""
+
+      testCase "can run tests and show basic status counts" <| fun () ->
+        let tests = testList "Interactive Tests" [
+          testCase "I pass" (fun () -> ())
+          test "I fail" {
+            Expect.equal true false "Should fail"
+          }
+        ]
+
+        let output = runTestsReturnLogs [] [|"--colours"; "0"|] tests
+        Expect.stringContains output "1 passed, 0 ignored, 1 failed, 0 errored" ""
+    ]
+  ]
