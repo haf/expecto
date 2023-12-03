@@ -161,7 +161,7 @@ Use `--nunit-summary TestResults.xml` or `--junit-summary TestResults.junit.xml`
 [Expecto has its own .NET template](https://github.com/MNie/Expecto.Template)! You could create a base .NET
 project with expecto.  How to do that? Simply write following lines:
 
-    dotnet new -i 'Expecto.Template::*'
+    dotnet new install 'Expecto.Template::*'
     dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
 
 How to run it?
