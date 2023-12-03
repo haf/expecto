@@ -31,7 +31,7 @@ Expecto also provides a simple API for property based testing using FsCheck.
 
 ## Quickstart
 
-    dotnet new -i Expecto.Template::*
+    dotnet new install Expecto.Template::*
     dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
     
 Follow [Smooth Testing](https://www.youtube.com/channel/UC2SN9CUu9LlOBukXXv_bT5Q) on YouTube to learn the basics.
@@ -161,7 +161,7 @@ Use `--nunit-summary TestResults.xml` or `--junit-summary TestResults.junit.xml`
 [Expecto has its own .NET template](https://github.com/MNie/Expecto.Template)! You could create a base .NET
 project with expecto.  How to do that? Simply write following lines:
 
-    dotnet new -i 'Expecto.Template::*'
+    dotnet new install 'Expecto.Template::*'
     dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
 
 How to run it?
