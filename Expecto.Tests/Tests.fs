@@ -1450,6 +1450,22 @@ let taskTests =
       testTask "inner skip" {
         skiptest "skipped"
       }
+      testTask "can let! bind ValueTask<T>" {
+        let expected = 5
+        let valueTask = ValueTask.FromResult(expected)
+        let! actual = valueTask
+        Expect.equal expected actual "should be able to let! bind ValueTask<T>"
+      }
+      testTask "can do! bind ValueTask" {
+        let valueTask = ValueTask.CompletedTask
+        do! valueTask
+      }
+      testTask "can let! bind Async<T>" {
+        let expected = 5
+        let asyncValue = async.Return(expected)
+        let! actual = asyncValue
+        Expect.equal expected actual "should be able to let! bind ValueTask<T>"
+      }
     ]
   ]
 
