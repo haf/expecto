@@ -36,7 +36,7 @@ group Build
   nuget Microsoft.Build.Framework 17.3.2
   nuget Microsoft.Build.Tasks.Core 17.3.2
   nuget Microsoft.Build.Utilities.Core 17.3.2
-  nuget Nuget.Protocol >= 6.6
+  nuget Nuget.Protocol >= 6.9.1
   nuget nosln
 
   // Fix security vulnerability in a transitive package CVE-2023-29331
