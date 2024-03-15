@@ -1,3 +1,5 @@
+### 10.2.1 - 2024-03-15
+* Fix bug where testTask and testCaseTask allow the tasks to start immediately when the test is defined, breaking backward compatibility with testTask.
 
 ### 10.2.0 - 2024-03-15
 * Add throwsAsync, throwsAsyncT, and throwsAsyncC (#469), thanks @jwosty
