@@ -1,3 +1,10 @@
+
+### 10.2.0 - 2024-03-15
+* Add throwsAsync, throwsAsyncT, and throwsAsyncC (#469), thanks @jwosty
+* Add Nullable<'t> helpers to Expect module (#478), thanks @bisen2
+* Add *testCaseTask functions (#483), thanks @ratsclub and @farlee2121
+* Support ValueTask and Async bindings in testTask expressions (#489), thanks @farlee2121
+
 ### 10.1.0 - 2023-06-26
 * Add Theory Test Support #456, thanks @ratsclub
 * Loosen the FSharp.Core version requirement #458, thanks @farlee2121 and @JohnTheGr8
