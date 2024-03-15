@@ -1397,19 +1397,23 @@ let taskTests =
     ]
 
     testList "testCaseTask" [
-      testCaseTask "simple" <| task {
-        Expect.equal 1 1 "1=1"
-      }
+      testCaseTask "simple" <| fun () ->
+        task {
+          Expect.equal 1 1 "1=1"
+        }
 
-      testCaseTask "let" <| task {
-        let! n = async { return 1 }
-        Expect.equal n 1 "n=1"
-      }
+      testCaseTask "let" <| fun () ->
+        task {
+          let! n = async { return 1 }
+          Expect.equal n 1 "n=1"
+        }
 
-      testCaseTask "can fail" <| task {
-        let! n = async { return 2 }
-        Expect.equal n 1 "n=1"
-      } |> assertTestFails
+      testCaseTask "can fail" <| (fun () ->
+        task {
+          let! n = async { return 2 }
+          Expect.equal n 1 "n=1"
+        })
+        |> assertTestFails
     ]
 
     testList "testTask" [

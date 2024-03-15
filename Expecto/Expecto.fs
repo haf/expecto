@@ -87,8 +87,15 @@ module Tests =
   let inline testCaseWithCancel name test = TestLabel(name, TestCase (SyncWithCancel test,Normal), Normal)
   /// Builds an async test case
   let inline testCaseAsync name test = TestLabel(name, TestCase (Async test,Normal), Normal)
+
+  let inline private deferTaskAsAsync (taskFactory: unit -> Task<unit>) =
+    // Tasks are hot, they are start right away, so we need to defer the task creation
+    async {
+          do! taskFactory() |> Async.AwaitTask
+      }
+
   /// Builds an async test case from a task
-  let inline testCaseTask name test = TestLabel(name, TestCase (Async (Async.AwaitTask test),Normal), Normal)
+  let inline testCaseTask name test = TestLabel(name, TestCase (Async (deferTaskAsAsync test),Normal), Normal)
   /// Builds a test case that will make Expecto to ignore other unfocused tests
   let inline ftestCase name test = TestLabel(name, TestCase (Sync test, Focused), Focused)
   /// Builds a test case with cancel that will make Expecto to ignore other unfocused tests
@@ -96,7 +103,7 @@ module Tests =
   /// Builds an async test case that will make Expecto to ignore other unfocused tests
   let inline ftestCaseAsync name test = TestLabel(name, TestCase (Async test, Focused), Focused)
   /// Builds an async test case from a task, that will make Expecto to ignore other unfocused tests
-  let inline ftestCaseTask name test = TestLabel(name, TestCase (Async (Async.AwaitTask test), Focused), Focused)
+  let inline ftestCaseTask name test = TestLabel(name, TestCase (Async (deferTaskAsAsync test), Focused), Focused)
   /// Builds a test case that will be ignored by Expecto
   let inline ptestCase name test = TestLabel(name, TestCase (Sync test, Pending), Pending)
   /// Builds a test case with cancel that will be ignored by Expecto
@@ -104,7 +111,7 @@ module Tests =
   /// Builds an async test case that will be ignored by Expecto
   let inline ptestCaseAsync name test = TestLabel(name, TestCase (Async test, Pending), Pending)
   /// Builds an async test case from a task, that will be ignored by Expecto
-  let inline ptestCaseTask name test = TestLabel(name, TestCase (Async (Async.AwaitTask test), Pending), Pending)
+  let inline ptestCaseTask name test = TestLabel(name, TestCase (Async (deferTaskAsAsync test), Pending), Pending)
   /// Test case or list needs to run sequenced. Use for any benchmark code or
   /// for tests using `Expect.isFasterThan`
   let inline testSequenced test = Sequenced (Synchronous,test)
@@ -235,13 +242,11 @@ module Tests =
     member inline __.TryFinally(p, cf) = task.TryFinally(p, cf)
     member inline __.TryWith(p, cf) = task.TryWith(p, cf)
     member __.Run f =
-      let a = task {
-          do! task.Run f
-      }
+      let deferred () = task.Run f
       match focusState with
-      | Normal -> testCaseTask name a
-      | Focused -> ftestCaseTask name a
-      | Pending -> ptestCaseTask name a
+      | Normal -> testCaseTask name deferred
+      | Focused -> ftestCaseTask name deferred
+      | Pending -> ptestCaseTask name deferred
 
   [<AutoOpen>]
   module TestTaskExtensions =

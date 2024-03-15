@@ -325,7 +325,7 @@ test project.**
 - `testTask : string -> TestTaskBuilder` - Builds a task test case in a computation expression.
 - `testCase : string -> (unit -> unit) -> Test` - Builds a test case from a test function.
 - `testCaseAsync : string -> Async<unit> -> Test` - Builds an async test case from an async expression.
-- `testCaseTask : string -> Task<unit> -> Test` - Builds an async test case from a task expression.
+- `testCaseTask : string -> (unit -> Task<unit>) -> Test` - Builds an async test case from a function returning a task. Unlike async, tasks start right away and thus must be wrapped in a function so the task doesn't start until the test is run.
 
 ### `testList` for grouping
 
