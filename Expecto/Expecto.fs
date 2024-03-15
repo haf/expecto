@@ -243,6 +243,13 @@ module Tests =
       | Focused -> ftestCaseTask name a
       | Pending -> ptestCaseTask name a
 
+  [<AutoOpen>]
+  module TestTaskExtensions =
+    type TestTaskBuilder with
+      member inline __.Bind(p1:ValueTask<'a>, p2:'a->_) = task.Bind(p1, p2)
+      member inline __.Bind(p1:ValueTask, p2:unit->_) = task.Bind(p1, p2)
+      member inline __.Bind(p1:Async<'a>, p2:'a->_) = task.Bind(p1, p2)
+
   /// Builds a task test case
   let inline testTask name =
     TestTaskBuilder (name, Normal)
