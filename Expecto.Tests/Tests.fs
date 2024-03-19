@@ -1841,4 +1841,17 @@ let theory =
     testTheoryTask "task odd numbers" [1; 3; 5;] <| fun x -> task {
       Expect.isTrue (x % 2 = 1) "should be odd"
     }
+
+    testList "Null and empty string cases should result in different test names" [
+      testTheory "testTheory" [""; null] <| fun x ->
+        Expect.isTrue (System.String.IsNullOrEmpty(x)) "should be null or empty"
+
+      testTheoryTask "testTheoryTask" [""; null] <| fun x -> task {
+        Expect.isTrue (System.String.IsNullOrEmpty(x)) "should be null or empty"
+      }
+
+      testTheoryAsync "testTheoryAsync" [""; null] <| fun x -> async {
+        Expect.isTrue (System.String.IsNullOrEmpty(x)) "should be null or empty"
+      }
+    ]
   ]
