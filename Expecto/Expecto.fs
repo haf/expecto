@@ -120,7 +120,7 @@ module Tests =
 
   let inline private stringify (value : 'T) =
       if typeof<'T> = typeof<string> then
-        if value = Unchecked.defaultof<'T> then "null" else value.ToString()
+        if value = Unchecked.defaultof<'T> then "null" else $"\"{value}\""
       else
         string value
 
