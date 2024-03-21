@@ -377,6 +377,10 @@ module Tests =
   type SummaryHandler =
     | SummaryHandler of (TestRunSummary -> unit)
 
+  [<ReferenceEquality>]
+  type LoggingConfigFactory = 
+    | FromVerbosity of (LogLevel -> LoggingConfig)
+
   /// The CLI arguments are the parameters that are possible to send to Expecto
   /// and change the runner's behaviour.
   type CLIArguments =
@@ -438,6 +442,9 @@ module Tests =
     | Append_Summary_Handler of SummaryHandler
     /// Specify test names join character.
     | JoinWith of split: string
+    /// A factory method taking the configured min log level and returning a logging config.
+    /// Can be used to swap out log targets like the LiterateConsoleTarget, TextWriterTarget, and OutputWindowTarget
+    | LoggingConfigFactory of LoggingConfigFactory
 
   let options = [
       "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
@@ -525,6 +532,7 @@ module Tests =
     | Printer p -> fun o -> { o with printer = p }
     | Verbosity l -> fun o -> { o with verbosity = l }
     | Append_Summary_Handler (SummaryHandler h) -> fun o -> o.appendSummaryHandler h
+    | LoggingConfigFactory (FromVerbosity f) -> fun o -> { o with loggingConfigFactory = Some f}
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
@@ -599,13 +607,18 @@ module Tests =
   let runTestsWithCLIArgsAndCancel (ct:CancellationToken) cliArgs args tests =
     let runTestsWithCancel (ct:CancellationToken) config (tests:Test) =
       ANSIOutputWriter.setColourLevel config.colour
-      Global.initialiseIfDefault
-        { Global.defaultConfig with
-            getLogger = fun name ->
-              LiterateConsoleTarget(
-                name, config.verbosity,
-                consoleSemaphore = Global.semaphore()) :> Logger
-        }
+
+      let loggingConfig =
+        match config.loggingConfigFactory with
+        | Some factory -> factory config.verbosity |> Global.initialise
+        | None -> 
+          { Global.defaultConfig with
+              getLogger = fun name ->
+                LiterateConsoleTarget(
+                  name, config.verbosity,
+                  consoleSemaphore = Global.semaphore()) :> Logger
+          } |> Global.initialiseIfDefault
+        
       config.logName |> Option.iter setLogName
       if config.failOnFocusedTests && passesFocusTestCheck config tests |> not then
         1
@@ -660,3 +673,31 @@ module Tests =
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssemblyWithCLIArgs cliArgs args =
     runTestsInAssemblyWithCLIArgsAndCancel CancellationToken.None cliArgs args
+
+  /// Runs all given tests with the supplied typed command-line options.
+  /// Returns the console output as a string (with ANSI coloring by default)
+  /// Useful for interactive environments like F# interactive or notebooks
+  let runTestsReturnLogs cliArgs args tests =
+
+    let literateOutputWriter (outputBuilder: Text.StringBuilder) (text: (string*ConsoleColor) list) : unit =
+      let colorizeLine (text, color) = ColourText.colouriseText color text
+      let sbAppend (builder: Text.StringBuilder) (text: string) =
+        builder.Append(text)
+
+      text
+      |> List.iter (colorizeLine >> (sbAppend outputBuilder) >> ignore)
+
+    let outputBuilder = System.Text.StringBuilder("")
+
+    let loggingConfigFactory verbosity =
+      { Global.defaultConfig with
+          getLogger = fun name ->
+            Expecto.Logging.LiterateConsoleTarget(
+              name, 
+              minLevel = verbosity, 
+              outputWriter = (literateOutputWriter outputBuilder)) :> Expecto.Logging.Logger
+      }
+        
+    let cliArgs = (LoggingConfigFactory (FromVerbosity loggingConfigFactory)) :: cliArgs
+    runTestsWithCLIArgs cliArgs args tests |> ignore
+    outputBuilder.ToString()

@@ -53,6 +53,7 @@ What follows is the Table of Contents for this README, which also serves as the 
   - [`runTestsWithCLIArgsAndCancel`](#runtestswithcliargsandcancel)
   - [`runTestsInAssemblyWithCLIArgs`](#runtestsinassemblywithcliargs)
   - [`runTestsInAssemblyWithCLIArgsAndCancel`](#runtestsinassemblywithcliargsandcancel)
+  - [`runTestsReturnLogs`](#runtestsreturnlogs)
   - [Filtering with `filter`](#filtering-with-filter)
   - [Shuffling with `shuffle`](#shuffling-with-shuffle)
   - [Stress testing](#stress-testing)
@@ -220,6 +221,8 @@ runTestsWithCLIArgs [] [||] simpleTest
 which returns 1 if any tests failed, otherwise 0. Useful for returning to the
 operating system as error code.
 
+For interactive environments, you can alternatively call [`runTestsReturnLogs`](#runtestsreturnlogs), which returns the console output as a string.
+
 It's worth noting that `<|` is just a way to change the associativity of the
 language parser. In other words; it's equivalent to:
 
@@ -249,6 +252,22 @@ parameters. All tests need to be marked with the `[<Tests>]` attribute.
 Signature `CancellationToken -> CLIArguments seq -> string[] -> int`. Runs the tests in the current
 assembly and also overrides the passed `CLIArguments` with the command line
 parameters. All tests need to be marked with the `[<Tests>]` attribute.
+
+### `runTestsReturnLogs`
+
+Signature `CLIArguments seq -> string[] -> Test -> string`.
+Accepts the same arguments as `runTestsWithCLIArgs`, but returns the console output as a string.
+
+This is useful for interactive environments like [F# interactive](https://learn.microsoft.com/en-us/dotnet/fsharp/tools/fsharp-interactive/) and [Polyglot Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode), where console output is not available but the returned string can be displayed instead.
+
+Note that ANSI colors are used by default, but can be turned off using `--colours 0`.
+```fsharp
+runTestsReturnLogs [] [|"--colours";"0"|] tests
+```
+
+Any valid CLI arguments work, including `--help` and `--list-tests`.
+
+
 
 ### Filtering with `filter`
 
