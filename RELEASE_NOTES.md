@@ -1,3 +1,6 @@
+### 10.2.2 - 2024-03-15
+* Fix testTheory issue where null and empty string produce duplicate test names (#494), thanks @Numpsy
+
 ### 10.2.1 - 2024-03-15
 * Fix bug where testTask and testCaseTask allow the tasks to start immediately when the test is defined, breaking backward compatibility with testTask.
 
