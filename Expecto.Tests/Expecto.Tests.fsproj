@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Expecto.Tests</AssemblyName>
@@ -13,6 +13,7 @@
     <Compile Include="FsCheckTests.fs" />
     <Compile Include="PerformanceTests.fs" />
     <Compile Include="Bug341.fs" />
+    <Compile Include="OpenTelemetry.fs" />
     <Compile Include="Main.fs" />
     <None Include="paket.references" />
     <ProjectReference Include="..\Expecto.Hopac\Expecto.Hopac.fsproj" />
