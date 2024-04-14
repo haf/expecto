@@ -593,63 +593,8 @@ module Impl =
               }
       }
 
-  let inline internal setStatus (status : ActivityStatusCode) (span : Activity) =
-    if isNull span |> not then
-      span.SetStatus(status) |> ignore
-
-  let inline internal setExn (e : exn) (span : Activity) =
-    if isNull span |> not then
-      let tags =
-          ActivityTagsCollection(
-              seq {
-                  KeyValuePair("exception.type", box (e.GetType().Name))
-                  KeyValuePair("exception.stacktrace", box (e.ToString()))
-                  if not <| String.IsNullOrEmpty(e.Message) then
-                      KeyValuePair("exception.message", box e.Message)
-              }
-          )
-
-      ActivityEvent("exception", tags = tags)
-      |> span.AddEvent
-      |> ignore
-
-  let inline internal setExnMarkFailed (e : exn) (span : Activity) =
-    if isNull span |> not then
-      setExn e span
-      span  |> setStatus ActivityStatusCode.Error
-
-  let setSourceLocation (sourceLoc : SourceLocation) (span : Activity) =
-    if isNull span |> not && sourceLoc <> SourceLocation.empty then
-      span.SetTag("code.lineno", sourceLoc.lineNumber) |> ignore
-      span.SetTag("code.filepath", sourceLoc.sourcePath) |> ignore
-
-  let inline internal addOutcome (result : TestResult) (span : Activity) =
-    if isNull span |> not then
-      span.SetTag("test.result.status", result.tag) |> ignore
-      span.SetTag("test.result.message", result) |> ignore
-
-  let inline internal  start (span : Activity) =
-    if isNull span |> not then
-      span.Start() |> ignore
-    span
-
-  let inline internal stop (span : Activity) =
-    if isNull span |> not then
-      span.Stop() |> ignore
-
-  let inline internal createActivity (name : string) (source : ActivitySource option) =
-    match source with
-    | Some source when not(isNull source) -> source.CreateActivity(name, ActivityKind.Internal)
-    | _ -> null
-
   let execTestAsync (ct:CancellationToken) config (test:FlatTest) : Async<TestSummary> =
     async {
-      let span =
-        config.activitySource
-        |> createActivity (config.joinWith.format test.name)
-      span |> setSourceLocation (config.locate test.test)
-
-      use span = start span
       let w = Stopwatch.StartNew()
       try
         match test.shouldSkipEvaluation with
@@ -682,59 +627,32 @@ module Impl =
                 )
             do! test fsConfig
           w.Stop()
-          stop span
-          let result = Passed
-          addOutcome result span
-          setStatus ActivityStatusCode.Ok span
-          return TestSummary.single result (float w.ElapsedMilliseconds)
+          return TestSummary.single Passed (float w.ElapsedMilliseconds)
       with
         | :? AssertException as e ->
           w.Stop()
-          stop span
           let msg =
             "\n" + e.Message + "\n" +
             (e.StackTrace.Split('\n')
              |> Seq.skipWhile (fun l -> l.StartsWith("   at Expecto.Expect."))
              |> Seq.truncate 5
              |> String.concat "\n")
-          let result = Failed msg
-          addOutcome result span
-          setExnMarkFailed e span
-          return TestSummary.single result (float w.ElapsedMilliseconds)
+          return TestSummary.single (Failed msg) (float w.ElapsedMilliseconds)
         | :? FailedException as e ->
           w.Stop()
-          stop span
-          let result = Failed ("\n"+e.Message)
-          addOutcome result span
-          setExnMarkFailed e span
-          return TestSummary.single result (float w.ElapsedMilliseconds)
+          return TestSummary.single (Failed ("\n"+e.Message)) (float w.ElapsedMilliseconds)
         | :? IgnoreException as e ->
           w.Stop()
-          stop span
-          let result = Ignored e.Message
-          addOutcome result span
-          setExn e span
-          return TestSummary.single result (float w.ElapsedMilliseconds)
+          return TestSummary.single (Ignored e.Message) (float w.ElapsedMilliseconds)
         | :? AggregateException as e when e.InnerExceptions.Count = 1 ->
           w.Stop()
-          stop span
           if e.InnerException :? IgnoreException then
-            let result = Ignored e.InnerException.Message
-            addOutcome result span
-            setExn e span
-            return TestSummary.single result (float w.ElapsedMilliseconds)
+            return TestSummary.single (Ignored e.InnerException.Message) (float w.ElapsedMilliseconds)
           else
-            let result = Error e.InnerException
-            addOutcome result span
-            setExnMarkFailed e span
-            return TestSummary.single result (float w.ElapsedMilliseconds)
+            return TestSummary.single (Error e.InnerException) (float w.ElapsedMilliseconds)
         | e ->
           w.Stop()
-          stop span
-          let result = Error e
-          addOutcome result span
-          setExnMarkFailed e span
-          return TestSummary.single result (float w.ElapsedMilliseconds)
+          return TestSummary.single (Error e) (float w.ElapsedMilliseconds)
     }
 
   let private numberOfWorkers limit config =
