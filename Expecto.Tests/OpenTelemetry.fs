@@ -65,6 +65,40 @@ module OpenTelemetry =
       ExceptionDispatchInfo.Capture(e).Throw()
       Unchecked.defaultof<'a>
 
+  module TestResult =
+    let ofException  (e:Exception) : TestResult =
+      match e with
+      | :? AssertException as e ->
+        let msg =
+          "\n" + e.Message + "\n" +
+          (e.StackTrace.Split('\n')
+          |> Seq.skipWhile (fun l -> l.StartsWith("   at Expecto.Expect."))
+          |> Seq.truncate 5
+          |> String.concat "\n")
+        Failed msg
+
+      | :? FailedException as e ->
+        Failed ("\n"+e.Message)
+      | :? IgnoreException as e ->
+        Ignored e.Message
+      | :? AggregateException as e when e.InnerExceptions.Count = 1 ->
+        if e.InnerException :? IgnoreException then
+          Ignored e.InnerException.Message
+        else
+          Error e.InnerException
+      | e ->
+        Error e
+
+
+  let addExceptionOutcomeToSpan (span: Activity) (e: Exception) =
+    let testResult = TestResult.ofException e
+
+    addOutcome testResult span
+    match testResult with
+    | Ignored _ ->
+      setExn e span
+    | _ ->
+      setExnMarkFailed e span
   let wrapCodeWithSpan (span: Activity) (test: TestCode) =
     match test with
     | Sync test ->
@@ -76,47 +110,8 @@ module OpenTelemetry =
           addOutcome Passed span
           setStatus ActivityStatusCode.Ok span
         with
-        | :? AssertException as e ->
-          stop span
-          // TODO: this message construction is fragile duplication
-          let msg =
-            "\n" + e.Message + "\n" +
-            (e.StackTrace.Split('\n')
-            |> Seq.skipWhile (fun l -> l.StartsWith("   at Expecto.Expect."))
-            |> Seq.truncate 5
-            |> String.concat "\n")
-          let result = Failed msg
-          addOutcome result span
-          setExnMarkFailed e span
-          reraiseAnywhere e
-        | :? FailedException as e ->
-          stop span
-          let result = Failed ("\n"+e.Message)
-          addOutcome result span
-          setExnMarkFailed e span
-          reraiseAnywhere e
-        | :? IgnoreException as e ->
-          stop span
-          let result = Ignored e.Message
-          addOutcome result span
-          setExn e span
-          reraiseAnywhere e
-        | :? AggregateException as e when e.InnerExceptions.Count = 1 ->
-          stop span
-          if e.InnerException :? IgnoreException then
-            let result = Ignored e.InnerException.Message
-            addOutcome result span
-            setExn e span
-          else
-            let result = Error e.InnerException
-            addOutcome result span
-            setExnMarkFailed e span
-          reraiseAnywhere e
         | e ->
-          stop span
-          let result = Error e
-          addOutcome result span
-          setExnMarkFailed e span
+          addExceptionOutcomeToSpan span e
           reraiseAnywhere e
       )
 
@@ -129,47 +124,8 @@ module OpenTelemetry =
           addOutcome Passed span
           setStatus ActivityStatusCode.Ok span
         with
-        | :? AssertException as e ->
-          stop span
-          // TODO: this message construction is fragile duplication
-          let msg =
-            "\n" + e.Message + "\n" +
-            (e.StackTrace.Split('\n')
-            |> Seq.skipWhile (fun l -> l.StartsWith("   at Expecto.Expect."))
-            |> Seq.truncate 5
-            |> String.concat "\n")
-          let result = Failed msg
-          addOutcome result span
-          setExnMarkFailed e span
-          reraiseAnywhere e
-        | :? FailedException as e ->
-          stop span
-          let result = Failed ("\n"+e.Message)
-          addOutcome result span
-          setExnMarkFailed e span
-          reraiseAnywhere e
-        | :? IgnoreException as e ->
-          stop span
-          let result = Ignored e.Message
-          addOutcome result span
-          setExn e span
-          reraiseAnywhere e
-        | :? AggregateException as e when e.InnerExceptions.Count = 1 ->
-          stop span
-          if e.InnerException :? IgnoreException then
-            let result = Ignored e.InnerException.Message
-            addOutcome result span
-            setExn e span
-          else
-            let result = Error e.InnerException
-            addOutcome result span
-            setExnMarkFailed e span
-          reraiseAnywhere e
         | e ->
-          stop span
-          let result = Error e
-          addOutcome result span
-          setExnMarkFailed e span
+          addExceptionOutcomeToSpan span e
           reraiseAnywhere e
       })
     | AsyncFsCheck (testConfig, stressConfig, test) ->
@@ -181,47 +137,8 @@ module OpenTelemetry =
           addOutcome Passed span
           setStatus ActivityStatusCode.Ok span
         with
-        | :? AssertException as e ->
-          stop span
-          // TODO: this message construction is fragile duplication
-          let msg =
-            "\n" + e.Message + "\n" +
-            (e.StackTrace.Split('\n')
-            |> Seq.skipWhile (fun l -> l.StartsWith("   at Expecto.Expect."))
-            |> Seq.truncate 5
-            |> String.concat "\n")
-          let result = Failed msg
-          addOutcome result span
-          setExnMarkFailed e span
-          reraiseAnywhere e
-        | :? FailedException as e ->
-          stop span
-          let result = Failed ("\n"+e.Message)
-          addOutcome result span
-          setExnMarkFailed e span
-          reraiseAnywhere e
-        | :? IgnoreException as e ->
-          stop span
-          let result = Ignored e.Message
-          addOutcome result span
-          setExn e span
-          reraiseAnywhere e
-        | :? AggregateException as e when e.InnerExceptions.Count = 1 ->
-          stop span
-          if e.InnerException :? IgnoreException then
-            let result = Ignored e.InnerException.Message
-            addOutcome result span
-            setExn e span
-          else
-            let result = Error e.InnerException
-            addOutcome result span
-            setExnMarkFailed e span
-          reraiseAnywhere e
         | e ->
-          stop span
-          let result = Error e
-          addOutcome result span
-          setExnMarkFailed e span
+          addExceptionOutcomeToSpan span e
           reraiseAnywhere e
       })
     | SyncWithCancel test->
@@ -233,47 +150,8 @@ module OpenTelemetry =
           addOutcome Passed span
           setStatus ActivityStatusCode.Ok span
         with
-        | :? AssertException as e ->
-          stop span
-          // TODO: this message construction is fragile duplication
-          let msg =
-            "\n" + e.Message + "\n" +
-            (e.StackTrace.Split('\n')
-            |> Seq.skipWhile (fun l -> l.StartsWith("   at Expecto.Expect."))
-            |> Seq.truncate 5
-            |> String.concat "\n")
-          let result = Failed msg
-          addOutcome result span
-          setExnMarkFailed e span
-          reraiseAnywhere e
-        | :? FailedException as e ->
-          stop span
-          let result = Failed ("\n"+e.Message)
-          addOutcome result span
-          setExnMarkFailed e span
-          reraiseAnywhere e
-        | :? IgnoreException as e ->
-          stop span
-          let result = Ignored e.Message
-          addOutcome result span
-          setExn e span
-          reraiseAnywhere e
-        | :? AggregateException as e when e.InnerExceptions.Count = 1 ->
-          stop span
-          if e.InnerException :? IgnoreException then
-            let result = Ignored e.InnerException.Message
-            addOutcome result span
-            setExn e span
-          else
-            let result = Error e.InnerException
-            addOutcome result span
-            setExnMarkFailed e span
-          reraiseAnywhere e
         | e ->
-          stop span
-          let result = Error e
-          addOutcome result span
-          setExnMarkFailed e span
+          addExceptionOutcomeToSpan span e
           reraiseAnywhere e
       )
 
