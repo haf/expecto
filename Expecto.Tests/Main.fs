@@ -36,8 +36,9 @@ let main args =
   let test =
     Impl.testFromThisAssembly()
     |> Option.orDefault (TestList ([], Normal))
+    |> OpenTelemetry.addOpenTelemetry_SpanPerTest Impl.ExpectoConfig.defaultConfig activitySource
     |> Test.shuffle "."
-  runTestsWithCLIArgs [NUnit_Summary "bin/Expecto.Tests.TestResults.xml"; CLIArguments.ActivitySource activitySource] args test
+  runTestsWithCLIArgs [NUnit_Summary "bin/Expecto.Tests.TestResults.xml"] args test
 
 
 
