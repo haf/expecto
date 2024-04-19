@@ -164,7 +164,6 @@ module OpenTelemetry =
 
 
   let addOpenTelemetry_SpanPerTest (config: ExpectoConfig) (activitySource: ActivitySource) (rootTest: Test) : Test =
-
     rootTest
     |> Test.toTestCodeList
     |> List.map (fun test ->
@@ -174,3 +173,8 @@ module OpenTelemetry =
     )
     |> Test.fromFlatTests config.joinWith.asString
 
+
+  let addOpenTelemetry_SpanPerTest_WithProvider (config: ExpectoConfig) (activitySource: ActivitySource) (providerFactory : unit -> #IDisposable) (rootTest: Test) : Test =
+    let provider = providerFactory()
+    AppDomain.CurrentDomain.ProcessExit.Add(fun _ -> provider.Dispose())
+    addOpenTelemetry_SpanPerTest config activitySource rootTest

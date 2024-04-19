@@ -1400,6 +1400,8 @@ let asyncTests =
   ]
 
 open System.Threading.Tasks
+open OpenTelemetry
+open System.Diagnostics
 
 [<Tests>]
 let taskTests =
@@ -1875,3 +1877,38 @@ let theory =
       }
     ]
   ]
+
+open OpenTelemetry.Resources
+open OpenTelemetry.Trace
+
+let serviceName = "Expecto.Tests"
+
+let resourceBuilder () =
+    ResourceBuilder
+        .CreateDefault()
+        .AddService(serviceName = serviceName)
+
+let traceProvider () =
+  Sdk
+      .CreateTracerProviderBuilder()
+      .AddSource(serviceName)
+      .SetResourceBuilder(resourceBuilder ())
+      .AddOtlpExporter()
+      .Build()
+
+
+[<Tests>]
+let fixtures =
+  let rng = Random()
+  let tests = [
+      for i in 1..(Environment.ProcessorCount * 2) do
+        testCaseAsync (sprintf "test %d" i) <| async {
+          printfn "Running test %d" i
+          do! Async.Sleep(rng.Next(1, 5000))
+          printfn "Finished Running test %d" i
+        }
+    ]
+
+  let source = new ActivitySource(serviceName)
+  testList "MyTests" tests
+  |> addOpenTelemetry_SpanPerTest_WithProvider ExpectoConfig.defaultConfig (source) (fun () -> traceProvider ())
