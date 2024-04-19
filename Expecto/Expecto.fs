@@ -456,8 +456,7 @@ module Tests =
     | Append_Summary_Handler of SummaryHandler
     /// Specify test names join character.
     | JoinWith of split: string
-    // TODO This isn't really a CLIArgument but just to show a way of updating the config
-    | ActivitySource of ActivitySource
+
 
   let options = [
       "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
@@ -545,7 +544,6 @@ module Tests =
     | Printer p -> fun o -> { o with printer = p }
     | Verbosity l -> fun o -> { o with verbosity = l }
     | Append_Summary_Handler (SummaryHandler h) -> fun o -> o.appendSummaryHandler h
-    | ActivitySource s -> fun o -> { o with activitySource = Option.ofObj s }
 
   [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
   module ExpectoConfig =
