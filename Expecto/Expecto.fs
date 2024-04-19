@@ -11,6 +11,7 @@ module Tests =
   open Impl
   open Helpers
   open Expecto.Logging
+  open System.Diagnostics
 
   let mutable private afterRunTestsList = []
   let private afterRunTestsListLock = obj()
@@ -444,6 +445,7 @@ module Tests =
     | Append_Summary_Handler of SummaryHandler
     /// Specify test names join character.
     | JoinWith of split: string
+
 
   let options = [
       "--sequenced", "Don't run the tests in parallel.", Args.none Sequenced
