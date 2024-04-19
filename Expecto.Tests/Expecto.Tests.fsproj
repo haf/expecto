@@ -4,16 +4,17 @@
     <AssemblyName>Expecto.Tests</AssemblyName>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
+    <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Prelude.fs" />
+    <Compile Include="OpenTelemetry.fs" />
     <Compile Include="Tests.fs" />
     <Compile Include="SummaryTests.fs" />
     <Compile Include="FocusedTests.fs" />
     <Compile Include="FsCheckTests.fs" />
     <Compile Include="PerformanceTests.fs" />
     <Compile Include="Bug341.fs" />
-    <Compile Include="OpenTelemetry.fs" />
     <Compile Include="Main.fs" />
     <None Include="paket.references" />
     <ProjectReference Include="..\Expecto.Hopac\Expecto.Hopac.fsproj" />
