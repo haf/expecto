@@ -1,2 +1,4 @@
 FsCheck
 OpenTelemetry.Exporter.OpenTelemetryProtocol
+YoloDev.Expecto.TestSdk
+Microsoft.NET.Test.Sdk

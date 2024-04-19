@@ -10,6 +10,31 @@ open Expecto
 open Expecto.Impl
 open Expecto.Logging
 open System.Globalization
+open OpenTelemetry.Resources
+open OpenTelemetry.Trace
+open System.Diagnostics
+open OpenTelemetry
+
+let serviceName = "Expecto.Tests"
+
+let source = new ActivitySource(serviceName)
+
+let resourceBuilder () =
+    ResourceBuilder
+        .CreateDefault()
+        .AddService(serviceName = serviceName)
+
+let traceProvider () =
+  Sdk
+      .CreateTracerProviderBuilder()
+      .AddSource(serviceName)
+      .SetResourceBuilder(resourceBuilder ())
+      .AddOtlpExporter()
+      .Build()
+do
+    let provider = traceProvider()
+    AppDomain.CurrentDomain.ProcessExit.Add(fun _ -> provider.Dispose())
+
 
 module Dummy =
 
@@ -1850,6 +1875,7 @@ let cancel =
     )
   ]
 
+
 [<Tests>]
 let theory =
   testList "theory testing" [
@@ -1877,24 +1903,8 @@ let theory =
       }
     ]
   ]
+  |> addOpenTelemetry_SpanPerTest ExpectoConfig.defaultConfig source
 
-open OpenTelemetry.Resources
-open OpenTelemetry.Trace
-
-let serviceName = "Expecto.Tests"
-
-let resourceBuilder () =
-    ResourceBuilder
-        .CreateDefault()
-        .AddService(serviceName = serviceName)
-
-let traceProvider () =
-  Sdk
-      .CreateTracerProviderBuilder()
-      .AddSource(serviceName)
-      .SetResourceBuilder(resourceBuilder ())
-      .AddOtlpExporter()
-      .Build()
 
 
 [<Tests>]
@@ -1909,6 +1919,5 @@ let fixtures =
         }
     ]
 
-  let source = new ActivitySource(serviceName)
   testList "MyTests" tests
-  |> addOpenTelemetry_SpanPerTest_WithProvider ExpectoConfig.defaultConfig (source) (fun () -> traceProvider ())
+  |> addOpenTelemetry_SpanPerTest ExpectoConfig.defaultConfig source
