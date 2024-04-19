@@ -7,13 +7,16 @@ module OpenTelemetry =
   open System.Threading
   open Impl
 
+
   module internal Activity =
+    let inline isNotNull x = isNull x |> not
+
     let inline setStatus (status : ActivityStatusCode) (span : Activity) =
-      if isNull span |> not then
+      if isNotNull span then
         span.SetStatus(status) |> ignore
 
     let inline setExn (e : exn) (span : Activity) =
-      if isNull span |> not then
+      if isNotNull span|> not then
         let tags =
             ActivityTagsCollection(
                 seq {
@@ -29,37 +32,41 @@ module OpenTelemetry =
         |> ignore
 
     let inline setExnMarkFailed (e : exn) (span : Activity) =
-      if isNull span |> not then
+      if isNotNull span then
         setExn e span
         span  |> setStatus ActivityStatusCode.Error
 
     let setSourceLocation (sourceLoc : SourceLocation) (span : Activity) =
-      if isNull span |> not && sourceLoc <> SourceLocation.empty then
+      if isNotNull span && sourceLoc <> SourceLocation.empty then
         span.SetTag("code.lineno", sourceLoc.lineNumber) |> ignore
         span.SetTag("code.filepath", sourceLoc.sourcePath) |> ignore
 
     let inline addOutcome (result : TestResult) (span : Activity) =
-      if isNull span |> not then
+      if isNotNull span then
         span.SetTag("test.result.status", result.tag) |> ignore
         span.SetTag("test.result.message", result) |> ignore
 
     let inline start (span : Activity) =
-      if isNull span |> not then
+      if isNotNull span then
         span.Start() |> ignore
       span
 
     let inline stop (span : Activity) =
-      if isNull span |> not then
+      if isNotNull span then
         span.Stop() |> ignore
 
-    let inline createActivity (name : string) (source : ActivitySource option) =
+    let inline setEndTimeNow (span : Activity) =
+      if isNotNull span then
+        span.SetEndTime(DateTime.UtcNow) |> ignore
+
+    let inline createActivity (name : string) (source : ActivitySource) =
       match source with
-      | Some source when not(isNull source) -> source.CreateActivity(name, ActivityKind.Internal)
+      | source when not(isNull source) -> source.CreateActivity(name, ActivityKind.Internal)
       | _ -> null
 
   open Activity
-
   open System.Runtime.ExceptionServices
+  open System.IO
 
   let inline internal reraiseAnywhere<'a> (e: exn) : 'a =
       ExceptionDispatchInfo.Capture(e).Throw()
@@ -99,61 +106,61 @@ module OpenTelemetry =
       setExn e span
     | _ ->
       setExnMarkFailed e span
+
   let wrapCodeWithSpan (span: Activity) (test: TestCode) =
+    let inline handleSuccess span =
+      setEndTimeNow span
+      addOutcome Passed span
+      setStatus ActivityStatusCode.Ok span
+    let inline handleFailure span e =
+      setEndTimeNow span
+      addExceptionOutcomeToSpan span e
+      reraiseAnywhere e
+
     match test with
     | Sync test ->
       TestCode.Sync (fun () ->
+        use span = start span
+        File.AppendAllText(Path.Combine(__SOURCE_DIRECTORY__, "wrapCodeWithSpan.log"), $"{span.DisplayName}\n")
         try
-          start span
           test ()
-          stop span
-          addOutcome Passed span
-          setStatus ActivityStatusCode.Ok span
+          handleSuccess span
         with
         | e ->
-          addExceptionOutcomeToSpan span e
-          reraiseAnywhere e
+          handleFailure span e
       )
 
     | Async test ->
       TestCode.Async (async {
+        use span = start span
         try
-          start span
           do! test
-          stop span
-          addOutcome Passed span
-          setStatus ActivityStatusCode.Ok span
+          handleSuccess span
         with
         | e ->
-          addExceptionOutcomeToSpan span e
-          reraiseAnywhere e
+          handleFailure span e
       })
     | AsyncFsCheck (testConfig, stressConfig, test) ->
       TestCode.AsyncFsCheck (testConfig, stressConfig, fun fsCheckConfig -> async {
+        use span = start span
         try
-          start span
           do! test fsCheckConfig
-          stop span
-          addOutcome Passed span
-          setStatus ActivityStatusCode.Ok span
+          handleSuccess span
         with
         | e ->
-          addExceptionOutcomeToSpan span e
-          reraiseAnywhere e
+          handleFailure span e
       })
     | SyncWithCancel test->
       TestCode.SyncWithCancel (fun ct ->
+        use span = start span
         try
-          start span
           test ct
-          stop span
-          addOutcome Passed span
-          setStatus ActivityStatusCode.Ok span
+          handleSuccess span
         with
         | e ->
-          addExceptionOutcomeToSpan span e
-          reraiseAnywhere e
+          handleFailure span e
       )
+
 
 
   let addOpenTelemetry_SpanPerTest (config: ExpectoConfig) (activitySource: ActivitySource) (rootTest: Test) : Test =
@@ -161,8 +168,9 @@ module OpenTelemetry =
     rootTest
     |> Test.toTestCodeList
     |> List.map (fun test ->
-      let span = createActivity (config.joinWith.format test.name) (Some activitySource)
+      let span = activitySource |> createActivity (config.joinWith.format test.name)
       span |> setSourceLocation (config.locate test.test)
       {test with test = wrapCodeWithSpan span test.test}
     )
     |> Test.fromFlatTests config.joinWith.asString
+
