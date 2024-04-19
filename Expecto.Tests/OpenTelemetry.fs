@@ -121,7 +121,6 @@ module OpenTelemetry =
     | Sync test ->
       TestCode.Sync (fun () ->
         use span = start span
-        File.AppendAllText(Path.Combine(__SOURCE_DIRECTORY__, "wrapCodeWithSpan.log"), $"{span.DisplayName}\n")
         try
           test ()
           handleSuccess span
