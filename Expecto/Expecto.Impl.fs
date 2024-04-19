@@ -10,20 +10,6 @@ open Expecto.Logging.Message
 open Helpers
 open Mono.Cecil
 
-//! The other option is to use a dedicated activity source for Expecto instead of adding it to the config
-
-// module ActivitySource =
-
-//   let [<Literal>] serviceName = "Expecto" // Should be public so consumers have a strong name when adding Sources
-//   let private version = lazy (
-//     let assembly = typeof<FlatTest>.Assembly
-//     let version = assembly.GetName().Version
-//     version.ToString()
-//   )
-
-//   let internal activitySource = lazy new ActivitySource(serviceName, version.Value)
-
-
 // TODO: make internal?
 module Impl =
 
@@ -548,11 +534,6 @@ module Impl =
       colour: ColourLevel
       /// Split test names by `.` or `/`
       joinWith: JoinWith
-      // One option is to allow the consumer to provide an activity source
-      // only problem is the only way to update the config is by using the CLIArguments currently
-      // we would have to add a new CLIArgument but that doesn't really work as it's not a reallyCLI option
-      // or have another way of updating the config after it's been created
-      activitySource : ActivitySource option
     }
     static member defaultConfig =
       { runInParallel = true
@@ -579,7 +560,6 @@ module Impl =
         noSpinner = false
         colour = Colour8
         joinWith = JoinWith.Dot
-        activitySource = None
       }
 
     member x.appendSummaryHandler handleSummary =
