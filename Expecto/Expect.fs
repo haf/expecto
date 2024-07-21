@@ -61,8 +61,8 @@ let private printVerses (firstName:string) first (secondName:string) second =
     if  first.Length > 100 || second.Length > 100
      || Seq.exists ((=)'\n') first || Seq.exists ((=)'\n') second
     then '\n' else ' '
-  let first = sprintf "\n%s:%c%s" firstName prefix first
-  let second = sprintf "\n%s:%c%s" secondName prefix second
+  let first = $"\n%s{firstName}:%c{prefix}%s{first}"
+  let second = $"\n%s{secondName}:%c{prefix}%s{second}"
   let diffs = allDiffs first second
   String.Concat(highlightAllGreen diffs first, highlightAllRed diffs second)
 
