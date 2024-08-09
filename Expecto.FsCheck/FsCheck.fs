@@ -71,7 +71,7 @@ module ExpectoFsCheck =
                           (String.concat " " data.Labels)
 
               let focus =
-                sprintf "Focus on error:\n\t%s (%i, %i) \"%s\"" methodName std gen name
+                sprintf "Focus on error:\n\t%s (%A, %A) \"%s\"" methodName (uint64 std) (uint64 gen) name
 
               sprintf "Failed after %s. %s%s\nResult:\n\t%A\n%s%s%s"
                       (numTests data.NumberOfTests) parameters shrunk
@@ -90,7 +90,9 @@ module ExpectoFsCheck =
       let config =
         { MaxTest = config.maxTest
           MaxFail = 1000
-          Replay = Option.map Random.StdGen config.replay
+          // We're converting uint64s to a smaller type, but it shouldn't be an issue because users are only using the
+          // values given in the test output, which are only ints when running FsCheck 2
+          Replay = Option.map Random.StdGen (config.replay |> Option.map (fun (seed, gamma) -> int seed, int gamma))
           Name = name
           StartSize = config.startSize
           EndSize = config.endSize
