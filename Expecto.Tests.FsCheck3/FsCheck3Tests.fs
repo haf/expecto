@@ -1,6 +1,5 @@
 module Expecto.FsCheckTests
 
-open System
 open Expecto
 open Expecto.Impl
 let properties =
