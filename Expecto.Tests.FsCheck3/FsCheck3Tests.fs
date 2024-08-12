@@ -1,5 +1,6 @@
 module Expecto.FsCheckTests
 
+open System
 open Expecto
 open Expecto.Impl
 let properties =
@@ -145,3 +146,7 @@ Focus on error:
     | x ->
       failtestf "Expected Failed, actual %A" x
   }
+
+[<Tests>]
+let runFsCheckReplaySeedMigrationTests =
+  testProperty "int32/uint64 roundtrip" <| fun (FsCheck.DoNotSize(n)) -> n = int32 (uint64 n)
