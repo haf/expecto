@@ -10,6 +10,7 @@ open BenchmarkDotNet.Analysers
 open BenchmarkDotNet.Columns
 open BenchmarkDotNet.Diagnosers
 open BenchmarkDotNet.Exporters
+open BenchmarkDotNet.EventProcessors
 open BenchmarkDotNet.Filters
 open BenchmarkDotNet.Jobs
 open BenchmarkDotNet.Loggers
@@ -46,6 +47,8 @@ module BenchmarkDotNet =
       buildTimeout: TimeSpan
       configAnalysisConclusion: IReadOnlyList<Conclusion>
       columnHidingRules: IColumnHidingRule list
+      eventProcessors: EventProcessor list
+      categoryDiscoverer: ICategoryDiscoverer
     }
     interface IConfig with
       member x.GetColumnProviders() = Seq.ofList x.columnProviders
@@ -67,6 +70,8 @@ module BenchmarkDotNet =
       member x.GetColumnHidingRules() = Seq.ofList x.columnHidingRules
       member x.BuildTimeout = x.buildTimeout
       member x.ConfigAnalysisConclusion = x.configAnalysisConclusion
+      member x.GetEventProcessors() = Seq.ofList x.eventProcessors
+      member x.CategoryDiscoverer = x.categoryDiscoverer
 
   let private synchronisedLogger =
     let cl = ConsoleLogger.Default
@@ -106,6 +111,8 @@ module BenchmarkDotNet =
       columnHidingRules = def.GetColumnHidingRules() |> List.ofSeq
       buildTimeout = def.BuildTimeout
       configAnalysisConclusion = def.ConfigAnalysisConclusion
+      eventProcessors = def.GetEventProcessors() |> List.ofSeq
+      categoryDiscoverer = def.CategoryDiscoverer
     }
 
   /// Run a performance test: pass the annotated type as a type param

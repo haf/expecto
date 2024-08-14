@@ -8,7 +8,7 @@ nuget FsCheck ~> 2.14
 nuget Hopac ~> 0.4
 nuget DiffPlex ~> 1.5
 nuget Mono.Cecil ~> 0.11
-nuget BenchmarkDotNet ~> 0.13.5
+nuget BenchmarkDotNet ~> 0.14.0
 
 group FsCheck3
   source https://api.nuget.org/v3/index.json
