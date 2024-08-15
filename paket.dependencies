@@ -41,3 +41,7 @@ group Build
 
   // Fix security vulnerability in a transitive package CVE-2023-29331
   nuget System.Security.Cryptography.Pkcs >= 7.0.2
+  // CVE-2024-30105
+  nuget System.Text.Json >= 8.0.4
+  // CVE-2024-38095
+  nuget System.Formats.Asn1 >= 6.0.1
