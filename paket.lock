@@ -324,7 +324,7 @@ NUGET
       System.Security.Permissions (>= 7.0)
     System.Drawing.Common (7.0) - restriction: || (== net6.0) (&& (== netstandard2.1) (>= net6.0))
       Microsoft.Win32.SystemEvents (>= 7.0) - restriction: || (== net6.0) (&& (== netstandard2.1) (>= net6.0))
-    System.Formats.Asn1 (7.0)
+    System.Formats.Asn1 (8.0.1)
       System.Buffers (>= 4.5.1) - restriction: || (&& (== net6.0) (>= net462)) (== netstandard2.1)
       System.Memory (>= 4.5.5) - restriction: || (&& (== net6.0) (>= net462)) (== netstandard2.1)
     System.Memory (4.5.5)

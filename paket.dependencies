@@ -44,4 +44,4 @@ group Build
   // CVE-2024-30105
   nuget System.Text.Json >= 8.0.4
   // CVE-2024-38095
-  nuget System.Formats.Asn1 >= 6.0.1
+  nuget System.Formats.Asn1 >= 8.0.1
