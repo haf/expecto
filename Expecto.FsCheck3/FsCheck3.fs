@@ -71,7 +71,7 @@ module ExpectoFsCheck =
                           (String.concat " " data.Labels)
 
               let focus =
-                sprintf "Focus on error:\n\t%s (%i, %i) \"%s\"" methodName originalSeed.Seed originalSeed.Gamma name
+                sprintf "Focus on error:\n\t%s (%A, %A) \"%s\"" methodName originalSeed.Seed originalSeed.Gamma name
 
               sprintf "Failed after %s. %s%s\nResult:\n\t%A\n%s%s%s"
                       (numTests data.NumberOfTests) parameters shrunk
@@ -91,7 +91,7 @@ module ExpectoFsCheck =
       let config =
         Config.Default
             .WithMaxTest(config.maxTest)
-            .WithReplay(Option.map (fun (seed,gamma) -> {Rnd = Rnd(uint64 seed, uint64 gamma); Size = None}) config.replay)
+            .WithReplay(Option.map (fun (seed,gamma) -> {Rnd = Rnd(seed, gamma); Size = None}) config.replay)
             .WithName(name)
             .WithStartSize(config.startSize)
             .WithEndSize(config.endSize)

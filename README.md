@@ -723,7 +723,7 @@ type FsCheckConfig =
     /// The size to use for the last test, when all the tests are passing. The size increases linearly between Start- and EndSize.
     endSize: int
     /// If set, the seed to use to start testing. Allows reproduction of previous runs.
-    replay: (int * int) option
+    replay: (uint64 * uint64) option
     /// The Arbitrary instances on this class will be merged in back to front order, i.e. instances for the same generated type at the front
     /// of the list will override those at the back. The instances on Arb.Default are always known, and are at the back (so they can always be
     /// overridden)
@@ -860,7 +860,7 @@ If a property fails, the output could look like this.
     Result:
       False
     Focus on error:
-      etestProperty (1865288075, 296281834) "addition is not commutative (should fail)"
+      etestProperty (1865288075UL, 296281834UL) "addition is not commutative (should fail)"
 
 The output that Expecto gives you, lets you recreate the exact test (that's from the 18..., 29... seed numbers). It's
 also a good idea to lift inputs and the test-case/parameter combination that failed into its *own* test (which isn't a
@@ -1366,3 +1366,7 @@ This might be due to how terminals/the locking thereof work: try running your te
 
 
 [logary]: https://github.com/logary/logary#using-logary-in-a-library
+
+## Migration notes
+
+- 11.0.0: Any usages of the `replay` (a.k.a `stdGen` with `etestProperty*` functions) config with FsCheck tests will need to be updated to use `uint64` by appending `UL` to the literals, e.g. from `(1865288075, 296281834)` to `(1865288075UL, 296281834UL)`.
