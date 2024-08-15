@@ -1,3 +1,9 @@
+### 11.0.0 - 2024-08-12
+* Breaking Change: move `FsCheckConfig.replay` from `int` to `uint64`.
+  * Fixes issue where many FsCheck3 runs could not be replayed since the random seed is too large.
+  * Existing FsCheck 2 users should be able to use the same seeds values, but converted to `uint64`.
+  * `uint64` literals can be defined like `let iAm5 = 5UL`
+
 ### 10.2.1 - 2024-03-15
 * Fix bug where testTask and testCaseTask allow the tasks to start immediately when the test is defined, breaking backward compatibility with testTask.
 
