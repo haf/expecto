@@ -1,5 +1,6 @@
-### 11.0.0 - 2024-08-14
+### 11.0.0-alpha1 - 2024-08-14
 * Fix testTheory issue where null and empty string produce duplicate test names (#494), thanks @Numpsy
+* Breaking Change: FsCheck 3 is now the default for Expecto.FsCheck, since FsCheck 2 is no longer supported. FsCheck 2 support is still available under the `-fscheck2` version suffix (i.e. install Expecto.FsCheck with version [11.0.0-alpha1-fscheck2](https://www.nuget.org/packages/Expecto.FsCheck/11.0.0-alpha1-fscheck2))
 * Breaking Change: move `FsCheckConfig.replay` from `int` to `uint64` (#501), thanks @rynoV
   * Fixes issue where many FsCheck3 runs could not be replayed since the random seed is too large.
   * Existing FsCheck 2 users should be able to use the same seeds values, but converted to `uint64`.
