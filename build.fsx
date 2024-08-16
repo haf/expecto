@@ -79,7 +79,7 @@ Target.create "BuildExpecto" (fun _ ->
 )
 
 Target.create "BuildBenchmarkDotNet" (fun _ ->
-  let sln = NoSln.WriteSolutionFile(files=benchmarkProjects, useTempSolutionFile=true)
+  let sln = NoSln.WriteSolutionFile(projects=benchmarkProjects, useTempSolutionFile=true)
   build sln
 )
 
