@@ -73,6 +73,13 @@ let build project =
              Common = DotNet.Options.withDotNetCliPath dotnetExePath p.Common })
     project
 
+let runTest project =
+  Trace.logfn "Running %s on .NET Core" project
+  DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
+    (sprintf "run --framework %s --project %s -c %O" testFramework project configuration)
+    "--summary"
+  |> fun r -> if r.ExitCode <> 0 then failwithf "Running %s on .NET Core failed" project
+
 Target.create "BuildExpecto" (fun _ ->
   let sln = NoSln.WriteSolutionFile(projects=libProjects, useTempSolutionFile=true)
   build sln
@@ -90,13 +97,6 @@ Target.create "BuildTest" (fun _ ->
 
 Target.create "RunTest" <| fun _ ->
 
-  let runTest project =
-    Trace.logfn "Running %s on .NET Core" project
-    DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
-      (sprintf "run --framework %s --project %s -c %O" testFramework project configuration)
-      "--summary"
-    |> fun r -> if r.ExitCode <> 0 then failwithf "Running %s on .NET Core failed" project
-
   runTest "Expecto.Tests"
   "Expecto.Tests.TestResults.xml"
   |> Path.combine (Path.combine __SOURCE_DIRECTORY__ "bin")
@@ -110,6 +110,10 @@ Target.create "RunTest" <| fun _ ->
   runTest "Expecto.Hopac.Tests"
   runTest "Expecto.Focused.Tests"
   runTest "Expecto.Tests.FsCheck3"
+
+Target.create "RunBenchmarkDotNetTest" <| fun _ ->
+
+  runTest "Expecto.BenchmarkDotNet.Tests"
 
 Target.create "Pack" <| fun _ ->
   let args =
@@ -177,6 +181,7 @@ Target.create "All" ignore
   ==> "BuildBenchmarkDotNet"
   ==> "BuildTest"
   ==> "RunTest"
+  ==> "RunBenchmarkDotNetTest"
   ==> "Pack"
   ==> "All"
   ==> "Push"
