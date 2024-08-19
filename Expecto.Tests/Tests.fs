@@ -10,6 +10,31 @@ open Expecto
 open Expecto.Impl
 open Expecto.Logging
 open System.Globalization
+open OpenTelemetry.Resources
+open OpenTelemetry.Trace
+open System.Diagnostics
+open OpenTelemetry
+
+let serviceName = "Expecto.Tests"
+
+let source = new ActivitySource(serviceName)
+
+let resourceBuilder () =
+    ResourceBuilder
+        .CreateDefault()
+        .AddService(serviceName = serviceName)
+
+let traceProvider () =
+  Sdk
+      .CreateTracerProviderBuilder()
+      .AddSource(serviceName)
+      .SetResourceBuilder(resourceBuilder ())
+      .AddOtlpExporter()
+      .Build()
+do
+    let provider = traceProvider()
+    AppDomain.CurrentDomain.ProcessExit.Add(fun _ -> provider.Dispose())
+
 
 module Dummy =
 
@@ -1380,6 +1405,8 @@ let asyncTests =
   ]
 
 open System.Threading.Tasks
+open OpenTelemetry
+open System.Diagnostics
 
 [<Tests>]
 let taskTests =
@@ -1828,6 +1855,7 @@ let cancel =
     )
   ]
 
+
 [<Tests>]
 let theory =
   testList "theory testing" [
@@ -1855,3 +1883,21 @@ let theory =
       }
     ]
   ]
+  |> addOpenTelemetry_SpanPerTest ExpectoConfig.defaultConfig source
+
+
+
+[<Tests>]
+let fixtures =
+  let rng = Random()
+  let tests = [
+      for i in 1..(Environment.ProcessorCount * 2) do
+        testCaseAsync (sprintf "test %d" i) <| async {
+          printfn "Running test %d" i
+          do! Async.Sleep(rng.Next(1, 5000))
+          printfn "Finished Running test %d" i
+        }
+    ]
+
+  testList "MyTests" tests
+  |> addOpenTelemetry_SpanPerTest ExpectoConfig.defaultConfig source
