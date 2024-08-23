@@ -543,7 +543,7 @@ module Tests =
       match Args.parseOptions options args with
       | Ok cliArguments ->
           let config =
-            Seq.fold (fun s a -> foldCLIArgumentToConfig a s) baseConfig cliArguments
+            List.fold (fun s a -> foldCLIArgumentToConfig a s) baseConfig cliArguments
           if List.exists(function List_Tests _ -> true | _ -> false) cliArguments then
             ArgsList config
           elif List.contains Version cliArguments then
