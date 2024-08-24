@@ -960,7 +960,7 @@ module Impl =
     else
       let nestedFunc =
         t.GetTypeInfo().GetFields()
-        |> Seq.tryFind (fun f -> isFsharpFuncType f.FieldType)
+        |> Array.tryFind (fun f -> isFsharpFuncType f.FieldType)
       match nestedFunc with
       | Some f -> f.GetValue(testFunc).GetType()
       | None -> t
@@ -969,7 +969,7 @@ module Impl =
     match testCode with
     | Sync test ->
       let t = getFuncTypeToUse test asm
-      let m = t.GetTypeInfo().GetMethods () |> Seq.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
+      let m = t.GetTypeInfo().GetMethods () |> Array.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
       (t.FullName, m.Name)
     | SyncWithCancel _ ->
       ("Unknown SyncWithCancel", "Unknown SyncWithCancel")
