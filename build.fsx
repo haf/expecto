@@ -172,6 +172,7 @@ Target.create "Release" (fun _ ->
 )
 
 Target.create "All" ignore
+Target.create "CI" ignore
 
 "CheckEnv"
   ==> "Release"
@@ -181,9 +182,10 @@ Target.create "All" ignore
   ==> "BuildBenchmarkDotNet"
   ==> "BuildTest"
   ==> "RunTest"
-  ==> "RunBenchmarkDotNetTest"
   ==> "Pack"
   ==> "All"
+  ==> "RunBenchmarkDotNetTest"
+  ==> "CI"
   ==> "Push"
   ==> "Release"
 
