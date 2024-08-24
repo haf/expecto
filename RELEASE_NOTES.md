@@ -1,3 +1,7 @@
+### 11.0.0-alpha2 - 2024-08-18
+* Breaking change: Update BenchmarkDotNet in Expecto.BenchmarkDotNet to 0.14.0 (#502)
+  * 'BenchmarkConfig' has new 'eventProcessors' and 'categoryDiscoverer' properties.
+
 ### 11.0.0-alpha1 - 2024-08-14
 * Fix testTheory issue where null and empty string produce duplicate test names (#494), thanks @Numpsy
 * Breaking Change: FsCheck 3 is now the default for Expecto.FsCheck, since FsCheck 2 is no longer supported. FsCheck 2 support is still available under the `-fscheck2` version suffix (i.e. install Expecto.FsCheck with version [11.0.0-alpha1-fscheck2](https://www.nuget.org/packages/Expecto.FsCheck/11.0.0-alpha1-fscheck2))
