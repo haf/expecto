@@ -31,7 +31,7 @@ Expecto also provides a simple API for property based testing using FsCheck.
 
 ## Quickstart
 
-    dotnet new install Expecto.Template::*
+    dotnet new install "Expecto.Template::*"
     dotnet new expecto -n PROJECT_NAME -o FOLDER_NAME
     
 Follow [Smooth Testing](https://www.youtube.com/channel/UC2SN9CUu9LlOBukXXv_bT5Q) on YouTube to learn the basics.
