@@ -60,7 +60,7 @@ let focused =
   testList "FsCheck focused" [
     testCase "ignore me" <| ignore
 
-    etestProperty (1UL,2UL) "Deliberately failing test" <|
+    etestProperty (1UL,2UL,0) "Deliberately failing test" <|
       fun a b c ->
         // wrong on purpose to test failures
         a * (b + c) = a * a + a * c
@@ -94,7 +94,7 @@ Shrunk 4 times to:
 Result:
 	False
 Focus on error:
-	etestProperty (1UL, 2UL) \"Deliberately failing test\""
+	etestProperty (1UL, 2UL, 0) \"Deliberately failing test\""
       Expect.equal actual expected "It should fail with the right message"
     | x ->
       failtestf "Expected Failed, actual was: %A" x
@@ -104,7 +104,7 @@ let config =
   testList "FsCheck config" [
     testCase "ignore me" ignore
 
-    etestPropertyWithConfig (1UL,2UL) FsCheckConfig.defaultConfig
+    etestPropertyWithConfig (1UL,2UL,0) FsCheckConfig.defaultConfig
       "Deliberately failing test" <|
       fun a b c ->
         // wrong on purpose to test failures
@@ -139,7 +139,7 @@ Shrunk 4 times to:
 Result:
 	False
 Focus on error:
-	etestPropertyWithConfig (1UL, 2UL) \"Deliberately failing test\""
+	etestPropertyWithConfig (1UL, 2UL, 0) \"Deliberately failing test\""
       Expect.equal actual expected "It should fail with the right message."
 
     | x ->
