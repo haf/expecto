@@ -1,3 +1,6 @@
+### 11.0.0-alpha4 - 2025-01-06
+* Add option to not print skipped tests
+
 ### 11.0.0-alpha3 - 2024-10-13
 * Add testParamAsync and testParamTask (#512), thanks @1eyewonder
 
