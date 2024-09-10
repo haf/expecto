@@ -498,6 +498,8 @@ module Impl =
       listStates : FocusState list
       /// Allows the test printer to be parametised to your liking.
       printer : TestPrinters
+      /// Whether to show skipped tests in the output.
+      printSkippedTests : bool
       /// Verbosity level (default: Info).
       verbosity : LogLevel
       /// Process name to log under (default: "Expecto")
@@ -536,6 +538,7 @@ module Impl =
             TestPrinters.defaultPrinter
           else
             TestPrinters.teamCityPrinter TestPrinters.defaultPrinter
+        printSkippedTests = true
         verbosity = Info
         logName = None
         locate = fun _ -> SourceLocation.empty
@@ -648,13 +651,18 @@ module Impl =
 
         let beforeEach (test:FlatTest) =
           let name = config.joinWith.format test.name
-          config.printer.beforeEach name
+          if config.printSkippedTests || test.shouldSkipEvaluation.IsNone then
+            config.printer.beforeEach name
+          else
+            async.Zero()
 
         async {
           let! beforeAsync = beforeEach test |> Async.StartChild
           let! result = execTestAsync ct config test
           do! beforeAsync
-          do! TestPrinters.printResult config test result
+
+          if config.printSkippedTests || test.shouldSkipEvaluation.IsNone then
+            do! TestPrinters.printResult config test result
 
           if progressStarted && Option.isNone test.shouldSkipEvaluation then
             Fraction (Interlocked.Increment testsCompleted, testLength)

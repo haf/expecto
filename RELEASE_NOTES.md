@@ -1,3 +1,6 @@
+### 11.0.0-alpha3 - 2024-09-10
+* Add option to not print skipped tests
+
 ### 11.0.0-alpha2 - 2024-08-18
 * Breaking change: Update BenchmarkDotNet in Expecto.BenchmarkDotNet to 0.14.0 (#502)
   * 'BenchmarkConfig' has new 'eventProcessors' and 'categoryDiscoverer' properties.
