@@ -16,7 +16,7 @@ type FsCheckConfig =
     /// The size to use for the last test, when all the tests are passing. The size increases linearly between Start- and EndSize.
     endSize: int
     /// If set, the seed to use to start testing. Allows reproduction of previous runs.
-    replay: (uint64 * uint64) option
+    replay: (uint64 * uint64 * int) option
     /// The Arbitrary instances on this class will be merged in back to front order, i.e. instances for the same generated type at the front
     /// of the list will override those at the back. The instances on Arb.Default are always known, and are at the back (so they can always be
     /// overridden)
