@@ -47,7 +47,7 @@ module ExpectoFsCheck =
             | TestResult.Failed (_,_,_, Outcome.Failed (:? IgnoreException as e),_,_,_) ->
               raise e
 
-            | TestResult.Failed (data, original, shrunk, outcome,originalSeed,_finalSeed,size) ->
+            | TestResult.Failed (data, original, shrunk, outcome,_originalSeed,finalSeed,size) ->
               let parameters =
                 original
                 |> List.map (sprintf "%A")
@@ -71,7 +71,7 @@ module ExpectoFsCheck =
                           (String.concat " " data.Labels)
 
               let focus =
-                sprintf "Focus on error:\n\t%s (%A, %A, %A) \"%s\"" methodName originalSeed.Seed originalSeed.Gamma size name
+                sprintf "Focus on error:\n\t%s (%A, %A, %A) \"%s\"" methodName finalSeed.Seed finalSeed.Gamma size name
 
               sprintf "Failed after %s. %s%s\nResult:\n\t%A\n%s%s%s"
                       (numTests data.NumberOfTests) parameters shrunk
