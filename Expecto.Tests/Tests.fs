@@ -289,6 +289,26 @@ let expecto =
             Expect.isLessThan value 1444 "Should be less than"
     ] |> List.ofSeq)
 
+    testList "testParamAsync" (
+      testParamAsync 1 [
+        "First sample",
+          fun value -> async {
+            Expect.equal value 1 "Should be expected value"
+          }
+      ]
+      |> List.ofSeq
+    )
+
+    testList "testParamTask" (
+      testParamTask 1 [
+        "First sample",
+          fun value () -> task {
+            Expect.equal value 1 "Should be expected value"
+          }
+      ]
+      |> List.ofSeq
+    )
+
     testList "shuffle" [
       testAsync "array sort same" {
         let a = [|1;2;3;4;5;6;7|]

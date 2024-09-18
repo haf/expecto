@@ -146,10 +146,21 @@ module Tests =
       ptestCase (stringify case) <| fun () ->
         test case |> ignore
     ptestList name (cases |> Seq.map caseToTest |> List.ofSeq)
+
   /// Applies a value to a list of partial tests
   let inline testParam param =
     Seq.map (fun (name, partialTest) ->
       testCase name (partialTest param))
+
+  /// Applies a value to a list of partial async tests
+  let inline testParamAsync param =
+    Seq.map (fun (name, partialTest) ->
+      testCaseAsync name (partialTest param))
+
+  /// Applies a value to a list of partial task tests
+  let inline testParamTask param =
+    Seq.map (fun (name, partialTest) ->
+      testCaseTask name (partialTest param))
 
   /// Test case computation expression builder
   type TestCaseBuilder(name, focusState) =
