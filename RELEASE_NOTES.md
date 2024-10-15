@@ -1,12 +1,15 @@
-### 11.0.0-alpha3 - 2024-09-10
+### 11.0.0-alpha4 - 2024-10-15
 * Add option to not print skipped tests
 * Breaking change: Add third item to `FsCheckConfig.replay` indicating the size
   * Fixes issue where the replay seed without the size was playing all tests leading up to the failure, making debugging 
     more difficult
   * Existing FsCheck 2 users can enter any number for the size, because it is ignored.
 
+### 11.0.0-alpha3 - 2024-10-13
+* Add testParamAsync and testParamTask (#512), thanks @1eyewonder
+
 ### 11.0.0-alpha2 - 2024-08-18
-* Breaking change: Update BenchmarkDotNet in Expecto.BenchmarkDotNet to 0.14.0 (#502)
+* Breaking change: Update BenchmarkDotNet in Expecto.BenchmarkDotNet to 0.14.0 (#502), thanks @Numpsy
   * 'BenchmarkConfig' has new 'eventProcessors' and 'categoryDiscoverer' properties.
 
 ### 11.0.0-alpha1 - 2024-08-14
