@@ -93,6 +93,7 @@ Shrunk 9 times to:
 	1 0 0
 Result:
 	Failed System.Exception: Expected true, got false.
+Original seed: (1UL, 3UL)
 Focus on error:
 	etestProperty (1UL, 3UL, 50) \"Deliberately failing test\""
       Expect.equal actual expected "It should fail with the right message"
@@ -138,6 +139,7 @@ Shrunk 9 times to:
 	1 0 0
 Result:
 	Failed System.Exception: Expected true, got false.
+Original seed: (1UL, 3UL)
 Focus on error:
 	etestPropertyWithConfig (1UL, 3UL, 50) \"Deliberately failing test\""
       Expect.equal actual expected "It should fail with the right message."
