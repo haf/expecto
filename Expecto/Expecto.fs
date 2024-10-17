@@ -449,6 +449,8 @@ module Tests =
     | Colours of int
     /// Adds a test printer.
     | Printer of TestPrinters
+    /// Whether to show skipped tests in the output.
+    | PrintSkippedTests of bool
     /// Sets the verbosity level.
     | Verbosity of LogLevel
     /// Append a summary handler.
@@ -540,6 +542,7 @@ module Tests =
                                       | _ -> JoinWith.Dot
                   }
     | Printer p -> fun o -> { o with printer = p }
+    | PrintSkippedTests b -> fun o -> { o with printSkippedTests = b }
     | Verbosity l -> fun o -> { o with verbosity = l }
     | Append_Summary_Handler (SummaryHandler h) -> fun o -> o.appendSummaryHandler h
 
