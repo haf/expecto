@@ -1,3 +1,6 @@
+### 11.0.0-alpha4 - 2024-12-16
+* Allow quietOnSuccess and maxRejected fscheck config
+
 ### 11.0.0-alpha3 - 2024-10-13
 * Add testParamAsync and testParamTask (#512), thanks @1eyewonder
 

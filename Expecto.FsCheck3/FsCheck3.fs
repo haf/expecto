@@ -95,9 +95,10 @@ module ExpectoFsCheck =
             .WithName(name)
             .WithStartSize(config.startSize)
             .WithEndSize(config.endSize)
-            .WithQuietOnSuccess(true)
+            .WithQuietOnSuccess(config.quietOnSuccess)
             .WithArbitrary(config.arbitrary)
             .WithRunner(runner config)
+            .WithMaxRejected(config.maxRejected)
 
 
       Check.One(config, property)

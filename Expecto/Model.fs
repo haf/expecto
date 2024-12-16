@@ -9,8 +9,8 @@ type SourceLocation =
   static member empty = { sourcePath = ""; lineNumber = 0 }
 
 type FsCheckConfig =
-    /// The maximum number of tests that are run.
-  { maxTest: int
+  { /// The maximum number of tests that are run.
+    maxTest: int
     /// The size to use for the first test.
     startSize: int
     /// The size to use for the last test, when all the tests are passing. The size increases linearly between Start- and EndSize.
@@ -36,6 +36,10 @@ type FsCheckConfig =
     finishedTest: FsCheckConfig
                -> (* test name *) string
                -> Async<unit>
+    /// If set, suppresses the output from the test if the test is successful.
+    quietOnSuccess: bool
+    /// The maximum number of tests where values are rejected, e.g. as the result of ==>
+    maxRejected: int
   }
 
   static member defaultConfig =
@@ -47,6 +51,8 @@ type FsCheckConfig =
       receivedArgs = fun _ _ _ _ -> async.Return ()
       successfulShrink = fun _ _ _ -> async.Return ()
       finishedTest = fun _ _ -> async.Return ()
+      quietOnSuccess = true
+      maxRejected = 1000
     }
 
 /// Actual test function; either an async one, or a synchronous one.
