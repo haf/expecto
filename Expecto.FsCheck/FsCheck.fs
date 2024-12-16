@@ -42,7 +42,11 @@ module ExpectoFsCheck =
               | xs  -> sprintf "%s\n" (String.concat "\n" xs)
 
             match testResult with
-            | TestResult.True (_testData,_b) -> ()
+            | TestResult.True (data,suppressOutput) ->
+              if not suppressOutput then
+                $"Passed {numTests data.NumberOfTests}.\n{stampsToString data.Stamps}"
+                |> PassWithMessage
+                |> raise
 
             | TestResult.False (_,_,_, Outcome.Exception (:? IgnoreException as e),_) ->
               raise e
