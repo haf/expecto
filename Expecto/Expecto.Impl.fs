@@ -219,6 +219,8 @@ module Impl =
       /// test name -> time taken -> unit
       passed: string -> TimeSpan -> Async<unit>
       /// test name -> message -> time taken -> unit
+      /// <br/>
+      /// Same as `passed`, but the test provided a message to be displayed.
       passedWithMessage: string -> string -> TimeSpan -> Async<unit>
       /// test name -> ignore message -> unit
       ignored: string -> string -> Async<unit>
