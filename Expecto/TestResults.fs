@@ -40,6 +40,7 @@ let writeNUnitSummary file (summary: TestRunSummary) =
       |> addAttribute "executed"
 
       match test.result with
+      | PassedWithMessage _
       | Passed -> "Success"
       | Error _
       | Failed _ -> "Failure"
@@ -47,6 +48,7 @@ let writeNUnitSummary file (summary: TestRunSummary) =
       |> addAttribute "result"
 
       match test.result with
+      | PassedWithMessage _
       | Passed -> addAttribute "success" "True"
       | Error _
       | Failed _ -> addAttribute "success" "False"
@@ -59,11 +61,15 @@ let writeNUnitSummary file (summary: TestRunSummary) =
       // TODO: implement it.
       addAttribute "asserts" "0"
 
+      let passNode = XElement(XName.Get "pass")
       let failureNode = XElement(XName.Get "failure")
 
       // Some more details that explain why a test was not executed.
       match test.result with
       | Passed -> ()
+      | PassedWithMessage m ->
+        passNode.Add(XName.Get "message", XCData m)
+        element.Add passNode
       | Error e ->
         failureNode.Add(XName.Get "message", XCData e.Message)
         failureNode.Add(XName.Get "stack-trace", XCData e.StackTrace)
@@ -136,6 +142,7 @@ let writeJUnitSummary file (summary: Impl.TestRunSummary) =
             XAttribute(XName.Get "message", message))
         match test.result with
         | Passed -> [||]
+        | PassedWithMessage msg -> [|makeMessageNode "pass" msg|]
         | Error e ->
           let message = makeMessageNode "error" e.Message
           message.Add(XCData(e.ToString()))

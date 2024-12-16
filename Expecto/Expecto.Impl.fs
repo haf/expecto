@@ -37,18 +37,21 @@ module Impl =
 
   type TestResult =
     | Passed
+    | PassedWithMessage of string
     | Ignored of string
     | Failed of string
     | Error of exn
     override x.ToString() =
       match x with
       | Passed -> "Passed"
+      | PassedWithMessage m -> "Passed: " + m
       | Ignored reason -> "Ignored: " + reason
       | Failed error -> "Failed: " + error
       | Error e -> "Exception: " + exnWithInnerMsg e ""
     member x.tag =
       match x with
       | Passed -> 0
+      | PassedWithMessage _ -> 0
       | Ignored _ -> 1
       | Failed _ -> 2
       | Error _ -> 3
@@ -57,11 +60,13 @@ module Impl =
       match x with
       | Ignored _ -> 0
       | Passed -> 1
+      | PassedWithMessage _ -> 1
       | Failed _ -> 2
       | Error _ -> 3
     member x.isPassed =
       match x with
       | Passed -> true
+      | PassedWithMessage _ -> true
       | _ -> false
     member x.isIgnored =
       match x with
@@ -213,6 +218,8 @@ module Impl =
       info: string -> Async<unit>
       /// test name -> time taken -> unit
       passed: string -> TimeSpan -> Async<unit>
+      /// test name -> message -> time taken -> unit
+      passedWithMessage: string -> string -> TimeSpan -> Async<unit>
       /// test name -> ignore message -> unit
       ignored: string -> string -> Async<unit>
       /// test name -> other message -> time taken -> unit
@@ -226,6 +233,7 @@ module Impl =
       let name = config.joinWith.format test.name
       match result.result with
       | Passed -> config.printer.passed name result.duration
+      | PassedWithMessage message -> config.printer.passedWithMessage name message result.duration
       | Failed message -> config.printer.failed name message result.duration
       | Ignored message -> config.printer.ignored name message
       | Error e -> config.printer.exn name e result.duration
@@ -235,6 +243,7 @@ module Impl =
         beforeEach = fun _ -> async.Zero()
         info = fun _ -> async.Zero()
         passed = fun _ _ -> async.Zero()
+        passedWithMessage = fun _ _ _ -> async.Zero()
         ignored = fun _ _ -> async.Zero()
         failed = fun _ _ _ -> async.Zero()
         exn = fun _ _ _ -> async.Zero()
@@ -256,6 +265,13 @@ module Impl =
           logger.logWithAck Debug (
             eventX "{testName} passed in {duration}."
             >> setField "testName" n
+            >> setField "duration" d)
+
+        passedWithMessage = fun n m d ->
+          logger.logWithAck Debug (
+            eventX "{testName} passed in {duration}. {message}"
+            >> setField "testName" n
+            >> setField "message" m
             >> setField "duration" d)
 
         ignored = fun n m ->
@@ -417,6 +433,13 @@ module Impl =
             "name", formatName n
             "duration", d.TotalMilliseconds |> int |> string ] }
 
+        passedWithMessage = fun n m d -> async {
+          do! innerPrinter.passedWithMessage n m d
+          tcLog "testFinished" [
+            "flowId", formatName n
+            "name", formatName n
+            "duration", d.TotalMilliseconds |> int |> string ] }
+
         info = fun s ->
           innerPrinter.info s
 
@@ -463,6 +486,7 @@ module Impl =
         beforeEach  = fun n -> runTwoAsyncs (first.beforeEach n) (second.beforeEach n)
         info        = fun s -> runTwoAsyncs (first.info s) (second.info s)
         passed      = fun n d -> runTwoAsyncs (first.passed n d) (second.passed n d)
+        passedWithMessage = fun n m d -> runTwoAsyncs (first.passedWithMessage n m d) (second.passedWithMessage n m d)
         ignored     = fun n m -> runTwoAsyncs (first.ignored n m) (second.ignored n m)
         failed      = fun n m d -> runTwoAsyncs (first.failed n m d) (second.failed n m d)
         exn         = fun n e d -> runTwoAsyncs (first.exn n e d) (second.exn n e d)
@@ -595,6 +619,9 @@ module Impl =
           w.Stop()
           return TestSummary.single Passed (float w.ElapsedMilliseconds)
       with
+        | :? PassWithMessage as e ->
+          w.Stop()
+          return TestSummary.single (PassedWithMessage ("\n"+e.Message)) (float w.ElapsedMilliseconds)
         | :? AssertException as e ->
           w.Stop()
           let msg =

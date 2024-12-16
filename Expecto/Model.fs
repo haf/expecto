@@ -100,6 +100,7 @@ type Test =
   | Sequenced of SequenceMethod * Test
 
 type ExpectoException(msg) = inherit Exception(msg)
+type PassWithMessage(msg) = inherit ExpectoException(msg)
 type AssertException(msg) = inherit ExpectoException(msg)
 type FailedException(msg) = inherit ExpectoException(msg)
 type IgnoreException(msg) = inherit ExpectoException(msg)
