@@ -1,8 +1,7 @@
 ### 11.0.0-alpha4 - 2024-12-16
-* Tests can now pass with a message
-    * `TestPrinters` now has a new field `passedWithMessage` which may need to be implemented for custom printers
 * Allow quietOnSuccess and maxRejected fscheck config
-  * When `quietOnSuccess` is false, the number of tests and stamps (`Prop.collect/classify/trivial` etc) will be shown when the test passes.
+* Tests can now pass with a message
+  * `TestPrinters` now has a new field `passedWithMessage` which may need to be implemented for custom printers
 
 ### 11.0.0-alpha3 - 2024-10-13
 * Add testParamAsync and testParamTask (#512), thanks @1eyewonder
