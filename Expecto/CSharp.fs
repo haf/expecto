@@ -16,7 +16,6 @@ type ITestPrinter =
   abstract member BeforeEach  : string -> Task
   abstract member Info        : string -> Task
   abstract member Passed      : string * TimeSpan -> Task
-  abstract member PassedWithMessage      : string * string * TimeSpan -> Task
   abstract member Ignored     : string * string -> Task
   abstract member Failed      : string * string * TimeSpan -> Task
   abstract member Exn         : string * exn * TimeSpan -> Task
@@ -31,7 +30,6 @@ module Runner =
       { beforeRun   = fun t ->      async { return! i.BeforeRun(t) |> Async.AwaitTask }
         beforeEach  = fun s ->      async { return! i.BeforeEach(s) |> Async.AwaitTask }
         passed      = fun n d ->    async { return! i.Passed(n, d) |> Async.AwaitTask }
-        passedWithMessage = fun n m d -> async { return! i.PassedWithMessage(n, m, d) |> Async.AwaitTask }
         info        = fun s ->      async { return! i.Info(s) |> Async.AwaitTask }
         ignored     = fun n m ->    async { return! i.Ignored(n, m) |> Async.AwaitTask }
         failed      = fun n m d ->  async { return! i.Failed(n, m, d) |> Async.AwaitTask }

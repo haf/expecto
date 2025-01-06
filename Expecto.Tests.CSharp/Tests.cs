@@ -30,11 +30,6 @@ namespace Test.CSharp
             return Task.CompletedTask;
         }
 
-        public Task PassedWithMessage(string value1, string value2, TimeSpan value3)
-        {
-            return Task.CompletedTask;
-        }
-
         Task ITestPrinter.Ignored(string value1, string value2)
         {
             return Task.CompletedTask;
