@@ -1378,4 +1378,3 @@ This might be due to how terminals/the locking thereof work: try running your te
 ### 11.0.0
 - Any usages of the `replay` (a.k.a `stdGen` with `etestProperty*` functions) config with FsCheck tests will need to be updated to use `uint64` by appending `UL` to the literals, e.g. from `(1865288075, 296281834)` to `(1865288075UL, 296281834UL)`.
 - FsCheck 2 is no longer supported, so we're switching Expecto.FsCheck to use FsCheck 3 by default, even though FsCheck 3 is still in release candidate state. If you still want FsCheck2, we will continue to release FsCheck2 support for the time being using a version suffix, e.g. [11.0.0-fscheck2](https://www.nuget.org/packages/Expecto.FsCheck/11.0.0-alpha1-fscheck2)  
-- `TestPrinters` now has a new field `passedWithMessage` which may need to be implemented for custom printers. It should be mostly the same as `passed`, but also print the given message.
