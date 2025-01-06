@@ -42,7 +42,9 @@ module ExpectoFsCheck =
               | xs  -> sprintf "%s\n" (String.concat "\n" xs)
 
             match testResult with
-            | TestResult.Passed (_testData,_b) -> ()
+            | TestResult.Passed (data, suppressOutput) ->
+              if not suppressOutput && config.logger.IsSome then
+                config.logger.Value.log Logging.LogLevel.Info (Logging.Message.eventX $"Passed {numTests data.NumberOfTests}.\n{stampsToString data.Stamps}") |> Async.RunSynchronously
 
             | TestResult.Failed (_,_,_, Outcome.Failed (:? IgnoreException as e),_,_,_) ->
               raise e
