@@ -71,7 +71,7 @@ module ExpectoFsCheck =
                           (String.concat " " data.Labels)
 
               let focus =
-                sprintf "Focus on error:\n\t%s (%A, %A, 0) \"%s\"" methodName (uint64 std) (uint64 gen) name
+                sprintf "Focus on error:\n\t%s (%A, %A, None) \"%s\"" methodName (uint64 std) (uint64 gen) name
 
               sprintf "Failed after %s. %s%s\nResult:\n\t%A\n%s%s%s"
                       (numTests data.NumberOfTests) parameters shrunk
