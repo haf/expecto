@@ -60,7 +60,7 @@ let focused =
   testList "FsCheck focused" [
     testCase "ignore me" <| ignore
 
-    etestProperty (1UL,3UL) "Deliberately failing test" <|
+    etestProperty (1UL,3UL,Some 50) "Deliberately failing test" <|
       fun a b c ->
         // wrong on purpose to test failures
         a * (b + c) = a * a + a * c
@@ -87,14 +87,15 @@ let runFsCheckFocusedTests =
     match (getResult ["FsCheck focused";"Deliberately failing test"]).result with
     | TestResult.Failed actual ->
       let expected = "
-Failed after 3 tests. Parameters:
-	-1 1 2
-Shrunk 2 times to:
-	-1 0 0
+Failed after 1 test. Parameters:
+	47 43 -38
+Shrunk 9 times to:
+	1 0 0
 Result:
 	Failed System.Exception: Expected true, got false.
+Original seed: (1UL, 3UL)
 Focus on error:
-	etestProperty (1UL, 3UL) \"Deliberately failing test\""
+	etestProperty (1UL, 3UL, Some 50) \"Deliberately failing test\""
       Expect.equal actual expected "It should fail with the right message"
     | x ->
       failtestf "Expected Failed, actual was: %A" x
@@ -104,7 +105,7 @@ let config =
   testList "FsCheck config" [
     testCase "ignore me" ignore
 
-    etestPropertyWithConfig (1UL,3UL) FsCheckConfig.defaultConfig
+    etestPropertyWithConfig (1UL,3UL,Some 50) FsCheckConfig.defaultConfig
       "Deliberately failing test" <|
       fun a b c ->
         // wrong on purpose to test failures
@@ -132,14 +133,15 @@ let runFsCheckConfigTests =
     match (getResult ["FsCheck config";"Deliberately failing test"]).result with
     | TestResult.Failed actual ->
       let expected = "
-Failed after 3 tests. Parameters:
-	-1 1 2
-Shrunk 2 times to:
-	-1 0 0
+Failed after 1 test. Parameters:
+	47 43 -38
+Shrunk 9 times to:
+	1 0 0
 Result:
 	Failed System.Exception: Expected true, got false.
+Original seed: (1UL, 3UL)
 Focus on error:
-	etestPropertyWithConfig (1UL, 3UL) \"Deliberately failing test\""
+	etestPropertyWithConfig (1UL, 3UL, Some 50) \"Deliberately failing test\""
       Expect.equal actual expected "It should fail with the right message."
 
     | x ->

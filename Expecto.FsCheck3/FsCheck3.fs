@@ -47,7 +47,7 @@ module ExpectoFsCheck =
             | TestResult.Failed (_,_,_, Outcome.Failed (:? IgnoreException as e),_,_,_) ->
               raise e
 
-            | TestResult.Failed (data, original, shrunk, outcome,originalSeed,_finalSeed,size) ->
+            | TestResult.Failed (data, original, shrunk, outcome,originalSeed,finalSeed,size) ->
               let parameters =
                 original
                 |> List.map (sprintf "%A")
@@ -70,12 +70,14 @@ module ExpectoFsCheck =
                 | _ -> sprintf "Labels of failing property (one or more is failing): %s\n"
                           (String.concat " " data.Labels)
 
+              let original =
+                sprintf "Original seed: (%A, %A)" originalSeed.Seed originalSeed.Gamma
               let focus =
-                sprintf "Focus on error:\n\t%s (%A, %A) \"%s\"" methodName originalSeed.Seed originalSeed.Gamma name
+                sprintf "Focus on error:\n\t%s (%A, %A, Some %A) \"%s\"" methodName finalSeed.Seed finalSeed.Gamma size name
 
-              sprintf "Failed after %s. %s%s\nResult:\n\t%A\n%s%s%s"
+              sprintf "Failed after %s. %s%s\nResult:\n\t%A\n%s%s%s\n%s"
                       (numTests data.NumberOfTests) parameters shrunk
-                      outcome labels (stampsToString data.Stamps) focus
+                      outcome labels (stampsToString data.Stamps) original focus
               |> FailedException
               |> raise
 
@@ -91,7 +93,7 @@ module ExpectoFsCheck =
       let config =
         Config.Default
             .WithMaxTest(config.maxTest)
-            .WithReplay(Option.map (fun (seed,gamma) -> {Rnd = Rnd(seed, gamma); Size = None}) config.replay)
+            .WithReplay(Option.map (fun (seed,gamma,size) -> {Rnd = Rnd(seed, gamma); Size = size}) config.replay)
             .WithName(name)
             .WithStartSize(config.startSize)
             .WithEndSize(config.endSize)
