@@ -8,6 +8,12 @@ type SourceLocation =
   { sourcePath: string; lineNumber: int }
   static member empty = { sourcePath = ""; lineNumber = 0 }
 
+type FsCheckTestData =
+    { Labels: Set<string>
+      NumberOfShrinks: int
+      NumberOfTests: int
+      Stamps: seq<int * list<string>> }
+
 type FsCheckConfig =
   { /// The maximum number of tests that are run.
     maxTest: int
@@ -35,6 +41,7 @@ type FsCheckConfig =
     /// Callback when the test case has finished
     finishedTest: FsCheckConfig
                -> (* test name *) string
+               -> FsCheckTestData
                -> Async<unit>
     /// If set, suppresses the output from the test if the test is successful.
     quietOnSuccess: bool
@@ -52,7 +59,7 @@ type FsCheckConfig =
       arbitrary = []
       receivedArgs = fun _ _ _ _ -> async.Return ()
       successfulShrink = fun _ _ _ -> async.Return ()
-      finishedTest = fun _ _ -> async.Return ()
+      finishedTest = fun _ _ _ -> async.Return ()
       quietOnSuccess = true
       maxRejected = 1000
       logger = None
