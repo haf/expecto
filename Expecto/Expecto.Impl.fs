@@ -207,8 +207,8 @@ module Impl =
   type TestPrinters =
     { /// Called before a test run (e.g. at the top of your main function)
       beforeRun: Test -> Async<unit>
-      /// Called before atomic test (TestCode) is executed.
-      beforeEach: string -> Async<unit>
+      /// test name -> isTestSkipped -> unit. Called before a test is executed (when isTestSkipped = true) or skipped (when isTestSkipped = false)
+      beforeEach: string -> bool -> Async<unit>
       /// info
       info: string -> Async<unit>
       /// test name -> time taken -> unit
@@ -232,7 +232,7 @@ module Impl =
 
     static member silent =
       { beforeRun = fun _ -> async.Zero()
-        beforeEach = fun _ -> async.Zero()
+        beforeEach = fun _ _ -> async.Zero()
         info = fun _ -> async.Zero()
         passed = fun _ _ -> async.Zero()
         ignored = fun _ _ -> async.Zero()
@@ -244,7 +244,7 @@ module Impl =
       { beforeRun = fun _tests ->
           logger.logWithAck Info (eventX "EXPECTO? Running tests...")
 
-        beforeEach = fun n ->
+        beforeEach = fun n _ ->
           logger.logWithAck Debug (
             eventX "{testName} starting..."
             >> setField "testName" n)
@@ -404,8 +404,8 @@ module Impl =
           tcLog "testSuiteStarted" [
             "name", "ExpectoTestSuite" ] }
 
-        beforeEach = fun n -> async {
-          do! innerPrinter.beforeEach n
+        beforeEach = fun n e -> async {
+          do! innerPrinter.beforeEach n e
           tcLog "testStarted" [
             "flowId", formatName n
             "name", formatName n ] }
@@ -439,7 +439,7 @@ module Impl =
             "duration", d.TotalMilliseconds |> int |> string ] }
 
         exn = fun n e d -> async {
-          do! innerPrinter.beforeEach n
+          do! innerPrinter.beforeEach n true
           tcLog "testFailed" [
             "flowId", formatName n
             "name", formatName n
@@ -460,7 +460,7 @@ module Impl =
         do! b
       }
       { beforeRun   = fun _tests -> runTwoAsyncs (first.beforeRun _tests) (second.beforeRun _tests)
-        beforeEach  = fun n -> runTwoAsyncs (first.beforeEach n) (second.beforeEach n)
+        beforeEach  = fun n e -> runTwoAsyncs (first.beforeEach n e) (second.beforeEach n e)
         info        = fun s -> runTwoAsyncs (first.info s) (second.info s)
         passed      = fun n d -> runTwoAsyncs (first.passed n d) (second.passed n d)
         ignored     = fun n m -> runTwoAsyncs (first.ignored n m) (second.ignored n m)
@@ -498,8 +498,6 @@ module Impl =
       listStates : FocusState list
       /// Allows the test printer to be parametised to your liking.
       printer : TestPrinters
-      /// Whether to show skipped tests in the output.
-      printSkippedTests : bool
       /// Verbosity level (default: Info).
       verbosity : LogLevel
       /// Process name to log under (default: "Expecto")
@@ -538,7 +536,6 @@ module Impl =
             TestPrinters.defaultPrinter
           else
             TestPrinters.teamCityPrinter TestPrinters.defaultPrinter
-        printSkippedTests = true
         verbosity = Info
         logName = None
         locate = fun _ -> SourceLocation.empty
@@ -651,18 +648,15 @@ module Impl =
 
         let beforeEach (test:FlatTest) =
           let name = config.joinWith.format test.name
-          if config.printSkippedTests || test.shouldSkipEvaluation.IsNone then
-            config.printer.beforeEach name
-          else
-            async.Zero()
+
+          config.printer.beforeEach name <| Option.isSome test.shouldSkipEvaluation
 
         async {
           let! beforeAsync = beforeEach test |> Async.StartChild
           let! result = execTestAsync ct config test
           do! beforeAsync
 
-          if config.printSkippedTests || test.shouldSkipEvaluation.IsNone then
-            do! TestPrinters.printResult config test result
+          do! TestPrinters.printResult config test result
 
           if progressStarted && Option.isNone test.shouldSkipEvaluation then
             Fraction (Interlocked.Increment testsCompleted, testLength)

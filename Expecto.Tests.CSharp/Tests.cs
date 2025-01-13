@@ -10,7 +10,7 @@ namespace Test.CSharp
 {
     public class CSharpPrinter : ITestPrinter
     {
-        Task ITestPrinter.BeforeEach(string value)
+        Task ITestPrinter.BeforeEach(string value, bool isTestSkipped)
         {
             return Task.CompletedTask;
         }
