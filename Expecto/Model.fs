@@ -47,8 +47,6 @@ type FsCheckConfig =
     quietOnSuccess: bool
     /// The maximum number of tests where values are rejected, e.g. as the result of ==>
     maxRejected: int
-    /// If set, this logger is used to show test information for passing tests.
-    logger: Logging.Logger option
   }
 
   static member defaultConfig =
@@ -62,7 +60,6 @@ type FsCheckConfig =
       finishedTest = fun _ _ _ -> async.Return ()
       quietOnSuccess = true
       maxRejected = 1000
-      logger = None
     }
 
 /// Actual test function; either an async one, or a synchronous one.
