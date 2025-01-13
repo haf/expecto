@@ -744,6 +744,7 @@ type FsCheckConfig =
     /// Callback when the test case has finished
     finishedTest: FsCheckConfig
                -> (* test name *) string
+               -> FsCheckTestData
                -> Async<unit>
     /// If set, suppresses the output from the test if the test is successful.
     quietOnSuccess: bool

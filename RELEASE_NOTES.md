@@ -1,5 +1,5 @@
 ### 11.0.0-alpha5 - 2025-01-13
-* Allow quietOnSuccess and maxRejected fscheck config
+* Add third argument to `FsCheckConfig.testFinished` containing information about the finished test.
 
 ### 11.0.0-alpha4 - 2025-01-06
 * Breaking change: Add third item to `FsCheckConfig.replay` indicating the size
