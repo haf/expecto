@@ -1,5 +1,5 @@
-### 11.0.0-alpha4 - 2025-01-13
-* Add option to not print skipped tests
+### 11.0.0-alpha5 - 2025-01-13
+* Add `isTestSkipped` parameter to `TestPrinters.beforeEach`, allowing to avoid printing skipped tests to the console
 
 ### 11.0.0-alpha4 - 2025-01-06
 * Breaking change: Add third item to `FsCheckConfig.replay` indicating the size
