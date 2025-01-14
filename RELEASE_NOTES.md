@@ -1,6 +1,12 @@
-### 11.0.0-alpha4 - 2025-01-06
+### 11.0.0-alpha4 - 2025-01-13
 * Add option to not print skipped tests
 
+### 11.0.0-alpha4 - 2025-01-06
+* Breaking change: Add third item to `FsCheckConfig.replay` indicating the size
+    * Fixes issue where the replay seed without the size was playing all tests leading up to the failure, making debugging
+      more difficult
+    * Existing FsCheck 2 users can enter `None` for the size, because it is ignored.
+    
 ### 11.0.0-alpha3 - 2024-10-13
 * Add testParamAsync and testParamTask (#512), thanks @1eyewonder
 
