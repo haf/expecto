@@ -1,3 +1,6 @@
+### 11.0.0-alpha5 - 2025-01-13
+* Add `isTestSkipped` parameter to `TestPrinters.beforeEach`, allowing to avoid printing skipped tests to the console
+
 ### 11.0.0-alpha4 - 2025-01-06
 * Breaking change: Add third item to `FsCheckConfig.replay` indicating the size
     * Fixes issue where the replay seed without the size was playing all tests leading up to the failure, making debugging
