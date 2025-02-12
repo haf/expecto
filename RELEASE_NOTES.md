@@ -1,5 +1,9 @@
-### 11.0.0-alpha5 - 2025-01-13
+### 11.0.0-alpha6 - 2025-02-12
 * Add third argument to `FsCheckConfig.testFinished` containing information about the finished test.
+
+### 11.0.0-alpha5 - 2025-01-13
+* Breaking Change: Add `isTestSkipped` parameter to `TestPrinters.beforeEach`, allowing to avoid printing skipped tests to the console, thanks @rynoV
+  * Requires a coordinated upgrade to YoloDev.Expecto.TestSdk 0.15+ for use with Visual Studio, Rider, Ionide, dotnet test, or any other test runner that depends on the vstest adapter system
 
 ### 11.0.0-alpha4 - 2025-01-06
 * Breaking change: Add third item to `FsCheckConfig.replay` indicating the size

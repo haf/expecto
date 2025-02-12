@@ -13,7 +13,7 @@ open Expecto.Impl
 // C# is weak and can't really handle Async or partial application
 type ITestPrinter =
   abstract member BeforeRun   : Test -> Task
-  abstract member BeforeEach  : string -> Task
+  abstract member BeforeEach  : name: string * isTestSkipped: bool -> Task
   abstract member Info        : string -> Task
   abstract member Passed      : string * TimeSpan -> Task
   abstract member Ignored     : string * string -> Task
@@ -28,7 +28,7 @@ module Runner =
 
   let private printerFromInterface (i : ITestPrinter) =
       { beforeRun   = fun t ->      async { return! i.BeforeRun(t) |> Async.AwaitTask }
-        beforeEach  = fun s ->      async { return! i.BeforeEach(s) |> Async.AwaitTask }
+        beforeEach = fun s e ->     async { return! i.BeforeEach(s, e) |> Async.AwaitTask }
         passed      = fun n d ->    async { return! i.Passed(n, d) |> Async.AwaitTask }
         info        = fun s ->      async { return! i.Info(s) |> Async.AwaitTask }
         ignored     = fun n m ->    async { return! i.Ignored(n, m) |> Async.AwaitTask }
