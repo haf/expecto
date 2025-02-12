@@ -102,14 +102,14 @@ module ExpectoFsCheck =
     let test (config: FsCheckConfig) =
       let config =
         { MaxTest = config.maxTest
-          MaxFail = config.maxRejected
+          MaxFail = 1000
           // We're converting uint64s to a smaller type, but it shouldn't be an issue because users are only using the
           // values given in the test output, which are only ints when running FsCheck 2
           Replay = Option.map Random.StdGen (config.replay |> Option.map (fun (seed, gamma, _) -> int seed, int gamma))
           Name = name
           StartSize = config.startSize
           EndSize = config.endSize
-          QuietOnSuccess = config.quietOnSuccess
+          QuietOnSuccess = true
           Every = fun _ _ -> String.Empty
           EveryShrink = fun _ -> String.Empty
           Arbitrary = config.arbitrary
