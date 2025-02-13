@@ -29,7 +29,20 @@ module ExpectoFsCheck =
 
           /// Called whenever all tests are done, either True, False or Exhausted.
           member __.OnFinished (fsCheckTestName, testResult) =
-            config.finishedTest config fsCheckTestName
+            let testData =
+              match testResult with
+              | TestResult.True(testData, _) -> testData
+              | TestResult.False(testData, _, _, _, _) -> testData
+              | TestResult.Exhausted testData -> testData
+
+            let testData = {
+              FsCheckTestData.Stamps = testData.Stamps
+              NumberOfTests = testData.NumberOfTests
+              NumberOfShrinks = testData.NumberOfShrinks
+              Labels = testData.Labels
+            }
+
+            config.finishedTest config fsCheckTestName testData
             |> Async.RunSynchronously
 
             let numTests i = if i = 1 then "1 test" else sprintf "%i tests" i

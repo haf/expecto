@@ -744,6 +744,7 @@ type FsCheckConfig =
     /// Callback when the test case has finished
     finishedTest: FsCheckConfig
                -> (* test name *) string
+               -> FsCheckTestData
                -> Async<unit>
   }
 ```

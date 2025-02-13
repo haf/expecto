@@ -8,6 +8,12 @@ type SourceLocation =
   { sourcePath: string; lineNumber: int }
   static member empty = { sourcePath = ""; lineNumber = 0 }
 
+type FsCheckTestData =
+    { Labels: Set<string>
+      NumberOfShrinks: int
+      NumberOfTests: int
+      Stamps: seq<int * list<string>> }
+
 type FsCheckConfig =
     /// The maximum number of tests that are run.
   { maxTest: int
@@ -36,6 +42,7 @@ type FsCheckConfig =
     /// Callback when the test case has finished
     finishedTest: FsCheckConfig
                -> (* test name *) string
+               -> FsCheckTestData
                -> Async<unit>
   }
 
@@ -47,7 +54,7 @@ type FsCheckConfig =
       arbitrary = []
       receivedArgs = fun _ _ _ _ -> async.Return ()
       successfulShrink = fun _ _ _ -> async.Return ()
-      finishedTest = fun _ _ -> async.Return ()
+      finishedTest = fun _ _ _ -> async.Return ()
     }
 
 /// Actual test function; either an async one, or a synchronous one.
@@ -127,4 +134,3 @@ type private TestNameHolder() =
   static member Name
       with get () = TestNameHolder.name
       and  set name = TestNameHolder.name <- name
-
