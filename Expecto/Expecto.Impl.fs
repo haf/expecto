@@ -978,18 +978,27 @@ module Impl =
     | Async _ | AsyncFsCheck _ ->
       ("Unknown Async", "Unknown Async")
 
+  // Load the list of types in the test assembly and cache the data
+  // Ref https://github.com/haf/expecto/issues/517 for comments on the performance
+  let private moduleDefinitionCache = System.Collections.Concurrent.ConcurrentDictionary<string, Map<string, TypeDefinition>>()
+
+  let private getTypesForAssembly (asm: Assembly) =
+
+    moduleDefinitionCache.GetOrAdd(asm.Location, valueFactory = (fun loc ->
+      let readerParams = ReaderParameters( ReadSymbols = true )
+      let moduleDefinition = ModuleDefinition.ReadModule(loc, readerParams)
+
+      seq { for t in moduleDefinition.GetTypes() -> (t.FullName, t) }
+      |> Map.ofSeq
+    ))
+
   // Ported from
   // https://github.com/adamchester/expecto-adapter/blob/885fc9fff0/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
   let getSourceLocation (asm: Assembly) className methodName =
     let lineNumberIndicatingHiddenLine = 0xfeefee
     let getEcma335TypeName (clrTypeName:string) = clrTypeName.Replace("+", "/")
 
-    let types =
-      let readerParams = ReaderParameters( ReadSymbols = true )
-      let moduleDefinition = ModuleDefinition.ReadModule(asm.Location, readerParams)
-
-      seq { for t in moduleDefinition.GetTypes() -> (t.FullName, t) }
-      |> Map.ofSeq
+    let types = getTypesForAssembly asm
 
     let getMethods typeName =
       match types.TryFind (getEcma335TypeName typeName) with
