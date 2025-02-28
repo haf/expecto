@@ -1,3 +1,6 @@
+### 11.0.0-alpha7 - 2025-02-28
+* Improve performance of test location, substatially improving performance for test discovery via VSTest on large projects. thanks @Numpsy
+
 ### 11.0.0-alpha6 - 2025-02-12
 * Add third argument to `FsCheckConfig.testFinished` containing information about the finished test.
 
