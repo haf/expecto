@@ -222,6 +222,18 @@ module Impl =
       /// Prints a summary given the test result counts
       summary : ExpectoConfig -> TestRunSummary -> Async<unit> }
 
+    // NOTE: with* methods provide a compatibility layer allowing us to change the TestPrinters signature
+    //       without breaking YoloDev.Expecto.TestSdk and other dependent packages
+
+    static member withBeforeRun (beforeRun: (Test -> Async<unit>)) (printer: TestPrinters)= {printer with beforeRun = beforeRun}
+    static member withBeforeEach (beforeEach: (string -> Async<unit>)) (printer: TestPrinters) = {printer with beforeEach = beforeEach}
+    static member withInfo (info: (string -> Async<unit>)) (printer: TestPrinters) = {printer with info = info}
+    static member withPassed (passed: (string -> TimeSpan -> Async<unit>)) (printer: TestPrinters) = {printer with passed = passed}
+    static member withIgnored (ignored: (string -> string -> Async<unit>)) (printer: TestPrinters) = {printer with ignored = ignored}
+    static member withFailed (failed: (string -> string -> TimeSpan -> Async<unit>)) (printer: TestPrinters) = {printer with failed = failed}
+    static member withExn (exn: (string -> exn -> TimeSpan -> Async<unit>)) (printer: TestPrinters) = {printer with exn = exn}
+    static member withSummary (summary: (ExpectoConfig -> TestRunSummary -> Async<unit>)) (printer: TestPrinters) = {printer with summary = summary}
+
     static member printResult config (test:FlatTest) (result:TestSummary) =
       let name = config.joinWith.format test.name
       match result.result with
