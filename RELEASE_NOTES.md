@@ -1,3 +1,6 @@
+### 11.0.0-alpha8 - 2025-03-02
+* Update v11 with the TestPrinters builder for compatibility with YoloDev.Expecto.TestSdk 16.0+
+
 ### 11.0.0-alpha7 - 2025-02-28
 * Improve performance of test location, substatially improving performance for test discovery via VSTest on large projects. thanks @Numpsy
 

@@ -226,7 +226,8 @@ module Impl =
     //       without breaking YoloDev.Expecto.TestSdk and other dependent packages
 
     static member withBeforeRun (beforeRun: (Test -> Async<unit>)) (printer: TestPrinters) = {printer with beforeRun = beforeRun}
-    static member withBeforeEach (beforeEach: (string -> Async<unit>)) (printer: TestPrinters) = {printer with beforeEach = beforeEach}
+    static member withBeforeEach (beforeEach: (string -> Async<unit>)) (printer: TestPrinters) = {printer with beforeEach = (fun name _ -> beforeEach name)}
+    static member withBeforeEach_WithIsSkipped (beforeEach: (string -> bool -> Async<unit>)) (printer: TestPrinters) = {printer with beforeEach = beforeEach}
     static member withInfo (info: (string -> Async<unit>)) (printer: TestPrinters) = {printer with info = info}
     static member withPassed (passed: (string -> TimeSpan -> Async<unit>)) (printer: TestPrinters) = {printer with passed = passed}
     static member withIgnored (ignored: (string -> string -> Async<unit>)) (printer: TestPrinters) = {printer with ignored = ignored}
