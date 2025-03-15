@@ -14,6 +14,7 @@ open OpenTelemetry.Resources
 open OpenTelemetry.Trace
 open System.Diagnostics
 open OpenTelemetry
+open OpenTelemetry.Exporter
 
 let serviceName = "Expecto.Tests"
 
@@ -1903,21 +1904,4 @@ let theory =
       }
     ]
   ]
-  |> addOpenTelemetry_SpanPerTest ExpectoConfig.defaultConfig source
-
-
-
-[<Tests>]
-let fixtures =
-  let rng = Random()
-  let tests = [
-      for i in 1..(Environment.ProcessorCount * 2) do
-        testCaseAsync (sprintf "test %d" i) <| async {
-          printfn "Running test %d" i
-          do! Async.Sleep(rng.Next(1, 5000))
-          printfn "Finished Running test %d" i
-        }
-    ]
-
-  testList "MyTests" tests
   |> addOpenTelemetry_SpanPerTest ExpectoConfig.defaultConfig source
