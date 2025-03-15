@@ -4,16 +4,38 @@ module OpenTelemetry =
   open System
   open System.Diagnostics
   open System.Collections.Generic
-  open System.Threading
   open Impl
-
+  open System.Runtime.CompilerServices
+  type Activity with
+    /// <summary>Sets code semantic conventions for <c>code.function.name</c>, <c>code.filepath</c>, and <c>code.lineno</c> </summary>
+    /// <param name="name_space">Optional: The current namespace. Will default to using <c>Reflection.MethodBase.GetCurrentMethod().DeclaringType</c></param>
+    /// <param name="memberName">Optional: The current function  Don't set this. This uses <c>CallerMemberName.</c></param>
+    /// <param name="path">Optional: The current filepath. Don't set this. This uses <c>CallerFilePath.</c></param>
+    /// <param name="line">Optional: The current line number. Don't set this. This uses <c>CallerLineNumber.</c></param>
+    member inline x.SetSource(
+      ?nameSpace : string,
+      [<CallerMemberName>] ?memberName: string,
+      [<CallerFilePath>] ?path: string,
+      [<CallerLineNumber>] ?line: int) =
+        if not (isNull x) then
+          if x.GetTagItem "code.function.name" = null then
+            let nameSpace =
+              nameSpace
+              |> Option.defaultWith (fun () ->
+                Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName.Split("+") // F# has + in type names that refer to anonymous functions, we typically want the first named type
+                |> Seq.tryHead
+                |> Option.defaultValue "")
+            let memberName = defaultArg memberName ""
+            x.SetTag("code.function.name", $"{nameSpace}.{memberName}" ) |> ignore
+          if x.GetTagItem "code.filepath" = null then x.SetTag("code.filepath", defaultArg path "") |> ignore
+          if x.GetTagItem "code.lineno" = null then x.SetTag("code.lineno", defaultArg line 0) |> ignore
 
   module internal Activity =
     let inline isNotNull x = isNull x |> not
 
     let inline setStatus (status : ActivityStatusCode) (span : Activity) =
       if isNotNull span then
-        span.SetStatus(status) |> ignore
+        span.SetStatus status |> ignore
 
     let inline setExn (e : exn) (span : Activity) =
       if isNotNull span|> not then
@@ -43,7 +65,12 @@ module OpenTelemetry =
 
     let inline addOutcome (result : TestResult) (span : Activity) =
       if isNotNull span then
-        span.SetTag("test.result.status", result.tag) |> ignore
+        let status = match result with
+                     | Passed -> "Passed"
+                     | Ignored _ -> "Ignored"
+                     | Failed _ -> "Failed"
+                     | Error _ -> "Error"
+        span.SetTag("test.result.status", status) |> ignore
         span.SetTag("test.result.message", result) |> ignore
 
     let inline start (span : Activity) =
@@ -57,16 +84,16 @@ module OpenTelemetry =
 
     let inline setEndTimeNow (span : Activity) =
       if isNotNull span then
-        span.SetEndTime(DateTime.UtcNow) |> ignore
+        span.SetEndTime DateTime.UtcNow |> ignore
 
     let inline createActivity (name : string) (source : ActivitySource) =
-      match source with
-      | source when not(isNull source) -> source.CreateActivity(name, ActivityKind.Internal)
-      | _ -> null
+      if isNotNull source then
+        source.CreateActivity(name, ActivityKind.Internal)
+      else
+        null
 
   open Activity
   open System.Runtime.ExceptionServices
-  open System.IO
 
   let inline internal reraiseAnywhere<'a> (e: exn) : 'a =
       ExceptionDispatchInfo.Capture(e).Throw()
@@ -160,6 +187,11 @@ module OpenTelemetry =
           handleFailure span e
       )
 
+  /// <summary>Wraps each test with an OpenTelemetry Span/System.Diagnostics.Activity.</summary>
+  /// <param name="config">ExpectoConfig</param>
+  /// <param name="activitySource">Provides APIs start OpenTelemetry Span/System.Diagnostics.Activity</param>
+  /// <param name="rootTest">The tests to wrap in span/activity.</param>
+  /// <returns>Tests wrapped in a Span/Activity</returns>
   let addOpenTelemetry_SpanPerTest (config: ExpectoConfig) (activitySource: ActivitySource) (rootTest: Test) : Test =
     rootTest
     |> Test.toTestCodeList
