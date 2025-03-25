@@ -1,8 +1,0 @@
-dist: bionic
-language: csharp
-mono: none
-dotnet: 6.0
-sudo: required
-
-script:
-  - ./build.sh --quiet verify
