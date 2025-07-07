@@ -397,7 +397,7 @@ testList "Setup & teardown 4" [
     use ms = new MemoryStream()
     do! f ms
   }
-  yield! testFixture withMemoryStream [
+  yield! testFixtureAsync withMemoryStream [
     "can read",
       fun ms -> async { return ms.CanRead ==? true }
     "can write",
@@ -421,7 +421,7 @@ testList "Setup & teardown 5" [
     use ms = new MemoryStream()
     do! f ms
   }
-  yield! testFixture withMemoryStream [
+  yield! testFixtureTask withMemoryStream [
     "can read",
       fun ms -> task { return ms.CanRead ==? true }
     "can write",
