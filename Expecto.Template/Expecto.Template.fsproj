@@ -7,7 +7,7 @@
   <PropertyGroup>
     <!-- Package Properties -->
     <PackageId>Expecto.Template</PackageId>
-    <PackageVersion>16.0.0</PackageVersion>
+    <PackageVersion>17.0.0</PackageVersion>
     <Authors>Michał Niegrzybowski</Authors>
     <Description>Expecto .NET Template</Description>
     <PackageTags>.NET;Expecto;template</PackageTags>
@@ -19,6 +19,10 @@
     <ContentTargetFolders>content</ContentTargetFolders>
     <NoDefaultExcludes>true</NoDefaultExcludes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>
+    - Create the project in a new folder if -n is specified
+    - Bump default target framework to net9.0
+    </PackageReleaseNotes>
     <!-- Template authoring guide: https://learn.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices -->
   </PropertyGroup>
 
