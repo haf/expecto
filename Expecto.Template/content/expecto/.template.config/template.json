@@ -7,5 +7,6 @@
     "tags": {
         "language": "F#"                
     },
-    "sourceName": "ExpectoTemplate"
+    "sourceName": "ExpectoTemplate",
+    "preferNameDirectory": true
 }
