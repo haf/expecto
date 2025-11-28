@@ -323,18 +323,36 @@ let floatGreaterThanOrClosef accuracy actual expected message =
 let isNotNaN f message =
   if Double.IsNaN f then failtestf "%s. Float was the NaN (not a number) value." message
 
+/// Expect the passed float to be a number.
+let isNotNaNf f message =
+  if Single.IsNaN f then failtestf "%s. Float was the NaN (not a number) value." message
+
 /// Expect the passed float not to be positive infinity.
 let isNotPositiveInfinity actual message =
   if Double.IsPositiveInfinity actual then failtestf "%s. Float was positive infinity." message
+
+/// Expect the passed float not to be positive infinity.
+let isNotPositiveInfinityf actual message =
+  if Single.IsPositiveInfinity actual then failtestf "%s. Float was positive infinity." message
 
 /// Expect the passed float not to be negative infinity.
 let isNotNegativeInfinity actual message =
   if Double.IsNegativeInfinity actual then failtestf "%s. Float was negative infinity." message
 
+/// Expect the passed float not to be negative infinity.
+let isNotNegativeInfinityf actual message =
+  if Single.IsNegativeInfinity actual then failtestf "%s. Float was negative infinity." message
+
 /// Expect the passed float not to be infinity.
 let isNotInfinity actual message =
   isNotNegativeInfinity actual message
   isNotPositiveInfinity actual message
+  // passed via excluded middle
+
+/// Expect the passed float not to be infinity.
+let isNotInfinityf actual message =
+  isNotNegativeInfinityf actual message
+  isNotPositiveInfinityf actual message
   // passed via excluded middle
 
 /// Expect the passed string not to be empty.

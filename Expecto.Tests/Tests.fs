@@ -924,7 +924,7 @@ let expecto =
       testList "double" [
         testList "nan testing" [
           testCase "is not 'NaN'" <| fun _ ->
-            Expect.isNotNaN 4.0 "should pass because it's not 'Nan'"
+            Expect.isNotNaN 4.0 "should pass because it's not 'NaN'"
           testCase "is 'NaN'" (fun _ ->
             Expect.isNotNaN Double.NaN "should fail because it's 'NaN'"
            ) |> assertTestFails
@@ -956,6 +956,45 @@ let expecto =
 
           testCase "is a positive infinity" (fun _ ->
             Expect.isNotInfinity Double.PositiveInfinity "should fail because it's positive infinity"
+           ) |> assertTestFails
+        ]
+      ]
+
+      testList "single" [
+        testList "nan testing" [
+          testCase "is not 'NaN'" <| fun _ ->
+            Expect.isNotNaNf 4.0f "should pass because it's not 'NaNf'"
+          testCase "is 'NaN'" (fun _ ->
+            Expect.isNotNaNf Single.NaN "should fail because it's 'NaNf'"
+           ) |> assertTestFails
+        ]
+
+        testList "positive infinity testing" [
+          testCase "is not a positive infinity" <| fun _ ->
+            Expect.isNotPositiveInfinityf 4.0f "should pass because it's not positive infinity"
+          testCase "is a positive infinity" (fun _ ->
+            Expect.isNotPositiveInfinityf Single.PositiveInfinity "should fail because it's a positive infinityf"
+           ) |> assertTestFails
+        ]
+
+        testList "negative infinity testing" [
+          testCase "is not a negative infinity" <| fun _ ->
+            Expect.isNotNegativeInfinityf 4.0f "should pass because it's not a negative infinity"
+          testCase "is a negative infinity" (fun _ ->
+            Expect.isNotNegativeInfinityf Single.NegativeInfinity "should fail because it's negative infinityf"
+           ) |> assertTestFails
+        ]
+
+        testList "infinity testing" [
+          testCase "is not an infinity" <| fun _ ->
+            Expect.isNotInfinityf 4.0f "should pass because it's not an negative infinityf nor positive"
+
+          testCase "is a negative infinity" (fun _ ->
+            Expect.isNotInfinityf Single.NegativeInfinity "should fail because it's negative infinityf"
+           ) |> assertTestFails
+
+          testCase "is a positive infinity" (fun _ ->
+            Expect.isNotInfinityf Single.PositiveInfinity "should fail because it's positive infinityf"
            ) |> assertTestFails
         ]
       ]
