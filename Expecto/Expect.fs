@@ -276,10 +276,10 @@ let floatEqual actual expected epsilon message =
 
 /// Expects `actual` and `expected` (that are both floats) to be within a
 /// given `accuracy`.
-let floatClose accuracy actual expected message =
-  if Double.IsInfinity actual then
+let floatClose (accuracy: Accuracy<'u>) (actual: float<'u>) (expected: float<'u>) (message: string) : unit =
+  if Double.IsInfinity (float actual) then
     failtestf "%s. Expected actual to not be infinity, but it was." message
-  elif Double.IsInfinity expected then
+  elif Double.IsInfinity (float expected) then
     failtestf "%s. Expected expected to not be infinity, but it was." message
   elif Accuracy.areClose accuracy actual expected |> not then
     failtestf
@@ -290,10 +290,10 @@ let floatClose accuracy actual expected message =
       actual expected
 /// Expects `actual` and `expected` (that are both float32s) to be within a
 /// given `accuracy`.
-let floatClosef accuracy actual expected message =
-  if Single.IsInfinity actual then
+let floatClosef (accuracy: AccuracyF<'u>) (actual: float32<'u>) (expected: float32<'u>) message =
+  if Single.IsInfinity (float32 actual) then
     failtestf "%s. Expected actual to not be infinity, but it was." message
-  elif Single.IsInfinity expected then
+  elif Single.IsInfinity (float32 expected) then
     failtestf "%s. Expected expected to not be infinity, but it was." message
   elif Accuracy.areClose accuracy actual expected |> not then
     failtestf

@@ -6,6 +6,8 @@ open System.Text.RegularExpressions
 open System.Threading
 open System.IO
 open System.Reflection
+open FSharp.Core.LanguagePrimitives
+open FSharp.Data.UnitSystems.SI.UnitSymbols
 open Expecto
 open Expecto.Impl
 open Expecto.Logging
@@ -1645,6 +1647,52 @@ let close =
         Expect.floatGreaterThanOrClose Accuracy.low -1.0 0.0 "fail"
       ) |> assertTestFails
     ]
+    testList "float<m>" [
+      testCase "zero" <| fun _ ->
+        Expect.floatClose Accuracy.veryHigh<m> 0.0<m> 0.0<m> "zero"
+
+      testCase "small" <| fun _ ->
+        Expect.floatClose Accuracy.low<m> 0.000001<m> 0.0<m> "small"
+
+      testCase "large" <| fun _ ->
+        Expect.floatClose Accuracy.low<m> 10004.0<m> 10000.0<m> "large"
+
+      testCase "user" <| fun _ ->
+        Expect.floatClose {absolute=0.0<m>; relative=1e-3}
+          10004.0<m> 10000.0<m> "user"
+
+      testCase "can fail" (fun _ ->
+        Expect.floatClose Accuracy.low<m> 1004.0<m> 1000.0<m> "can fail"
+      ) |> assertTestFails
+
+      testCase "nan fails" (fun _ ->
+        Expect.floatClose Accuracy.low<m> (FloatWithMeasure<m> nan) 1.0<m> "nan fails"
+      ) |> assertTestFails
+
+      testCase "inf fails" (fun _ ->
+        Expect.floatClose Accuracy.low<m> (FloatWithMeasure<m> infinity) 1.0<m> "inf fails"
+      ) |> assertTestFails
+
+      testCase "less than easy" <| fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low<m> -1.0<m> 0.0<m> "less"
+
+      testCase "not less than but close" <| fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low<m> 0.000001<m> 0.0<m> "close"
+
+      testCase "not less than fails" (fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low<m> 1.0<m> 0.0<m> "fail"
+      ) |> assertTestFails
+
+      testCase "greater than easy" <| fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low<m> 1.0<m> 0.0<m> "greater"
+
+      testCase "not greater than but close" <| fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low<m> -0.000001<m> 0.0<m> "close"
+
+      testCase "not greater than fails" (fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low<m> -1.0<m> 0.0<m> "fail"
+      ) |> assertTestFails
+    ]
     testList "float32" [
       testCase "zero" <| fun _ ->
         Expect.floatClosef Accuracy.veryHighf 0.0f 0.0f "zero"
@@ -1689,6 +1737,52 @@ let close =
 
       testCase "not greater than fails" (fun _ ->
         Expect.floatGreaterThanOrClosef Accuracy.lowf -1.0f 0.0f "fail"
+      ) |> assertTestFails
+    ]
+    testList "float32<m>" [
+      testCase "zero" <| fun _ ->
+        Expect.floatClosef Accuracy.veryHighf<m> 0.0f<m> 0.0f<m> "zero"
+
+      testCase "small" <| fun _ ->
+        Expect.floatClosef Accuracy.lowf<m> 0.000001f<m> 0.0f<m> "small"
+
+      testCase "large" <| fun _ ->
+        Expect.floatClosef Accuracy.lowf<m> 10004.0f<m> 10000.0f<m> "large"
+
+      testCase "user" <| fun _ ->
+        Expect.floatClosef {absolute=0.0f<m>; relative=1e-3f}
+          10004.0f<m> 10000.0f<m> "user"
+
+      testCase "can fail" (fun _ ->
+        Expect.floatClosef Accuracy.lowf<m> 1004.0f<m> 1000.0f<m> "can fail"
+      ) |> assertTestFails
+
+      testCase "nan fails" (fun _ ->
+        Expect.floatClosef Accuracy.lowf<m> (Float32WithMeasure<m> nanf) 1.0f<m> "nanf fails"
+      ) |> assertTestFails
+
+      testCase "inf fails" (fun _ ->
+        Expect.floatClosef Accuracy.lowf<m> (Float32WithMeasure<m> infinityf) 1.0f<m> "infinityf fails"
+      ) |> assertTestFails
+
+      testCase "less than easy" <| fun _ ->
+        Expect.floatLessThanOrClosef Accuracy.lowf<m> -1.0f<m> 0.0f<m> "less"
+
+      testCase "not less than but close" <| fun _ ->
+        Expect.floatLessThanOrClosef Accuracy.lowf<m> 0.000001f<m> 0.0f<m> "close"
+
+      testCase "not less than fails" (fun _ ->
+        Expect.floatLessThanOrClosef Accuracy.lowf<m> 1.0f<m> 0.0f<m> "fail"
+      ) |> assertTestFails
+
+      testCase "greater than easy" <| fun _ ->
+        Expect.floatGreaterThanOrClosef Accuracy.lowf<m> 1.0f<m> 0.0f<m> "greater"
+
+      testCase "not greater than but close" <| fun _ ->
+        Expect.floatGreaterThanOrClosef Accuracy.lowf<m> -0.000001f<m> 0.0f<m> "close"
+
+      testCase "not greater than fails" (fun _ ->
+        Expect.floatGreaterThanOrClosef Accuracy.lowf<m> -1.0f<m> 0.0f<m> "fail"
       ) |> assertTestFails
     ]
   ]
