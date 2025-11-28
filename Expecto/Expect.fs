@@ -288,14 +288,36 @@ let floatClose accuracy actual expected message =
       accuracy.absolute accuracy.relative
       (Accuracy.areCloseLhs actual expected)
       actual expected
+/// Expects `actual` and `expected` (that are both float32s) to be within a
+/// given `accuracy`.
+let floatClosef accuracy actual expected message =
+  if Single.IsInfinity actual then
+    failtestf "%s. Expected actual to not be infinity, but it was." message
+  elif Single.IsInfinity expected then
+    failtestf "%s. Expected expected to not be infinity, but it was." message
+  elif Accuracy.areClose accuracy actual expected |> not then
+    failtestf
+      "%s. Expected difference to be less than %.20g for accuracy {absolute=%.20g; relative=%.20g}, but was %.20g. actual=%.20g expected=%.20g"
+      message (Accuracy.areCloseRhs accuracy actual expected)
+      accuracy.absolute accuracy.relative
+      (Accuracy.areCloseLhs actual expected)
+      actual expected
 /// Expects `actual` to be less than `expected` or to be within a
 /// given `accuracy`.
 let floatLessThanOrClose accuracy actual expected message =
     if actual>expected then floatClose accuracy actual expected message
+/// Expects `actual` to be less than `expected` or to be within a
+/// given `accuracy`.
+let floatLessThanOrClosef accuracy actual expected message =
+    if actual>expected then floatClosef accuracy actual expected message
 /// Expects `actual` to be greater than `expected` or to be within a
 /// given `accuracy`.
 let floatGreaterThanOrClose accuracy actual expected message =
     if actual<expected then floatClose accuracy actual expected message
+/// Expects `actual` to be greater than `expected` or to be within a
+/// given `accuracy`.
+let floatGreaterThanOrClosef accuracy actual expected message =
+    if actual<expected then floatClosef accuracy actual expected message
 
 /// Expect the passed float to be a number.
 let isNotNaN f message =

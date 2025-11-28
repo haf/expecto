@@ -1560,52 +1560,98 @@ let performance =
 [<Tests>]
 let close =
   testList "close" [
+    testList "float" [
+      testCase "zero" <| fun _ ->
+        Expect.floatClose Accuracy.veryHigh 0.0 0.0 "zero"
 
-    testCase "zero" <| fun _ ->
-      Expect.floatClose Accuracy.veryHigh 0.0 0.0 "zero"
+      testCase "small" <| fun _ ->
+        Expect.floatClose Accuracy.low 0.000001 0.0 "small"
 
-    testCase "small" <| fun _ ->
-      Expect.floatClose Accuracy.low 0.000001 0.0 "small"
+      testCase "large" <| fun _ ->
+        Expect.floatClose Accuracy.low 10004.0 10000.0 "large"
 
-    testCase "large" <| fun _ ->
-      Expect.floatClose Accuracy.low 10004.0 10000.0 "large"
+      testCase "user" <| fun _ ->
+        Expect.floatClose {absolute=0.0; relative=1e-3}
+          10004.0 10000.0 "user"
 
-    testCase "user" <| fun _ ->
-      Expect.floatClose {absolute=0.0; relative=1e-3}
-        10004.0 10000.0 "user"
+      testCase "can fail" (fun _ ->
+        Expect.floatClose Accuracy.low 1004.0 1000.0 "can fail"
+      ) |> assertTestFails
 
-    testCase "can fail" (fun _ ->
-      Expect.floatClose Accuracy.low 1004.0 1000.0 "can fail"
-    ) |> assertTestFails
+      testCase "nan fails" (fun _ ->
+        Expect.floatClose Accuracy.low nan 1.0 "nan fails"
+      ) |> assertTestFails
 
-    testCase "nan fails" (fun _ ->
-      Expect.floatClose Accuracy.low nan 1.0 "nan fails"
-    ) |> assertTestFails
+      testCase "inf fails" (fun _ ->
+        Expect.floatClose Accuracy.low infinity 1.0 "inf fails"
+      ) |> assertTestFails
 
-    testCase "inf fails" (fun _ ->
-      Expect.floatClose Accuracy.low infinity 1.0 "inf fails"
-    ) |> assertTestFails
+      testCase "less than easy" <| fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low -1.0 0.0 "less"
 
-    testCase "less than easy" <| fun _ ->
-      Expect.floatLessThanOrClose Accuracy.low -1.0 0.0 "less"
+      testCase "not less than but close" <| fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low 0.000001 0.0 "close"
 
-    testCase "not less than but close" <| fun _ ->
-      Expect.floatLessThanOrClose Accuracy.low 0.000001 0.0 "close"
+      testCase "not less than fails" (fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low 1.0 0.0 "fail"
+      ) |> assertTestFails
 
-    testCase "not less than fails" (fun _ ->
-      Expect.floatLessThanOrClose Accuracy.low 1.0 0.0 "fail"
-    ) |> assertTestFails
+      testCase "greater than easy" <| fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low 1.0 0.0 "greater"
 
-    testCase "greater than easy" <| fun _ ->
-      Expect.floatGreaterThanOrClose Accuracy.low 1.0 0.0 "greater"
+      testCase "not greater than but close" <| fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low -0.000001 0.0 "close"
 
-    testCase "not greater than but close" <| fun _ ->
-      Expect.floatGreaterThanOrClose Accuracy.low -0.000001 0.0 "close"
+      testCase "not greater than fails" (fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low -1.0 0.0 "fail"
+      ) |> assertTestFails
+    ]
+    testList "float32" [
+      testCase "zero" <| fun _ ->
+        Expect.floatClosef Accuracy.veryHighf 0.0f 0.0f "zero"
 
-    testCase "not greater than fails" (fun _ ->
-      Expect.floatGreaterThanOrClose Accuracy.low -1.0 0.0 "fail"
-    ) |> assertTestFails
+      testCase "small" <| fun _ ->
+        Expect.floatClosef Accuracy.lowf 0.000001f 0.0f "small"
 
+      testCase "large" <| fun _ ->
+        Expect.floatClosef Accuracy.lowf 10004.0f 10000.0f "large"
+
+      testCase "user" <| fun _ ->
+        Expect.floatClosef {absolute=0.0f; relative=1e-3f}
+          10004.0f 10000.0f "user"
+
+      testCase "can fail" (fun _ ->
+        Expect.floatClosef Accuracy.lowf 1004.0f 1000.0f "can fail"
+      ) |> assertTestFails
+
+      testCase "nan fails" (fun _ ->
+        Expect.floatClosef Accuracy.lowf nanf 1.0f "nanf fails"
+      ) |> assertTestFails
+
+      testCase "inf fails" (fun _ ->
+        Expect.floatClosef Accuracy.lowf infinityf 1.0f "infinityf fails"
+      ) |> assertTestFails
+
+      testCase "less than easy" <| fun _ ->
+        Expect.floatLessThanOrClosef Accuracy.lowf -1.0f 0.0f "less"
+
+      testCase "not less than but close" <| fun _ ->
+        Expect.floatLessThanOrClosef Accuracy.lowf 0.000001f 0.0f "close"
+
+      testCase "not less than fails" (fun _ ->
+        Expect.floatLessThanOrClosef Accuracy.lowf 1.0f 0.0f "fail"
+      ) |> assertTestFails
+
+      testCase "greater than easy" <| fun _ ->
+        Expect.floatGreaterThanOrClosef Accuracy.lowf 1.0f 0.0f "greater"
+
+      testCase "not greater than but close" <| fun _ ->
+        Expect.floatGreaterThanOrClosef Accuracy.lowf -0.000001f 0.0f "close"
+
+      testCase "not greater than fails" (fun _ ->
+        Expect.floatGreaterThanOrClosef Accuracy.lowf -1.0f 0.0f "fail"
+      ) |> assertTestFails
+    ]
   ]
 
 [<Tests>]
