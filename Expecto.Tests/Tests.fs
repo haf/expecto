@@ -32,6 +32,9 @@ let (==?) actual expected = Expect.equal actual expected ""
 type smallRecord = { a: string }
 type anotherSmallRecord = { a: string; b:string }
 
+[<RequireQualifiedAccess>]
+type ExampleDu = TwoArg of string * string | OneArg of string | NoArg
+
 [<Tests>]
 let tests =
 
@@ -1088,6 +1091,56 @@ let expecto =
         testCase "fail" (fun _ ->
           Expect.stringHasLength "hello world" 5 "Deliberately failing"
         ) |> assertTestFails
+      ]
+
+      testList "wantCase" [
+        testList "NoArg" [
+          testCase "pass" <| fun _ ->
+            Expect.wantCase ExampleDu.NoArg <@ fun _ -> ExampleDu.NoArg @> "Case actually matches"
+          testCase "fail" (fun _ ->
+            Expect.wantCase (ExampleDu.TwoArg ("foo", "bar")) <@ fun _ -> ExampleDu.NoArg @> "Deliberately failing"
+          ) |> assertTestFails
+        ]
+        testList "OneArg" [
+          testCase "pass" <| fun _ ->
+            let result = Expect.wantCase (ExampleDu.OneArg "banana") <@ ExampleDu.OneArg @> "Case actually matches"
+            Expect.equal result "banana" "Case data actually matches"
+          testCase "fail" (fun _ ->
+            Expect.wantCase (ExampleDu.TwoArg ("foo", "bar")) <@ ExampleDu.OneArg @> "Deliberately failing" |> ignore
+          ) |> assertTestFails
+        ]
+        testList "TwoArg" [
+          testCase "pass" <| fun _ ->
+            let result = Expect.wantCase (ExampleDu.TwoArg ("foo", "bar")) <@ ExampleDu.TwoArg @> "Case actually matches"
+            Expect.equal result ("foo", "bar") "Case data actually matches"
+          testCase "fail" (fun _ ->
+            Expect.wantCase (ExampleDu.OneArg "banana") <@ ExampleDu.TwoArg @> "Deliberately failing" |> ignore
+          ) |> assertTestFails
+        ]
+      ]
+
+      testList "isCase" [
+        testList "NoArg" [
+          testCase "pass" <| fun _ ->
+            Expect.isCase ExampleDu.NoArg <@ fun _ -> ExampleDu.NoArg @> "Case actually matches"
+          testCase "fail" (fun _ ->
+            Expect.isCase (ExampleDu.TwoArg ("foo", "bar")) <@ fun _ -> ExampleDu.NoArg @> "Deliberately failing"
+          ) |> assertTestFails
+        ]
+        testList "OneArg" [
+          testCase "pass" <| fun _ ->
+            Expect.isCase (ExampleDu.OneArg "banana") <@ ExampleDu.OneArg @> "Case actually matches"
+          testCase "fail" (fun _ ->
+            Expect.isCase (ExampleDu.TwoArg ("foo", "bar")) <@ ExampleDu.OneArg @> "Deliberately failing"
+          ) |> assertTestFails
+        ]
+        testList "TwoArg" [
+          testCase "pass" <| fun _ ->
+            Expect.isCase (ExampleDu.TwoArg ("foo", "bar")) <@ ExampleDu.TwoArg @> "Case actually matches"
+          testCase "fail" (fun _ ->
+            Expect.isCase (ExampleDu.OneArg "banana") <@ ExampleDu.TwoArg @> "Deliberately failing"
+          ) |> assertTestFails
+        ]
       ]
 
       testList "seq has length" [
