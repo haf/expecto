@@ -915,6 +915,7 @@ This module is your main entry-point when asserting.
 - `isChoice2Of2`
 - `isOk` - Expect the value to be a Result.Ok value
 - `isError` - Expect the value to be a Result.Error value
+- `isCase` - Expects the value to be a specific case of a discriminated union as defined by the given template
 - `isNull`
 - `isNotNull`
 - `isNotNaN`
@@ -991,6 +992,8 @@ This module is your main entry-point when asserting.
    the next section on [Performance](#performance-module) for example usage.
 - `wantOk` - Expect the result to be `Ok` and returns its value, otherwise fails.
 - `wantError` - Expect the result to be `Error` and returns its value, otherwise fails.
+- `wantCase` - Expects the value to be a specific case of a discriminated union as defined by the given template and returns its value, otherwise fails.
+    - For example: `Expect.wantCase (Choice2Of3 "banana") <@ Choice2Of3 @> "Assert and get string from Choice2Of3"`
 
 Also note, that there's a "fluent" API, with which you can pipe the test-subject
 value into the expectation:
