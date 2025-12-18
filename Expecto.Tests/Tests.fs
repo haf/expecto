@@ -6,6 +6,8 @@ open System.Text.RegularExpressions
 open System.Threading
 open System.IO
 open System.Reflection
+open FSharp.Core.LanguagePrimitives
+open FSharp.Data.UnitSystems.SI.UnitSymbols
 open Expecto
 open Expecto.Impl
 open Expecto.Logging
@@ -924,42 +926,207 @@ let expecto =
 
       ]
 
-      testList "double" [
-        testList "nan testing" [
-          testCase "is not 'NaN'" <| fun _ ->
-            Expect.isNotNaN 4.0 "should pass because it's not 'Nan'"
-          testCase "is 'NaN'" (fun _ ->
-            Expect.isNotNaN Double.NaN "should fail because it's 'NaN'"
-           ) |> assertTestFails
+      testList "float" [
+        testList "float" [
+          testList "nan testing" [
+            testList "is 'NaN'" [
+              testCase "pass" <| fun _ ->
+                Expect.isNaN nan "should pass because it's 'NaN'"
+              testCase "fail" (fun _ ->
+                Expect.isNaN 4.0 "should fail because it's not 'NaN'"
+              ) |> assertTestFails
+            ]
+            testList "is not 'NaN'" [
+              testCase "pass" <| fun _ ->
+                Expect.isNotNaN 4.0 "should pass because it's not 'NaN'"
+              testCase "fail" (fun _ ->
+                Expect.isNotNaN nan "should fail because it's 'NaN'"
+              ) |> assertTestFails
+            ]
+          ]
+
+          testList "negative infinity testing" [
+            testList "is a negative infinity" [
+              testCase "pass" <| fun _ ->
+                Expect.isNegativeInfinity -infinity "should pass because it's a negative infinity"
+              testCase "fail infinity" (fun _ ->
+                Expect.isNegativeInfinity infinity "should fail because it's a not a negative infinity"
+              ) |> assertTestFails
+              testCase "fail 4.0" (fun _ ->
+                Expect.isNegativeInfinity 4.0 "should fail because it's not a negative infinity"
+              ) |> assertTestFails
+            ]
+            testList "is not a negative infinity" [
+              testCase "pass infinity" <| fun _ ->
+                Expect.isNotNegativeInfinity infinity "should pass because it's not a negative infinity"
+              testCase "pass 4.0" <| fun _ ->
+                Expect.isNotNegativeInfinity 4.0 "should pass because it's not a negative infinity"
+              testCase "fail" (fun _ ->
+                Expect.isNotNegativeInfinity -infinity "should fail because it's negative infinity"
+              ) |> assertTestFails
+            ]
+          ]
+
+          testList "infinity testing" [
+            testList "is an infinity" [
+              testCase "pass - negative infinity" <| fun _ ->
+                Expect.isInfinity infinity "should fail because it's negative infinity"
+              testCase "pass - positive infinity" <| fun _ ->
+                Expect.isInfinity infinity "should fail because it's positive infinity"
+              testCase "fail - 4.0" (fun _ ->
+                Expect.isInfinity 4.0 "should pass because it's not an negative infinity nor positive"
+              ) |> assertTestFails
+            ]
+            testList "is not an infinity" [
+              testCase "pass - 4.0" <| fun _ ->
+                Expect.isNotInfinity 4.0 "should pass because it's not an negative infinity nor positive"
+              testCase "fail - negative infinity" (fun _ ->
+                Expect.isNotInfinity -infinity "should fail because it's negative infinity"
+               ) |> assertTestFails
+              testCase "fail - positive infinity" (fun _ ->
+                Expect.isNotInfinity infinity "should fail because it's positive infinity"
+               ) |> assertTestFails
+            ]
+          ]
+        ]
+        testList "float<m>" [
+          testList "nan testing" [
+            testList "is 'NaN'" [
+              testCase "pass" <| fun _ ->
+                Expect.isNaN (FloatWithMeasure<m> nan) "should pass because it's 'NaN'"
+              testCase "fail" (fun _ ->
+                Expect.isNaN 4.0<m> "should fail because it's not 'NaN'"
+              ) |> assertTestFails
+            ]
+            testList "is not 'NaN'" [
+              testCase "pass" <| fun _ ->
+                Expect.isNotNaN 4.0<m> "should pass because it's not 'NaN'"
+              testCase "fail" (fun _ ->
+                Expect.isNotNaN nan "should fail because it's 'NaN'"
+              ) |> assertTestFails
+            ]
+          ]
+
+          testList "negative infinity testing" [
+            testList "is a negative infinity" [
+              testCase "pass" <| fun _ ->
+                Expect.isNegativeInfinity (FloatWithMeasure<m> -infinity) "should pass because it's a negative infinity"
+              testCase "fail infinity" (fun _ ->
+                Expect.isNegativeInfinity (FloatWithMeasure<m> infinity) "should fail because it's a not a negative infinity"
+              ) |> assertTestFails
+              testCase "fail 4.0" (fun _ ->
+                Expect.isNegativeInfinity 4.0<m> "should fail because it's not a negative infinity"
+              ) |> assertTestFails
+            ]
+            testList "is not a negative infinity" [
+              testCase "pass infinity" <| fun _ ->
+                Expect.isNotNegativeInfinity (FloatWithMeasure<m> infinity) "should pass because it's not a negative infinity"
+              testCase "pass 4.0" <| fun _ ->
+                Expect.isNotNegativeInfinity 4.0 "should pass because it's not a negative infinity"
+              testCase "fail" (fun _ ->
+                Expect.isNotNegativeInfinity (FloatWithMeasure<m> -infinity) "should fail because it's negative infinity"
+              ) |> assertTestFails
+            ]
+          ]
+
+          testList "infinity testing" [
+            testList "is an infinity" [
+              testCase "pass - negative infinity" <| fun _ ->
+                Expect.isInfinity infinity "should fail because it's negative infinity"
+              testCase "pass - positive infinity" <| fun _ ->
+                Expect.isInfinity infinity "should fail because it's positive infinity"
+              testCase "fail - 4.0" (fun _ ->
+                Expect.isInfinity 4.0 "should pass because it's not an negative infinity nor positive"
+              ) |> assertTestFails
+            ]
+            testList "is not an infinity" [
+              testCase "pass - 4.0" <| fun _ ->
+                Expect.isNotInfinity 4.0 "should pass because it's not an negative infinity nor positive"
+              testCase "fail - negative infinity" (fun _ ->
+                Expect.isNotInfinity -infinity "should fail because it's negative infinity"
+               ) |> assertTestFails
+              testCase "fail - positive infinity" (fun _ ->
+                Expect.isNotInfinity infinity "should fail because it's positive infinity"
+               ) |> assertTestFails
+            ]
+          ]
         ]
 
-        testList "positive infinity testing" [
-          testCase "is not a positive infinity" <| fun _ ->
-            Expect.isNotPositiveInfinity 4.0 "should pass because it's not positive infinity"
-          testCase "is a positive infinity" (fun _ ->
-            Expect.isNotPositiveInfinity Double.PositiveInfinity "should fail because it's a positive infinity"
-           ) |> assertTestFails
+        testList "float32" [
+          testList "nan testing" [
+            testCase "is not 'NaN'" <| fun _ ->
+              Expect.isNotNaNf 4.0f "should pass because it's not 'NaNf'"
+            testCase "is 'NaN'" (fun _ ->
+              Expect.isNotNaNf Single.NaN "should fail because it's 'NaNf'"
+             ) |> assertTestFails
+          ]
+
+          testList "positive infinity testing" [
+            testCase "is not a positive infinity" <| fun _ ->
+              Expect.isNotPositiveInfinityf 4.0f "should pass because it's not positive infinity"
+            testCase "is a positive infinity" (fun _ ->
+              Expect.isNotPositiveInfinityf Single.PositiveInfinity "should fail because it's a positive infinityf"
+             ) |> assertTestFails
+          ]
+
+          testList "negative infinity testing" [
+            testCase "is not a negative infinity" <| fun _ ->
+              Expect.isNotNegativeInfinityf 4.0f "should pass because it's not a negative infinity"
+            testCase "is a negative infinity" (fun _ ->
+              Expect.isNotNegativeInfinityf Single.NegativeInfinity "should fail because it's negative infinityf"
+             ) |> assertTestFails
+          ]
+
+          testList "infinity testing" [
+            testCase "is not an infinity" <| fun _ ->
+              Expect.isNotInfinityf 4.0f "should pass because it's not an negative infinityf nor positive"
+
+            testCase "is a negative infinity" (fun _ ->
+              Expect.isNotInfinityf Single.NegativeInfinity "should fail because it's negative infinityf"
+             ) |> assertTestFails
+
+            testCase "is a positive infinity" (fun _ ->
+              Expect.isNotInfinityf Single.PositiveInfinity "should fail because it's positive infinityf"
+             ) |> assertTestFails
+          ]
         ]
+        testList "float32<m>" [
+          testList "nan testing" [
+            testCase "is not 'NaN'" <| fun _ ->
+              Expect.isNotNaNf 4.0f<m> "should pass because it's not 'NaNf'"
+            testCase "is 'NaN'" (fun _ ->
+              Expect.isNotNaNf (Float32WithMeasure<m> Single.NaN) "should fail because it's 'NaNf'"
+             ) |> assertTestFails
+          ]
 
-        testList "negative infinity testing" [
-          testCase "is not a negative infinity" <| fun _ ->
-            Expect.isNotNegativeInfinity 4.0 "should pass because it's not a negative infinity"
-          testCase "is a negative infinity" (fun _ ->
-            Expect.isNotNegativeInfinity Double.NegativeInfinity "should fail because it's negative infinity"
-           ) |> assertTestFails
-        ]
+          testList "positive infinity testing" [
+            testCase "is not a positive infinity" <| fun _ ->
+              Expect.isNotPositiveInfinityf 4.0f<m> "should pass because it's not positive infinity"
+            testCase "is a positive infinity" (fun _ ->
+              Expect.isNotPositiveInfinityf (Float32WithMeasure<m> Single.PositiveInfinity) "should fail because it's a positive infinityf"
+             ) |> assertTestFails
+          ]
 
-        testList "infinity testing" [
-          testCase "is not an infinity" <| fun _ ->
-            Expect.isNotInfinity 4.0 "should pass because it's not an negative infinity nor positive"
+          testList "negative infinity testing" [
+            testCase "is not a negative infinity" <| fun _ ->
+              Expect.isNotNegativeInfinityf 4.0f<m> "should pass because it's not a negative infinity"
+            testCase "is a negative infinity" (fun _ ->
+              Expect.isNotNegativeInfinityf (Float32WithMeasure<m> Single.NegativeInfinity) "should fail because it's negative infinityf"
+             ) |> assertTestFails
+          ]
 
-          testCase "is a negative infinity" (fun _ ->
-            Expect.isNotInfinity Double.NegativeInfinity "should fail because it's negative infinity"
-           ) |> assertTestFails
+          testList "infinity testing" [
+            testCase "is not an infinity" <| fun _ ->
+              Expect.isNotInfinityf 4.0f<m> "should pass because it's not an negative infinityf nor positive"
 
-          testCase "is a positive infinity" (fun _ ->
-            Expect.isNotInfinity Double.PositiveInfinity "should fail because it's positive infinity"
-           ) |> assertTestFails
+            testCase "is a negative infinity" (fun _ ->
+              Expect.isNotInfinityf (Float32WithMeasure<m> Single.NegativeInfinity) "should fail because it's negative infinityf"
+             ) |> assertTestFails
+
+            testCase "is a positive infinity" (fun _ ->
+              Expect.isNotInfinityf (Float32WithMeasure<m> Single.PositiveInfinity) "should fail because it's positive infinityf"
+             ) |> assertTestFails
+          ]
         ]
       ]
 
@@ -1613,52 +1780,190 @@ let performance =
 [<Tests>]
 let close =
   testList "close" [
+    testList "float" [
+      testCase "zero" <| fun _ ->
+        Expect.floatClose Accuracy.veryHigh 0.0 0.0 "zero"
 
-    testCase "zero" <| fun _ ->
-      Expect.floatClose Accuracy.veryHigh 0.0 0.0 "zero"
+      testCase "small" <| fun _ ->
+        Expect.floatClose Accuracy.low 0.000001 0.0 "small"
 
-    testCase "small" <| fun _ ->
-      Expect.floatClose Accuracy.low 0.000001 0.0 "small"
+      testCase "large" <| fun _ ->
+        Expect.floatClose Accuracy.low 10004.0 10000.0 "large"
 
-    testCase "large" <| fun _ ->
-      Expect.floatClose Accuracy.low 10004.0 10000.0 "large"
+      testCase "user" <| fun _ ->
+        Expect.floatClose {absolute=0.0; relative=1e-3}
+          10004.0 10000.0 "user"
 
-    testCase "user" <| fun _ ->
-      Expect.floatClose {absolute=0.0; relative=1e-3}
-        10004.0 10000.0 "user"
+      testCase "can fail" (fun _ ->
+        Expect.floatClose Accuracy.low 1004.0 1000.0 "can fail"
+      ) |> assertTestFails
 
-    testCase "can fail" (fun _ ->
-      Expect.floatClose Accuracy.low 1004.0 1000.0 "can fail"
-    ) |> assertTestFails
+      testCase "nan fails" (fun _ ->
+        Expect.floatClose Accuracy.low nan 1.0 "nan fails"
+      ) |> assertTestFails
 
-    testCase "nan fails" (fun _ ->
-      Expect.floatClose Accuracy.low nan 1.0 "nan fails"
-    ) |> assertTestFails
+      testCase "inf fails" (fun _ ->
+        Expect.floatClose Accuracy.low infinity 1.0 "inf fails"
+      ) |> assertTestFails
 
-    testCase "inf fails" (fun _ ->
-      Expect.floatClose Accuracy.low infinity 1.0 "inf fails"
-    ) |> assertTestFails
+      testCase "less than easy" <| fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low -1.0 0.0 "less"
 
-    testCase "less than easy" <| fun _ ->
-      Expect.floatLessThanOrClose Accuracy.low -1.0 0.0 "less"
+      testCase "not less than but close" <| fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low 0.000001 0.0 "close"
 
-    testCase "not less than but close" <| fun _ ->
-      Expect.floatLessThanOrClose Accuracy.low 0.000001 0.0 "close"
+      testCase "not less than fails" (fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low 1.0 0.0 "fail"
+      ) |> assertTestFails
 
-    testCase "not less than fails" (fun _ ->
-      Expect.floatLessThanOrClose Accuracy.low 1.0 0.0 "fail"
-    ) |> assertTestFails
+      testCase "greater than easy" <| fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low 1.0 0.0 "greater"
 
-    testCase "greater than easy" <| fun _ ->
-      Expect.floatGreaterThanOrClose Accuracy.low 1.0 0.0 "greater"
+      testCase "not greater than but close" <| fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low -0.000001 0.0 "close"
 
-    testCase "not greater than but close" <| fun _ ->
-      Expect.floatGreaterThanOrClose Accuracy.low -0.000001 0.0 "close"
+      testCase "not greater than fails" (fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low -1.0 0.0 "fail"
+      ) |> assertTestFails
+    ]
+    testList "float<m>" [
+      testCase "zero" <| fun _ ->
+        Expect.floatClose Accuracy.veryHigh<m> 0.0<m> 0.0<m> "zero"
 
-    testCase "not greater than fails" (fun _ ->
-      Expect.floatGreaterThanOrClose Accuracy.low -1.0 0.0 "fail"
-    ) |> assertTestFails
+      testCase "small" <| fun _ ->
+        Expect.floatClose Accuracy.low<m> 0.000001<m> 0.0<m> "small"
 
+      testCase "large" <| fun _ ->
+        Expect.floatClose Accuracy.low<m> 10004.0<m> 10000.0<m> "large"
+
+      testCase "user" <| fun _ ->
+        Expect.floatClose {absolute=0.0<m>; relative=1e-3}
+          10004.0<m> 10000.0<m> "user"
+
+      testCase "can fail" (fun _ ->
+        Expect.floatClose Accuracy.low<m> 1004.0<m> 1000.0<m> "can fail"
+      ) |> assertTestFails
+
+      testCase "nan fails" (fun _ ->
+        Expect.floatClose Accuracy.low<m> (FloatWithMeasure<m> nan) 1.0<m> "nan fails"
+      ) |> assertTestFails
+
+      testCase "inf fails" (fun _ ->
+        Expect.floatClose Accuracy.low<m> (FloatWithMeasure<m> infinity) 1.0<m> "inf fails"
+      ) |> assertTestFails
+
+      testCase "less than easy" <| fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low<m> -1.0<m> 0.0<m> "less"
+
+      testCase "not less than but close" <| fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low<m> 0.000001<m> 0.0<m> "close"
+
+      testCase "not less than fails" (fun _ ->
+        Expect.floatLessThanOrClose Accuracy.low<m> 1.0<m> 0.0<m> "fail"
+      ) |> assertTestFails
+
+      testCase "greater than easy" <| fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low<m> 1.0<m> 0.0<m> "greater"
+
+      testCase "not greater than but close" <| fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low<m> -0.000001<m> 0.0<m> "close"
+
+      testCase "not greater than fails" (fun _ ->
+        Expect.floatGreaterThanOrClose Accuracy.low<m> -1.0<m> 0.0<m> "fail"
+      ) |> assertTestFails
+    ]
+    testList "float32" [
+      testCase "zero" <| fun _ ->
+        Expect.float32Close Accuracy32.veryHigh 0.0f 0.0f "zero"
+
+      testCase "small" <| fun _ ->
+        Expect.float32Close Accuracy32.low 0.000001f 0.0f "small"
+
+      testCase "large" <| fun _ ->
+        Expect.float32Close Accuracy32.low 10004.0f 10000.0f "large"
+
+      testCase "user" <| fun _ ->
+        Expect.float32Close {absolute=0.0f; relative=1e-3f}
+          10004.0f 10000.0f "user"
+
+      testCase "can fail" (fun _ ->
+        Expect.float32Close Accuracy32.low 1004.0f 1000.0f "can fail"
+      ) |> assertTestFails
+
+      testCase "nan fails" (fun _ ->
+        Expect.float32Close Accuracy32.low nanf 1.0f "nanf fails"
+      ) |> assertTestFails
+
+      testCase "inf fails" (fun _ ->
+        Expect.float32Close Accuracy32.low infinityf 1.0f "infinityf fails"
+      ) |> assertTestFails
+
+      testCase "less than easy" <| fun _ ->
+        Expect.float32LessThanOrClose Accuracy32.low -1.0f 0.0f "less"
+
+      testCase "not less than but close" <| fun _ ->
+        Expect.float32LessThanOrClose Accuracy32.low 0.000001f 0.0f "close"
+
+      testCase "not less than fails" (fun _ ->
+        Expect.float32LessThanOrClose Accuracy32.low 1.0f 0.0f "fail"
+      ) |> assertTestFails
+
+      testCase "greater than easy" <| fun _ ->
+        Expect.float32GreaterThanOrClose Accuracy32.low 1.0f 0.0f "greater"
+
+      testCase "not greater than but close" <| fun _ ->
+        Expect.float32GreaterThanOrClose Accuracy32.low -0.000001f 0.0f "close"
+
+      testCase "not greater than fails" (fun _ ->
+        Expect.float32GreaterThanOrClose Accuracy32.low -1.0f 0.0f "fail"
+      ) |> assertTestFails
+    ]
+    testList "float32<m>" [
+      testCase "zero" <| fun _ ->
+        Expect.float32Close Accuracy32.veryHigh<m> 0.0f<m> 0.0f<m> "zero"
+
+      testCase "small" <| fun _ ->
+        Expect.float32Close Accuracy32.low<m> 0.000001f<m> 0.0f<m> "small"
+
+      testCase "large" <| fun _ ->
+        Expect.float32Close Accuracy32.low<m> 10004.0f<m> 10000.0f<m> "large"
+
+      testCase "user" <| fun _ ->
+        Expect.float32Close {absolute=0.0f<m>; relative=1e-3f}
+          10004.0f<m> 10000.0f<m> "user"
+
+      testCase "can fail" (fun _ ->
+        Expect.float32Close Accuracy32.low<m> 1004.0f<m> 1000.0f<m> "can fail"
+      ) |> assertTestFails
+
+      testCase "nan fails" (fun _ ->
+        Expect.float32Close Accuracy32.low<m> (Float32WithMeasure<m> nanf) 1.0f<m> "nanf fails"
+      ) |> assertTestFails
+
+      testCase "inf fails" (fun _ ->
+        Expect.float32Close Accuracy32.low<m> (Float32WithMeasure<m> infinityf) 1.0f<m> "infinityf fails"
+      ) |> assertTestFails
+
+      testCase "less than easy" <| fun _ ->
+        Expect.float32LessThanOrClose Accuracy32.low<m> -1.0f<m> 0.0f<m> "less"
+
+      testCase "not less than but close" <| fun _ ->
+        Expect.float32LessThanOrClose Accuracy32.low<m> 0.000001f<m> 0.0f<m> "close"
+
+      testCase "not less than fails" (fun _ ->
+        Expect.float32LessThanOrClose Accuracy32.low<m> 1.0f<m> 0.0f<m> "fail"
+      ) |> assertTestFails
+
+      testCase "greater than easy" <| fun _ ->
+        Expect.float32GreaterThanOrClose Accuracy32.low<m> 1.0f<m> 0.0f<m> "greater"
+
+      testCase "not greater than but close" <| fun _ ->
+        Expect.float32GreaterThanOrClose Accuracy32.low<m> -0.000001f<m> 0.0f<m> "close"
+
+      testCase "not greater than fails" (fun _ ->
+        Expect.float32GreaterThanOrClose Accuracy32.low<m> -1.0f<m> 0.0f<m> "fail"
+      ) |> assertTestFails
+    ]
   ]
 
 [<Tests>]
