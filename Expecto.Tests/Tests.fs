@@ -926,78 +926,126 @@ let expecto =
       testList "float" [
         testList "float" [
           testList "nan testing" [
-            testCase "is not 'NaN'" <| fun _ ->
-              Expect.isNotNaN 4.0 "should pass because it's not 'NaN'"
-            testCase "is 'NaN'" (fun _ ->
-              Expect.isNotNaN Double.NaN "should fail because it's 'NaN'"
-             ) |> assertTestFails
-          ]
-
-          testList "positive infinity testing" [
-            testCase "is not a positive infinity" <| fun _ ->
-              Expect.isNotPositiveInfinity 4.0 "should pass because it's not positive infinity"
-            testCase "is a positive infinity" (fun _ ->
-              Expect.isNotPositiveInfinity Double.PositiveInfinity "should fail because it's a positive infinity"
-             ) |> assertTestFails
+            testList "is 'NaN'" [
+              testCase "pass" <| fun _ ->
+                Expect.isNaN nan "should pass because it's 'NaN'"
+              testCase "fail" (fun _ ->
+                Expect.isNaN 4.0 "should fail because it's not 'NaN'"
+              ) |> assertTestFails
+            ]
+            testList "is not 'NaN'" [
+              testCase "pass" <| fun _ ->
+                Expect.isNotNaN 4.0 "should pass because it's not 'NaN'"
+              testCase "fail" (fun _ ->
+                Expect.isNotNaN nan "should fail because it's 'NaN'"
+              ) |> assertTestFails
+            ]
           ]
 
           testList "negative infinity testing" [
-            testCase "is not a negative infinity" <| fun _ ->
-              Expect.isNotNegativeInfinity 4.0 "should pass because it's not a negative infinity"
-            testCase "is a negative infinity" (fun _ ->
-              Expect.isNotNegativeInfinity Double.NegativeInfinity "should fail because it's negative infinity"
-             ) |> assertTestFails
+            testList "is a negative infinity" [
+              testCase "pass" <| fun _ ->
+                Expect.isNegativeInfinity -infinity "should pass because it's a negative infinity"
+              testCase "fail infinity" (fun _ ->
+                Expect.isNegativeInfinity infinity "should fail because it's a not a negative infinity"
+              ) |> assertTestFails
+              testCase "fail 4.0" (fun _ ->
+                Expect.isNegativeInfinity 4.0 "should fail because it's not a negative infinity"
+              ) |> assertTestFails
+            ]
+            testList "is not a negative infinity" [
+              testCase "pass infinity" <| fun _ ->
+                Expect.isNotNegativeInfinity infinity "should pass because it's not a negative infinity"
+              testCase "pass 4.0" <| fun _ ->
+                Expect.isNotNegativeInfinity 4.0 "should pass because it's not a negative infinity"
+              testCase "fail" (fun _ ->
+                Expect.isNotNegativeInfinity -infinity "should fail because it's negative infinity"
+              ) |> assertTestFails
+            ]
           ]
 
           testList "infinity testing" [
-            testCase "is not an infinity" <| fun _ ->
-              Expect.isNotInfinity 4.0 "should pass because it's not an negative infinity nor positive"
-
-            testCase "is a negative infinity" (fun _ ->
-              Expect.isNotInfinity Double.NegativeInfinity "should fail because it's negative infinity"
-             ) |> assertTestFails
-
-            testCase "is a positive infinity" (fun _ ->
-              Expect.isNotInfinity Double.PositiveInfinity "should fail because it's positive infinity"
-             ) |> assertTestFails
+            testList "is an infinity" [
+              testCase "pass - negative infinity" <| fun _ ->
+                Expect.isInfinity infinity "should fail because it's negative infinity"
+              testCase "pass - positive infinity" <| fun _ ->
+                Expect.isInfinity infinity "should fail because it's positive infinity"
+              testCase "fail - 4.0" (fun _ ->
+                Expect.isInfinity 4.0 "should pass because it's not an negative infinity nor positive"
+              ) |> assertTestFails
+            ]
+            testList "is not an infinity" [
+              testCase "pass - 4.0" <| fun _ ->
+                Expect.isNotInfinity 4.0 "should pass because it's not an negative infinity nor positive"
+              testCase "fail - negative infinity" (fun _ ->
+                Expect.isNotInfinity -infinity "should fail because it's negative infinity"
+               ) |> assertTestFails
+              testCase "fail - positive infinity" (fun _ ->
+                Expect.isNotInfinity infinity "should fail because it's positive infinity"
+               ) |> assertTestFails
+            ]
           ]
         ]
         testList "float<m>" [
           testList "nan testing" [
-            testCase "is not 'NaN'" <| fun _ ->
-              Expect.isNotNaN 4.0<m> "should pass because it's not 'NaN'"
-            testCase "is 'NaN'" (fun _ ->
-              Expect.isNotNaN (FloatWithMeasure<m> Double.NaN) "should fail because it's 'NaN'"
-             ) |> assertTestFails
-          ]
-
-          testList "positive infinity testing" [
-            testCase "is not a positive infinity" <| fun _ ->
-              Expect.isNotPositiveInfinity 4.0<m> "should pass because it's not positive infinity"
-            testCase "is a positive infinity" (fun _ ->
-              Expect.isNotPositiveInfinity (FloatWithMeasure<m> Double.PositiveInfinity) "should fail because it's a positive infinity"
-             ) |> assertTestFails
+            testList "is 'NaN'" [
+              testCase "pass" <| fun _ ->
+                Expect.isNaN (FloatWithMeasure<m> nan) "should pass because it's 'NaN'"
+              testCase "fail" (fun _ ->
+                Expect.isNaN 4.0<m> "should fail because it's not 'NaN'"
+              ) |> assertTestFails
+            ]
+            testList "is not 'NaN'" [
+              testCase "pass" <| fun _ ->
+                Expect.isNotNaN 4.0<m> "should pass because it's not 'NaN'"
+              testCase "fail" (fun _ ->
+                Expect.isNotNaN nan "should fail because it's 'NaN'"
+              ) |> assertTestFails
+            ]
           ]
 
           testList "negative infinity testing" [
-            testCase "is not a negative infinity" <| fun _ ->
-              Expect.isNotNegativeInfinity 4.0<m> "should pass because it's not a negative infinity"
-            testCase "is a negative infinity" (fun _ ->
-              Expect.isNotNegativeInfinity (FloatWithMeasure<m> Double.NegativeInfinity) "should fail because it's negative infinity"
-             ) |> assertTestFails
+            testList "is a negative infinity" [
+              testCase "pass" <| fun _ ->
+                Expect.isNegativeInfinity (FloatWithMeasure<m> -infinity) "should pass because it's a negative infinity"
+              testCase "fail infinity" (fun _ ->
+                Expect.isNegativeInfinity (FloatWithMeasure<m> infinity) "should fail because it's a not a negative infinity"
+              ) |> assertTestFails
+              testCase "fail 4.0" (fun _ ->
+                Expect.isNegativeInfinity 4.0<m> "should fail because it's not a negative infinity"
+              ) |> assertTestFails
+            ]
+            testList "is not a negative infinity" [
+              testCase "pass infinity" <| fun _ ->
+                Expect.isNotNegativeInfinity (FloatWithMeasure<m> infinity) "should pass because it's not a negative infinity"
+              testCase "pass 4.0" <| fun _ ->
+                Expect.isNotNegativeInfinity 4.0 "should pass because it's not a negative infinity"
+              testCase "fail" (fun _ ->
+                Expect.isNotNegativeInfinity (FloatWithMeasure<m> -infinity) "should fail because it's negative infinity"
+              ) |> assertTestFails
+            ]
           ]
 
           testList "infinity testing" [
-            testCase "is not an infinity" <| fun _ ->
-              Expect.isNotInfinity 4.0<m> "should pass because it's not an negative infinity nor positive"
-
-            testCase "is a negative infinity" (fun _ ->
-              Expect.isNotInfinity (FloatWithMeasure<m> Double.NegativeInfinity) "should fail because it's negative infinity"
-             ) |> assertTestFails
-
-            testCase "is a positive infinity" (fun _ ->
-              Expect.isNotInfinity (FloatWithMeasure<m> Double.PositiveInfinity) "should fail because it's positive infinity"
-             ) |> assertTestFails
+            testList "is an infinity" [
+              testCase "pass - negative infinity" <| fun _ ->
+                Expect.isInfinity infinity "should fail because it's negative infinity"
+              testCase "pass - positive infinity" <| fun _ ->
+                Expect.isInfinity infinity "should fail because it's positive infinity"
+              testCase "fail - 4.0" (fun _ ->
+                Expect.isInfinity 4.0 "should pass because it's not an negative infinity nor positive"
+              ) |> assertTestFails
+            ]
+            testList "is not an infinity" [
+              testCase "pass - 4.0" <| fun _ ->
+                Expect.isNotInfinity 4.0 "should pass because it's not an negative infinity nor positive"
+              testCase "fail - negative infinity" (fun _ ->
+                Expect.isNotInfinity -infinity "should fail because it's negative infinity"
+               ) |> assertTestFails
+              testCase "fail - positive infinity" (fun _ ->
+                Expect.isNotInfinity infinity "should fail because it's positive infinity"
+               ) |> assertTestFails
+            ]
           ]
         ]
 
