@@ -9,8 +9,8 @@ type Accuracy<'abs, 'rel> = { absolute: 'abs; relative: 'rel }
 
 type Accuracy<[<Measure>] 'u> = Accuracy<float<'u>, float>
 type Accuracy = Accuracy<1>
-type AccuracyF<[<Measure>] 'u> = Accuracy<float32<'u>, float32>
-type AccuracyF = AccuracyF<1>
+type Accuracy32<[<Measure>] 'u> = Accuracy<float32<'u>, float32>
+type Accuracy32 = Accuracy32<1>
 
 module Accuracy =
   let inline areCloseLhs a b : ^a = abs(a-b)
@@ -19,19 +19,19 @@ module Accuracy =
 
   let low<[<Measure>] 'u> : Accuracy<'u>        = { absolute = FloatWithMeasure 1e-6; relative = 1e-3 }
   let medium<[<Measure>] 'u> : Accuracy<'u>     = { absolute = FloatWithMeasure 1e-8; relative = 1e-5 }
-  let mediumf<[<Measure>] 'u> : AccuracyF<'u>   = { absolute = Float32WithMeasure 1e-8f; relative = 1e-5f }
+  let mediumf<[<Measure>] 'u> : Accuracy32<'u>   = { absolute = Float32WithMeasure 1e-8f; relative = 1e-5f }
   let high<[<Measure>] 'u> : Accuracy<'u>       = { absolute = FloatWithMeasure 1e-10; relative = 1e-7 }
-  let highf<[<Measure>] 'u> : AccuracyF<'u>     = { absolute = Float32WithMeasure 1e-10f; relative = 1e-7f }
+  let highf<[<Measure>] 'u> : Accuracy32<'u>     = { absolute = Float32WithMeasure 1e-10f; relative = 1e-7f }
   let veryHigh<[<Measure>] 'u> : Accuracy<'u>   = { absolute = FloatWithMeasure 1e-12; relative = 1e-9 }
-  let veryHighf<[<Measure>] 'u> : AccuracyF<'u> = { absolute = Float32WithMeasure 1e-12f; relative = 1e-9f }
+  let veryHighf<[<Measure>] 'u> : Accuracy32<'u> = { absolute = Float32WithMeasure 1e-12f; relative = 1e-9f }
 
-module AccuracyF =
+module Accuracy32 =
   open Accuracy
 
-  let low<[<Measure>] 'u> : AccuracyF<'u>      = { absolute = Float32WithMeasure 1e-6f; relative = 1e-3f }
-  let medium<[<Measure>] 'u> : AccuracyF<'u>   = { absolute = Float32WithMeasure 1e-8f; relative = 1e-5f }
-  let high<[<Measure>] 'u> : AccuracyF<'u>     = { absolute = Float32WithMeasure 1e-10f; relative = 1e-7f }
-  let veryHigh<[<Measure>] 'u> : AccuracyF<'u> = { absolute = Float32WithMeasure 1e-12f; relative = 1e-9f }
+  let low<[<Measure>] 'u> : Accuracy32<'u>      = { absolute = Float32WithMeasure 1e-6f; relative = 1e-3f }
+  let medium<[<Measure>] 'u> : Accuracy32<'u>   = { absolute = Float32WithMeasure 1e-8f; relative = 1e-5f }
+  let high<[<Measure>] 'u> : Accuracy32<'u>     = { absolute = Float32WithMeasure 1e-10f; relative = 1e-7f }
+  let veryHigh<[<Measure>] 'u> : Accuracy32<'u> = { absolute = Float32WithMeasure 1e-12f; relative = 1e-9f }
 
 module Performance =
   open Statistics

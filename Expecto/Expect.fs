@@ -290,7 +290,7 @@ let floatClose (accuracy: Accuracy<'u>) (actual: float<'u>) (expected: float<'u>
       actual expected
 /// Expects `actual` and `expected` (that are both float32s) to be within a
 /// given `accuracy`.
-let float32Close (accuracy: AccuracyF<'u>) (actual: float32<'u>) (expected: float32<'u>) message =
+let float32Close (accuracy: Accuracy32<'u>) (actual: float32<'u>) (expected: float32<'u>) message =
   if Single.IsInfinity (float32 actual) then
     failtestf "%s. Expected actual to not be infinity, but it was." message
   elif Single.IsInfinity (float32 expected) then
