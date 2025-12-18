@@ -290,7 +290,7 @@ let floatClose (accuracy: Accuracy<'u>) (actual: float<'u>) (expected: float<'u>
       actual expected
 /// Expects `actual` and `expected` (that are both float32s) to be within a
 /// given `accuracy`.
-let floatClosef (accuracy: AccuracyF<'u>) (actual: float32<'u>) (expected: float32<'u>) message =
+let float32Close (accuracy: AccuracyF<'u>) (actual: float32<'u>) (expected: float32<'u>) message =
   if Single.IsInfinity (float32 actual) then
     failtestf "%s. Expected actual to not be infinity, but it was." message
   elif Single.IsInfinity (float32 expected) then
@@ -308,16 +308,16 @@ let floatLessThanOrClose accuracy actual expected message =
     if actual>expected then floatClose accuracy actual expected message
 /// Expects `actual` to be less than `expected` or to be within a
 /// given `accuracy`.
-let floatLessThanOrClosef accuracy actual expected message =
-    if actual>expected then floatClosef accuracy actual expected message
+let float32LessThanOrClose accuracy actual expected message =
+    if actual>expected then float32Close accuracy actual expected message
 /// Expects `actual` to be greater than `expected` or to be within a
 /// given `accuracy`.
 let floatGreaterThanOrClose accuracy actual expected message =
     if actual<expected then floatClose accuracy actual expected message
 /// Expects `actual` to be greater than `expected` or to be within a
 /// given `accuracy`.
-let floatGreaterThanOrClosef accuracy actual expected message =
-    if actual<expected then floatClosef accuracy actual expected message
+let float32GreaterThanOrClose accuracy actual expected message =
+    if actual<expected then float32Close accuracy actual expected message
 
 /// Expect the passed float to be a number.
 let isNotNaN (f: float<'u>) message =

@@ -1773,94 +1773,94 @@ let close =
     ]
     testList "float32" [
       testCase "zero" <| fun _ ->
-        Expect.floatClosef Accuracy.veryHighf 0.0f 0.0f "zero"
+        Expect.float32Close AccuracyF.veryHigh 0.0f 0.0f "zero"
 
       testCase "small" <| fun _ ->
-        Expect.floatClosef Accuracy.lowf 0.000001f 0.0f "small"
+        Expect.float32Close AccuracyF.low 0.000001f 0.0f "small"
 
       testCase "large" <| fun _ ->
-        Expect.floatClosef Accuracy.lowf 10004.0f 10000.0f "large"
+        Expect.float32Close AccuracyF.low 10004.0f 10000.0f "large"
 
       testCase "user" <| fun _ ->
-        Expect.floatClosef {absolute=0.0f; relative=1e-3f}
+        Expect.float32Close {absolute=0.0f; relative=1e-3f}
           10004.0f 10000.0f "user"
 
       testCase "can fail" (fun _ ->
-        Expect.floatClosef Accuracy.lowf 1004.0f 1000.0f "can fail"
+        Expect.float32Close AccuracyF.low 1004.0f 1000.0f "can fail"
       ) |> assertTestFails
 
       testCase "nan fails" (fun _ ->
-        Expect.floatClosef Accuracy.lowf nanf 1.0f "nanf fails"
+        Expect.float32Close AccuracyF.low nanf 1.0f "nanf fails"
       ) |> assertTestFails
 
       testCase "inf fails" (fun _ ->
-        Expect.floatClosef Accuracy.lowf infinityf 1.0f "infinityf fails"
+        Expect.float32Close AccuracyF.low infinityf 1.0f "infinityf fails"
       ) |> assertTestFails
 
       testCase "less than easy" <| fun _ ->
-        Expect.floatLessThanOrClosef Accuracy.lowf -1.0f 0.0f "less"
+        Expect.float32LessThanOrClose AccuracyF.low -1.0f 0.0f "less"
 
       testCase "not less than but close" <| fun _ ->
-        Expect.floatLessThanOrClosef Accuracy.lowf 0.000001f 0.0f "close"
+        Expect.float32LessThanOrClose AccuracyF.low 0.000001f 0.0f "close"
 
       testCase "not less than fails" (fun _ ->
-        Expect.floatLessThanOrClosef Accuracy.lowf 1.0f 0.0f "fail"
+        Expect.float32LessThanOrClose AccuracyF.low 1.0f 0.0f "fail"
       ) |> assertTestFails
 
       testCase "greater than easy" <| fun _ ->
-        Expect.floatGreaterThanOrClosef Accuracy.lowf 1.0f 0.0f "greater"
+        Expect.float32GreaterThanOrClose AccuracyF.low 1.0f 0.0f "greater"
 
       testCase "not greater than but close" <| fun _ ->
-        Expect.floatGreaterThanOrClosef Accuracy.lowf -0.000001f 0.0f "close"
+        Expect.float32GreaterThanOrClose AccuracyF.low -0.000001f 0.0f "close"
 
       testCase "not greater than fails" (fun _ ->
-        Expect.floatGreaterThanOrClosef Accuracy.lowf -1.0f 0.0f "fail"
+        Expect.float32GreaterThanOrClose AccuracyF.low -1.0f 0.0f "fail"
       ) |> assertTestFails
     ]
     testList "float32<m>" [
       testCase "zero" <| fun _ ->
-        Expect.floatClosef Accuracy.veryHighf<m> 0.0f<m> 0.0f<m> "zero"
+        Expect.float32Close AccuracyF.veryHigh<m> 0.0f<m> 0.0f<m> "zero"
 
       testCase "small" <| fun _ ->
-        Expect.floatClosef Accuracy.lowf<m> 0.000001f<m> 0.0f<m> "small"
+        Expect.float32Close AccuracyF.low<m> 0.000001f<m> 0.0f<m> "small"
 
       testCase "large" <| fun _ ->
-        Expect.floatClosef Accuracy.lowf<m> 10004.0f<m> 10000.0f<m> "large"
+        Expect.float32Close AccuracyF.low<m> 10004.0f<m> 10000.0f<m> "large"
 
       testCase "user" <| fun _ ->
-        Expect.floatClosef {absolute=0.0f<m>; relative=1e-3f}
+        Expect.float32Close {absolute=0.0f<m>; relative=1e-3f}
           10004.0f<m> 10000.0f<m> "user"
 
       testCase "can fail" (fun _ ->
-        Expect.floatClosef Accuracy.lowf<m> 1004.0f<m> 1000.0f<m> "can fail"
+        Expect.float32Close AccuracyF.low<m> 1004.0f<m> 1000.0f<m> "can fail"
       ) |> assertTestFails
 
       testCase "nan fails" (fun _ ->
-        Expect.floatClosef Accuracy.lowf<m> (Float32WithMeasure<m> nanf) 1.0f<m> "nanf fails"
+        Expect.float32Close AccuracyF.low<m> (Float32WithMeasure<m> nanf) 1.0f<m> "nanf fails"
       ) |> assertTestFails
 
       testCase "inf fails" (fun _ ->
-        Expect.floatClosef Accuracy.lowf<m> (Float32WithMeasure<m> infinityf) 1.0f<m> "infinityf fails"
+        Expect.float32Close AccuracyF.low<m> (Float32WithMeasure<m> infinityf) 1.0f<m> "infinityf fails"
       ) |> assertTestFails
 
       testCase "less than easy" <| fun _ ->
-        Expect.floatLessThanOrClosef Accuracy.lowf<m> -1.0f<m> 0.0f<m> "less"
+        Expect.float32LessThanOrClose AccuracyF.low<m> -1.0f<m> 0.0f<m> "less"
 
       testCase "not less than but close" <| fun _ ->
-        Expect.floatLessThanOrClosef Accuracy.lowf<m> 0.000001f<m> 0.0f<m> "close"
+        Expect.float32LessThanOrClose AccuracyF.low<m> 0.000001f<m> 0.0f<m> "close"
 
       testCase "not less than fails" (fun _ ->
-        Expect.floatLessThanOrClosef Accuracy.lowf<m> 1.0f<m> 0.0f<m> "fail"
+        Expect.float32LessThanOrClose AccuracyF.low<m> 1.0f<m> 0.0f<m> "fail"
       ) |> assertTestFails
 
       testCase "greater than easy" <| fun _ ->
-        Expect.floatGreaterThanOrClosef Accuracy.lowf<m> 1.0f<m> 0.0f<m> "greater"
+        Expect.float32GreaterThanOrClose AccuracyF.low<m> 1.0f<m> 0.0f<m> "greater"
 
       testCase "not greater than but close" <| fun _ ->
-        Expect.floatGreaterThanOrClosef Accuracy.lowf<m> -0.000001f<m> 0.0f<m> "close"
+        Expect.float32GreaterThanOrClose AccuracyF.low<m> -0.000001f<m> 0.0f<m> "close"
 
       testCase "not greater than fails" (fun _ ->
-        Expect.floatGreaterThanOrClosef Accuracy.lowf<m> -1.0f<m> 0.0f<m> "fail"
+        Expect.float32GreaterThanOrClose AccuracyF.low<m> -1.0f<m> 0.0f<m> "fail"
       ) |> assertTestFails
     ]
   ]
