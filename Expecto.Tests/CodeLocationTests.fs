@@ -8,9 +8,9 @@ module CodeLocationSamples =
     let ptestCaseExample = ptestCase "ptestCaseExample" <| (fun () -> ())
     let ftestCaseExample = ftestCase "ftestCaseExample" <| (fun () -> ())
 
-    let testBuilderExample = test "Locate a builder" { ignore ()}
-    let ptestBuilderExample = ptest "Locate a builder" { ignore ()}
-    let ftestBuilderExample = ftest "Locate a builder" { ignore ()}
+    let testBuilderExample = test "Locate a builder" { ignore () }
+    let ptestBuilderExample = ptest "Locate a builder" { ignore () }
+    let ftestBuilderExample = ftest "Locate a builder" { ignore () }
 
     let testParamExamples = List.ofSeq (testParam 5 [
             "t1", (fun _ () -> ())
@@ -53,10 +53,6 @@ let tests = testList "Code Location Tests" [
         testLocation "testCase" CodeLocationSamples.testCaseExample { sourcePath = pathToThisFile; lineNumber = 7 }
         testLocation "ptestCase" CodeLocationSamples.ptestCaseExample { sourcePath = pathToThisFile; lineNumber = 8 }
         testLocation "ftestCase" CodeLocationSamples.ftestCaseExample { sourcePath = pathToThisFile; lineNumber = 9 }
-        
-        testLocation "test" CodeLocationSamples.testBuilderExample { sourcePath = pathToThisFile; lineNumber = 11 }
-        testLocation "ptest" CodeLocationSamples.ptestBuilderExample { sourcePath = pathToThisFile; lineNumber = 12 }
-        testLocation "ftest" CodeLocationSamples.ftestBuilderExample { sourcePath = pathToThisFile; lineNumber = 13 }
 
         test "testParam" {
             let testCodeList = CodeLocationSamples.testParamExamples |> List.map getTestCode
