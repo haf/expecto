@@ -79,25 +79,49 @@ let inline isGreaterThanOrEqual message (a, b) = Expecto.Expect.isGreaterThanOrE
 /// given `accuracy`.
 let inline floatClose message accuracy expected actual = Expecto.Expect.floatClose accuracy actual expected message
 
+/// Expects `actual` and `expected` (that are both floats) to be within a
+/// given `accuracy`.
+let inline float32Close message accuracy expected actual = Expecto.Expect.float32Close accuracy actual expected message
+
 /// Expects `actual` to be less than `expected` or to be within a
 /// given `accuracy`.
 let inline floatLessThanOrClose message accuracy expected actual = Expecto.Expect.floatLessThanOrClose accuracy actual expected message
+
+/// Expects `actual` to be less than `expected` or to be within a
+/// given `accuracy`.
+let inline float32LessThanOrClose message accuracy expected actual = Expecto.Expect.float32LessThanOrClose accuracy actual expected message
 
 /// Expects `actual` to be greater than `expected` or to be within a
 /// given `accuracy`.
 let inline floatGreaterThanOrClose message accuracy expected actual = Expecto.Expect.floatGreaterThanOrClose accuracy actual expected message
 
+/// Expects `actual` to be greater than `expected` or to be within a
+/// given `accuracy`.
+let inline float32GreaterThanOrClose message accuracy expected actual = Expecto.Expect.float32GreaterThanOrClose accuracy actual expected message
+
 /// Expect the passed float to be a number.
 let inline isNotNaN message f = Expecto.Expect.isNotNaN f message
+
+/// Expect the passed float to be a number.
+let inline isNotNaNf message f = Expecto.Expect.isNotNaNf f message
 
 /// Expect the passed float not to be positive infinity.
 let inline isNotPositiveInfinity message f = Expecto.Expect.isNotPositiveInfinity f message
 
+/// Expect the passed float not to be positive infinity.
+let inline isNotPositiveInfinityf message f = Expecto.Expect.isNotPositiveInfinityf f message
+
 /// Expect the passed float not to be negative infinity.
 let inline isNotNegativeInfinity message f = Expecto.Expect.isNotNegativeInfinity f message
 
+/// Expect the passed float not to be negative infinity.
+let inline isNotNegativeInfinityf message f = Expecto.Expect.isNotNegativeInfinityf f message
+
 /// Expect the passed float not to be infinity.
 let inline isNotInfinity message f = Expecto.Expect.isNotInfinity f message
+
+/// Expect the passed float not to be infinity.
+let inline isNotInfinityf message f = Expecto.Expect.isNotInfinityf f message
 
 /// Expect the passed string not to be empty.
 let inline isNotEmpty message actual = Expecto.Expect.isNotEmpty actual message
