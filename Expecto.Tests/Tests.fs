@@ -414,7 +414,7 @@ let expecto =
           |> Array.tryHead
       let getTest =
           getMember
-          >> Option.bind testFromMember
+          >> Option.bind TestDiscovery.testFromMember
           >> Option.bind (function TestLabel(name, _, Normal) -> Some name | _ -> None)
 
       yield testCase "from member" <| fun _ ->
@@ -422,14 +422,14 @@ let expecto =
       yield testCase"from function" <| fun _ ->
           getTest "testB" ==? Some "test B"
       yield testCase"from type" <| fun _ ->
-          match testFromType Dummy.thisModuleType.Value with
+          match TestDiscovery.testFromType Dummy.thisModuleType.Value with
           | Some (TestList (
                       Seq.Two (
                           TestLabel("test B", TestList (_, Normal), Normal),
                           TestLabel("test A", TestList (_, Normal), Normal)), Normal)) -> ()
           | x -> failtestf "TestList expected, found %A" x
       yield testCase "from empty type" <| fun _ ->
-          let test = testFromType EmptyModule.thisModuleType.Value
+          let test = TestDiscovery.testFromType EmptyModule.thisModuleType.Value
           Expect.isNone test ""
     ]
 
