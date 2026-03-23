@@ -917,149 +917,165 @@ module Impl =
   let runStress config test =
     runStressWithCancel CancellationToken.None config test
 
-  let testFromMember (mi: MemberInfo) : Test option =
-    let inline unboxTest v =
-      if isNull v then
-        "Test is null. Assembly may not be initialized. Consider adding an [<EntryPoint>] or making it a library/classlib."
-        |> NullTestDiscoveryException |> raise
-      else unbox v
-    let getTestFromMemberInfo focusedState =
-      match box mi with
-      | :? FieldInfo as m when m.FieldType = typeof<Test> ->
-        Some(focusedState, m.GetValue(null) |> unboxTest)
-      | :? MethodInfo as m when m.ReturnType = typeof<Test> ->
-        Some(focusedState, m.Invoke(null, null) |> unboxTest)
-      | :? PropertyInfo as m when m.PropertyType = typeof<Test> ->
-        Some(focusedState, m.GetValue(null, null) |> unboxTest)
-      | _ -> None
-    mi.MatchTestsAttributes ()
-    |> Option.bind getTestFromMemberInfo
-    |> Option.map ((<||) Test.translateFocusState)
+  module CodeLocation =
+    // If the test function we've found doesn't seem to be in the test assembly, it's
+    // possible we're looking at an FsCheck 'testProperty' style check. In that case,
+    // the function of interest (i.e., the one in the test assembly, and for which we
+    // might be able to find corresponding source code) is referred to in a field
+    // of the function object.
+    let isFsharpFuncType t =
+      let baseType =
+        let rec findBase (t:Type) =
+          if t.GetTypeInfo().BaseType |> isNull || t.GetTypeInfo().BaseType = typeof<obj> then
+            t
+          else
+            findBase (t.GetTypeInfo().BaseType)
+        findBase t
+      baseType.GetTypeInfo().IsGenericType && baseType.GetTypeInfo().GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
 
-  let listToTestListOption =
-    function
-    | [] -> None
-    | x -> Some (TestList (x, Normal))
+    let getFuncTypeToUse (testFunc:unit->unit) (asm:Assembly) =
+      let t = testFunc.GetType()
+      if t.GetTypeInfo().Assembly.FullName = asm.FullName then
+        t
+      else
+        let nestedFunc =
+          t.GetTypeInfo().GetFields()
+          |> Array.tryFind (fun f -> isFsharpFuncType f.FieldType)
+        match nestedFunc with
+        | Some f -> f.GetValue(testFunc).GetType()
+        | None -> t
 
-  let testFromType =
-    let inline asMembers x = unbox<MemberInfo[]> x
-    let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
-    fun (t: Type) ->
-      [ t.GetMethods bindingFlags |> asMembers
-        t.GetProperties bindingFlags |> asMembers
-        t.GetFields bindingFlags |> asMembers ]
-      |> Seq.collect id
-      |> Seq.choose testFromMember
+    let getMethodName asm testCode =
+      match testCode with
+      | Sync test ->
+        let t = getFuncTypeToUse test asm
+        let m = t.GetTypeInfo().GetMethods () |> Array.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
+        (t.FullName, m.Name)
+      | SyncWithCancel _ ->
+        ("Unknown SyncWithCancel", "Unknown SyncWithCancel")
+      | Async _ | AsyncFsCheck _ ->
+        ("Unknown Async", "Unknown Async")
+
+    // Load the list of types in the test assembly and cache the data
+    // Ref https://github.com/haf/expecto/issues/517 for comments on the performance
+    let private moduleDefinitionCache = System.Collections.Concurrent.ConcurrentDictionary<string, Map<string, TypeDefinition>>()
+
+    let private getTypesForAssembly (asm: Assembly) =
+
+      moduleDefinitionCache.GetOrAdd(asm.Location, valueFactory = (fun loc ->
+        let readerParams = ReaderParameters( ReadSymbols = true )
+        let moduleDefinition = ModuleDefinition.ReadModule(loc, readerParams)
+
+        seq { for t in moduleDefinition.GetTypes() -> (t.FullName, t) }
+        |> Map.ofSeq
+      ))
+
+    // Ported from
+    // https://github.com/adamchester/expecto-adapter/blob/885fc9fff0/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
+    let getSourceLocation (asm: Assembly) className methodName =
+      let lineNumberIndicatingHiddenLine = 0xfeefee
+      let getEcma335TypeName (clrTypeName:string) = clrTypeName.Replace("+", "/")
+
+      let types = getTypesForAssembly asm
+
+      let getMethods typeName =
+        match types.TryFind (getEcma335TypeName typeName) with
+        | Some t -> Some (t.Methods)
+        | _ -> None
+
+      let getFirstOrDefaultSequencePoint (m:MethodDefinition) =
+        m.Body.Instructions
+        |> Seq.tryPick (fun i ->
+          let sp = m.DebugInformation.GetSequencePoint i
+          if isNull sp |> not && sp.StartLine <> lineNumberIndicatingHiddenLine then
+            Some sp else None)
+
+      match getMethods className with
+      | None -> SourceLocation.empty
+      | Some methods ->
+        let candidateSequencePoints =
+          methods
+          |> Seq.where (fun m -> m.Name = methodName)
+          |> Seq.choose getFirstOrDefaultSequencePoint
+          |> Seq.sortBy (fun sp -> sp.StartLine)
+          |> Seq.toList
+        match candidateSequencePoints with
+        | [] -> SourceLocation.empty
+        | xs -> {sourcePath = xs.Head.Document.Url ; lineNumber = xs.Head.StartLine}
+
+
+    //val apply : f:(TestCode * FocusState * SourceLocation -> TestCode * FocusState * SourceLocation) -> _arg1:Test -> Test
+    let getLocation (asm:Assembly) code =
+      let typeName, methodName = getMethodName asm code
+      try
+        getSourceLocation asm typeName methodName
+      with :? IO.FileNotFoundException ->
+        SourceLocation.empty
+
+  let getLocation (asm:Assembly) (code: TestCode) : SourceLocation = CodeLocation.getLocation asm code
+
+  module TestDiscovery =
+    let testFromMember (mi: MemberInfo) : Test option =
+      let inline unboxTest v =
+        if isNull v then
+          "Test is null. Assembly may not be initialized. Consider adding an [<EntryPoint>] or making it a library/classlib."
+          |> NullTestDiscoveryException |> raise
+        else unbox v
+      let getTestFromMemberInfo focusedState =
+        match box mi with
+        | :? FieldInfo as m when m.FieldType = typeof<Test> ->
+          Some(focusedState, m.GetValue(null) |> unboxTest)
+        | :? MethodInfo as m when m.ReturnType = typeof<Test> ->
+          Some(focusedState, m.Invoke(null, null) |> unboxTest)
+        | :? PropertyInfo as m when m.PropertyType = typeof<Test> ->
+          Some(focusedState, m.GetValue(null, null) |> unboxTest)
+        | _ -> None
+      mi.MatchTestsAttributes ()
+      |> Option.bind getTestFromMemberInfo
+      |> Option.map ((<||) Test.translateFocusState)
+
+    let listToTestListOption =
+      function
+      | [] -> None
+      | x -> Some (TestList (x, Normal))
+
+    let testFromType =
+      let inline asMembers x = unbox<MemberInfo[]> x
+      let bindingFlags = BindingFlags.Public ||| BindingFlags.Static
+      fun (t: Type) ->
+        [ t.GetMethods bindingFlags |> asMembers
+          t.GetProperties bindingFlags |> asMembers
+          t.GetFields bindingFlags |> asMembers ]
+        |> Seq.collect id
+        |> Seq.choose testFromMember
+        |> Seq.toList
+        |> listToTestListOption
+  
+    /// Scan filtered tests marked with TestsAttribute from an assembly
+    let testFromAssemblyWithFilter typeFilter (a: Assembly) : Test option=
+      a.GetExportedTypes()
+      |> Seq.filter typeFilter
+      |> Seq.choose testFromType
       |> Seq.toList
       |> listToTestListOption
 
-  // If the test function we've found doesn't seem to be in the test assembly, it's
-  // possible we're looking at an FsCheck 'testProperty' style check. In that case,
-  // the function of interest (i.e., the one in the test assembly, and for which we
-  // might be able to find corresponding source code) is referred to in a field
-  // of the function object.
-  let isFsharpFuncType t =
-    let baseType =
-      let rec findBase (t:Type) =
-        if t.GetTypeInfo().BaseType |> isNull || t.GetTypeInfo().BaseType = typeof<obj> then
-          t
-        else
-          findBase (t.GetTypeInfo().BaseType)
-      findBase t
-    baseType.GetTypeInfo().IsGenericType && baseType.GetTypeInfo().GetGenericTypeDefinition() = typedefof<FSharpFunc<unit, unit>>
+    /// Scan tests marked with TestsAttribute from an assembly
+    let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
+    // TODO v10 eta expansion: let testFromAssembly asm = testFromAssemblyWithFilter (fun _ -> true) asm
 
-  let getFuncTypeToUse (testFunc:unit->unit) (asm:Assembly) =
-    let t = testFunc.GetType()
-    if t.GetTypeInfo().Assembly.FullName = asm.FullName then
-      t
-    else
-      let nestedFunc =
-        t.GetTypeInfo().GetFields()
-        |> Array.tryFind (fun f -> isFsharpFuncType f.FieldType)
-      match nestedFunc with
-      | Some f -> f.GetValue(testFunc).GetType()
-      | None -> t
+    /// Scan tests marked with TestsAttribute from entry assembly
+    let testFromThisAssembly () = testFromAssembly (Assembly.GetEntryAssembly())
 
-  let getMethodName asm testCode =
-    match testCode with
-    | Sync test ->
-      let t = getFuncTypeToUse test asm
-      let m = t.GetTypeInfo().GetMethods () |> Array.find (fun m -> (m.Name = "Invoke") && (m.DeclaringType = t))
-      (t.FullName, m.Name)
-    | SyncWithCancel _ ->
-      ("Unknown SyncWithCancel", "Unknown SyncWithCancel")
-    | Async _ | AsyncFsCheck _ ->
-      ("Unknown Async", "Unknown Async")
-
-  // Load the list of types in the test assembly and cache the data
-  // Ref https://github.com/haf/expecto/issues/517 for comments on the performance
-  let private moduleDefinitionCache = System.Collections.Concurrent.ConcurrentDictionary<string, Map<string, TypeDefinition>>()
-
-  let private getTypesForAssembly (asm: Assembly) =
-
-    moduleDefinitionCache.GetOrAdd(asm.Location, valueFactory = (fun loc ->
-      let readerParams = ReaderParameters( ReadSymbols = true )
-      let moduleDefinition = ModuleDefinition.ReadModule(loc, readerParams)
-
-      seq { for t in moduleDefinition.GetTypes() -> (t.FullName, t) }
-      |> Map.ofSeq
-    ))
-
-  // Ported from
-  // https://github.com/adamchester/expecto-adapter/blob/885fc9fff0/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
-  let getSourceLocation (asm: Assembly) className methodName =
-    let lineNumberIndicatingHiddenLine = 0xfeefee
-    let getEcma335TypeName (clrTypeName:string) = clrTypeName.Replace("+", "/")
-
-    let types = getTypesForAssembly asm
-
-    let getMethods typeName =
-      match types.TryFind (getEcma335TypeName typeName) with
-      | Some t -> Some (t.Methods)
-      | _ -> None
-
-    let getFirstOrDefaultSequencePoint (m:MethodDefinition) =
-      m.Body.Instructions
-      |> Seq.tryPick (fun i ->
-        let sp = m.DebugInformation.GetSequencePoint i
-        if isNull sp |> not && sp.StartLine <> lineNumberIndicatingHiddenLine then
-          Some sp else None)
-
-    match getMethods className with
-    | None -> SourceLocation.empty
-    | Some methods ->
-      let candidateSequencePoints =
-        methods
-        |> Seq.where (fun m -> m.Name = methodName)
-        |> Seq.choose getFirstOrDefaultSequencePoint
-        |> Seq.sortBy (fun sp -> sp.StartLine)
-        |> Seq.toList
-      match candidateSequencePoints with
-      | [] -> SourceLocation.empty
-      | xs -> {sourcePath = xs.Head.Document.Url ; lineNumber = xs.Head.StartLine}
-
-  //val apply : f:(TestCode * FocusState * SourceLocation -> TestCode * FocusState * SourceLocation) -> _arg1:Test -> Test
-  let getLocation (asm:Assembly) code =
-    let typeName, methodName = getMethodName asm code
-    try
-      getSourceLocation asm typeName methodName
-    with :? IO.FileNotFoundException ->
-      SourceLocation.empty
 
   /// Scan filtered tests marked with TestsAttribute from an assembly
-  let testFromAssemblyWithFilter typeFilter (a: Assembly) =
-    a.GetExportedTypes()
-    |> Seq.filter typeFilter
-    |> Seq.choose testFromType
-    |> Seq.toList
-    |> listToTestListOption
+  let testFromAssemblyWithFilter typeFilter (a: Assembly) : Test option = TestDiscovery.testFromAssemblyWithFilter typeFilter a
 
   /// Scan tests marked with TestsAttribute from an assembly
-  let testFromAssembly = testFromAssemblyWithFilter (fun _ -> true)
+  let testFromAssembly : Assembly -> Test option = TestDiscovery.testFromAssembly
   // TODO v10 eta expansion: let testFromAssembly asm = testFromAssemblyWithFilter (fun _ -> true) asm
 
   /// Scan tests marked with TestsAttribute from entry assembly
-  let testFromThisAssembly () = testFromAssembly (Assembly.GetEntryAssembly())
+  let testFromThisAssembly () : Test option = TestDiscovery.testFromThisAssembly () 
 
   /// When the failOnFocusedTests switch is activated this function that no
   /// focused tests exist.
