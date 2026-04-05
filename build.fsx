@@ -70,7 +70,8 @@ let normaliseFileToLFEnding filename =
 let build project =
   DotNet.build (fun p ->
     { p with Configuration = configuration
-             Common = DotNet.Options.withDotNetCliPath dotnetExePath p.Common })
+             Common = DotNet.Options.withDotNetCliPath dotnetExePath p.Common
+             MSBuildParams = { p.MSBuildParams with DisableInternalBinLog = true } })
     project
 
 let runTest project =
@@ -125,6 +126,7 @@ Target.create "Pack" <| fun _ ->
           "VersionPrefix", release.NugetVersion
           "PackageReleaseNotes", String.toLines release.Notes
         ]
+        DisableInternalBinLog = true
     }
 
   let pkgSln = NoSln.WriteSolutionFile(projects=libProjects, useTempSolutionFile=true)
