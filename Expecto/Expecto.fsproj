@@ -3,7 +3,7 @@
   <PropertyGroup>
     <PackageId>Expecto</PackageId>
     <Description>Advanced testing library for F#</Description>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Logging.fs" />

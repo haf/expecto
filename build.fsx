@@ -24,7 +24,7 @@ let configuration =
   |> DotNet.BuildConfiguration.fromString
 
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
-let testFramework = "net6.0"
+let testFrameworks = ["net6.0"; "net481"]
 let dotnetExePath = "dotnet"
 
 let githubToken = lazy(Environment.environVarOrFail "GITHUB_TOKEN")
@@ -74,11 +74,12 @@ let build project =
     project
 
 let runTest project =
-  Trace.logfn "Running %s on .NET Core" project
-  DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
-    (sprintf "run --framework %s --project %s -c %O" testFramework project configuration)
-    "--summary"
-  |> fun r -> if r.ExitCode <> 0 then failwithf "Running %s on .NET Core failed" project
+  for framework in testFrameworks do
+    Trace.logfn "Running %s on %s" project framework
+    DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
+      (sprintf "run --framework %s --project %s -c %O" framework project configuration)
+      "--summary"
+    |> fun r -> if r.ExitCode <> 0 then failwithf "Running %s on %s failed" project framework
 
 Target.create "BuildExpecto" (fun _ ->
   let sln = NoSln.WriteSolutionFile(projects=libProjects, useTempSolutionFile=true)

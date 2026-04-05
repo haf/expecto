@@ -3,7 +3,7 @@
   <PropertyGroup>
     <PackageId>Expecto.Diff</PackageId>
     <Description>Integration of Expecto with DiffPlex</Description>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />

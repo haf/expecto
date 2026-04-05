@@ -1,2 +1,3 @@
 FSharp.Core
 Mono.Cecil
+System.Threading.Tasks.Extensions
