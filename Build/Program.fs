@@ -22,7 +22,12 @@ let configuration =
   |> DotNet.BuildConfiguration.fromString
 
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
-let testFrameworks = ["net10.0"; "net481"]
+let testFrameworks =
+  if Environment.isWindows then
+    ["net10.0"; "net481"]
+  else
+    ["net10.0"]
+
 let dotnetExePath = "dotnet"
 
 let githubToken = lazy(Environment.environVarOrFail "GITHUB_TOKEN")
