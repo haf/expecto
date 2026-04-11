@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:www.nuget.org)"
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -21,7 +21,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>
     - Create the project in a new folder if -n is specified
-    - Bump default target framework to net9.0
+    - Bump default target framework to net10.0
     </PackageReleaseNotes>
     <!-- Template authoring guide: https://learn.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices -->
   </PropertyGroup>

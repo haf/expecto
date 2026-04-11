@@ -1,10 +1,4 @@
-#r "paket: groupref Build //"
-
-#load ".fake/build.fsx/intellisense.fsx"
-#if !FAKE
-#r "netstandard"
-#endif
-
+﻿
 open System
 open System.IO
 open Fake.Core
@@ -17,14 +11,18 @@ open Fake.IO.Globbing.Operators
 open Fake.BuildServer
 open NoSln
 
-Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
+
+Environment.CurrentDirectory <- Path.Combine(__SOURCE_DIRECTORY__, "..")
+
+let execContext = Context.FakeExecutionContext.Create false "build.fsx" []
+Context.setExecutionContext (Context.RuntimeContext.Fake execContext)
 
 let configuration =
   Environment.environVarOrDefault "CONFIGURATION" "Release"
   |> DotNet.BuildConfiguration.fromString
 
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
-let testFrameworks = ["net6.0"; "net481"]
+let testFrameworks = ["net10.0"; "net481"]
 let dotnetExePath = "dotnet"
 
 let githubToken = lazy(Environment.environVarOrFail "GITHUB_TOKEN")
@@ -60,6 +58,7 @@ Target.create "Clean" <| fun _ ->
   !!"./**/bin/"
   ++ "./**/obj/"
   ++ pkgPath
+  -- "./Build/**/"
   |> Shell.cleanDirs
 
 let normaliseFileToLFEnding filename =

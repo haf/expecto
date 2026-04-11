@@ -4,7 +4,7 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <AssemblyName>Expecto.Hopac.Tests</AssemblyName>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net6.0;net481</TargetFrameworks>
+    <TargetFrameworks>net10.0;net481</TargetFrameworks>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>

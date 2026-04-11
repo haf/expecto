@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyName>Expecto.Tests.CSharp</AssemblyName>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net6.0;net481</TargetFrameworks>
+    <TargetFrameworks>net10.0;net481</TargetFrameworks>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
