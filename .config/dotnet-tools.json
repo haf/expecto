@@ -3,16 +3,18 @@
   "isRoot": true,
   "tools": {
     "paket": {
-      "version": "8.0.3",
+      "version": "10.3.1",
       "commands": [
         "paket"
-      ]
+      ],
+      "rollForward": false
     },
     "fake-cli": {
-      "version": "6.1.0",
+      "version": "6.1.4",
       "commands": [
         "fake"
-      ]
+      ],
+      "rollForward": false
     }
   }
 }

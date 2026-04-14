@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyName>Expecto.Tests</AssemblyName>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net10.0;net481</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FsCheck3Tests.fs" />

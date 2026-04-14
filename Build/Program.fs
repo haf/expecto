@@ -1,10 +1,4 @@
-#r "paket: groupref Build //"
-
-#load ".fake/build.fsx/intellisense.fsx"
-#if !FAKE
-#r "netstandard"
-#endif
-
+﻿
 open System
 open System.IO
 open Fake.Core
@@ -17,14 +11,23 @@ open Fake.IO.Globbing.Operators
 open Fake.BuildServer
 open NoSln
 
-Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
+
+Environment.CurrentDirectory <- Path.Combine(__SOURCE_DIRECTORY__, "..")
+
+let execContext = Context.FakeExecutionContext.Create false "build.fsx" []
+Context.setExecutionContext (Context.RuntimeContext.Fake execContext)
 
 let configuration =
   Environment.environVarOrDefault "CONFIGURATION" "Release"
   |> DotNet.BuildConfiguration.fromString
 
 let release = ReleaseNotes.load "RELEASE_NOTES.md"
-let testFramework = "net6.0"
+let testFrameworks =
+  if Environment.isWindows then
+    ["net10.0"; "net481"]
+  else
+    ["net10.0"]
+
 let dotnetExePath = "dotnet"
 
 let githubToken = lazy(Environment.environVarOrFail "GITHUB_TOKEN")
@@ -60,6 +63,7 @@ Target.create "Clean" <| fun _ ->
   !!"./**/bin/"
   ++ "./**/obj/"
   ++ pkgPath
+  -- "./Build/**/"
   |> Shell.cleanDirs
 
 let normaliseFileToLFEnding filename =
@@ -70,15 +74,17 @@ let normaliseFileToLFEnding filename =
 let build project =
   DotNet.build (fun p ->
     { p with Configuration = configuration
-             Common = DotNet.Options.withDotNetCliPath dotnetExePath p.Common })
+             Common = DotNet.Options.withDotNetCliPath dotnetExePath p.Common
+             MSBuildParams = { p.MSBuildParams with DisableInternalBinLog = true } })
     project
 
 let runTest project =
-  Trace.logfn "Running %s on .NET Core" project
-  DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
-    (sprintf "run --framework %s --project %s -c %O" testFramework project configuration)
-    "--summary"
-  |> fun r -> if r.ExitCode <> 0 then failwithf "Running %s on .NET Core failed" project
+  for framework in testFrameworks do
+    Trace.logfn "Running %s on %s" project framework
+    DotNet.exec (DotNet.Options.withDotNetCliPath dotnetExePath)
+      (sprintf "run --framework %s --project %s -c %O" framework project configuration)
+      "--summary"
+    |> fun r -> if r.ExitCode <> 0 then failwithf "Running %s on %s failed" project framework
 
 Target.create "BuildExpecto" (fun _ ->
   let sln = NoSln.WriteSolutionFile(projects=libProjects, useTempSolutionFile=true)
@@ -124,6 +130,7 @@ Target.create "Pack" <| fun _ ->
           "VersionPrefix", release.NugetVersion
           "PackageReleaseNotes", String.toLines release.Notes
         ]
+        DisableInternalBinLog = true
     }
 
   let pkgSln = NoSln.WriteSolutionFile(projects=libProjects, useTempSolutionFile=true)
