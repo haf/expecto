@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <Target Name="ILRepacker" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">     
+        <ItemGroup>
+            <InputAssemblies Include="$(OutputPath)FSharp.Core.dll" />
+            <InputAssemblies Include="$(OutputPath)FSharp.Compiler.Service.dll" />
+        </ItemGroup>
+        <Message Text="MERGING: @(InputAssemblies->'%(Filename)') into $(OutputAssembly)" Importance="High" />  
+        <ILRepack
+            AllowDuplicateResources="false"
+            DebugInfo="true"
+            Internalize="true"
+            InputAssemblies="@(InputAssemblies)"
+            OutputFile="$(OutputPath)$(AssemblyName).dll"
+            Parallel="true"
+            TargetKind="Dll" />
+    </Target>
+</Project>
