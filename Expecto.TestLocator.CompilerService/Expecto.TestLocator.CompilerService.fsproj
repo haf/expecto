@@ -7,11 +7,14 @@
 
   <ItemGroup>
     <None Include="paket.references" />
-    <Compile Include="Library.fs" />
+    <Compile Include="TestLocator.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
-  </ItemGroup> 
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Compiler.Service" Version="43.9.300" />
+  </ItemGroup>
   <Import Project="..\NuGet.props" />
   <Import Project="..\.paket\Paket.Restore.targets" />
 
