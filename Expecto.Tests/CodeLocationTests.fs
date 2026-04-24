@@ -19,6 +19,8 @@ module CodeLocationSamples =
 
     let testCaseAsyncExample = testCaseAsync "testCaseExample" <| async { ignore ()}
 
+    let testTheoryExample = testTheory "testTheory example" [1;2] (fun _ -> ())
+
 
 type LetMeGetTheCurrentAssembly = private Case of unit 
 
@@ -35,6 +37,16 @@ let tests = testList "Code Location Tests" [
         recurse test
 
     let getTestCode (test: Test) : TestCode = tryGetTestCode test |> Option.defaultWith (fun () -> failwith $"Count not find single TestCode for Test value: {test}")  
+
+    let tryGetTestCodeList (test: Test) : TestCode list =
+        let rec recurse (test: Test) : TestCode list = 
+            match test with 
+            | TestCase (testCode, _) -> [testCode]
+            | TestLabel (_, test, _) -> recurse test
+            | TestList (list, state) -> list |> List.collect recurse
+            | Test.Sequenced (_, test) -> recurse test
+
+        recurse test
     
     let thisAssembly = System.Reflection.Assembly.GetAssembly(typeof<LetMeGetTheCurrentAssembly>)
     let pathToThisFile = System.IO.Path.Combine(__SOURCE_DIRECTORY__, __SOURCE_FILE__)
@@ -63,6 +75,7 @@ let tests = testList "Code Location Tests" [
             ]
             Expect.equal actualLocations expectedLocations ""
         }
+        
     ]
     
 ]
