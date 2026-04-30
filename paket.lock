@@ -23,7 +23,7 @@ NUGET
     DiffPlex (1.9)
     FsCheck (2.16.6)
       FSharp.Core (>= 4.2.3)
-    FSharp.Core (10.1.203)
+    FSharp.Core (7.0.200)
     Gee.External.Capstone (2.3)
     Hopac (0.5.1)
       FSharp.Core (>= 4.5.2)
