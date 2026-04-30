@@ -22,6 +22,9 @@
     <Compile Include="CSharp.fs" />
     <Compile Include="Flip.Expect.fs" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4"/>
+  </ItemGroup>
   <Import Project="..\NuGet.props" />
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

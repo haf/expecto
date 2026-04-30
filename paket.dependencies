@@ -4,8 +4,6 @@ storage none
 version 8.0.3
 
 nuget FSharp.Core >= 7.0.200
-nuget System.Threading.Tasks.Extensions >= 4.5.4
-nuget System.Runtime.CompilerServices.Unsafe >= 4.5.3
 nuget FsCheck ~> 2.14
 nuget Hopac ~> 0.4
 nuget DiffPlex ~> 1.5
