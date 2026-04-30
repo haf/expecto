@@ -49,3 +49,5 @@ group Build
   nuget System.Text.Json >= 8.0.4
   // CVE-2024-38095
   nuget System.Formats.Asn1 >= 8.0.1
+  // CVE-2026-33116
+  nuget System.Security.Cryptography.Xml >= 10.0.7
