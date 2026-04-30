@@ -183,6 +183,7 @@ Target.create "CI" ignore
 
 "CheckEnv"
   ==> "Release"
+  |> ignore
 
 "Clean"
   ==> "BuildExpecto"
@@ -195,5 +196,6 @@ Target.create "CI" ignore
   ==> "CI"
   ==> "Push"
   ==> "Release"
+  |> ignore
 
 Target.runOrDefaultWithArguments "All"
