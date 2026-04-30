@@ -11,6 +11,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Expecto\Expecto.fsproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FsCheck" Version="3.0.0" />
+  </ItemGroup>
   <Import Project="..\NuGet.props" />
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

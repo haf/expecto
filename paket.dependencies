@@ -10,12 +10,6 @@ nuget DiffPlex ~> 1.5
 nuget Mono.Cecil ~> 0.11
 nuget BenchmarkDotNet ~> 0.14.0
 
-group FsCheck3
-  source https://api.nuget.org/v3/index.json
-
-  nuget FsCheck >= 3 prerelease
-  nuget FSharp.Core 7.0.200
-
 group Build
   source https://api.nuget.org/v3/index.json
   storage none
