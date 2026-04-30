@@ -3,6 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
+    <!-- NOTE: Disable package pruning for the build. It raises a bunch of warnings that aren't relevant to our usage https://github.com/fsprojects/Paket/issues/4307 -->
+    <RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
   </PropertyGroup>
   <ItemGroup>
     <None Include="paket.references" />
