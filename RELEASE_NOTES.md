@@ -1,3 +1,8 @@
+### 11.0.0-alpha9 - 2026-04-30
+* Add `wantCase` and `isCase` assertions, thanks @jwosty
+* Update target frameworks to netstandard2.0 and net8.0, thanks @Numpsy
+* Update Expecto.FsCheck off FsCheck previews now that FsCheck 3 is out of preview, thanks @farlee2121
+
 ### 11.0.0-alpha8 - 2025-03-02
 * Update v11 with the TestPrinters builder for compatibility with YoloDev.Expecto.TestSdk 16.0+
 
