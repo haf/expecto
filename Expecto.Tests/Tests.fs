@@ -1529,12 +1529,12 @@ let taskTests =
       }
       testTask "can let! bind ValueTask<T>" {
         let expected = 5
-        let valueTask = ValueTask.FromResult(expected)
+        let valueTask = ValueTask<int>(expected)
         let! actual = valueTask
         Expect.equal expected actual "should be able to let! bind ValueTask<T>"
       }
       testTask "can do! bind ValueTask" {
-        let valueTask = ValueTask.CompletedTask
+        let valueTask = ValueTask()
         do! valueTask
       }
       testTask "can let! bind Async<T>" {

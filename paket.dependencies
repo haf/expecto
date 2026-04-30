@@ -1,9 +1,9 @@
 source https://api.nuget.org/v3/index.json
-framework netstandard2.1, net6.0
+framework netstandard2.0, net8.0, net10.0, net481
 storage none
 version 8.0.3
 
-nuget FSharp.Core >= 6
+nuget FSharp.Core >= 7.0.200
 nuget FsCheck ~> 2.14
 nuget Hopac ~> 0.4
 nuget DiffPlex ~> 1.5
@@ -14,11 +14,12 @@ group FsCheck3
   source https://api.nuget.org/v3/index.json
 
   nuget FsCheck >= 3 prerelease
+  nuget FSharp.Core 7.0.200
 
 group Build
   source https://api.nuget.org/v3/index.json
   storage none
-  framework netstandard2.1, net6.0
+  framework net10.0, net481
 
   nuget Fake.Api.GitHub
   nuget Fake.BuildServer.AppVeyor
@@ -32,11 +33,12 @@ group Build
   nuget Fake.IO.Zip
   nuget Fake.Tools.Git
   nuget Fake.Tools.Octo
-  nuget Microsoft.Build 17.3.2
-  nuget Microsoft.Build.Framework 17.3.2
-  nuget Microsoft.Build.Tasks.Core 17.3.2
-  nuget Microsoft.Build.Utilities.Core 17.3.2
-  nuget Nuget.Protocol >= 6.9.1
+  nuget Microsoft.Build 18.4.0
+  nuget Microsoft.Build.Framework 18.4.0
+  nuget Microsoft.Build.Tasks.Core 18.4.0
+  nuget Microsoft.Build.Utilities.Core 18.4.0
+  nuget FSharp.Core ~> 8
+  nuget Nuget.Protocol >= 7.3.1
   nuget nosln
 
   // Fix security vulnerability in a transitive package CVE-2023-29331
@@ -45,3 +47,5 @@ group Build
   nuget System.Text.Json >= 8.0.4
   // CVE-2024-38095
   nuget System.Formats.Asn1 >= 8.0.1
+  // CVE-2026-33116
+  nuget System.Security.Cryptography.Xml >= 10.0.7
