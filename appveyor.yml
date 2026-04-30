@@ -3,4 +3,4 @@ image:
 install:
   - dotnet tool restore
 build_script:
-  - dotnet tool run fake build
+  - ./fake -t CI

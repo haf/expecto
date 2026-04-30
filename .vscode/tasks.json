@@ -5,8 +5,11 @@
     "tasks": [
         {
             "label": "Build",
-            "type": "shell",
-            "command": "dotnet tool run fake build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "command": "./fake",
             "problemMatcher": [
                 "$msCompile"
             ]

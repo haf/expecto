@@ -74,7 +74,7 @@ Futhermore, in no particular order;
 
 ## Releasing
 
-`fake build -- --target Release`
+`./fake build -- --target Release`
 
 [ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
 [ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
