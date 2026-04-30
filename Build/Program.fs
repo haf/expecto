@@ -13,8 +13,8 @@ open NoSln
 
 
 Environment.CurrentDirectory <- Path.Combine(__SOURCE_DIRECTORY__, "..")
-
-let execContext = Context.FakeExecutionContext.Create false "build.fsx" []
+let argv = (Environment.GetCommandLineArgs() |> List.ofArray |> List.tail)
+let execContext = Context.FakeExecutionContext.Create false "build.fsx" argv
 Context.setExecutionContext (Context.RuntimeContext.Fake execContext)
 
 let configuration =
@@ -198,4 +198,4 @@ Target.create "CI" ignore
   ==> "Release"
   |> ignore
 
-Target.runOrDefaultWithArguments "All"
+Target.runOrDefault "All"

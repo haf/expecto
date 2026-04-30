@@ -15,6 +15,6 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           global-json-file: "./global.json"
-      - run: ./fake build --target Release
+      - run: ./fake --target Release
         env:
           NUGET_TOKEN: ${{secrets.NUGET_RELEASE_KEY}}

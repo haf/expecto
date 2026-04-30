@@ -18,7 +18,7 @@
 
     ```bash
     source .env
-    ./fake build
+    ./fake 
     ```
 
  1. New features:
