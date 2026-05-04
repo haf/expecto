@@ -1,6 +1,6 @@
 ﻿namespace Expecto.TestLocator.CompilerService
 
-module TestLocator =
+module internal ASTTestLocator =
     open FSharp.Compiler.Text
     open FSharp.Compiler.Syntax
     open System
@@ -27,7 +27,7 @@ module TestLocator =
         | _ -> None
 
 
-    let getExpectoTests (ast: ParsedInput) : TestAdapterEntry<range> list =
+    let getTestHierarchyFromAST (ast: ParsedInput) : TestAdapterEntry<range> list =
         let mutable ident = 0
 
         let isExpectoName (str: string) =
@@ -250,4 +250,68 @@ module TestLocator =
         | _ -> ()
 
         List.ofSeq allTests.Childs
+
+    open FSharp.Compiler.CodeAnalysis
+
+    type ASTSourceLocation = { 
+        testNameSegments: string list
+        sourceFilePath: string
+        lineNumber: int 
+    }
+    
+
+    let adapterEntryToSourceLocations (filePath: string) (adapterEntry: TestAdapterEntry<range>) : ASTSourceLocation list =
+        let rec recurse (parentNameSegments: string list) (adapterEntry: TestAdapterEntry<range>) : ASTSourceLocation list = 
+            let nameSegments = List.append parentNameSegments [adapterEntry.Name]
+            
+            let location = 
+                {
+                    testNameSegments = nameSegments
+                    sourceFilePath = filePath
+                    lineNumber = adapterEntry.Range.StartLine
+                }
+
+            let childLocations = adapterEntry.Childs |> List.ofSeq |> List.collect (recurse nameSegments)
+
+            location :: childLocations
+
+        recurse [] adapterEntry
+            
+    open System.IO
+    let getTestsLocationsFromProject (projectPath: string) : Async<ASTSourceLocation list> = 
+        let getTestLocationsForFile (parseResult: FSharpParseFileResults) =
+            let adapterEntries = getTestHierarchyFromAST parseResult.ParseTree
+            let locations = adapterEntries |> List.collect (adapterEntryToSourceLocations parseResult.FileName)
+            locations 
+        
+        async {
+            let checker = FSharpChecker.Create()
+            let projectDirectory = Path.GetDirectoryName(projectPath)
+            let files = System.IO.Directory.GetFiles(projectDirectory, "*.fs") |> List.ofArray
+            let parseIndividual (filePath: string) = 
+                let source=  File.ReadAllText(filePath)
+                checker.ParseFile(filePath, SourceText.ofString source, {FSharpParsingOptions.Default with SourceFiles= [|filePath|]})
+            let! untypedASTByFile = files |> List.map parseIndividual |> Async.Sequential
+
+            let tests = untypedASTByFile |> List.ofArray |> List.collect getTestLocationsForFile
+            return tests
+        }
+
+module Stateful = 
+    let mutable blah = 5
+
+module TestLocator =
+    open Expecto
+    // now I need to reference the expecto assembly
+    let getTestNameToLocationMap (projectFilePath: string) : Map<string list, SourceLocation> Async= 
+        // NOTE: Test names are expected to be unique per-project. This can technically be turned off for expecto's console runner, but is manadatory for any test explorer 
+        async {
+            let! locations = ASTTestLocator.getTestsLocationsFromProject projectFilePath
+            
+            return 
+                locations |> List.map (fun l -> 
+                    (l.testNameSegments, { sourcePath = l.sourceFilePath; lineNumber = l.lineNumber })
+                )
+                |> Map
+        }
 

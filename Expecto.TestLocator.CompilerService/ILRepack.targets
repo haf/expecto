@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <Target Name="ILRepacker" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">     
+    <Target Name="ILRepacker" AfterTargets="Build">     
         <ItemGroup>
             <InputAssemblies Include="$(OutputPath)FSharp.Core.dll" />
             <InputAssemblies Include="$(OutputPath)FSharp.Compiler.Service.dll" />

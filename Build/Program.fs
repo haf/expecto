@@ -45,6 +45,7 @@ let libProjects =
   ++ "Expecto.Diff/*.fsproj"
   ++ "Expecto.BenchmarkDotNet/*.fsproj"
   ++ "Expecto.Hopac/*.fsproj"
+  ++ "Expecto.TestLocator.CompilerService/*.fsproj"
 
 let testProjects =
   !! "Expecto.Tests/*.Tests.fsproj"
@@ -52,6 +53,7 @@ let testProjects =
   ++ "Expecto.Tests.CSharp/*.Tests.CSharp.csproj"
   ++ "Expecto.Focused.Tests/*.Tests.fsproj"
   ++ "Expecto.Tests.FsCheck3/*.Tests.FsCheck3.fsproj"
+  ++ "Expecto.TestLocator.CompilerService.Tests/Expecto.TestLocator.CompilerService.Tests.fsproj"
 
 let benchmarkProjects =
   !! "Expecto.BenchmarkDotNet/*.fsproj"
@@ -74,7 +76,7 @@ let normaliseFileToLFEnding filename =
 let build project =
   DotNet.build (fun p ->
     { p with Configuration = configuration
-             Common = DotNet.Options.withDotNetCliPath dotnetExePath p.Common
+             Common = DotNet.Options.withDotNetCliPath dotnetExePath p.Common 
              MSBuildParams = { p.MSBuildParams with DisableInternalBinLog = true } })
     project
 
@@ -116,6 +118,7 @@ Target.create "RunTest" <| fun _ ->
   runTest "Expecto.Hopac.Tests"
   runTest "Expecto.Focused.Tests"
   runTest "Expecto.Tests.FsCheck3"
+  runTest "Expecto.TestLocator.CompilerService.Tests"
 
 Target.create "RunBenchmarkDotNetTest" <| fun _ ->
 

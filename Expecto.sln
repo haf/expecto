@@ -39,6 +39,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.BenchmarkDotNet.Tests", "Expecto.BenchmarkDotNet.Tests\Expecto.BenchmarkDotNet.Tests.fsproj", "{5AA7624C-8E53-457C-8F3C-1DCEFDB31C71}"
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.TestLocator.CompilerService", "Expecto.TestLocator.CompilerService\Expecto.TestLocator.CompilerService.fsproj", "{57E60FA1-2B08-460F-BAAB-2C840A2E82FA}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Expecto.TestLocator.CompilerService.Tests", "Expecto.TestLocator.CompilerService.Tests\Expecto.TestLocator.CompilerService.Tests.fsproj", "{35A45DF5-7156-4E99-A082-3FB5491A963D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -193,6 +195,10 @@ Global
 		{57E60FA1-2B08-460F-BAAB-2C840A2E82FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57E60FA1-2B08-460F-BAAB-2C840A2E82FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57E60FA1-2B08-460F-BAAB-2C840A2E82FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35A45DF5-7156-4E99-A082-3FB5491A963D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35A45DF5-7156-4E99-A082-3FB5491A963D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35A45DF5-7156-4E99-A082-3FB5491A963D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35A45DF5-7156-4E99-A082-3FB5491A963D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
