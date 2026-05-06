@@ -278,36 +278,51 @@ module internal ASTTestLocator =
         recurse [] adapterEntry
             
     open System.IO
-    let getTestsLocationsFromProject (projectPath: string) : Async<ASTSourceLocation list> = 
-        let getTestLocationsForFile (parseResult: FSharpParseFileResults) =
-            let adapterEntries = getTestHierarchyFromAST parseResult.ParseTree
-            let locations = adapterEntries |> List.collect (adapterEntryToSourceLocations parseResult.FileName)
-            locations 
-        
+
+    let locateTestsForParseResults (parseResult: FSharpParseFileResults) =
+        let adapterEntries = getTestHierarchyFromAST parseResult.ParseTree
+        let locations = adapterEntries |> List.collect (adapterEntryToSourceLocations parseResult.FileName)
+        locations 
+
+    let locateTestsForFile (filePath: string) =
         async {
             let checker = FSharpChecker.Create()
+            let source=  File.ReadAllText(filePath)
+            let! untypedAST = checker.ParseFile(filePath, SourceText.ofString source, {FSharpParsingOptions.Default with SourceFiles= [|filePath|]})
+            return locateTestsForParseResults untypedAST
+        }
+        
+    let locateTestsFromProject (projectPath: string) : Async<ASTSourceLocation list> =         
+        async {
             let projectDirectory = Path.GetDirectoryName(projectPath)
             let files = System.IO.Directory.GetFiles(projectDirectory, "*.fs") |> List.ofArray
-            let parseIndividual (filePath: string) = 
-                let source=  File.ReadAllText(filePath)
-                checker.ParseFile(filePath, SourceText.ofString source, {FSharpParsingOptions.Default with SourceFiles= [|filePath|]})
-            let! untypedASTByFile = files |> List.map parseIndividual |> Async.Sequential
 
-            let tests = untypedASTByFile |> List.ofArray |> List.collect getTestLocationsForFile
-            return tests
+            let! testLocationsByFile = files |> List.map locateTestsForFile |> Async.Sequential 
+
+            return testLocationsByFile |> List.ofArray |> List.collect id
         }
 
 module FCSTestLocator =
     open Expecto
-    let getTestNameToLocationMap (projectFilePath: string) : Async<Map<string list, SourceLocation>> = 
+
+    let private astLocationsToNameLocationMap (locations: ASTTestLocator.ASTSourceLocation list) =
+        locations 
+        |> List.map (fun l -> 
+            (l.testNameSegments, { sourcePath = l.sourceFilePath; lineNumber = l.lineNumber })
+        )
+        |> Map 
+
+    let getTestNameToLocationMapForFile (fileName: string) : Async<Map<string list, SourceLocation>> =
+        async {
+            let! testLocations = ASTTestLocator.locateTestsForFile fileName
+            return testLocations |> astLocationsToNameLocationMap
+        }
+
+    let getTestNameToLocationMapForProject (projectFilePath: string) : Async<Map<string list, SourceLocation>> = 
         // NOTE: Test names are expected to be unique per-project. This can technically be turned off for expecto's console runner, but is manadatory for any test explorer 
         async {
-            let! locations = ASTTestLocator.getTestsLocationsFromProject projectFilePath
+            let! locations = ASTTestLocator.locateTestsFromProject projectFilePath
             
-            return 
-                locations |> List.map (fun l -> 
-                    (l.testNameSegments, { sourcePath = l.sourceFilePath; lineNumber = l.lineNumber })
-                )
-                |> Map
+            return locations |> astLocationsToNameLocationMap
         }
 

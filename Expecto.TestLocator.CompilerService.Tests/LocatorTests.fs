@@ -10,16 +10,12 @@ module Sut =
     open System.IO
 
     let mutable private locationCache : Map<string list, SourceLocation> option = None 
-    let getTestLocation (assembly: Assembly) (test: FlatTest) = 
-        let projectFilePath = Path.Combine(__SOURCE_DIRECTORY__, "Expecto.TestLocator.CompilerService.fsproj")
-        // let projectFilePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
-        
+    let getTestLocation (assembly: Assembly) (sourceFilePath: string) (test: FlatTest) = 
         let locationMap = 
             match locationCache with
             | Some cache -> cache
             | None ->
-                printfn $"generating map for project: {projectFilePath}"
-                let map = FCSTestLocator.getTestNameToLocationMap projectFilePath |> Async.RunSynchronously 
+                let map = FCSTestLocator.getTestNameToLocationMapForFile sourceFilePath |> Async.RunSynchronously 
                 locationCache <- Some map
                 map 
                 
@@ -37,12 +33,12 @@ let tests = testList "Code Location Tests" [
         let inline testLocation testName (sampleTest: Test) (expectedLocation: SourceLocation) =
             test testName {
                 let flatTests = Test.toTestCodeList sampleTest
-                let actualLocation = flatTests |> List.map (Sut.getTestLocation thisAssembly)
+                let actualLocation = flatTests |> List.map (Sut.getTestLocation thisAssembly CodeLocationSamples.sampleFilePath)
 
                 Expect.equal (actualLocation |> List.toArray) [|Some expectedLocation|] "" 
             }
         
-        testLocation "testCase" CodeLocationSamples.testCaseExample CodeLocationSamples.testCaseExampleLocation
+        testLocation "testCase"  CodeLocationSamples.testCaseExample CodeLocationSamples.testCaseExampleLocation
         testLocation "ptestCase" CodeLocationSamples.ptestCaseExample CodeLocationSamples.ptestCaseExampleLocation
         testLocation "ftestCase" CodeLocationSamples.ftestCaseExample CodeLocationSamples.ftestCaseExampleLocation
 
