@@ -10,6 +10,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="paket.references" />
+    <Compile Include="TestExamples.fs" />
     <Compile Include="LocatorTests.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>

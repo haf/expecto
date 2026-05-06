@@ -3,28 +3,6 @@ module LocatorTests
 open Expecto.TestLocator.CompilerService
 open Expecto
 
-module CodeLocationSamples = 
-
-    let testCaseExample = testCase "testCase" <| (fun () -> ())
-    let ptestCaseExample = ptestCase "ptestCaseExample" <| (fun () -> ())
-    let ftestCaseExample = ftestCase "ftestCaseExample" <| (fun () -> ())
-
-    let testBuilderExample = test "Locate a builder" { ignore () }
-    let ptestBuilderExample = ptest "Locate a builder" { ignore () }
-    let ftestBuilderExample = ftest "Locate a builder" { ignore () }
-
-    let testParamExamples = List.ofSeq (testParam 5 [
-            "t1", (fun _ () -> ())
-            "t2", (fun _ () -> ())
-        ])
-
-    let testCaseAsyncExample = testCaseAsync "testCaseExample" <| async { ignore ()}
-
-    let testTheoryExample = testTheory "testTheory example" [1;2] (fun _ -> ())
-
-    let testListExample = testList "testList example" []
-
-
 type LetMeGetTheCurrentAssembly = private Case of unit 
 
 module Sut =
@@ -64,9 +42,9 @@ let tests = testList "Code Location Tests" [
                 Expect.equal (actualLocation |> List.toArray) [|Some expectedLocation|] "" 
             }
         
-        testLocation "testCase" CodeLocationSamples.testCaseExample { sourcePath = pathToThisFile; lineNumber = 8 }
-        testLocation "ptestCase" CodeLocationSamples.ptestCaseExample { sourcePath = pathToThisFile; lineNumber = 9 }
-        testLocation "ftestCase" CodeLocationSamples.ftestCaseExample { sourcePath = pathToThisFile; lineNumber = 10 }
+        testLocation "testCase" CodeLocationSamples.testCaseExample CodeLocationSamples.testCaseExampleLocation
+        testLocation "ptestCase" CodeLocationSamples.ptestCaseExample CodeLocationSamples.ptestCaseExampleLocation
+        testLocation "ftestCase" CodeLocationSamples.ftestCaseExample CodeLocationSamples.ftestCaseExampleLocation
 
         // test "testParam" {
         //     let testCodeList = CodeLocationSamples.testParamExamples |> List.map getTestCode
