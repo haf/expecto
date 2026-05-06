@@ -297,13 +297,9 @@ module internal ASTTestLocator =
             return tests
         }
 
-module Stateful = 
-    let mutable blah = 5
-
-module TestLocator =
+module FCSTestLocator =
     open Expecto
-    // now I need to reference the expecto assembly
-    let getTestNameToLocationMap (projectFilePath: string) : Map<string list, SourceLocation> Async= 
+    let getTestNameToLocationMap (projectFilePath: string) : Async<Map<string list, SourceLocation>> = 
         // NOTE: Test names are expected to be unique per-project. This can technically be turned off for expecto's console runner, but is manadatory for any test explorer 
         async {
             let! locations = ASTTestLocator.getTestsLocationsFromProject projectFilePath

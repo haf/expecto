@@ -40,7 +40,7 @@ module Sut =
             match locationCache with
             | Some cache -> cache
             | None ->
-                let map = TestLocator.getTestNameToLocationMap projectFilePath |> Async.RunSynchronously 
+                let map = FCSTestLocator.getTestNameToLocationMap projectFilePath |> Async.RunSynchronously 
                 locationCache <- Some map
                 map 
                 

@@ -14,7 +14,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="9.0.300" PrivateAssets="All" />
+    <PackageReference Include="FSharp.Core" Version="9.0.300" />
     <PackageReference Include="FSharp.Compiler.Service" Version="43.9.300" PrivateAssets="All" />
     <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.44.2">
       <PrivateAssets>all</PrivateAssets>

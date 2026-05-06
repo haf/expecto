@@ -6,7 +6,6 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <!-- <ProjectReference Include="../Expecto/Expecto.fsproj" /> -->
     <ProjectReference Include="../Expecto.TestLocator.CompilerService/Expecto.TestLocator.CompilerService.fsproj" />
   </ItemGroup>
   <ItemGroup>

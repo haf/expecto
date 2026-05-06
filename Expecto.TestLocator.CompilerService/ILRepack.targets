@@ -3,16 +3,24 @@
 
     <Target Name="ILRepacker" AfterTargets="Build">     
         <ItemGroup>
-            <InputAssemblies Include="$(OutputPath)FSharp.Core.dll" />
+            <InputAssemblies Include="$(OutputPath)Expecto.TestLocator.CompilerService.dll" />
             <InputAssemblies Include="$(OutputPath)FSharp.Compiler.Service.dll" />
+            <LibraryPath Include="$(OutputPath)" />
+        </ItemGroup>
+        <ItemGroup>
+            <!-- Must be a fully qualified name -->
+            <DoNotInternalizeAssemblies Include="Expecto.TestLocator.CompilerService.dll" />
         </ItemGroup>
         <Message Text="MERGING: @(InputAssemblies->'%(Filename)') into $(OutputAssembly)" Importance="High" />  
         <ILRepack
             AllowDuplicateResources="false"
             DebugInfo="true"
             Internalize="true"
+            InternalizeExclude="@(DoNotInternalizeAssemblies)"
             InputAssemblies="@(InputAssemblies)"
             OutputFile="$(OutputPath)$(AssemblyName).dll"
+            LibraryPath="@(LibraryPath)"
+            LogFile="$(OutputPath)/repacklog.txt"
             Parallel="true"
             TargetKind="Dll" />
     </Target>
