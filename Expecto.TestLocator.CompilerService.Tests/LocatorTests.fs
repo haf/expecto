@@ -5,7 +5,6 @@ open Expecto
 
 module CodeLocationSamples = 
 
-
     let testCaseExample = testCase "testCase" <| (fun () -> ())
     let ptestCaseExample = ptestCase "ptestCaseExample" <| (fun () -> ())
     let ftestCaseExample = ftestCase "ftestCaseExample" <| (fun () -> ())
@@ -34,12 +33,14 @@ module Sut =
 
     let mutable private locationCache : Map<string list, SourceLocation> option = None 
     let getTestLocation (assembly: Assembly) (test: FlatTest) = 
-        let projectFilePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+        let projectFilePath = Path.Combine(__SOURCE_DIRECTORY__, "Expecto.TestLocator.CompilerService.fsproj")
+        // let projectFilePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
         
         let locationMap = 
             match locationCache with
             | Some cache -> cache
             | None ->
+                printfn $"generating map for project: {projectFilePath}"
                 let map = FCSTestLocator.getTestNameToLocationMap projectFilePath |> Async.RunSynchronously 
                 locationCache <- Some map
                 map 
@@ -48,27 +49,6 @@ module Sut =
 
 [<Tests>]
 let tests = testList "Code Location Tests" [
-
-    let tryGetTestCode (test: Test) : TestCode option =
-        let rec recurse (test: Test ) = 
-            match test with 
-            | TestCase (testCode, _) -> Some testCode
-            | TestLabel (_, test, _) -> recurse test
-            | _ -> None
-
-        recurse test
-
-    let getTestCode (test: Test) : TestCode = tryGetTestCode test |> Option.defaultWith (fun () -> failwith $"Count not find single TestCode for Test value: {test}")  
-
-    let tryGetTestCodeList (test: Test) : TestCode list =
-        let rec recurse (test: Test) : TestCode list = 
-            match test with 
-            | TestCase (testCode, _) -> [testCode]
-            | TestLabel (_, test, _) -> recurse test
-            | TestList (list, state) -> list |> List.collect recurse
-            | Test.Sequenced (_, test) -> recurse test
-
-        recurse test
     
     let thisAssembly = System.Reflection.Assembly.GetAssembly(typeof<LetMeGetTheCurrentAssembly>)
     let pathToThisFile = System.IO.Path.Combine(__SOURCE_DIRECTORY__, __SOURCE_FILE__)
@@ -84,9 +64,9 @@ let tests = testList "Code Location Tests" [
                 Expect.equal (actualLocation |> List.toArray) [|Some expectedLocation|] "" 
             }
         
-        testLocation "testCase" CodeLocationSamples.testCaseExample { sourcePath = pathToThisFile; lineNumber = 7 }
-        testLocation "ptestCase" CodeLocationSamples.ptestCaseExample { sourcePath = pathToThisFile; lineNumber = 8 }
-        testLocation "ftestCase" CodeLocationSamples.ftestCaseExample { sourcePath = pathToThisFile; lineNumber = 9 }
+        testLocation "testCase" CodeLocationSamples.testCaseExample { sourcePath = pathToThisFile; lineNumber = 8 }
+        testLocation "ptestCase" CodeLocationSamples.ptestCaseExample { sourcePath = pathToThisFile; lineNumber = 9 }
+        testLocation "ftestCase" CodeLocationSamples.ftestCaseExample { sourcePath = pathToThisFile; lineNumber = 10 }
 
         // test "testParam" {
         //     let testCodeList = CodeLocationSamples.testParamExamples |> List.map getTestCode
