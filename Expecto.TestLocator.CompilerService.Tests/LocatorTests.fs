@@ -21,37 +21,20 @@ module Sut =
                 
         locationMap |> Map.tryFind test.name
 
+let thisAssembly = System.Reflection.Assembly.GetAssembly(typeof<LetMeGetTheCurrentAssembly>)
+
+let testLocation (sampleTest: CodeLocationSamples.LocationTestExample) =
+    test sampleTest.Name {
+        let flatTests = Test.toTestCodeList sampleTest.Test
+        let actualLocations = 
+            flatTests 
+            |> List.choose (Sut.getTestLocation thisAssembly CodeLocationSamples.samplesFilePath)
+            |> Array.ofList
+
+        Expect.equal actualLocations sampleTest.ExpectedLocations "" 
+    }
 [<Tests>]
 let tests = testList "Code Location Tests" [
-    
-    let thisAssembly = System.Reflection.Assembly.GetAssembly(typeof<LetMeGetTheCurrentAssembly>)
-    let pathToThisFile = System.IO.Path.Combine(__SOURCE_DIRECTORY__, __SOURCE_FILE__)
-    
-
-    testList "it can locate the basic test functions" [
-        // NOTE: Can't use testTheory because Test doesn't support equality, which is required by the stringify in testTheory
-        let inline testLocation testName (sampleTest: Test) (expectedLocation: SourceLocation) =
-            test testName {
-                let flatTests = Test.toTestCodeList sampleTest
-                let actualLocation = flatTests |> List.map (Sut.getTestLocation thisAssembly CodeLocationSamples.sampleFilePath)
-
-                Expect.equal (actualLocation |> List.toArray) [|Some expectedLocation|] "" 
-            }
-        
-        testLocation "testCase"  CodeLocationSamples.testCaseExample CodeLocationSamples.testCaseExampleLocation
-        testLocation "ptestCase" CodeLocationSamples.ptestCaseExample CodeLocationSamples.ptestCaseExampleLocation
-        testLocation "ftestCase" CodeLocationSamples.ftestCaseExample CodeLocationSamples.ftestCaseExampleLocation
-
-        // test "testParam" {
-        //     let testCodeList = CodeLocationSamples.testParamExamples |> List.map getTestCode
-        //     let actualLocations = testCodeList |> List.map (Expecto.Impl.getLocation thisAssembly)
-        //     let expectedLocations = [
-        //         { sourcePath = pathToThisFile; lineNumber = 16 }
-        //         { sourcePath = pathToThisFile; lineNumber = 17 }
-        //     ]
-        //     Expect.equal actualLocations expectedLocations ""
-        // }
-        
-    ]
-    
+    testList "testCase variants" (CodeLocationSamples.testCaseExamples |> List.map testLocation)
+    testList "test builder variants" (CodeLocationSamples.testBuilderExamples |> List.map testLocation)
 ]

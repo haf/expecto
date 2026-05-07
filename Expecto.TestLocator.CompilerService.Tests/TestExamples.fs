@@ -1,33 +1,85 @@
 module CodeLocationSamples 
 open Expecto
 
-let sampleFilePath = System.IO.Path.Combine(__SOURCE_DIRECTORY__, __SOURCE_FILE__)
+let samplesFilePath = System.IO.Path.Combine(__SOURCE_DIRECTORY__, __SOURCE_FILE__)
 
-let testCaseExampleLocation : SourceLocation = { sourcePath = sampleFilePath; lineNumber = __LINE__ |> int |> (+) 1 }
-let testCaseExample = testCase "testCase" <| (fun () -> ())
-let ptestCaseExampleLocation : SourceLocation = { sourcePath = sampleFilePath; lineNumber = __LINE__ |> int |> (+) 1 }
-let ptestCaseExample = ptestCase "ptestCaseExample" <| (fun () -> ())
-let ftestCaseExampleLocation : SourceLocation = { sourcePath = sampleFilePath; lineNumber = __LINE__ |> int |> (+) 1 }
-let ftestCaseExample = ftestCase "ftestCaseExample" <| (fun () -> ())
+type SampleTags = 
+    | OriginalSupport
+    | Pending
+    | Focused
+    | Async
+    | Task
 
-let testBuilderExampleLocation : SourceLocation = { sourcePath = sampleFilePath; lineNumber = __LINE__ |> int |> (+) 1 }
-let testBuilderExample = test "Locate a builder" { ignore () }
-let ptestBuilderExampleLocation : SourceLocation = { sourcePath = sampleFilePath; lineNumber = __LINE__ |> int |> (+) 1 }
-let ptestBuilderExample = ptest "Locate a builder" { ignore () }
-let ftestBuilderExampleLocation : SourceLocation = { sourcePath = sampleFilePath; lineNumber = __LINE__ |> int |> (+) 1 }
-let ftestBuilderExample = ftest "Locate a builder" { ignore () }
+type LocationTestExample = {
+    Name: string
+    Test : Test
+    ExpectedLocations: SourceLocation array
+    Tags: SampleTags list
+}
 
-let testParamExamplesLocation : SourceLocation = { sourcePath = sampleFilePath; lineNumber = __LINE__ |> int |> (+) 1 }
-let testParamExamples = List.ofSeq (testParam 5 [
-        "t1", (fun _ () -> ())
-        "t2", (fun _ () -> ())
-    ])
 
-let testCaseAsyncExampleLocation : SourceLocation = { sourcePath = sampleFilePath; lineNumber = __LINE__ |> int |> (+) 1 }
-let testCaseAsyncExample = testCaseAsync "testCaseExample" <| async { ignore ()}
+let testCaseExamples : LocationTestExample list = [
+    {
+        Name = nameof(testCase)
+        ExpectedLocations = [| { sourcePath = samplesFilePath; lineNumber = (int __LINE__) + 1 } |]
+        Test = testCase "testCase" <| (fun () -> ())
+        Tags = [OriginalSupport]
+    }
+    {
+        Name = nameof(ptestCase)
+        ExpectedLocations = [| { sourcePath = samplesFilePath; lineNumber = (int __LINE__) + 1 } |]
+        Test = ptestCase "ptestCaseExample" <| (fun () -> ())
+        Tags = [OriginalSupport; Pending]
+    }
+    {
+        Name = nameof(ftestCase)
+        ExpectedLocations = [| { sourcePath = samplesFilePath; lineNumber = (int __LINE__) + 1 } |]
+        Test = ftestCase "ftestCaseExample" <| (fun () -> ())
+        Tags = [OriginalSupport; Focused]
+    }
+    {
+        Name = nameof(testCaseAsync)
+        ExpectedLocations = [| { sourcePath = samplesFilePath; lineNumber = (int __LINE__) + 1 } |]
+        Test = testCaseAsync "testCaseAsyncExample" <| async { ignore ()}
+        Tags = [OriginalSupport; Async]
+    }
+    {
+        Name = nameof(testCaseTask)
+        ExpectedLocations = [| { sourcePath = samplesFilePath; lineNumber = (int __LINE__) + 1 } |]
+        Test = testCaseTask "testCaseTaskExample" <| fun () -> task { ignore ()}
+        Tags = [OriginalSupport; Task]
+    }
+] 
 
-let testCaseTheoryExaLocation : SourceLocation = { sourcePath = sampleFilePath; lineNumber = __LINE__ |> int |> (+) 1 }
-let testTheoryExample = testTheory "testTheory example" [1;2] (fun _ -> ())
-
-let testListExampleLocation : SourceLocation = { sourcePath = sampleFilePath; lineNumber = __LINE__ |> int |> (+) 1 }
-let testListExample = testList "testList example" []
+let testBuilderExamples : LocationTestExample list = [
+    {
+        Name = nameof(test)
+        ExpectedLocations = [| { sourcePath = samplesFilePath; lineNumber = (int __LINE__) + 1 } |]
+        Test = test "Locate a builder" { ignore () }
+        Tags = []
+    }
+    {
+        Name = nameof(ptest)
+        ExpectedLocations = [| { sourcePath = samplesFilePath; lineNumber = (int __LINE__) + 1 } |]
+        Test = ptest "ptest" { ignore () }
+        Tags = [Pending]
+    }
+    {
+        Name = nameof(ftest)
+        ExpectedLocations = [| { sourcePath = samplesFilePath; lineNumber = (int __LINE__) + 1 } |]
+        Test = ftest "ftest" { ignore () }
+        Tags = [Focused]
+    }
+    {
+        Name = nameof(testAsync)
+        ExpectedLocations = [| { sourcePath = samplesFilePath; lineNumber = (int __LINE__) + 1 } |]
+        Test = testAsync "testAsyncExample" { ignore ()}
+        Tags = [Async]
+    }
+    {
+        Name = nameof(testTask)
+        ExpectedLocations = [| { sourcePath = samplesFilePath; lineNumber = (int __LINE__) + 1 } |]
+        Test = testTask "testTaskExample" { ignore ()}
+        Tags = [Task]
+    }
+] 
