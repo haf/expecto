@@ -326,3 +326,6 @@ module FCSTestLocator =
             return locations |> astLocationsToNameLocationMap
         }
 
+    let testLocator (assembly: System.Reflection.Assembly) (sourceFilePath: string) (test: FlatTest) : SourceLocation option =
+        let locationMap = getTestNameToLocationMapForFile sourceFilePath |> Async.RunSynchronously 
+        locationMap |> Map.tryFind test.name

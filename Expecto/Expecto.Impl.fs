@@ -972,7 +972,7 @@ module Impl =
 
     // Ported from
     // https://github.com/adamchester/expecto-adapter/blob/885fc9fff0/src/Expecto.VisualStudio.TestAdapter/SourceLocation.fs
-    let getSourceLocation (asm: Assembly) className methodName =
+    let getSourceLocation (asm: Assembly) (className: string) (methodName: string) : SourceLocation option =
       let lineNumberIndicatingHiddenLine = 0xfeefee
       let getEcma335TypeName (clrTypeName:string) = clrTypeName.Replace("+", "/")
 
@@ -991,7 +991,7 @@ module Impl =
             Some sp else None)
 
       match getMethods className with
-      | None -> SourceLocation.empty
+      | None -> None
       | Some methods ->
         let candidateSequencePoints =
           methods
@@ -1000,19 +1000,22 @@ module Impl =
           |> Seq.sortBy (fun sp -> sp.StartLine)
           |> Seq.toList
         match candidateSequencePoints with
-        | [] -> SourceLocation.empty
-        | xs -> {sourcePath = xs.Head.Document.Url ; lineNumber = xs.Head.StartLine}
+        | [] -> None
+        | xs -> Some {sourcePath = xs.Head.Document.Url ; lineNumber = xs.Head.StartLine}
 
-
-    //val apply : f:(TestCode * FocusState * SourceLocation -> TestCode * FocusState * SourceLocation) -> _arg1:Test -> Test
-    let getLocation (asm:Assembly) code =
+    let getLocation (asm:Assembly) (code: TestCode) : SourceLocation option =
       let typeName, methodName = getMethodName asm code
       try
-        getSourceLocation asm typeName methodName
+        getSourceLocation asm typeName methodName 
       with :? IO.FileNotFoundException ->
-        SourceLocation.empty
+        None
 
-  let getLocation (asm:Assembly) (code: TestCode) : SourceLocation = CodeLocation.getLocation asm code
+    let testLocator (asm: Reflection.Assembly) (_sourceFile: string) (test: FlatTest) =
+      getLocation asm test.test
+
+  /// DEPRECATED: Preserved for compatibility with old YoloDev.Expecto.TestSdk verions
+  let getLocation (asm:Assembly) (code: TestCode) : SourceLocation = 
+    CodeLocation.getLocation asm code |> Option.defaultValue SourceLocation.empty
 
   module TestDiscovery =
     let testFromMember (mi: MemberInfo) : Test option =
