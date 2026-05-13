@@ -677,3 +677,12 @@ module Tests =
   /// Returns 0 if all tests passed, otherwise 1
   let runTestsInAssemblyWithCLIArgs cliArgs args =
     runTestsInAssemblyWithCLIArgsAndCancel CancellationToken.None cliArgs args
+
+
+/// Process-level statefulness. 
+/// IMPORTANT: Only consume from top-level functions to simplify default arguments.
+module TopLevelDefaults =
+  /// Path to the f# file the test is defined in
+  type SourceFilePath = string
+  type TestLocator = System.Reflection.Assembly -> SourceFilePath -> FlatTest -> SourceLocation option
+  let mutable testLocator : TestLocator = Expecto.Impl.CodeLocation.testLocator
