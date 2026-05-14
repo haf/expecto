@@ -686,3 +686,32 @@ module TopLevelDefaults =
   type SourceFilePath = string
   type TestLocator = System.Reflection.Assembly -> SourceFilePath -> FlatTest -> SourceLocation option
   let mutable testLocator : TestLocator = Expecto.Impl.CodeLocation.testLocator
+
+/// Mark the custom TestLocator so the test adapter (i.e. YoloDev.Expecto.TestSdk) can find and use different  testLocator implementations
+[<AttributeUsage(AttributeTargets.Method ||| AttributeTargets.Property ||| AttributeTargets.Field)>]
+type TestLocatorAttribute() = inherit Attribute()
+
+module TestLocatorAttribute = 
+  open System.Reflection
+
+  let private methodInfoToTestLocator (mi: MethodInfo) : TopLevelDefaults.TestLocator =
+    (fun (assembly: Assembly) (sourceFilePath: string) (test: FlatTest) -> 
+      mi.Invoke(null, [|box assembly; box sourceFilePath; box test|]) |> unbox
+    )
+     
+  let tryFindLocatorInSingleAssembly (assembly: Assembly) : TopLevelDefaults.TestLocator option =
+    assembly
+    |> _.GetExportedTypes() 
+    |> Array.collect (fun t -> t.GetMethods(BindingFlags.Public ||| BindingFlags.Static))
+    |> Array.filter (fun m -> m.GetCustomAttributes<TestLocatorAttribute>() |> (not << Seq.isEmpty))
+    |> Array.tryHead
+    |> Option.map methodInfoToTestLocator
+
+  let tryFindTestLocator (assembly: Assembly) : TopLevelDefaults.TestLocator option = 
+    // Prioritize a test locator found in the top assembly
+    tryFindLocatorInSingleAssembly assembly
+    |> Option.orElseWith (fun () -> 
+      // otherwise, look for it in referenced assemblies
+      assembly.GetReferencedAssemblies()
+      |> Array.tryPick (Assembly.Load >> tryFindLocatorInSingleAssembly)
+    )
