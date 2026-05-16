@@ -682,9 +682,7 @@ module Tests =
 /// Process-level statefulness. 
 /// IMPORTANT: Only consume from top-level functions to simplify default arguments.
 module TopLevelDefaults =
-  /// Path to the f# file the test is defined in
-  type SourceFilePath = string
-  type TestLocator = System.Reflection.Assembly -> SourceFilePath -> FlatTest -> SourceLocation option
+  type TestLocator = System.Reflection.Assembly -> FlatTest -> SourceLocation option
   let mutable testLocator : TestLocator = Expecto.Impl.CodeLocation.testLocator
 
 /// Mark the custom TestLocator so the test adapter (i.e. YoloDev.Expecto.TestSdk) can find and use different  testLocator implementations
@@ -695,8 +693,8 @@ module TestLocatorAttribute =
   open System.Reflection
 
   let private methodInfoToTestLocator (mi: MethodInfo) : TopLevelDefaults.TestLocator =
-    (fun (assembly: Assembly) (sourceFilePath: string) (test: FlatTest) -> 
-      mi.Invoke(null, [|box assembly; box sourceFilePath; box test|]) |> unbox
+    (fun (assembly: Assembly) (test: FlatTest) -> 
+      mi.Invoke(null, [|box assembly; box test|]) |> unbox
     )
      
   let tryFindLocatorInSingleAssembly (assembly: Assembly) : TopLevelDefaults.TestLocator option =

@@ -12,7 +12,7 @@ let testLocation (sampleTest: CodeLocationSamples.LocationTestExample) =
         let flatTests = Test.toTestCodeList sampleTest.Test
         let actualLocations = 
             flatTests 
-            |> List.choose (FCSTestLocator.testLocator thisAssembly CodeLocationSamples.samplesFilePath)
+            |> List.choose (FCSTestLocator.testLocator thisAssembly)
             |> Array.ofList
 
         Expect.equal actualLocations sampleTest.ExpectedLocations "" 

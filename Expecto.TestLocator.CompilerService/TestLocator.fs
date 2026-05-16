@@ -312,7 +312,7 @@ module FCSTestLocator =
         )
         |> Map 
 
-    let getTestNameToLocationMapForFile (fileName: string) : Async<Map<string list, SourceLocation>> =
+    let private getTestNameToLocationMapForFile (fileName: string) : Async<Map<string list, SourceLocation>> =
         async {
             let! testLocations = ASTTestLocator.locateTestsForFile fileName
             return testLocations |> astLocationsToNameLocationMap
@@ -326,7 +326,13 @@ module FCSTestLocator =
             return locations |> astLocationsToNameLocationMap
         }
 
+
     [<TestLocator>]
-    let testLocator (assembly: System.Reflection.Assembly) (sourceFilePath: string) (test: FlatTest) : SourceLocation option =
-        let locationMap = getTestNameToLocationMapForFile sourceFilePath |> Async.RunSynchronously 
+    let testLocator (assembly: System.Reflection.Assembly) (test: FlatTest) : SourceLocation option =
+        let rec upDirectoryLevels (n: int) (path: string) : string =
+            if(n>0) then (upDirectoryLevels (n-1) (System.IO.Path.GetDirectoryName(path)))
+            else path
+        let projectNameGuess = System.IO.Path.GetFileNameWithoutExtension(assembly.Location)+".fsproj"
+        let projectPathGuess =  System.IO.Path.Combine(upDirectoryLevels 4 assembly.Location, projectNameGuess)
+        let locationMap = getTestNameToLocationMapForProject projectPathGuess |> Async.RunSynchronously 
         locationMap |> Map.tryFind test.name

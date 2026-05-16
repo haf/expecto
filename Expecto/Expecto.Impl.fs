@@ -1010,7 +1010,7 @@ module Impl =
       with :? IO.FileNotFoundException ->
         None
 
-    let testLocator (asm: Reflection.Assembly) (_sourceFile: string) (test: FlatTest) =
+    let testLocator (asm: Reflection.Assembly) (test: FlatTest) =
       getLocation asm test.test
 
   /// DEPRECATED: Preserved for compatibility with old YoloDev.Expecto.TestSdk verions
