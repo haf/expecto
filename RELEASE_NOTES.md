@@ -1,41 +1,25 @@
-### 11.0.0-alpha9 - 2026-04-30
-* Add `wantCase` and `isCase` assertions, thanks @jwosty
-* Update target frameworks to netstandard2.0 and net8.0, thanks @Numpsy
-* Update Expecto.FsCheck off FsCheck previews now that FsCheck 3 is out of preview, thanks @farlee2121
-
-### 11.0.0-alpha8 - 2025-03-02
-* Update v11 with the TestPrinters builder for compatibility with YoloDev.Expecto.TestSdk 16.0+
-
-### 11.0.0-alpha7 - 2025-02-28
-* Improve performance of test location, substatially improving performance for test discovery via VSTest on large projects. thanks @Numpsy
-
-### 11.0.0-alpha6 - 2025-02-12
-* Add third argument to `FsCheckConfig.testFinished` containing information about the finished test.
-
-### 11.0.0-alpha5 - 2025-01-13
-* Breaking Change: Add `isTestSkipped` parameter to `TestPrinters.beforeEach`, allowing to avoid printing skipped tests to the console, thanks @rynoV
-  * Requires a coordinated upgrade to YoloDev.Expecto.TestSdk 0.15+ for use with Visual Studio, Rider, Ionide, dotnet test, or any other test runner that depends on the vstest adapter system
-
-### 11.0.0-alpha4 - 2025-01-06
-* Breaking change: Add third item to `FsCheckConfig.replay` indicating the size
-    * Fixes issue where the replay seed without the size was playing all tests leading up to the failure, making debugging
-      more difficult
-    * Existing FsCheck 2 users can enter `None` for the size, because it is ignored.
-    
-### 11.0.0-alpha3 - 2024-10-13
-* Add testParamAsync and testParamTask (#512), thanks @1eyewonder
-
-### 11.0.0-alpha2 - 2024-08-18
-* Breaking change: Update BenchmarkDotNet in Expecto.BenchmarkDotNet to 0.14.0 (#502), thanks @Numpsy
-  * 'BenchmarkConfig' has new 'eventProcessors' and 'categoryDiscoverer' properties.
-
-### 11.0.0-alpha1 - 2024-08-14
-* Fix testTheory issue where null and empty string produce duplicate test names (#494), thanks @Numpsy
+### 11.0.0 - 2026-06-11
 * Breaking Change: FsCheck 3 is now the default for Expecto.FsCheck, since FsCheck 2 is no longer supported. FsCheck 2 support is still available under the `-fscheck2` version suffix (i.e. install Expecto.FsCheck with version [11.0.0-alpha1-fscheck2](https://www.nuget.org/packages/Expecto.FsCheck/11.0.0-alpha1-fscheck2))
 * Breaking Change: move `FsCheckConfig.replay` from `int` to `uint64` (#501), thanks @rynoV
   * Fixes issue where many FsCheck3 runs could not be replayed since the random seed is too large.
   * Existing FsCheck 2 users should be able to use the same seeds values, but converted to `uint64`.
   * `uint64` literals can be defined like `let iAm5 = 5UL`
+* Breaking change: Update BenchmarkDotNet in Expecto.BenchmarkDotNet to 0.14.0 (#502), thanks @Numpsy
+  * 'BenchmarkConfig' has new 'eventProcessors' and 'categoryDiscoverer' properties.
+* Breaking change: Add third item to `FsCheckConfig.replay` indicating the size
+    * Fixes issue where the replay seed without the size was playing all tests leading up to the failure, making debugging
+      more difficult
+    * Existing FsCheck 2 users can enter `None` for the size, because it is ignored.
+* Breaking Change: Add `isTestSkipped` parameter to `TestPrinters.beforeEach`, allowing to avoid printing skipped tests to the console, thanks @rynoV
+  * Requires a coordinated upgrade to YoloDev.Expecto.TestSdk 0.15+ for use with Visual Studio, Rider, Ionide, dotnet test, or any other test runner that depends on the vstest adapter system
+* Fix testTheory issue where null and empty string produce duplicate test names (#494), thanks @Numpsy
+* Add testParamAsync and testParamTask (#512), thanks @1eyewonder
+* Add third argument to `FsCheckConfig.testFinished` containing information about the finished test.
+* Improve performance of test location, substatially improving performance for test discovery via VSTest on large projects. thanks @Numpsy
+* Update v11 with the TestPrinters builder for compatibility with YoloDev.Expecto.TestSdk 16.0+
+* Add `wantCase` and `isCase` assertions, thanks @jwosty
+* Update target frameworks to netstandard2.0 and net8.0, thanks @Numpsy
+* Update Expecto.FsCheck off FsCheck previews now that FsCheck 3 is out of preview, thanks @farlee2121
 
 ### 10.2.2 - 2025-02-28
 * Add builder methods for TestPrinters. Using builders allows TestPrinter signatures to evolve without breaking YoloDev.Expecto.TestSdk and other packages that need to build printers. This should reduce the need for version coordination between such packages, thanks @farlee2121
