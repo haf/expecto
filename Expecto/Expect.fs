@@ -315,10 +315,24 @@ let floatEqual actual expected epsilon message =
 
 /// Expects `actual` and `expected` (that are both floats) to be within a
 /// given `accuracy`.
-let floatClose accuracy actual expected message =
-  if Double.IsInfinity actual then
+let floatClose (accuracy: Accuracy<'u>) (actual: float<'u>) (expected: float<'u>) (message: string) : unit =
+  if Double.IsInfinity (float actual) then
     failtestf "%s. Expected actual to not be infinity, but it was." message
-  elif Double.IsInfinity expected then
+  elif Double.IsInfinity (float expected) then
+    failtestf "%s. Expected expected to not be infinity, but it was." message
+  elif Accuracy.areClose accuracy actual expected |> not then
+    failtestf
+      "%s. Expected difference to be less than %.20g for accuracy {absolute=%.20g; relative=%.20g}, but was %.20g. actual=%.20g expected=%.20g"
+      message (Accuracy.areCloseRhs accuracy actual expected)
+      accuracy.absolute accuracy.relative
+      (Accuracy.areCloseLhs actual expected)
+      actual expected
+/// Expects `actual` and `expected` (that are both float32s) to be within a
+/// given `accuracy`.
+let float32Close (accuracy: Accuracy32<'u>) (actual: float32<'u>) (expected: float32<'u>) message =
+  if Single.IsInfinity (float32 actual) then
+    failtestf "%s. Expected actual to not be infinity, but it was." message
+  elif Single.IsInfinity (float32 expected) then
     failtestf "%s. Expected expected to not be infinity, but it was." message
   elif Accuracy.areClose accuracy actual expected |> not then
     failtestf
@@ -331,27 +345,86 @@ let floatClose accuracy actual expected message =
 /// given `accuracy`.
 let floatLessThanOrClose accuracy actual expected message =
     if actual>expected then floatClose accuracy actual expected message
+/// Expects `actual` to be less than `expected` or to be within a
+/// given `accuracy`.
+let float32LessThanOrClose accuracy actual expected message =
+    if actual>expected then float32Close accuracy actual expected message
 /// Expects `actual` to be greater than `expected` or to be within a
 /// given `accuracy`.
 let floatGreaterThanOrClose accuracy actual expected message =
     if actual<expected then floatClose accuracy actual expected message
+/// Expects `actual` to be greater than `expected` or to be within a
+/// given `accuracy`.
+let float32GreaterThanOrClose accuracy actual expected message =
+    if actual<expected then float32Close accuracy actual expected message
+
+/// Expect the passed float to not be a number.
+let isNaN (f: float<'u>) message =
+  if not (Double.IsNaN (float f)) then failtestf "%s. Float should be a NaN (not a number) value." message
+
+/// Expect the passed float to not be a number.
+let isNaNf (f: float32<'u>) message =
+  if not (Single.IsNaN (float32 f)) then failtestf "%s. Float should be a NaN (not a number) value." message
 
 /// Expect the passed float to be a number.
-let isNotNaN f message =
-  if Double.IsNaN f then failtestf "%s. Float was the NaN (not a number) value." message
+let isNotNaN (f: float<'u>) message =
+  if Double.IsNaN (float f) then failtestf "%s. Float was the NaN (not a number) value." message
+
+/// Expect the passed float to be a number.
+let isNotNaNf (f: float32<'u>) message =
+  if Single.IsNaN (float32 f) then failtestf "%s. Float was the NaN (not a number) value." message
+
 
 /// Expect the passed float not to be positive infinity.
-let isNotPositiveInfinity actual message =
-  if Double.IsPositiveInfinity actual then failtestf "%s. Float was positive infinity." message
+let isPositiveInfinity (actual: float<'u>) message =
+  if not (Double.IsPositiveInfinity (float actual)) then failtestf "%s. Float should be positive infinity." message
+
+/// Expect the passed float not to be positive infinity.
+let isPositiveInfinityf (actual: float32<'u>) message =
+  if not (Single.IsPositiveInfinity (float32 actual)) then failtestf "%s. Float should be positive infinity." message
 
 /// Expect the passed float not to be negative infinity.
-let isNotNegativeInfinity actual message =
-  if Double.IsNegativeInfinity actual then failtestf "%s. Float was negative infinity." message
+let isNegativeInfinity (actual: float<'u>) message =
+  if not (Double.IsNegativeInfinity (float actual)) then failtestf "%s. Float should be negative infinity." message
+
+/// Expect the passed float not to be negative infinity.
+let isNegativeInfinityf (actual: float32<'u>) message =
+  if not (Single.IsNegativeInfinity (float32 actual)) then failtestf "%s. Float should be negative infinity." message
+
+/// Expect the passed float not to be infinity.
+let isInfinity (actual: float<'u>) message =
+  if not (Double.IsInfinity (float actual)) then failtestf "%s. Float should be infinity." message
+
+/// Expect the passed float not to be infinity.
+let isInfinityf (actual: float32<'u>) message =
+  if not (Single.IsInfinity (float32 actual)) then failtestf "%s. Float should be infinity." message
+
+/// Expect the passed float not to be positive infinity.
+let isNotPositiveInfinity (actual: float<'u>) message =
+  if Double.IsPositiveInfinity (float actual) then failtestf "%s. Float was positive infinity." message
+
+/// Expect the passed float not to be positive infinity.
+let isNotPositiveInfinityf (actual: float32<'u>) message =
+  if Single.IsPositiveInfinity (float32 actual) then failtestf "%s. Float was positive infinity." message
+
+/// Expect the passed float not to be negative infinity.
+let isNotNegativeInfinity (actual: float<'u>) message =
+  if Double.IsNegativeInfinity (float actual) then failtestf "%s. Float was negative infinity." message
+
+/// Expect the passed float not to be negative infinity.
+let isNotNegativeInfinityf (actual: float32<'u>) message =
+  if Single.IsNegativeInfinity (float32 actual) then failtestf "%s. Float was negative infinity." message
 
 /// Expect the passed float not to be infinity.
 let isNotInfinity actual message =
   isNotNegativeInfinity actual message
   isNotPositiveInfinity actual message
+  // passed via excluded middle
+
+/// Expect the passed float not to be infinity.
+let isNotInfinityf actual message =
+  isNotNegativeInfinityf actual message
+  isNotPositiveInfinityf actual message
   // passed via excluded middle
 
 /// Expect the passed string not to be empty.

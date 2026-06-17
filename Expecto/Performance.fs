@@ -3,17 +3,35 @@ namespace Expecto
 open System
 open Expecto.Logging
 open Expecto.Logging.Message
+open FSharp.Core.LanguagePrimitives
 
-type Accuracy = { absolute: float; relative: float }
+type Accuracy<'abs, 'rel> = { absolute: 'abs; relative: 'rel }
+
+type Accuracy<[<Measure>] 'u> = Accuracy<float<'u>, float>
+type Accuracy = Accuracy<1>
+type Accuracy32<[<Measure>] 'u> = Accuracy<float32<'u>, float32>
+type Accuracy32 = Accuracy32<1>
 
 module Accuracy =
-  let inline areCloseLhs a b = abs(a-b)
-  let inline areCloseRhs m a b = m.absolute + m.relative * max (abs a) (abs b)
-  let inline areClose m a b = areCloseLhs a b <= areCloseRhs m a b
-  let low = {absolute=1e-6; relative=1e-3}
-  let medium = {absolute=1e-8; relative=1e-5}
-  let high = {absolute=1e-10; relative=1e-7}
-  let veryHigh = {absolute=1e-12; relative=1e-9}
+  let inline areCloseLhs a b : ^a = abs(a-b)
+  let inline areCloseRhs (m: Accuracy<'a,_>) (a: 'a) (b: 'a) : 'a = m.absolute + m.relative * max (abs a) (abs b)
+  let inline areClose (m: Accuracy<'a,_>) (a: 'a) (b: 'a) : bool = areCloseLhs a b <= areCloseRhs m a b
+
+  let low<[<Measure>] 'u> : Accuracy<'u>        = { absolute = FloatWithMeasure 1e-6; relative = 1e-3 }
+  let medium<[<Measure>] 'u> : Accuracy<'u>     = { absolute = FloatWithMeasure 1e-8; relative = 1e-5 }
+  let mediumf<[<Measure>] 'u> : Accuracy32<'u>   = { absolute = Float32WithMeasure 1e-8f; relative = 1e-5f }
+  let high<[<Measure>] 'u> : Accuracy<'u>       = { absolute = FloatWithMeasure 1e-10; relative = 1e-7 }
+  let highf<[<Measure>] 'u> : Accuracy32<'u>     = { absolute = Float32WithMeasure 1e-10f; relative = 1e-7f }
+  let veryHigh<[<Measure>] 'u> : Accuracy<'u>   = { absolute = FloatWithMeasure 1e-12; relative = 1e-9 }
+  let veryHighf<[<Measure>] 'u> : Accuracy32<'u> = { absolute = Float32WithMeasure 1e-12f; relative = 1e-9f }
+
+module Accuracy32 =
+  open Accuracy
+
+  let low<[<Measure>] 'u> : Accuracy32<'u>      = { absolute = Float32WithMeasure 1e-6f; relative = 1e-3f }
+  let medium<[<Measure>] 'u> : Accuracy32<'u>   = { absolute = Float32WithMeasure 1e-8f; relative = 1e-5f }
+  let high<[<Measure>] 'u> : Accuracy32<'u>     = { absolute = Float32WithMeasure 1e-10f; relative = 1e-7f }
+  let veryHigh<[<Measure>] 'u> : Accuracy32<'u> = { absolute = Float32WithMeasure 1e-12f; relative = 1e-9f }
 
 module Performance =
   open Statistics
