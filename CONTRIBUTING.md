@@ -18,7 +18,7 @@
 
     ```bash
     source .env
-    ./fake build
+    ./fake 
     ```
 
  1. New features:
@@ -74,7 +74,7 @@ Futhermore, in no particular order;
 
 ## Releasing
 
-`fake build -- --target Release`
+`./fake build -- --target Release`
 
 [ec-vs]: https://marketplace.visualstudio.com/items?itemName=EditorConfigTeam.EditorConfig
 [ec-vsc]: https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig

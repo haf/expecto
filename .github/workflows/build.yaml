@@ -11,11 +11,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Setup .Net
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         global-json-file: "./global.json"
-    - run: ./fake build --target CI
+    - run: ./fake --target CI
       env:
         NUGET_TOKEN: ${{secrets.NUGET_RELEASE_KEY}}

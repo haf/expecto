@@ -34,6 +34,9 @@ let (==?) actual expected = Expect.equal actual expected ""
 type smallRecord = { a: string }
 type anotherSmallRecord = { a: string; b:string }
 
+[<RequireQualifiedAccess>]
+type ExampleDu = TwoArg of string * string | OneArg of string | NoArg
+
 [<Tests>]
 let tests =
 
@@ -413,7 +416,7 @@ let expecto =
           |> Array.tryHead
       let getTest =
           getMember
-          >> Option.bind testFromMember
+          >> Option.bind TestDiscovery.testFromMember
           >> Option.bind (function TestLabel(name, _, Normal) -> Some name | _ -> None)
 
       yield testCase "from member" <| fun _ ->
@@ -421,14 +424,14 @@ let expecto =
       yield testCase"from function" <| fun _ ->
           getTest "testB" ==? Some "test B"
       yield testCase"from type" <| fun _ ->
-          match testFromType Dummy.thisModuleType.Value with
+          match TestDiscovery.testFromType Dummy.thisModuleType.Value with
           | Some (TestList (
                       Seq.Two (
                           TestLabel("test B", TestList (_, Normal), Normal),
                           TestLabel("test A", TestList (_, Normal), Normal)), Normal)) -> ()
           | x -> failtestf "TestList expected, found %A" x
       yield testCase "from empty type" <| fun _ ->
-          let test = testFromType EmptyModule.thisModuleType.Value
+          let test = TestDiscovery.testFromType EmptyModule.thisModuleType.Value
           Expect.isNone test ""
     ]
 
@@ -1257,6 +1260,56 @@ let expecto =
         ) |> assertTestFails
       ]
 
+      testList "wantCase" [
+        testList "NoArg" [
+          testCase "pass" <| fun _ ->
+            Expect.wantCase ExampleDu.NoArg <@ fun _ -> ExampleDu.NoArg @> "Case actually matches"
+          testCase "fail" (fun _ ->
+            Expect.wantCase (ExampleDu.TwoArg ("foo", "bar")) <@ fun _ -> ExampleDu.NoArg @> "Deliberately failing"
+          ) |> assertTestFails
+        ]
+        testList "OneArg" [
+          testCase "pass" <| fun _ ->
+            let result = Expect.wantCase (ExampleDu.OneArg "banana") <@ ExampleDu.OneArg @> "Case actually matches"
+            Expect.equal result "banana" "Case data actually matches"
+          testCase "fail" (fun _ ->
+            Expect.wantCase (ExampleDu.TwoArg ("foo", "bar")) <@ ExampleDu.OneArg @> "Deliberately failing" |> ignore
+          ) |> assertTestFails
+        ]
+        testList "TwoArg" [
+          testCase "pass" <| fun _ ->
+            let result = Expect.wantCase (ExampleDu.TwoArg ("foo", "bar")) <@ ExampleDu.TwoArg @> "Case actually matches"
+            Expect.equal result ("foo", "bar") "Case data actually matches"
+          testCase "fail" (fun _ ->
+            Expect.wantCase (ExampleDu.OneArg "banana") <@ ExampleDu.TwoArg @> "Deliberately failing" |> ignore
+          ) |> assertTestFails
+        ]
+      ]
+
+      testList "isCase" [
+        testList "NoArg" [
+          testCase "pass" <| fun _ ->
+            Expect.isCase ExampleDu.NoArg <@ fun _ -> ExampleDu.NoArg @> "Case actually matches"
+          testCase "fail" (fun _ ->
+            Expect.isCase (ExampleDu.TwoArg ("foo", "bar")) <@ fun _ -> ExampleDu.NoArg @> "Deliberately failing"
+          ) |> assertTestFails
+        ]
+        testList "OneArg" [
+          testCase "pass" <| fun _ ->
+            Expect.isCase (ExampleDu.OneArg "banana") <@ ExampleDu.OneArg @> "Case actually matches"
+          testCase "fail" (fun _ ->
+            Expect.isCase (ExampleDu.TwoArg ("foo", "bar")) <@ ExampleDu.OneArg @> "Deliberately failing"
+          ) |> assertTestFails
+        ]
+        testList "TwoArg" [
+          testCase "pass" <| fun _ ->
+            Expect.isCase (ExampleDu.TwoArg ("foo", "bar")) <@ ExampleDu.TwoArg @> "Case actually matches"
+          testCase "fail" (fun _ ->
+            Expect.isCase (ExampleDu.OneArg "banana") <@ ExampleDu.TwoArg @> "Deliberately failing"
+          ) |> assertTestFails
+        ]
+      ]
+
       testList "seq has length" [
           testCase "pass" <| fun _ ->
             Expect.hasLength [1;2;3;4;5] 5 "Seq actually has length"
@@ -1643,12 +1696,12 @@ let taskTests =
       }
       testTask "can let! bind ValueTask<T>" {
         let expected = 5
-        let valueTask = ValueTask.FromResult(expected)
+        let valueTask = ValueTask<int>(expected)
         let! actual = valueTask
         Expect.equal expected actual "should be able to let! bind ValueTask<T>"
       }
       testTask "can do! bind ValueTask" {
-        let valueTask = ValueTask.CompletedTask
+        let valueTask = ValueTask()
         do! valueTask
       }
       testTask "can let! bind Async<T>" {

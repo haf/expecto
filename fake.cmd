@@ -1,4 +1,4 @@
 @echo off
 
 dotnet tool restore
-dotnet tool run fake %*
+dotnet run --project ./Build/Build.fsproj -- %*

@@ -50,6 +50,13 @@ let inline wantError message x = Expecto.Expect.wantError x message
 /// Expects the value to be a Result.Error value.
 let inline isError message x = Expecto.Expect.isError x message
 
+/// Expects the value to be a specific case of a discriminated union as defined by the given template, and returns the
+/// extracted case data or fails the test.
+let wantCase message expr actual = Expecto.Expect.wantCase actual expr message
+
+/// Expects the value to be a specific case of a discriminated union as defined by the given template.
+let isCase message expr actual = Expecto.Expect.isCase actual expr message
+
 /// Expects the value not to be null.
 let inline isNotNull message x = Expecto.Expect.isNotNull x message
 

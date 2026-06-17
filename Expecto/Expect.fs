@@ -9,6 +9,10 @@ open System.Text.RegularExpressions
 open Expecto.Logging
 open Expecto.Logging.Message
 open Microsoft.FSharp.Reflection
+open Microsoft.FSharp.Quotations
+open Microsoft.FSharp.Quotations.Patterns
+open Microsoft.FSharp.Quotations.DerivedPatterns
+open Microsoft.FSharp.Quotations.ExprShape
 open System.Reflection
 
 let private isNull' value = isNull value
@@ -210,6 +214,41 @@ let wantError x message =
 
 /// Expects the value to be a Result.Error value.
 let isError x message = wantError x message |> ignore
+
+/// Expects the value to be a specific case of a discriminated union as defined by the given template, and returns the
+/// extracted case data or fails the test.
+let wantCase (actual: 'Union) (template: Expr<'CaseData -> 'Union>) (message: string) : 'CaseData =
+  let rec skipLets (e: Expr) =
+    match e with
+    | Let (_, _, body) -> skipLets body
+    | _ -> e
+  let inline invalidTemplate () = invalidArg (nameof(template)) "Template expression must be a function constructing a union case"
+  // Matches code quotations of the form: <@ SomeDuCase @>
+  // which end up desugared as a lambda: <@ fun (arg1, arg2, ...) -> SomeDuCase (arg1, arg2, ...) @>
+  // which end up further desugared with some extra let bindings (hence the skipLets):
+  // <@ fun args ->
+  //      let (arg1, _, ...) = args
+  //      let (_, arg2, ...) = args
+  //      ...
+  //      SomeDuCase (arg1, arg2, ...) @>
+  match template with
+  | ShapeLambda (_, e) ->
+    match skipLets e with
+    | NewUnionCase (expectedCaseInfo, _) ->
+      let actualCaseInfo, actualValues = FSharpValue.GetUnionFields (actual, typeof<'Union>)
+      if actualCaseInfo = expectedCaseInfo then
+        match actualValues with
+        | [||] -> () :> obj :?> 'CaseData
+        | [|value|] -> value :?> 'CaseData
+        | actualValues -> FSharpValue.MakeTuple (actualValues, typeof<'CaseData>) :?> 'CaseData
+      else
+        failtestf "%s. Expected %s, was %A." message expectedCaseInfo.Name actual
+    | _ -> invalidTemplate ()
+  | _ -> invalidTemplate ()
+
+/// Expects the value to be a specific case of a discriminated union as defined by the given template.
+let isCase (actual: 'Union) (template: Expr<'CaseData -> 'Union>) (message: string) : unit =
+  wantCase actual template message |> ignore
 
 /// Expects the value not to be null.
 let isNotNull x message =

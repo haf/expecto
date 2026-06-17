@@ -3,7 +3,10 @@
   <PropertyGroup>
     <AssemblyName>Expecto.Focused.Tests</AssemblyName>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <!-- Default for non-Windows (Linux/Mac CI) -->
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <!-- Dual target only when building on Windows -->
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net10.0;net481</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Main.fs" />
