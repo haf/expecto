@@ -1,3 +1,7 @@
+### 11.1.0 - 2026-06-17
+* Added float32 versions of all the float assertion functions. Thanks, @jwosty
+* Extended both the float and float32 assertions to support floats/float32s with units of measure. Thanks, @jwosty
+
 ### 11.0.0 - 2026-06-11
 * Breaking Change: FsCheck 3 is now the default for Expecto.FsCheck, since FsCheck 2 is no longer supported. FsCheck 2 support is still available under the `-fscheck2` version suffix (i.e. install Expecto.FsCheck with version [11.0.0-alpha1-fscheck2](https://www.nuget.org/packages/Expecto.FsCheck/11.0.0-alpha1-fscheck2))
 * Breaking Change: move `FsCheckConfig.replay` from `int` to `uint64` (#501), thanks @rynoV
