@@ -1003,6 +1003,15 @@ module internal ANSIOutputWriter =
           let value = value ||| ENABLE_VIRTUAL_TERMINAL_PROCESSING
           SetConsoleMode(handle, value) |> ignore
 
+  /// Runs `f` under a lock on the current `Console.Out`.
+  ///
+  /// On Unix, every write to the console stream ends in `lock (Console.Out)` inside .NET
+  /// (`ConsolePal.WriteFromConsoleStream`). After `init`, `Console.Out` is a synchronized writer that calls into the
+  /// ANSIOutputWriter, so a thread inside `Console.Write` holds this lock before it gets to our locks. Any code that
+  /// writes to the console while it holds one of our locks must take this lock first, or we deadlock.
+  let internal lockConsole (f: unit -> 'a) : 'a =
+    lock Console.Out f
+
   /// Lifecycle: (new T() -> t.init() -> t._ {0,*} -> (t :> IDisposable).Dispose()) {1,*}
   [<Sealed>]
   type T(origStdOut: TextWriter, origStdErr: TextWriter, sem: obj) =
@@ -1010,8 +1019,9 @@ module internal ANSIOutputWriter =
     //  - For every non-private method that touches the origStdOut or origStdErr,
     //    a lock on `sem` must be held.
     //  - For every change to `buffer`, a lock on `buffer` must be held.
-    //  - Call order of locks must always be; 1. `lock sem ..`, 2. `lock buffer ..`,
-    //    or we may deadlock.
+    //  - Call order of locks must always be; 1. `lock sem ..`, 2. `lockConsole ..`,
+    //    3. `lock buffer ..`, or we may deadlock. See `lockConsole` for why `Console.Out` comes
+    //    before `buffer`.
     //  - The call order described in the docs of this type must be followed.
     //  - No `..Inner` function declared below may take a lock on `sem`.
     //  - All `..Inner` functions below must assert `inited` is valid.
@@ -1024,6 +1034,7 @@ module internal ANSIOutputWriter =
 
     let flushInner () =
       if inited then
+        lockConsole <| fun _ ->
         lock buffer <| fun _ ->
           flushStart.Trigger ()
           buffer.ToString() |> origStdOut.Write
@@ -1034,6 +1045,7 @@ module internal ANSIOutputWriter =
     let rec prettyPrintInner (autoFlush, fromSysConsole) parts =
       ignore (tryInitInner ())
 
+      lockConsole <| fun _ ->
       lock buffer <| fun _ ->
         let hasEndLine =
           parts
@@ -1099,7 +1111,7 @@ module internal ANSIOutputWriter =
     /// trigger the FlushStart/FlushEnd events.
     ///
     /// This function is internal, because it needs to be guarded by a Monitor object; in the case of Expecto, this
-    /// guard is in Progress.fs, an is the lock on the ref cell `isRunning`.
+    /// guard is in Progress.fs, an is the lock on the ref cell `isRunning`. Take `lockConsole` before that guard.
     member internal __.writeAndFlushRaw (value: string) =
       origStdOut.Write value
       origStdOut.Flush()
