@@ -1,3 +1,7 @@
+### 11.1.1 - 2026-10-09
+- Fix console deadlock on Unix by locking Console.Out first PR #536. Thanks @nojaf
+- Fix truncated tests names in NUnit and JUnit test summaries by joining the name segments using joinWith PR #535. Thanks @nojaf
+
 ### 11.1.0 - 2026-06-17
 * Added float32 versions of all the float assertion functions. Thanks, @jwosty
 * Extended both the float and float32 assertions to support floats/float32s with units of measure. Thanks, @jwosty
