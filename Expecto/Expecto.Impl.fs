@@ -561,16 +561,21 @@ module Impl =
         joinWith = JoinWith.Dot
       }
 
-    member x.appendSummaryHandler handleSummary =
+    /// Appends a handler that receives the final config the tests run with,
+    /// so it sees option values regardless of CLI argument order.
+    member x.appendSummaryHandlerWithConfig handleSummary =
       { x with
           printer =
             { x.printer with
                 summary = fun config summary -> async {
                   do! x.printer.summary config summary
-                  handleSummary summary
+                  handleSummary config summary
                 }
               }
       }
+
+    member x.appendSummaryHandler handleSummary =
+      x.appendSummaryHandlerWithConfig (fun _ summary -> handleSummary summary)
 
   let execTestAsync (ct:CancellationToken) config (test:FlatTest) : Async<TestSummary> =
     async {
