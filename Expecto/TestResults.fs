@@ -20,7 +20,8 @@ let private xmlSave fileName (doc: XDocument) =
   doc.Save writer
 
 /// Generate test results using NUnit v2 schema.
-let writeNUnitSummary file (summary: TestRunSummary) =
+/// Test names are joined with `joinWith`.
+let writeNUnitSummaryWith (joinWith: JoinWith) file (summary: TestRunSummary) =
   // v3: https://github.com/nunit/docs/wiki/Test-Result-XML-Format
   // this impl is v2: http://nunit.org/docs/files/TestResult.xml
   let totalTests = summary.errored @ summary.failed @ summary.ignored @ summary.passed
@@ -30,7 +31,7 @@ let writeNUnitSummary file (summary: TestRunSummary) =
     |> Seq.map (fun (flatTest, test) ->
       let element =
         XElement(XName.Get "test-case",
-          XAttribute(XName.Get "name", flatTest.name))
+          XAttribute(XName.Get "name", joinWith.format flatTest.name))
       let addAttribute name (content: string) =
         element.Add(XAttribute(XName.Get name, content))
 
@@ -120,7 +121,14 @@ let writeNUnitSummary file (summary: TestRunSummary) =
   |> XDocument
   |> xmlSave file
 
-let writeJUnitSummary file (summary: Impl.TestRunSummary) =
+/// Generate test results using NUnit v2 schema.
+/// Test names are joined with `.`.
+let writeNUnitSummary file (summary: TestRunSummary) =
+  writeNUnitSummaryWith JoinWith.Dot file summary
+
+/// Generate test results using JUnit schema.
+/// Test names are joined with `joinWith`.
+let writeJUnitSummaryWith (joinWith: JoinWith) file (summary: Impl.TestRunSummary) =
 
   // junit does not have an official xml spec
   // this is a minimal implementation to get gitlab to recognize the tests:
@@ -145,7 +153,7 @@ let writeJUnitSummary file (summary: Impl.TestRunSummary) =
 
       XElement(XName.Get "testcase",
         [|
-          yield XAttribute(XName.Get "name", flatTest.name) :> XObject
+          yield XAttribute(XName.Get "name", joinWith.format flatTest.name) :> XObject
           yield XAttribute(XName.Get "time",
             System.String.Format(CultureInfo.InvariantCulture,
               "{0:0.000}", test.duration.TotalSeconds)) :> XObject
@@ -164,3 +172,8 @@ let writeJUnitSummary file (summary: Impl.TestRunSummary) =
   element
   |> XDocument
   |> xmlSave file
+
+/// Generate test results using JUnit schema.
+/// Test names are joined with `.`.
+let writeJUnitSummary file (summary: Impl.TestRunSummary) =
+  writeJUnitSummaryWith JoinWith.Dot file summary

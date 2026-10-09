@@ -15,8 +15,8 @@ module ConfigExt =
 
     [<Extension; CompiledName("AddNUnitSummary")>]
     member x.AddNUnitSummary(file) =
-      x.appendSummaryHandler(TestResults.writeNUnitSummary file)
+      x.appendSummaryHandlerWithConfig(fun config -> TestResults.writeNUnitSummaryWith config.joinWith file)
 
     [<Extension; CompiledName("AddJUnitSummary")>]
     member x.AddJUnitSummary(file) =
-      x.appendSummaryHandler(TestResults.writeJUnitSummary file)
+      x.appendSummaryHandlerWithConfig(fun config -> TestResults.writeJUnitSummaryWith config.joinWith file)
