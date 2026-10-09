@@ -41,6 +41,9 @@ module internal ProgressIndicator =
     let value = String(' ', currentLength) + backStart + showCursor
     ansi.writeAndFlushRaw value
 
+  // Lock order: `ANSIOutputWriter.lockConsole` before `isRunning`. The FlushStart handler runs while the flushing
+  // thread already holds the console lock (see ANSIOutputWriter.T), and `clear` writes to the console.
+
   let start () =
     let ansi = ANSIOutputWriter.getInstance (Global.semaphore())
 
@@ -82,6 +85,7 @@ module internal ProgressIndicator =
             let start = DateTime.UtcNow
             while !isRunning do
               if not isPaused then
+                ANSIOutputWriter.lockConsole <| fun () ->
                 lock isRunning (fun () ->
                   if !isRunning then
                     let t = (DateTime.UtcNow - start).TotalMilliseconds / 100.
@@ -110,6 +114,7 @@ module internal ProgressIndicator =
     )
 
   let stop () =
+    ANSIOutputWriter.lockConsole <| fun () ->
     lock isRunning <| fun () ->
       if !isRunning then
         isRunning := false
